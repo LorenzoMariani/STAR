@@ -909,6 +909,16 @@ class StarApi:
         ])
         return cubesat and thermal
 
+    def end019_design_requested(self, normalized_text: str) -> bool:
+        """END-019 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose platform
+        components or subsystems are to be chosen; used by the consistency check of
+        LLM plans (the rule-based planner has its own, broader keyword list)."""
+        cubesat = "cubesat" in normalized_text or re.search(r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)", normalized_text) is not None
+        design = any(token in normalized_text for token in [
+            "component", "subsystem", "bill of materials", "satellite design", "platform design", "off-the-shelf", "datasheet",
+        ])
+        return cubesat and design
+
     def rule_based_requirement_extraction(self, text: str) -> list[dict[str, Any]]:
         normalized_text = self.normalize_text(text)
         requirements: list[dict[str, Any]] = []
@@ -3849,6 +3859,29 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
                         "reviewed_by_user": False,
                     })
                     self.add_log("AI", f"Planning consistency check added {upstream_id} upstream of END-018.")
+
+        # END-019 Satellite Design Component Selector: add it when the request asks
+        # to choose the components or subsystems of a CubeSat (no upstream module).
+        if self.end019_design_requested(combined_text) and not workflow_has("END-019"):
+            module = self.get_module_by_id("END-019")
+            if module:
+                append_requested_output(
+                    "Select the satellite platform components (structure, OBC, EPS, battery, solar panels, radio, ADCS and payload) from real vendor datasheets and size the design.",
+                    "engineering_feasibility", "medium",
+                    "The approved requirements ask to choose the components or subsystems of a CubeSat.",
+                    ["cubesat", "component", "subsystem", "bill of materials", "form factor"],
+                )
+                workflow.append({
+                    "step": len(workflow) + 1,
+                    "module": module.get("module_name", "Satellite Design Component Selector"),
+                    "module_id": "END-019",
+                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
+                    "output_artifacts": self.build_workflow_output_summary(module),
+                    "rationale": "Added by planning consistency check because the approved requirements ask to choose the components of a CubeSat.",
+                    "status": "proposed",
+                    "reviewed_by_user": False,
+                })
+                self.add_log("AI", "Planning consistency check added END-019 Satellite Design Component Selector for the CubeSat platform design.")
 
         workflow = self.sort_and_renumber_workflow(workflow)
         for index, output in enumerate(requested_outputs, start=1):
