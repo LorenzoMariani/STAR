@@ -1,0 +1,170 @@
+module_id: END-008
+module_name: Battery module
+module_type: digital_twin_module
+module_version: "0.1.0"
+owner: UNIRM1
+
+description: >
+  High-fidelity representation of the physical
+  asset, continuously synchronized with real-time data for State Of Health
+  (SOH) monitoring and Remaining Useful Life (RUL) prediction for operational
+  and design purposes.
+
+capabilities:
+  - physical_asset_digital_twin
+  - high_fidelity_asset_representation
+  - real_time_synchronization
+  - state_of_health_monitoring
+  - remaining_useful_life_prediction
+  - diagnostics_generation
+  - design_exploration
+  - design_validation
+  - operational_support
+
+domain_of_validity:
+  mission_phase:
+    - phase_a
+    - design_trade_off
+    - verification
+    - operations
+  mission_type:
+    - earth_observation
+  fidelity_level: high_fidelity_when_data_available
+  notes: >
+    In design scenarios, the module may rely on mission-specific assumptions and
+    historical data. In operational scenarios, real-time telemetry is
+    required to synchronize the digital twin with the physical asset.
+
+required_inputs:
+  - name: asset_configuration
+    kind: parameter_or_file
+    data_type: object_or_json
+    unit: "-"
+    required: true
+    default_value: null
+    assumption_allowed: false
+    description: >
+      Configuration of the physical asset, including relevant EPS architecture,
+      battery configuration, electrical interfaces and subsystem parameters.
+    missing_information_reason: >
+      Required to instantiate the EPS digital twin and represent the physical
+      asset.
+
+  - name: battery_data_training
+    kind: dataset
+    data_type: time_series_or_table
+    unit: "-"
+    required: false
+    default_value: null
+    assumption_allowed: false
+    description: >
+      Battery data used for training SOH/RUL models or calibrating battery
+      behavior.
+    missing_information_reason: >
+      Required when data-driven SOH monitoring or RUL model training is part of
+      the analysis.
+
+  - name: battery_data_forecasting
+    kind: dataset
+    data_type: time_series_or_table
+    unit: "-"
+    required: false
+    default_value: null
+    assumption_allowed: false
+    description: >
+      Battery data used for forecasting or validating predictive models.
+    missing_information_reason: >
+      Required when RUL prediction or forecasting validation is requested.
+
+  - name: mission_specific_information
+    kind: parameter
+    data_type: object
+    unit: "-"
+    required: true
+    default_value: null
+    assumption_allowed: true
+    description: >
+      Mission-specific information required for design analysis, such as
+      operational profile, acquisition timeline, duty cycles, power modes,
+      eclipse periods or design constraints.
+    missing_information_reason: >
+      Required to evaluate EPS behavior in the context of the specific mission.
+
+  - name: real_time_telemetry
+    kind: data_stream
+    data_type: telemetry
+    unit: "-"
+    required: false
+    default_value: null
+    assumption_allowed: false
+    description: >
+      Real-time telemetry required for operational synchronization of the EPS
+      digital twin with the physical asset.
+    missing_information_reason: >
+      Required when the scenario is operational or requires live synchronized
+      state estimation.
+
+  - name: acquisition_timeline
+    kind: artifact
+    artifact_name: acquisition_timeline_or_plan
+    data_type: csv_or_json
+    required: false
+    default_value: null
+    produced_by: observation_module
+    assumption_allowed: false
+    description: >
+      Timeline of acquisitions or operational events affecting the EPS load
+      profile.
+    missing_information_reason: >
+      Required when observation operations are used to estimate mission-specific
+      EPS load, SOH or RUL evolution.
+
+outputs:
+  - name: live_synchronized_state
+    kind: result
+    artifact_name: live_synchronized_state.json
+    data_type: json
+    description: >
+      Current synchronized state of the EPS digital twin with respect to the
+      asset or simulated mission state.
+
+  - name: diagnostics_soh
+    kind: result
+    artifact_name: diagnostics_soh.json
+    data_type: json
+    description: >
+      Diagnostics and State Of Health assessment.
+
+  - name: predictions_rul
+    kind: result
+    artifact_name: predictions_rul.json
+    data_type: json
+    description: >
+      Remaining Useful Life predictions.
+
+  - name: design_exploration_results
+    kind: result
+    artifact_name: design_exploration_results.json
+    data_type: json
+    description: >
+      Results of design-space exploration and trade-off analysis.
+
+  - name: validation_results
+    kind: result
+    artifact_name: validation_results.json
+    data_type: json
+    description: >
+      Validation results for design or operational scenarios.
+
+execution:
+  estimated_runtime: 3
+  execution_mode: sequential_or_live_synchronized
+  upstream_dependencies:
+    - observation_module
+  downstream_dependencies: []
+
+interface_notes: >
+  For early STAR demonstrations without real telemetry, the module can operate
+  in design-support mode using asset configuration and mission-specific
+  information. For operational use, real-time telemetry is required for live
+  synchronization, SOH monitoring and RUL prediction.

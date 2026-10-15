@@ -1,0 +1,16 @@
+CDM_ID                             =1475707069               
+CREATED                            =2026-05-09 05:30:12.000000
+EMERGENCY_REPORTABLE               =Y                        
+TCA                                =2026-05-11T19:26:11.288000
+MIN_RNG                            =13                       
+PC                                 =0.07201977               
+SAT_1_ID                           =745                      
+SAT_1_NAME                         =THOR ABLESTAR DEB        
+SAT1_OBJECT_TYPE                   =DEBRIS                   
+SAT1_RCS                           =SMALL                    
+SAT_1_EXCL_VOL                     =1.00                     
+SAT_2_ID                           =899                      
+SAT_2_NAME                         =EXPLORER 22              
+SAT2_OBJECT_TYPE                   =PAYLOAD                  
+SAT2_RCS                           =MEDIUM                   
+SAT_2_EXCL_VOL                     =5.00 

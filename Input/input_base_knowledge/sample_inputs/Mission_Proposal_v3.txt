@@ -1,0 +1,56 @@
+CALL FOR PROPOSALS - LOW-BRIGHTNESS SAR EARTH-OBSERVATION CONSTELLATION FOR ITALY (ITA-SAR)
+Reference: STAR-CFP-2026-SAR-01
+
+1. Object of the call
+
+This call requests the preliminary design of a Synthetic Aperture Radar (SAR) Earth-observation constellation of small satellites in Low Earth Orbit, dedicated to all-weather, day-and-night monitoring of the Italian territory (ground deformation, floods, landslides, civil protection). Large SAR antennas and solar arrays can make satellites bright, therefore the constellation shall have a low luminous impact on ground-based astronomy. The brightness of its satellites shall be verified from the telescope located at Matera, Italy (latitude 40.6492 deg N, longitude 16.7039 deg E, altitude 400 m). The proposal shall be assessed through a STAR digital analysis only.
+
+2. Mandatory STAR workflow and execution order
+
+The STAR analysis shall use exactly the following five modules, executed in exactly this order, each module using the products of the previous ones:
+1. END-001 Constellation Optimizer (SAR constellation optimization, revisit time, coverage). First module.
+2. END-003 Attitude Propagation (orbit and nadir attitude propagation, satellite and pass selection). Second module.
+3. END-004 Power Budget (electrical power budget, battery, duty cycle, SAR payload mode). Third module.
+4. END-007 Synthetic Data Generation (synthetic optical images of the selected daylight pass). Fourth module.
+5. END-010 Reflectance Determination (reflectance, light curve and apparent magnitude of the selected night pass seen from Matera). Fifth and last module.
+No other STAR module shall be planned. END-007 shall use its default global reference maps.
+
+3. Constellation and orbit requirements (END-001)
+
+The Constellation Optimizer shall optimize the SAR constellation for revisit time over the area of interest, defined as the Italian territory (latitude 35 deg N to 47 deg N, longitude 6 deg E to 19 deg E). The constellation shall contain at most 12 satellites in sun-synchronous repeat-ground-track orbits with altitude between 500 km and 1200 km. SAR frequency band: X band. SAR field of regard: 35 deg, looking to the left and to the right of the ground track. Propagation time shall be 7 days with J2 perturbation and atmospheric drag. Spacecraft mass shall be 100 kg, drag area 1 m2, drag coefficient 2.2. The orbits of the optimized constellation shall be the orbit source for all downstream modules.
+
+4. Analysis epoch and reference target
+
+Analysis start: 2026-05-21 13:41:10 UTC. Attitude propagation duration: 48 hours. Reference acquisition target: Port of Genoa, Italy (latitude 44.4056 deg N, longitude 8.9463 deg E), minimum satellite elevation 10 deg. Nominal attitude mode: nadir pointing, with off-nadir SAR looking obtained within the field of regard.
+
+5. Attitude propagation and pass selection (END-003)
+
+The Attitude Propagation module shall screen every satellite of the constellation and select the satellite and the pass to be simulated. It shall write an output file reporting the selected satellite, the pass date, and the start time and end time (UTC) of the pass. Two passes shall be selected:
+- Imaging pass for END-007: the satellite shall be in visibility of the reference target with the Sun above the horizon at the target, preferably with Sun elevation above 20 deg, so that the synthetic images are illuminated. Daylight is required only for the synthetic optical images: SAR acquisition itself does not depend on illumination.
+- Light-curve pass for END-010: the satellite shall be visible from Matera above 10 deg elevation, illuminated by the Sun, while the Matera telescope is in night conditions (Sun elevation below -12 deg).
+
+6. SAR payload and synthetic optical imagery (END-007)
+
+The payload shall be an X-band SAR in stripmap mode with 3 m ground resolution, 30 km swath and incidence angle between 15 deg and 50 deg. END-007 shall generate synthetic optical images of the SAR acquisition footprint for the imaging pass selected by END-003 in daylight over the reference target, to verify imaging geometry, footprint and ground context. The simulation of the SAR backscatter signal is out of scope.
+
+7. Power budget requirements (END-004)
+
+The power budget shall cover the Idle, TX UHF, TX S-band and Payload (SAR acquisition) operating modes, with duty cycles in sunlight and in eclipse. Reference values: battery capacity 19 Wh, solar generation 3 Wh per orbit, 15 orbits per day with 7 idle orbits and 8 payload (acquisition) orbits, design margin 10 percent. The power budget shall show a non-negative daily energy balance and the battery depth of discharge per orbit for each operating mode.
+
+8. Low luminous impact requirement and verification (END-010)
+
+The Reflectance Determination module shall simulate the reflected-light flux (light curve) of the satellite during the night pass selected by END-003, as seen from the Matera telescope, and shall report phase angle, range, elevation and estimated apparent visual magnitude. Requirement: the peak apparent visual magnitude of the satellite seen from Matera shall be fainter than magnitude 7 (the limiting magnitude for the unaided eye). The light-pollution impact of the constellation shall be reported against this limit.
+
+9. Expected outputs
+
+- optimized SAR constellation architecture with revisit time and coverage over Italy;
+- selected satellite, pass date, start time and end time for the imaging pass and for the night pass;
+- propagated orbit and nadir attitude products;
+- power-budget tables, timelines and figures;
+- synthetic optical images of the daylight imaging pass;
+- light curve, apparent magnitude and light-pollution assessment from Matera;
+- all outputs stored under the RUN_YYYYMMDD_HHMMSS output folder.
+
+10. Scope limitations
+
+Costs, lifecycle economics, SAR signal simulation and multi-fidelity trade studies are out of scope. The workflow of Section 2 shall not be extended with additional modules.

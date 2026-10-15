@@ -1,0 +1,446 @@
+module_id: END-001
+module_name: constellation optimizer
+module_type: digital_twin_module
+module_version: 0.1.0
+owner: UNIRM1
+description: 'Simulate and optimize satellite constellations based on customizable
+  mission parameters and sensor benchmarking. The module supports preliminary mission
+  architecture studies by estimating constellation-level performance indicators such
+  as revisit time, latency, coverage, acquisition frequency and constellation trajectories.
+
+  '
+capabilities:
+- constellation_simulation
+- constellation_optimization
+- mission_parameter_trade_off
+- sensor_benchmarking
+- revisit_time_estimation
+- latency_estimation
+- coverage_assessment
+- acquisition_frequency_estimation
+- constellation_trajectory_generation
+domain_of_validity:
+  mission_phase:
+  - pre_phase_a
+  - phase_a
+  - design_trade_off
+  mission_type:
+  - earth_observation
+  - remote_sensing
+  fidelity_level: preliminary_to_intermediate
+  notes: 'The registry entry describes the interface contract required by STAR. The
+    internal optimization algorithms remain owned by the module provider.
+
+    '
+required_inputs:
+- name: area_of_interest
+  kind: parameter
+  data_type: geometry_or_string
+  unit: '-'
+  required: true
+  default_value: null
+  assumption_allowed: false
+  description: 'Area of Interest to be observed. It may be provided as a named region,
+    polygon, bounding box or other agreed geospatial representation.
+
+    '
+  missing_information_reason: 'Required to compute coverage, revisit time, acquisition
+    frequency and trajectories with respect to the mission target.
+
+    '
+- name: propagation_time
+  kind: parameter
+  data_type: float_or_string
+  unit: days
+  required: false
+  default_value: auto
+  valid_range:
+    min: 1
+    max: 365
+  assumption_allowed: true
+  description: 'Time span used for orbit/constellation propagation and performance
+    assessment. Inside STAR, END-001 always chooses it itself (auto): one exact
+    repeat cycle of each candidate orbit for Sun-synchronous orbits, a whole
+    lighting-drift cycle (the time the orbit plane takes to turn 360 deg relative
+    to the Sun, 48-150 days) for generally inclined ones, evaluated as one period
+    of a repeating pattern; a value given here is reported and ignored.
+
+    '
+  missing_information_reason: 'Not required: the module chooses the steady-state
+    window of each design.
+
+    '
+- name: perturbations
+  kind: parameter
+  data_type: list_or_string
+  unit: '-'
+  required: true
+  default_value:
+  - J2
+  allowed_values:
+  - none
+  - J2
+  - atmospheric_drag
+  - third_body
+  - solar_radiation_pressure
+  assumption_allowed: true
+  description: 'Perturbation models to be included in the propagation.
+
+    '
+  missing_information_reason: 'Required to define the orbit propagation fidelity and
+    assumptions.
+
+    '
+- name: constellation_type
+  kind: parameter
+  data_type: string
+  unit: '-'
+  required: true
+  default_value: single_satellite
+  allowed_values:
+  - single_satellite
+  - walker_delta
+  - walker_star
+  - train
+  - custom
+  assumption_allowed: true
+  description: 'Type of constellation architecture to be simulated or optimized.
+
+    '
+  missing_information_reason: 'Required to define the constellation design space.
+
+    '
+- name: optical_field_of_view_deg
+  kind: parameter
+  data_type: float
+  unit: deg
+  required: false
+  default_value: 5
+  valid_range:
+    min: 0.1
+    max: 60
+  assumption_allowed: true
+  description: 'Optical sensor Field Of View used for optical sensor benchmarking.
+
+    '
+  missing_information_reason: 'Required when the mission uses an optical payload or
+    when optical sensor benchmarking is requested.
+
+    '
+- name: sar_frequency
+  kind: parameter
+  data_type: string
+  unit: '-'
+  required: false
+  default_value: null
+  allowed_values:
+  - P_band
+  - L_band
+  - S_band
+  - C_band
+  - X_band
+  - Ku_band
+  assumption_allowed: true
+  description: 'SAR operating frequency band used for SAR sensor benchmarking.
+
+    '
+  missing_information_reason: 'Required when the mission uses a SAR or radar payload.
+
+    '
+- name: sar_field_of_regard_deg
+  kind: parameter
+  data_type: float
+  unit: deg
+  required: false
+  default_value: null
+  valid_range:
+    min: 1
+    max: 120
+  assumption_allowed: true
+  description: 'SAR Field Of Regard used for SAR acquisition and coverage benchmarking.
+
+    '
+  missing_information_reason: 'Required when SAR acquisition geometry or radar sensor
+    benchmarking is part of the mission concept.
+
+    '
+- name: spacecraft_mass_kg
+  kind: parameter
+  data_type: float
+  unit: kg
+  required: false
+  default_value: 100
+  valid_range:
+    min: 1
+    max: 20000
+  assumption_allowed: true
+  description: 'Spacecraft dry mass used by the atmospheric-drag station-keeping
+    delta-V estimate.
+
+    '
+  missing_information_reason: 'Required when atmospheric_drag is included among
+    the propagation perturbations.
+
+    '
+- name: spacecraft_drag_area_m2
+  kind: parameter
+  data_type: float
+  unit: m^2
+  required: false
+  default_value: 1
+  valid_range:
+    min: 0.01
+    max: 100
+  assumption_allowed: true
+  description: 'Spacecraft cross-sectional area exposed to atmospheric drag, used
+    by the station-keeping delta-V estimate.
+
+    '
+  missing_information_reason: 'Required when atmospheric_drag is included among
+    the propagation perturbations.
+
+    '
+- name: spacecraft_drag_coefficient
+  kind: parameter
+  data_type: float
+  unit: '-'
+  required: false
+  default_value: 2.2
+  valid_range:
+    min: 1.5
+    max: 3
+  assumption_allowed: true
+  description: 'Spacecraft drag coefficient (Cd) used by the atmospheric-drag station-keeping
+    delta-V estimate.
+
+    '
+  missing_information_reason: 'Required when atmospheric_drag is included among
+    the propagation perturbations.
+
+    '
+- name: evaluation_mode
+  kind: parameter
+  data_type: string
+  unit: '-'
+  required: false
+  default_value: GA_Optimization
+  allowed_values:
+  - GA_Optimization
+  - Complete_SSORGT_Evaluation
+  assumption_allowed: true
+  description: 'Run mode for the SSORGT orbit type. GA_Optimization (default) runs
+    the genetic algorithm once. Complete_SSORGT_Evaluation exhaustively evaluates
+    the SSO_RGT_table_Final.csv altitude/inclination table against a swept number
+    of orbital planes, producing a heatmap per KPI and selecting the best cell by
+    the same weighted-sum score used to rank the GA Pareto front. Only applies when
+    orbit_type is SSORGT; ignored for RGT and Hybrid.
+
+    '
+  missing_information_reason: 'Not required; defaults to the existing GA-based optimization
+    behaviour.
+
+    '
+- name: fitness_engine
+  kind: parameter
+  data_type: string
+  unit: '-'
+  required: false
+  default_value: Surrogate
+  allowed_values:
+  - Simulation
+  - Surrogate
+  assumption_allowed: true
+  description: 'How each GA candidate is scored. Inside STAR END-001 always uses the
+    Surrogate (fixed, 2026-10-14): the trained END-001 machine-learning surrogate
+    scores the candidates in seconds, then the best candidates are re-simulated for
+    real and the best simulated one is exported, so reported KPIs are always
+    simulated. The surrogate is valid for SSORGT and Walker-delta (RGT) orbits,
+    GA_Optimization, a single optical sensor (RECT, or push-broom) with the Sun
+    constraint, the Italy AOI, one ground station on Italian land (mask 0-15 deg,
+    altitude 0-2000 m), FOVs 1-60 deg and a 10 s time step; any other scenario
+    falls back to the full Simulation automatically and the KPI file records why.
+    Standalone runs (outside STAR) can choose Simulation or Surrogate in the input
+    JSON.
+
+    '
+  missing_information_reason: 'Not required; fixed to Surrogate inside STAR.
+
+    '
+- name: surrogate_verify_top_k
+  kind: parameter
+  data_type: integer
+  unit: '-'
+  required: false
+  default_value: 30
+  valid_range:
+    min: 1
+    max: 50
+  assumption_allowed: true
+  description: 'Only used when fitness_engine is Surrogate. Number of best surrogate
+    solutions re-simulated with the real simulator before choosing the exported one
+    (each costs roughly one to a few minutes).
+
+    '
+  missing_information_reason: 'Only required when fitness_engine is Surrogate.
+
+    '
+- name: complete_eval_table_coverage
+  kind: parameter
+  data_type: string
+  unit: '-'
+  required: false
+  default_value: Full
+  allowed_values:
+  - Full
+  - RowStride
+  assumption_allowed: true
+  description: 'Only used when evaluation_mode is Complete_SSORGT_Evaluation. Full
+    evaluates every row of SSO_RGT_table_Final.csv (~1163 rows, several hours per
+    swept plane count). RowStride evaluates every complete_eval_row_stride-th row
+    instead, trading altitude/inclination resolution for runtime.
+
+    '
+  missing_information_reason: 'Only required when evaluation_mode is Complete_SSORGT_Evaluation.
+
+    '
+- name: complete_eval_row_stride
+  kind: parameter
+  data_type: integer
+  unit: '-'
+  required: false
+  default_value: 5
+  valid_range:
+    min: 1
+    max: 200
+  assumption_allowed: true
+  description: 'Row subsampling factor used when complete_eval_table_coverage is
+    RowStride (evaluate every Nth row of SSO_RGT_table_Final.csv).
+
+    '
+  missing_information_reason: 'Only required when complete_eval_table_coverage is
+    RowStride.
+
+    '
+- name: complete_eval_planes_list
+  kind: parameter
+  data_type: integer_array
+  unit: '-'
+  required: false
+  default_value: [3, 4, 5, 6, 7, 8, 9, 10]
+  assumption_allowed: true
+  description: 'Number-of-orbital-planes values swept as the second heatmap axis
+    in Complete_SSORGT_Evaluation mode.
+
+    '
+  missing_information_reason: 'Only required when evaluation_mode is Complete_SSORGT_Evaluation.
+
+    '
+- name: complete_eval_sats_per_plane
+  kind: parameter
+  data_type: integer
+  unit: '-'
+  required: false
+  default_value: 4
+  valid_range:
+    min: 1
+    max: 40
+  assumption_allowed: true
+  description: 'Satellites-per-plane held fixed across the whole grid in Complete_SSORGT_Evaluation
+    mode (phasing and RAAN are also held fixed, at 0, since this mode sweeps altitude/inclination/plane-count,
+    not phasing or orientation).
+
+    '
+  missing_information_reason: 'Only required when evaluation_mode is Complete_SSORGT_Evaluation.
+
+    '
+- name: optic_rect_fov_cross_deg
+  kind: parameter
+  data_type: float
+  unit: deg
+  required: false
+  default_value: 10
+  valid_range:
+    min: 0.5
+    max: 60
+  assumption_allowed: true
+  description: 'Cross-track half-width... full field of view for the rectangular
+    "framing" optical sensor (single_sensor_type RECT), measured perpendicular to
+    the ground track. Independent of optic_rect_fov_along_deg, unlike the existing
+    single-angle CON/PBS optical models.
+
+    '
+  missing_information_reason: 'Required when single_sensor_type is RECT.
+
+    '
+- name: optic_rect_fov_along_deg
+  kind: parameter
+  data_type: float
+  unit: deg
+  required: false
+  default_value: 10
+  valid_range:
+    min: 0.5
+    max: 60
+  assumption_allowed: true
+  description: 'Along-track field of view for the rectangular "framing" optical
+    sensor (single_sensor_type RECT), measured along the ground track. The footprint
+    is instantaneous (computed per timestep, not swept like the push-broom PBS
+    model) and aligned to the velocity vector.
+
+    '
+  missing_information_reason: 'Required when single_sensor_type is RECT.
+
+    '
+outputs:
+- name: revisit_time
+  kind: result
+  artifact_name: revisit_time.csv
+  data_type: csv
+  description: 'Estimated revisit time statistics over the Area of Interest.
+
+    '
+- name: latency
+  kind: result
+  artifact_name: latency.csv
+  data_type: csv
+  description: 'Estimated observation or acquisition latency metrics.
+
+    '
+- name: coverage
+  kind: result
+  artifact_name: coverage_summary.json
+  data_type: json
+  description: 'Coverage metrics over the Area of Interest.
+
+    '
+- name: acquisition_frequency
+  kind: result
+  artifact_name: acquisition_frequency.csv
+  data_type: csv
+  description: 'Estimated acquisition frequency over the Area of Interest.
+
+    '
+- name: constellation_trajectories
+  kind: artifact
+  artifact_name: constellation_trajectories.csv
+  data_type: csv
+  description: 'Propagated constellation trajectories.
+
+    '
+execution:
+  estimated_runtime: 2
+  execution_mode: sequential_or_optimization_loop
+  input_filename: END-001_input.json
+  runner_module: runners.end001_runner
+  runner_function: run_end001
+  upstream_dependencies: []
+  downstream_dependencies: []
+interface_notes: This module provides orbit/constellation-level outputs required by
+  downstream attitude propagation and synthetic/observation simulation modules. END-003
+  may consume the optimized orbital configuration for attitude and pointing propagation;
+  END-007 may consume trajectories, acquisition windows or orbit configuration for
+  sensor-level observation simulation. The current execution runner calls the MATLAB
+  implementation located outside star_cef at STAR/END001-ConstellationOptimizer/lib/star_constellation_optimizer.m,
+  assuming the sibling project layout STAR/STAR-ORCHESTRATOR/star_cef. The MATLAB script
+  may use its standalone default input JSON, or STAR/END001-ConstellationOptimizer/Input/input_constellation_optimizer.json
+  if that file is provided.

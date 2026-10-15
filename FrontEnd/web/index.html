@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAR — Local Desktop App</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="header">
+      <div>
+        <h1 id="app-title">STAR-Local Desktop App</h1>
+        <p id="app-subtitle">Loading desktop HTML prototype...</p>
+      </div>
+      <div class="header-actions">
+        <label class="run-folder-field" title="Optional custom name for the next run folder">
+          <span>Run folder</span>
+          <input id="run-folder-name" type="text" placeholder="auto: RUN_YYYYMMDD_HHMMSS" />
+        </label>
+        <label class="theme-switcher" title="Select interface theme">
+          <span>Theme</span>
+          <select id="theme-select">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <section class="top-workbench">
+      <div class="panel communication-panel">
+        <div class="comm-tabs" role="tablist" aria-label="Console and chat selector">
+          <button class="comm-tab-button" data-comm-tab="chat">Interactive Chat</button>
+          <button class="comm-tab-button active" data-comm-tab="log">Technical Log</button>
+        </div>
+
+        <div id="comm-chat" class="comm-tab-content">
+          <div class="panel-header compact-panel-header">
+            <span class="muted">human-in-the-loop</span>
+          </div>
+          <div id="chat-box" class="chat-box"></div>
+          <div class="chat-input-row">
+            <textarea id="chat-input" placeholder="Type a message to STAR... Enter to send, Shift+Enter for new line"></textarea>
+            <button id="send-button">Send</button>
+          </div>
+        </div>
+
+        <div id="comm-log" class="comm-tab-content active">
+          <div class="panel-header compact-panel-header">
+            <span class="muted">backend events</span>
+          </div>
+          <pre id="log-console" class="log-console" tabindex="0" aria-label="Technical log output"></pre>
+        </div>
+      </div>
+
+      <div id="top-column-resizer" class="column-resizer top-column-resizer" title="Drag to resize communication and mission-control panels"></div>
+
+      <main class="workflow-control-panel panel">
+        <div class="tabs workflow-tabs-with-upload">
+          <button id="upload-button" class="tab-button tabs-upload-button upload-state unloaded" type="button">Upload Mission Request Document</button>
+          <button class="tab-button active" data-tab="requirements">1. Requirements</button>
+          <button class="tab-button" data-tab="workflow">2. Mission Planning</button>
+          <button class="tab-button" data-tab="assumptions">3. Input Resolution</button>
+          <button class="tab-button" data-tab="execution">4. Execution</button>
+          <button class="tab-button" data-tab="report">5. Report</button>
+        </div>
+
+        <section id="tab-requirements-controls" class="tab-controls-content active">
+          <div class="section-header-row">
+            <div>
+              <h2>Requirement Extraction</h2>
+              <p>
+                Read the uploaded mission request document, extract candidate requirements, then manually review the table.
+              </p>
+            </div>
+            <div class="run-chip" id="run-chip">No active run</div>
+          </div>
+
+          <div class="toolbar-card">
+            <label class="field-label">
+              Extraction mode
+              <select id="requirement-mode">
+                <option>Rule-based MVP</option>
+                <option selected>Local LLM via Ollama</option>
+              </select>
+            </label>
+            <button id="extract-button" disabled>Extract Requirements</button>
+            <button id="add-requirement-button" disabled>Add Requirement</button>
+            <button id="save-reviewed-button" class="review-button" disabled>Save Reviewed Requirements</button>
+          </div>
+
+          <div class="file-card" id="file-card">
+            <strong>Input document:</strong> no document loaded yet.
+          </div>
+
+          <div class="review-card" id="review-card">
+            <strong>Review status:</strong> no requirements available yet.
+          </div>
+        </section>
+
+        <section id="tab-workflow-controls" class="tab-controls-content">
+          <div class="section-header-row">
+            <div>
+              <h2>Requested Outputs & Workflow proposal</h2>
+              <p>
+                After requirements are approved, identify requested outputs and propose the workflow to obtain them.
+              </p>
+            </div>
+            <div class="run-chip tab-status-chip" id="workflow-chip">No workflow proposal</div>
+          </div>
+
+          <div class="toolbar-card">
+            <label class="field-label">
+              Planning mode
+              <select id="workflow-proposal-mode">
+                <option>Local LLM via Ollama (RAG)</option>
+                <option>Rule-based MVP</option>
+              </select>
+            </label>
+            <button id="propose-workflow-button" disabled>Generate Mission Planning</button>
+            <button id="save-reviewed-workflow-button" class="review-button" disabled>Save Reviewed Workflow</button>
+            <button id="approve-workflow-button" class="approve-button" disabled>Approve Workflow</button>
+          </div>
+
+          <div class="review-card" id="workflow-review-card">
+            <strong>Review status:</strong> no mission planning proposal available yet.
+          </div>
+
+          <div class="workflow-preview" id="workflow-preview">
+            No workflow proposed yet.
+          </div>
+        </section>
+
+        <section id="tab-assumptions-controls" class="tab-controls-content">
+          <div class="section-header-row">
+            <div>
+              <h2>First-Guess Assumptions</h2>
+              <p>
+                After the mission planning workflow has been approved, check the selected module interfaces,
+                identify which inputs are available, which are expected from upstream modules, and which need first-guess assumptions or user input.
+              </p>
+            </div>
+            <div class="run-chip tab-status-chip" id="assumption-chip">No assumption board</div>
+          </div>
+
+          <div class="toolbar-card">
+            <label class="field-label">
+              Input-resolution mode
+              <select id="missing-analysis-mode">
+                <option>Local LLM via Ollama (RAG)</option>
+                <option>Rule-based MVP</option>
+              </select>
+            </label>
+            <button id="analyze-missing-button" disabled>Resolve Workflow Inputs</button>
+            <button id="save-missing-button" class="review-button" disabled>Save Reviewed Inputs</button>
+            <button id="approve-missing-button" class="approve-button" disabled>Approve Inputs & Assumptions</button>
+          </div>
+
+          <div class="review-card" id="missing-review-card">
+            <strong>Review status:</strong> no workflow input resolution available yet.
+          </div>
+        </section>
+
+        <section id="tab-execution-controls" class="tab-controls-content">
+          <div class="section-header-row">
+            <div>
+              <h2>Workflow Execution</h2>
+              <p>
+                After workflow and first-guess assumptions have been approved, generate the input file for each module step, then call the declared runner.
+              </p>
+            </div>
+            <div class="run-chip tab-status-chip" id="execution-chip">No execution results</div>
+          </div>
+
+          <div class="toolbar-card">
+            <button id="execute-workflow-button" disabled>Execute Workflow</button>
+            <button id="stop-execution-button" class="danger-button" disabled>Stop Execution</button>
+            <button id="save-reviewed-execution-button" class="review-button" disabled>Save Reviewed Execution Results</button>
+            <button id="approve-execution-button" class="approve-button" disabled>Approve Execution Results</button>
+          </div>
+
+          <div class="review-card" id="execution-review-card">
+            <strong>Review status:</strong> no execution results available yet.
+          </div>
+        </section>
+
+        <section id="tab-report-controls" class="tab-controls-content">
+          <div class="section-header-row">
+            <div>
+              <h2>Report Generation</h2>
+              <p>
+                Generate the STAR preliminary report package.
+              </p>
+            </div>
+            <div class="run-chip tab-status-chip" id="report-chip">No report package</div>
+          </div>
+
+          <div class="toolbar-card">
+            <button id="generate-report-button" disabled>Generate Report Package</button>
+          </div>
+
+          <div class="review-card" id="report-status-card">
+            <strong>Report status:</strong> no report generated yet.
+            <br>
+            <span class="muted">
+              The generated package includes a Markdown report, executive summary, traceability matrix,
+              artifact registry, run summary and report manifest.
+            </span>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <div id="top-row-resizer" class="row-resizer top-row-resizer" title="Drag to resize upper control panels"></div>
+
+    <main class="data-panel panel">
+      <section id="tab-requirements" class="tab-data-content active">
+        <div class="table-wrap full-table">
+          <table class="data-table" id="requirements-table">
+            <thead>
+              <tr>
+                <th class="col-id">ID</th>
+                <th>Requirement</th>
+                <th class="col-category">Category</th>
+                <th class="col-status">Status</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="empty-cell">No requirements extracted yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-workflow" class="tab-data-content">
+        <h3>Requested outputs / analysis objectives</h3>
+        <div class="table-wrap workflow-outputs-table">
+          <table class="data-table" id="requested-outputs-table">
+            <thead>
+              <tr>
+                <th class="col-id">ID</th>
+                <th>Description</th>
+                <th class="col-category">Type</th>
+                <th class="col-status">Priority</th>
+                <th>Derived from</th>
+                <th>Rationale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="6" class="empty-cell">No requested outputs identified yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Proposed module workflow</h3>
+        <div class="table-wrap workflow-steps-table">
+          <table class="data-table" id="workflow-table">
+            <thead>
+              <tr>
+                <th class="col-step">Step</th>
+                <th class="col-needed">Module</th>
+                <th>Input data / artifacts</th>
+                <th>Output artifacts</th>
+                <th>Rationale</th>
+                <th class="col-workflow-status">Status</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" class="empty-cell">No workflow proposed yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-assumptions" class="tab-data-content">
+        <div class="table-wrap full-table">
+          <table class="data-table" id="missing-table">
+            <thead>
+              <tr>
+                <th class="col-parameter">Parameter</th>
+                <th class="col-needed">Needed by</th>
+                <th>Reason</th>
+                <th class="col-value">Proposed value</th>
+                <th class="col-unit">Unit</th>
+                <th class="col-mi-status">Status</th>
+                <th class="col-source">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" class="empty-cell">No workflow inputs resolved yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-execution" class="tab-data-content">
+        <div class="table-wrap full-table">
+          <table class="data-table" id="execution-table">
+            <thead>
+              <tr>
+                <th class="col-step">Step</th>
+                <th class="col-needed">Module</th>
+                <th>Input data / artifacts</th>
+                <th>Output artifacts</th>
+                <th>Generated artifacts</th>
+                <th>Evidence</th>
+                <th class="col-execution-status">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" class="empty-cell">No execution results yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-report" class="tab-data-content">
+        <div class="report-note-card">
+          <strong>Generated paths:</strong>
+          <span class="muted">paths will be printed in the Interactive CEF Chat and in the technical log.</span>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="module-row-resizer" class="row-resizer module-row-resizer" title="Drag upward to expand Module Bay"></div>
+
+    <section class="module-bay panel expanded-modules">
+      <div class="panel-header">
+        <h2>STAR Modules</h2>
+        <span class="muted">registry-driven</span>
+      </div>
+      <div id="module-grid" class="module-grid"></div>
+      <div class="legend">
+        <span><i class="dot idle"></i> Idle</span>
+        <span><i class="dot ready"></i> Ready</span>
+        <span><i class="dot running"></i> Running</span>
+        <span><i class="dot completed"></i> Completed</span>
+        <span><i class="dot error"></i> Error</span>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

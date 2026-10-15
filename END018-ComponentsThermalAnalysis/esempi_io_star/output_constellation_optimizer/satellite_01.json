@@ -1,0 +1,12 @@
+{
+  "sim_start_date": "2026-05-21 13:41:10",
+  "sim_hours": 48,
+  "orbit": {
+    "alt_perigee_m": 1.19966E+6,
+    "alt_apogee_m": 1.19966E+6,
+    "inclination_deg": 100.419,
+    "raan_deg": 132.4044529197607,
+    "omega_deg": 0,
+    "nu_deg": 0
+  }
+}

@@ -1,0 +1,372 @@
+module_id: END-007
+module_name: Synthetic Data Generation
+module_type: digital_twin_module
+module_version: 0.2.0
+owner: TELESPAZIO
+aliases:
+- observation module
+- observation process simulation
+- synthetic image generation
+- synthetic EO data generation
+- sensor-level data generation
+- payload observation simulation
+- payload resolution verification
+short_description: 'Simulates the observation process of an Earth-observation sensor and generates synthetic
+  sensor-level products, acquisition geometry metadata, payload performance indicators and, when requested,
+  ground-truth datasets.
+
+  '
+description: 'The module simulates the full or simplified observation process of a space sensor, from
+  mission geometry and environmental interaction to sensor-level data generation. It supports performance
+  assessment, trade-off analysis, verification of payload-related observation quantities such as ground
+  sampling distance, swath and effective acquisition geometry, and synthetic dataset production. The module
+  can operate with a high-fidelity custom scenario produced upstream, or with a simplified/base scenario
+  built from global reference maps and public geospatial data when no user-provided scenario package is
+  available.
+
+  '
+capabilities:
+- observation_process_simulation
+- mission_geometry_simulation
+- environmental_interaction_modeling
+- sensor_level_data_generation
+- synthetic_image_generation
+- synthetic_dataset_production
+- acquisition_geometry_assessment
+- payload_resolution_assessment
+- ground_sampling_distance_assessment
+- swath_and_footprint_assessment
+- payload_performance_verification
+- image_quality_proxy_assessment
+- trade_off_analysis
+- segmentation_mask_generation
+- pixel_level_metadata_generation
+- object_level_annotation_generation
+- ground_truth_dataset_generation
+activation_rules:
+  keywords:
+  - synthetic data
+  - synthetic image
+  - simulated image
+  - simulated observation
+  - observation simulation
+  - payload resolution
+  - ground sampling distance
+  - GSD
+  - swath
+  - sensor footprint
+  - payload verification
+  - acquisition geometry
+  - image metadata
+  - ground truth
+  - training dataset
+  - test dataset
+  requirement_tags:
+  - synthetic_data
+  - image_generation
+  - observation_simulation
+  - payload_resolution
+  - gsd
+  - acquisition_geometry
+  - sensor_performance
+  - payload_verification
+planning_guidance: 'Select this module when the requested outputs include synthetic EO images, simulated
+  observations, sensor-level data products, image metadata, ground-truth datasets, acquisition-geometry
+  assessment, or verification of payload-derived observation quantities such as GSD, swath, footprint
+  or effective spatial resolution. This module does not always require END-006. A custom scenario package
+  from END-006 is useful when the user requests a mission-specific terrain scene, local high-resolution
+  rendering, 3D target objects, event-specific scene generation or high-fidelity dataset production. If
+  only a preliminary observation simulation, acquisition geometry check or payload resolution verification
+  is required, the module may operate with a simplified/base scenario constructed from global reference
+  maps and public geospatial datasets, using the target area as geographic context. END-003 is useful
+  upstream when the synthetic data or payload-resolution assessment must account for attitude propagation,
+  target tracking, quaternion histories, pointing errors or spacecraft-target line-of-sight dynamics.
+
+  '
+domain_of_validity:
+  mission_phase:
+  - pre_phase_a
+  - phase_a
+  - design_trade_off
+  - operations_support
+  mission_type:
+  - earth_observation
+  - remote_sensing
+  - synthetic_data_generation
+  - payload_performance_assessment
+  fidelity_level: modular_variable_fidelity
+  notes: 'The module may operate at different fidelity levels depending on the available scenario definition,
+    terrain data, sensor model, trajectory, attitude profile and environmental inputs. Simplified global-map
+    operation is acceptable for preliminary studies, while mission-specific scenario data should be used
+    for high-fidelity simulations.
+
+    '
+required_inputs:
+- name: points_or_areas_of_interest
+  kind: parameter
+  data_type: geometry_or_string
+  unit: '-'
+  required: true
+  default_value: null
+  assumption_allowed: false
+  description: 'Points or areas of interest to be observed. This may be a named target, coordinate pair,
+    polygon, region or mission-defined target set.
+
+    '
+  missing_information_reason: 'Required to associate generated observations, acquisition geometry and
+    resolution assessment with the mission target.
+
+    '
+- name: orbit_configuration
+  kind: parameter_or_artifact
+  data_type: object_or_file
+  unit: '-'
+  required: true
+  default_value: null
+  produced_by:
+    module_id: END-001
+    output: constellation_trajectories
+  assumption_allowed: false
+  description: 'Orbit, trajectory or constellation configuration, including spacecraft state or access-related
+    information needed to simulate the observation geometry.
+
+    '
+  missing_information_reason: 'Required to compute sensor-target geometry, visibility, footprint and payload
+    resolution over the target.
+
+    '
+- name: acquisition_timeline_or_observation_windows
+  kind: parameter_or_artifact
+  data_type: object_or_csv
+  unit: '-'
+  required: true
+  default_value: null
+  produced_by:
+    module_id: END-001
+    output: acquisition_frequency
+  assumption_allowed: false
+  description: 'Acquisition timeline or observation windows defining when observations can be performed.
+
+    '
+  missing_information_reason: 'Required to simulate acquisitions and generate observation products.
+
+    '
+- name: sensor_specifications
+  kind: parameter
+  data_type: object
+  unit: '-'
+  required: true
+  default_value: null
+  assumption_allowed: true
+  description: 'Sensor specifications such as sensor type, field of view, focal length, detector geometry,
+    nominal spatial resolution, spectral bands, pointing constraints and acquisition mode.
+
+    '
+  missing_information_reason: 'Required to simulate the sensor-level observation process and evaluate
+    payload-related quantities such as GSD, swath and footprint.
+
+    '
+- name: scene_source
+  kind: parameter
+  data_type: enum_or_object
+  unit: '-'
+  required: false
+  default_value:
+    mode: base_global_scene
+    source: global_reference_maps
+    note: simplified scene based on public/global geospatial map layers
+  assumption_allowed: true
+  description: 'Defines whether the module uses a simplified/base scene from global reference maps or
+    a custom mission-specific scenario package.
+
+    '
+  missing_information_reason: 'Needed to define the level of fidelity of the simulated observation scene.
+
+    '
+- name: scenario_package
+  kind: parameter_or_artifact
+  data_type: object_or_file
+  unit: '-'
+  required: false
+  default_value: null
+  produced_by:
+    module_id: END-006
+    output: scenario_package
+  assumption_allowed: false
+  description: 'Optional high-fidelity scenario package including local terrain, texture, 3D objects,
+    event data, semantic layers or scene metadata. If absent, the module may use a simplified/base scenario
+    from global reference maps.
+
+    '
+  missing_information_reason: 'Required only when mission-specific terrain, high-fidelity scene generation,
+    local 3D modelling, event-specific rendering or custom dataset generation is requested.
+
+    '
+- name: attitude_or_pointing_profile
+  kind: parameter_or_artifact
+  data_type: object_or_csv
+  unit: '-'
+  required: false
+  default_value:
+    attitude_mode: nominal_nadir
+    pointing_error_model: none
+  produced_by:
+    module_id: END-003
+    output: ground_station_pass_telemetry
+  assumption_allowed: true
+  description: 'Spacecraft attitude, quaternion time history, pointing law or target tracking profile
+    used to model the sensor line of sight. When available, END-003 output such as gs_pass.csv can be
+    used to account for propagated attitude and pointing errors.
+
+    '
+  missing_information_reason: 'Needed for high-fidelity observation geometry, target tracking analysis,
+    pointing-error sensitivity, or payload-resolution assessment affected by attitude dynamics.
+
+    '
+- name: environmental_parameters
+  kind: parameter
+  data_type: object
+  unit: '-'
+  required: false
+  default_value:
+    atmosphere_model: simplified_clear_sky
+    illumination_model: simplified_solar_geometry
+    weather_condition: nominal
+  assumption_allowed: true
+  description: 'Environmental parameters affecting the observation process, such as atmosphere, illumination,
+    weather or other propagation effects.
+
+    '
+  missing_information_reason: 'Required to model environmental interaction with the sensor or to justify
+    simplified assumptions.
+
+    '
+- name: acquisition_settings
+  kind: parameter
+  data_type: object
+  unit: '-'
+  required: false
+  default_value:
+    acquisition_mode: nadir_or_nominal
+    max_off_nadir_deg: 30
+  assumption_allowed: true
+  description: 'Acquisition configuration such as pointing mode, off-nadir limits, acquisition duration,
+    sampling settings or imaging mode.
+
+    '
+  missing_information_reason: 'Required to define how the observation is performed during each window.
+
+    '
+- name: personalized_terrain_data
+  kind: artifact
+  artifact_name: terrain_data
+  data_type: file_or_dataset
+  required: false
+  default_value: null
+  assumption_allowed: false
+  description: 'Optional user-provided or mission-specific terrain data.
+
+    '
+  missing_information_reason: 'Required only when high-fidelity rendering, terrain-aware simulation or
+    custom synthetic dataset generation is requested.
+
+    '
+- name: object_3d_models
+  kind: artifact
+  artifact_name: object_3d_models
+  data_type: file_or_dataset
+  required: false
+  default_value: null
+  assumption_allowed: false
+  description: 'Optional 3D models of objects of interest used for rendering, annotation or synthetic
+    dataset production.
+
+    '
+  missing_information_reason: 'Required only when object-level annotation, segmentation or synthetic dataset
+    generation involving specific objects is requested.
+
+    '
+outputs:
+- name: acquisition_geometry
+  kind: result
+  artifact_name: acquisition_geometry.json
+  data_type: json
+  description: 'Geometry of each simulated acquisition, including viewing angles, footprints, line-of-sight
+    vectors and target-sensor relationships.
+
+    '
+- name: payload_resolution_assessment
+  kind: result
+  artifact_name: payload_resolution_assessment.json
+  data_type: json
+  description: 'Assessment of payload-derived observation quantities such as GSD, effective spatial resolution,
+    swath, footprint and acquisition geometry consistency with the proposed payload and orbit.
+
+    '
+- name: synthetic_images
+  kind: artifact
+  artifact_name: synthetic_images
+  data_type: dataset
+  description: 'Simulated image products generated by the sensor-level observation model.
+
+    '
+- name: acquired_data
+  kind: artifact
+  artifact_name: acquired_data
+  data_type: dataset
+  description: 'Simulated sensor-level acquired data.
+
+    '
+- name: segmentation_masks
+  kind: artifact
+  artifact_name: segmentation_masks
+  data_type: dataset
+  description: 'Segmentation masks generated for synthetic data or ML dataset production.
+
+    '
+- name: pixel_level_metadata
+  kind: artifact
+  artifact_name: pixel_level_metadata
+  data_type: dataset_or_json
+  description: 'Pixel-level metadata associated with the acquired data.
+
+    '
+- name: object_level_annotations
+  kind: artifact
+  artifact_name: object_level_annotations
+  data_type: dataset_or_json
+  description: 'Object-level annotations generated for objects of interest.
+
+    '
+- name: ground_truth_datasets
+  kind: artifact
+  artifact_name: ground_truth_datasets
+  data_type: dataset
+  description: 'Ground truth datasets intended for machine learning algorithm development and validation.
+
+    '
+execution:
+  estimated_runtime: 3
+  execution_mode: sequential_or_batch_simulation
+  input_filename: END-007_input.json
+  runner_module: runners.end007_runner
+  runner_function: run_end007
+  upstream_dependencies:
+  - END-001
+  optional_upstream_dependencies:
+  - END-003
+  - END-006
+  downstream_dependencies:
+  - END-008
+interface_notes: 'This module consumes orbit/constellation outputs, mission/sensor information and, when
+  available, attitude propagation and/or scenario-generation outputs. END-006 is not mandatory for all
+  executions: a base global-map scene may be used for preliminary payload-resolution checks and simplified
+  observation simulation. END-006 should be used when the analysis requires a customized local scene,
+  high-fidelity terrain, 3D target objects, event-specific scene modelling or mission-specific dataset
+  generation.
+
+  Execution integration note: The current STAR runner for END-007 calls external_modules/END-007/python/run_simulation.py.
+  By default it uses the CSV_INPUT and FOV_DEG values defined in that script, unless overridden by external_modules/END-007/config/end007_runtime_config.json
+  or STAR resolved inputs.
+
+  '

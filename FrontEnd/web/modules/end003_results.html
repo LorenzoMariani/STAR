@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR — Attitude Propagation Dashboard</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');.plot-fallback-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--plot-bg)}.plot-fallback-image{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in}
+.image-modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:flex;align-items:center;justify-content:center;padding:40px;backdrop-filter:blur(8px)}.image-modal.hidden{display:none}.image-modal img{max-width:95vw;max-height:88vh;background:#fff;border:1px solid var(--border);border-radius:14px}.image-modal-close{position:fixed;top:22px;right:26px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,92,122,.75);background:#ff2f5f;color:#fff;font-size:28px;line-height:1;padding:0;z-index:210}.image-modal-caption{position:fixed;bottom:20px;color:#fff;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:8px 14px;font-size:11px}.gallery-item img{cursor:zoom-in}
+</style>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script src="./modules_output/END-003/results_attitude_propagator/attitude_propagation_plots_data.js"></script>
+<script>if(!window.attitudePropagationData){document.write('<script src="./attitude_propagation_plots_data.js"><\/script>');}</script>
+<style>
+:root{--bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);--text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;--danger:#ff5c7a;--success:#61f6a8;--plot-bg:#090a0d;--shadow:0 24px 80px rgba(0,0,0,.32);color-scheme:dark}
+:root[data-theme="light"]{--bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);--text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;--danger:#bd2450;--success:#047857;--plot-bg:#fff;--shadow:0 18px 60px rgba(31,41,55,.12);color-scheme:light}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button,input{font:inherit}
+button{border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:10px 14px;cursor:pointer;transition:transform .16s ease,border-color .16s ease}
+button:hover{transform:translateY(-1px);border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.app-shell{width:min(1920px,100%);margin:0 auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;border:1px solid var(--border);border-radius:22px;background:color-mix(in srgb,var(--panel) 92%,transparent);box-shadow:var(--shadow);position:sticky;top:12px;z-index:20;backdrop-filter:blur(18px)}
+.header h1{margin:0;font-family:'Syne',Inter,system-ui,sans-serif;font-size:clamp(19px,2vw,28px);line-height:1.05;color:var(--text-strong);letter-spacing:-.03em;text-transform:uppercase}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.theme-toggle{display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:var(--panel-muted);color:var(--muted-2);user-select:none}
+.switch{position:relative;width:48px;height:26px;display:inline-flex;align-items:center}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;border-radius:999px;background:var(--border);transition:.22s ease;box-shadow:inset 0 0 0 1px var(--border-soft)}
+.slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;border-radius:50%;background:var(--text-strong);transition:.22s ease}
+.switch input:checked+.slider{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.switch input:checked+.slider:before{transform:translateX(22px);background:#07100d}
+.dashboard-grid{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+.panel,.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+.sidebar{position:sticky;top:118px;max-height:calc(100vh - 136px);overflow-y:auto}
+.panel-header,.card-header{padding:16px 18px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel-header h2,.card h3,.sidebar-section h2{margin:0;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:13px}
+.sidebar-section{padding:18px}
+.sidebar-section+.sidebar-section{border-top:1px solid var(--border)}
+.sidebar-section h2{margin-bottom:12px}
+.muted{color:var(--muted)}
+.data-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--border-soft)}
+.data-row:last-child{border-bottom:0}
+.data-label{color:var(--muted);font-size:12px}
+.data-value{color:var(--accent);font-weight:700;text-align:right;overflow-wrap:anywhere}
+.file-status-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--border-soft)}
+.file-status-row:last-child{border-bottom:0}
+.status-dot{width:11px;height:11px;margin-top:4px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.file-title{color:var(--text-strong);font-weight:700}
+.file-path{color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:3px}
+.file-row-button{padding:7px 10px;border-radius:10px;font-size:11px;white-space:nowrap}
+.hidden-file-input{display:none}
+.main-content{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card-body{padding:8px}
+.plot{width:100%;min-height:320px;background:var(--plot-bg);border-radius:16px;border:1px solid var(--border-soft);overflow:hidden}
+.plot.small{min-height:300px}
+.plot.space{height:500px;min-height:460px}
+.plot.ground{height:430px}
+.plot-grid{display:grid;gap:18px}
+.plot-grid.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}
+.plot-grid.three-col{grid-template-columns:repeat(3,minmax(0,1fr))}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.gallery-item{border:1px solid var(--border-soft);background:var(--panel-muted);border-radius:16px;overflow:hidden}
+.gallery-item img{display:block;width:100%;height:auto;background:#fff}
+.gallery-caption{padding:10px 12px;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
+.status-message{color:var(--muted);border:1px dashed var(--border);border-radius:14px;background:var(--panel-muted);padding:12px;font-size:11px}
+.empty-cell{color:var(--muted);text-align:center;padding:28px}
+.data-value.ok{color:var(--success)}
+.data-value.bad{color:var(--danger)}
+.data-value.neutral{color:var(--muted-2)}
+.kpi-category{margin-bottom:16px}
+.kpi-category:last-child{margin-bottom:0}
+.kpi-category h4{margin:0 0 8px;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.kpi-threshold{font-size:10px;color:var(--muted);display:block;font-weight:400;text-align:right}
+@media(max-width:1280px){.dashboard-grid{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.plot-grid.three-col{grid-template-columns:1fr 1fr}}
+@media(max-width:980px){.header{align-items:flex-start;flex-direction:column;position:static}.header-actions{justify-content:flex-start;width:100%}.plot-grid.two-col,.plot-grid.three-col,.gallery-grid{grid-template-columns:1fr}.plot.space{height:500px}}
+@media(max-width:640px){.app-shell{padding:10px}.file-status-row{grid-template-columns:18px minmax(0,1fr)}.file-row-button{grid-column:2;width:max-content}}
+</style>
+
+<style id="star-merged-iframe-style">
+html,body{min-height:100%;height:auto!important;}
+.app-shell{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;}
+header.header{display:none!important;}
+.dashboard-grid{margin-top:0!important;}
+.sidebar{top:0!important;max-height:calc(100vh - 48px)!important;}
+</style>
+
+<style>
+.pass-block{border:1px solid var(--border-soft);border-radius:14px;padding:10px 14px;margin-bottom:12px;background:var(--panel-muted)}
+.pass-block:last-child{margin-bottom:0}
+.pass-block h4{margin:0 0 6px;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.pass-block .purpose{color:var(--muted);font-size:11px;margin-bottom:6px}
+.pass-block .data-value.ok{color:var(--success)}
+.pass-block .data-value.bad{color:var(--danger)}
+.pass-table-wrap{overflow:auto;max-height:300px;border:1px solid var(--border-soft);border-radius:12px;margin-top:8px}
+.pass-table-wrap table{border-collapse:collapse;width:100%;font-size:11px}
+.pass-table-wrap th,.pass-table-wrap td{border-bottom:1px solid var(--border-soft);padding:5px 8px;text-align:right;white-space:nowrap}
+.pass-table-wrap th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase}
+.pass-table-wrap tr.sel td{color:var(--accent-2);font-weight:700}
+details.pass-details>summary{cursor:pointer;color:var(--muted-2);font-size:11px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="header">
+    <h1>STAR · Attitude Propagation Dashboard</h1>
+    <div class="header-actions">
+      <button id="star-root-button" class="primary-action" type="button">Load from RUN Folder</button>
+      <label class="theme-toggle"><span id="theme-label">Dark</span><span class="switch"><input id="theme-switch" type="checkbox"/><span class="slider"></span></span></label>
+    </div>
+  </header>
+
+  <input id="data-folder-input" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+  <input id="input-folder-input" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+
+  <div class="dashboard-grid">
+    <aside class="panel sidebar">
+      <div class="panel-header"><h2>Simulation Input</h2><span class="muted" id="input-status">pending</span></div>
+      <div class="sidebar-section" id="inputs-panel"><div class="empty-cell">No input configuration has been loaded.</div></div>
+
+      <div class="sidebar-section">
+        <h2>File Access Status</h2>
+        <div id="file-access-panel"></div>
+        <div class="status-message" style="margin-top:14px">
+          
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>Simulation Summary</h2>
+        <div id="summary-panel"><div class="empty-cell">No dashboard data available.</div></div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>Mean Torques</h2>
+        <div id="torque-report-panel"><div class="empty-cell">No report data available.</div></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <article class="card" id="passes-card"><div class="card-header"><h3>Selected Passes · Satellite, Date, Start/End</h3><span class="small" id="passes-status">Pending</span></div><div class="card-body"><div id="passes-panel"><div class="empty-cell">Load the propagation results to show the satellite and pass selected by END-003.</div></div></div></article>
+
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>Angular Velocity</h3></div><div class="card-body"><div id="plotAngularVelocity" class="plot small"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Euler Angles</h3></div><div class="card-body"><div id="plotEulerAngles" class="plot small"></div></div></article>
+      </section>
+
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>Torques · Linear Scale</h3></div><div class="card-body"><div id="plotTorquesLinear" class="plot small"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Torques · Logarithmic Scale</h3></div><div class="card-body"><div id="plotTorquesLog" class="plot small"></div></div></article>
+      </section>
+
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>Rotational Energy</h3></div><div class="card-body"><div id="plotEnergy" class="plot small"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Altitude</h3></div><div class="card-body"><div id="plotAltitude" class="plot small"></div></div></article>
+      </section>
+
+      <section class="plot-grid three-col">
+        <article class="card"><div class="card-header"><h3>Ground Station Elevation</h3></div><div class="card-body"><div id="plotElevation" class="plot small"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Nadir Pointing Error</h3></div><div class="card-body"><div id="plotNadirOffset" class="plot small"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Target Pointing Error</h3></div><div class="card-body"><div id="plotTargetOffset" class="plot small"></div></div></article>
+      </section>
+
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>Angular Momentum Modulus</h3></div><div class="card-body"><div id="plotHMag" class="plot small"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Angular Momentum Direction · ECI</h3></div><div class="card-body"><div id="plotHDir" class="plot small"></div></div></article>
+      </section>
+
+      <article class="card"><div class="card-header"><h3>Ground Track and Coverage Windows</h3></div><div class="card-body"><div id="plotGroundTrack" class="plot ground"></div></div></article>
+
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>3D Orbit · ECI Frame</h3></div><div class="card-body"><div id="plotOrbitECI" class="plot space"></div></div></article>
+        <article class="card"><div class="card-header"><h3>3D Orbit · ECEF Frame</h3></div><div class="card-body"><div id="plotOrbitECEF" class="plot space"></div></div></article>
+      </section>
+
+      <article class="card"><div class="card-header"><h3>MATLAB Exported PNG Figures</h3></div><div class="card-body"><div id="png-gallery" class="gallery-grid"><div class="empty-cell">No PNG files loaded.</div></div></div></article>
+
+      <article class="card"><div class="card-header"><h3>Performance KPI Catalog</h3></div><div class="card-body"><div id="kpi-table"><div class="empty-cell">Load the propagation results to populate the KPI catalog.</div></div></div></article>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const AUTO_DATA_DIR = './modules_output/END-003/results_attitude_propagator/';
+const ABSOLUTE_DATA_DIR = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Output/RUN_XXXXX/modules_output/END-003/results_attitude_propagator/';
+const AUTO_INPUT_DIR = './modules_output/END-003/';
+const ABSOLUTE_INPUT_DIR = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Input/';
+const DATA_JS = 'attitude_propagation_plots_data.js';
+const DATA_JSON = 'attitude_propagation_plots_data.json';
+const INPUT_JSON = 'end003_runtime_input.json';
+const LEGACY_INPUT_JSON = 'input_attitude_propagator.json';
+const KPI_JSON = 'attitude_summary.json';
+const PASSES_JSON = 'selected_passes.json';
+
+const state = {
+  data: null,
+  input: null,
+  pngFiles: new Map(),
+  kpiData: null,
+  passes: null,
+  fileStatus: {
+    data: { loaded: false, path: AUTO_DATA_DIR + DATA_JS },
+    input: { loaded: false, path: AUTO_INPUT_DIR + INPUT_JSON },
+    png: { loaded: false, path: AUTO_DATA_DIR + '01_telemetry.png … 06_orbit_3d_eci.png', count: 0 },
+    kpi: { loaded: false, path: AUTO_DATA_DIR + KPI_JSON }
+  }
+};
+
+const $ = (id) => document.getElementById(id);
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const colors = () => ({
+  panel: cssVar('--panel'),
+  plotBg: cssVar('--plot-bg'),
+  border: cssVar('--border'),
+  text: cssVar('--text'),
+  strong: cssVar('--text-strong'),
+  muted: cssVar('--muted'),
+  accent: cssVar('--accent'),
+  accent2: cssVar('--accent-2')
+});
+
+function escapeHtml(value) {
+  return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+}
+function readPath(obj, path, fallback = undefined) {
+  return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj) ?? fallback;
+}
+function fmt(v, d = 2, fallback = '—') {
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toFixed(d) : fallback;
+}
+function row(label, value) {
+  return `<div class="data-row"><span class="data-label">${escapeHtml(label)}</span><span class="data-value">${escapeHtml(value)}</span></div>`;
+}
+
+function setupTheme() {
+  const saved = localStorage.getItem('star-attitude-theme') || 'dark';
+  setTheme(saved === 'light' ? 'light' : 'dark', false);
+}
+function setTheme(theme, persist = true) {
+  document.documentElement.dataset.theme = theme;
+  if (persist) localStorage.setItem('star-attitude-theme', theme);
+  $('theme-switch').checked = theme === 'light';
+  $('theme-label').textContent = theme === 'light' ? 'Light' : 'Dark';
+  drawDashboard();
+}
+
+function parseDataJs(text) {
+  const match = String(text || '').trim().match(/(?:window\.)?attitudePropagationData\s*=\s*([\s\S]*?)\s*;?\s*$/);
+  if (!match) throw new Error('The selected JavaScript file does not define window.attitudePropagationData.');
+  return JSON.parse(match[1]);
+}
+async function fetchJson(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`${url} returned HTTP ${r.status}`);
+  return r.json();
+}
+async function fetchText(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`${url} returned HTTP ${r.status}`);
+  return r.text();
+}
+
+function updateFileAccessPanel() {
+  const s = state.fileStatus;
+  $('file-access-panel').innerHTML = `
+    ${fileStatusRow('Interactive dashboard data', s.data.loaded, s.data.path, 'data-folder-button', 'Select Results Folder')}
+    ${fileStatusRow('Input configuration', s.input.loaded, s.input.path, 'input-folder-button', 'Select Input Folder')}
+    ${fileStatusRow(`MATLAB PNG figures (${s.png.count})`, s.png.loaded, s.png.path, 'png-folder-button', 'Select Results Folder')}
+    ${fileStatusRow('Performance KPI catalog', s.kpi.loaded, s.kpi.path, 'kpi-folder-button', 'Select Results Folder')}
+  `;
+  bindFileButtons();
+}
+function fileStatusRow(title, loaded, path, buttonId, buttonText) {
+  return `<div class="file-status-row"><span class="status-dot ${loaded ? 'loaded' : ''}"></span><div><div class="file-title">${escapeHtml(title)} · ${loaded ? 'Loaded' : 'Missing'}</div><div class="file-path">${escapeHtml(path)}</div></div><button id="${buttonId}" class="file-row-button" type="button">${escapeHtml(buttonText)}</button></div>`;
+}
+function bindFileButtons() {
+  const dataButton = $('data-folder-button');
+  const inputButton = $('input-folder-button');
+  const pngButton = $('png-folder-button');
+  const kpiButton = $('kpi-folder-button');
+  if (dataButton) dataButton.onclick = () => requestFolder('data', 'data-folder-input');
+  if (inputButton) inputButton.onclick = () => requestFolder('input', 'input-folder-input');
+  if (pngButton) pngButton.onclick = () => requestFolder('png', 'data-folder-input');
+  if (kpiButton) kpiButton.onclick = () => requestFolder('kpi', 'data-folder-input');
+}
+
+async function collectFilesFromDirectoryHandle(handle, prefix = '') {
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === 'file') {
+      const file = await entry.getFile();
+      file.relativeDisplayPath = `${prefix}${name}`;
+      files.push(file);
+    } else if (entry.kind === 'directory') {
+      files.push(...await collectFilesFromDirectoryHandle(entry, `${prefix}${name}/`));
+    }
+  }
+  return files;
+}
+async function requestFolder(kind, inputId) {
+  if (window.parent && window.parent !== window && typeof window.parent.STAR_PICK_DIRECTORY === 'function') {
+    const picked = await window.parent.STAR_PICK_DIRECTORY('attitude', kind);
+    if (picked && picked.files) {
+      await loadSelectedFolder(kind, picked.files, picked.label || 'STAR');
+      return;
+    }
+  }
+  if ('showDirectoryPicker' in window) {
+    try {
+      const handle = await window.showDirectoryPicker({ mode: 'read', id: 'star-attitude-folder', startIn: 'desktop' });
+      const files = await collectFilesFromDirectoryHandle(handle, `${handle.name}/`);
+      await loadSelectedFolder(kind, files, handle.name);
+      return;
+    } catch (error) {
+      if (error && error.name === 'AbortError') return;
+      console.warn('Directory picker failed; falling back to directory input:', error);
+    }
+  }
+  $(inputId).click();
+}
+function fileRelativePath(file) {
+  return file.relativeDisplayPath || file.webkitRelativePath || file.name;
+}
+function findFile(files, name) {
+  const target = name.toLowerCase();
+  return files.find((file) => file.name.toLowerCase() === target) || null;
+}
+async function loadSelectedFolder(kind, files, label = 'Selected folder') {
+  const array = Array.from(files || []);
+  if (kind === 'data') await loadDataFromFiles(array, label);
+  if (kind === 'input') await loadInputFromFiles(array, label);
+  if (kind === 'png') loadPngFromFiles(array, label);
+  if (kind === 'kpi') await loadKpiFromFiles(array, label);
+  updateFileAccessPanel();
+  drawDashboard();
+}
+async function loadDataFromFiles(files, label) {
+  const js = findFile(files, DATA_JS);
+  const json = findFile(files, DATA_JSON);
+  try {
+    if (js) {
+      state.data = parseDataJs(await js.text());
+      state.fileStatus.data = { loaded: true, path: fileRelativePath(js) };
+    } else if (json) {
+      state.data = JSON.parse(await json.text());
+      state.fileStatus.data = { loaded: true, path: fileRelativePath(json) };
+    } else {
+      state.fileStatus.data.loaded = false;
+      state.fileStatus.data.path = `${label}: ${DATA_JS} not found`;
+    }
+    if (state.data && state.data.input && !state.input) state.input = state.data.input;
+    loadPngFromFiles(files, label);
+    await loadKpiFromFiles(files, label);
+  } catch (error) {
+    state.fileStatus.data.loaded = false;
+    state.fileStatus.data.path = `${label}: ${error.message}`;
+  }
+}
+async function loadInputFromFiles(files, label) {
+  const file = findFile(files, INPUT_JSON) || findFile(files, LEGACY_INPUT_JSON) || findFile(files, 'STEP_002_END-003_input.json');
+  if (!file) {
+    state.fileStatus.input.loaded = false;
+    state.fileStatus.input.path = `${label}: ${INPUT_JSON} or ${LEGACY_INPUT_JSON} not found`;
+    return;
+  }
+  try {
+    state.input = JSON.parse(await file.text());
+    state.fileStatus.input = { loaded: true, path: fileRelativePath(file) };
+  } catch (error) {
+    state.fileStatus.input.loaded = false;
+    state.fileStatus.input.path = `${fileRelativePath(file)}: ${error.message}`;
+  }
+}
+function loadPngFromFiles(files, label) {
+  const pngs = files.filter((file) => /^0[1-6]_.+\.png$/i.test(file.name) || /\.png$/i.test(file.name));
+  state.pngFiles.forEach((url) => URL.revokeObjectURL(url));
+  state.pngFiles.clear();
+  pngs.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric: true })).forEach((file) => {
+    state.pngFiles.set(file.name, URL.createObjectURL(file));
+  });
+  state.fileStatus.png.loaded = state.pngFiles.size > 0;
+  state.fileStatus.png.count = state.pngFiles.size;
+  state.fileStatus.png.path = state.pngFiles.size ? `${label}: ${state.pngFiles.size} PNG figure(s)` : `${label}: no PNG figures found`;
+}
+function fmtNum(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return String(n);
+  if (v !== 0 && Math.abs(v) < 0.01) return v.toExponential(2);
+  return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+async function loadKpiFromFiles(files, label) {
+  const file = findFile(files, KPI_JSON);
+  if (!file) {
+    state.kpiData = null;
+    state.fileStatus.kpi.loaded = false;
+    state.fileStatus.kpi.path = `${label}: ${KPI_JSON} not found`;
+    populateKpiTable();
+    return;
+  }
+  try {
+    state.kpiData = JSON.parse(await file.text());
+    state.fileStatus.kpi.loaded = true;
+    state.fileStatus.kpi.path = fileRelativePath(file);
+  } catch (error) {
+    state.kpiData = null;
+    state.fileStatus.kpi.loaded = false;
+    state.fileStatus.kpi.path = `${fileRelativePath(file)}: ${error.message}`;
+  }
+  populateKpiTable();
+}
+async function loadPassesFromFiles(files) {
+  state.passes = null;
+  const file = findFile(files, PASSES_JSON);
+  if (file) {
+    try { state.passes = JSON.parse(await file.text()); } catch (error) { console.warn('selected_passes.json is not valid JSON:', error); }
+  }
+  populatePassesCard();
+}
+function passUtcParts(iso) {
+  const m = String(iso || '').match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})Z$/);
+  return m ? { date: m[1], time: m[2] } : { date: '—', time: String(iso || '—') };
+}
+function populatePassesCard() {
+  const panel = $('passes-panel');
+  const status = $('passes-status');
+  if (!panel) return;
+  const P = state.passes;
+  if (!P || (!P.imaging_pass && !P.lightcurve_pass)) {
+    if (status) status.textContent = 'Not available';
+    panel.innerHTML = '<div class="empty-cell">selected_passes.json not found in this run (produced by END-003 with the pass planner).</div>';
+    return;
+  }
+  const f1 = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '—');
+  const rowHtml = (label, value, cls) => `<div class="data-row"><span class="data-label">${escapeHtml(label)}</span><span class="data-value ${cls || ''}">${escapeHtml(value)}</span></div>`;
+  const orbitText = (o) => (o && Number.isFinite(Number(o.alt_perigee_m)) ? `${f1(Number(o.alt_perigee_m) / 1000)} km · i ${f1(o.inclination_deg)}°` : '—');
+  const blocks = [];
+  const im = P.imaging_pass;
+  if (im) {
+    const a = passUtcParts(im.start_utc), b = passUtcParts(im.end_utc);
+    const sc = im.sun_constraint || {};
+    const nSat = (P.constellation && P.constellation.n_satellites !== undefined) ? P.constellation.n_satellites : '—';
+    blocks.push(`<div class="pass-block"><h4>Imaging pass · END-007 (daylight over the target site)</h4>
+      <div class="purpose">${escapeHtml(im.purpose || '')}</div>
+      ${rowHtml('Satellite', `${im.satellite_label || '—'} of ${nSat} screened · ${orbitText(im.orbit)}`)}
+      ${rowHtml('Date (UTC)', a.date)}
+      ${rowHtml('Pass start → end (UTC)', `${a.time} → ${b.time} · ${f1(im.duration_min)} min`)}
+      ${rowHtml('Peak elevation over the site', `${f1(im.peak_elevation_deg)}° at ${passUtcParts(im.peak_time_utc).time} (off-nadir ${f1(im.min_off_nadir_deg)}°)`)}
+      ${rowHtml('Site Sun elevation (peak / minimum)', `${f1(im.site_sun_elevation_at_peak_deg)}° / ${f1(im.site_sun_elevation_min_deg)}°`)}
+      ${rowHtml('Sun constraint', sc.enabled ? `${sc.mode} ≥ ${sc.threshold_deg}° · ${sc.met ? 'met ✓' : 'NOT met ✕'}` : 'not enabled', sc.enabled ? (sc.met ? 'ok' : 'bad') : '')}
+      ${rowHtml('Candidates evaluated', im.n_candidate_passes !== undefined ? `${im.n_candidate_passes} passes · ${im.n_candidates_satisfying_sun_constraint} satisfy the Sun constraint` : '—')}
+    </div>`);
+  }
+  const lc = P.lightcurve_pass;
+  if (lc) {
+    if (lc.found) {
+      const a = passUtcParts(lc.start_utc), b = passUtcParts(lc.end_utc);
+      const obs = lc.observer || {};
+      blocks.push(`<div class="pass-block"><h4>Light-curve pass · END-010 (night, seen from ${escapeHtml(obs.name || 'the observer')})</h4>
+        <div class="purpose">${escapeHtml(lc.purpose || '')}</div>
+        ${rowHtml('Satellite', `${lc.satellite_label || '—'} · ${orbitText(lc.orbit)}`)}
+        ${rowHtml('Date (UTC)', a.date)}
+        ${rowHtml('Pass start → end (UTC)', `${a.time} → ${b.time} · ${f1(lc.duration_min)} min`)}
+        ${rowHtml('Peak elevation from the observer', `${f1(lc.peak_elevation_deg)}° at ${passUtcParts(lc.peak_time_utc).time} · min range ${f1(lc.min_range_km)} km`)}
+        ${rowHtml('Observer Sun elevation at peak', `${f1(lc.observer_sun_elevation_at_peak_deg)}° (limit ${f1(lc.observer_sun_elevation_used_deg)}°)`, 'ok')}
+        ${rowHtml('Satellite sunlit', `${f1((Number(lc.satellite_sunlit_fraction) || 0) * 100)}% of the pass`)}
+        ${rowHtml('Windows found in the simulation', String(lc.n_visible_windows_found !== undefined ? lc.n_visible_windows_found : '—'))}
+      </div>`);
+    } else {
+      blocks.push(`<div class="pass-block"><h4>Light-curve pass · END-010</h4>${rowHtml('Result', 'no sunlit night pass visible from the observer in the simulated window', 'bad')}</div>`);
+    }
+  }
+  const cands = Array.isArray(P.imaging_candidates) ? P.imaging_candidates : [];
+  let table = '';
+  if (cands.length) {
+    const rows = cands.map((c) => `<tr class="${c.selected ? 'sel' : ''}"><td>${c.selected ? '★ ' : ''}${escapeHtml(String(c.satellite_index))}</td><td>${escapeHtml(c.start_utc)}</td><td>${escapeHtml(c.end_utc)}</td><td>${f1(c.peak_elevation_deg)}</td><td>${f1(c.site_sun_elevation_at_peak_deg)}</td><td>${f1(c.subsatellite_sun_elevation_min_deg)}</td><td>${c.sun_constraint_ok ? 'yes' : 'no'}</td></tr>`).join('');
+    table = `<details class="pass-details"><summary>All ${cands.length} imaging pass candidates over the target site</summary><div class="pass-table-wrap"><table><thead><tr><th>Sat</th><th>Start UTC</th><th>End UTC</th><th>Peak el. °</th><th>Site Sun °</th><th>Sub-sat Sun min °</th><th>Day OK</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+  }
+  if (status) status.textContent = 'Loaded';
+  panel.innerHTML = blocks.join('') + table;
+}
+function populateKpiTable() {
+  const container = $('kpi-table');
+  if (!container) return;
+  const kpis = state.kpiData && Array.isArray(state.kpiData.kpis) ? state.kpiData.kpis : null;
+  if (!kpis || !kpis.length) {
+    container.innerHTML = '<div class="empty-cell">No KPI catalog loaded.</div>';
+    return;
+  }
+  const catLabels = {
+    run_validity: 'Run Validity',
+    pointing_performance: 'Pointing Performance',
+    disturbance_environment: 'Disturbance Environment',
+    momentum_and_rates: 'Momentum and Rates',
+    pass_selection: 'Pass Selection'
+  };
+  const cats = [...new Set(kpis.map((k) => k.category))];
+  container.innerHTML = cats.map((cat) => {
+    const rows = kpis.filter((k) => k.category === cat).map((k) => {
+      let cls = 'neutral';
+      if (k.meets_requirement === true) cls = 'ok'; else if (k.meets_requirement === false) cls = 'bad';
+      let valueText = (k.value === null || k.value === undefined) ? '—' : (typeof k.value === 'number' ? fmtNum(k.value) : String(k.value));
+      if (k.unit && k.unit !== '-' && valueText !== '—') valueText += ' ' + k.unit;
+      let thr = '';
+      if (k.threshold_ok !== null && k.threshold_ok !== undefined && k.threshold_bad !== null && k.threshold_bad !== undefined) {
+        thr = `<span class="kpi-threshold">thresholds: ok ${fmtNum(k.threshold_ok)} · bad ${fmtNum(k.threshold_bad)}</span>`;
+      }
+      return `<div class="data-row"><span class="data-label">${escapeHtml(k.id)} · ${escapeHtml(k.name)}</span><span class="data-value ${cls}">${escapeHtml(valueText)}${thr}</span></div>`;
+    }).join('');
+    return `<div class="kpi-category"><h4>${escapeHtml(catLabels[cat] || cat)}</h4>${rows}</div>`;
+  }).join('');
+}
+
+async function loadDefaultRelativeData() {
+  try {
+    const parentData = getParentAttitudeData();
+    if (parentData) {
+      state.data = JSON.parse(JSON.stringify(parentData));
+      state.fileStatus.data.loaded = true;
+      state.fileStatus.data.path = 'RUN_XXXXX/modules_output/END-003/results_attitude_propagator/attitude_propagation_plots_data.js';
+    } else if (window.attitudePropagationData) {
+      state.data = JSON.parse(JSON.stringify(window.attitudePropagationData));
+      state.fileStatus.data.loaded = true;
+      state.fileStatus.data.path = AUTO_DATA_DIR + DATA_JS;
+    } else {
+      let text = null;
+      try { text = await fetchText(AUTO_DATA_DIR + DATA_JS); }
+      catch (_) { text = await fetchText(ABSOLUTE_DATA_DIR + DATA_JS); }
+      state.data = parseDataJs(text);
+      state.fileStatus.data.loaded = true;
+      state.fileStatus.data.path = AUTO_DATA_DIR + DATA_JS;
+    }
+    if (state.data?.input) state.input = state.data.input;
+  } catch (error) {
+    console.warn('Dashboard data auto-load failed:', error);
+  }
+  try {
+    try { state.input = await fetchJson(AUTO_INPUT_DIR + INPUT_JSON); }
+    catch (_) { state.input = await fetchJson(ABSOLUTE_INPUT_DIR + INPUT_JSON); }
+    state.fileStatus.input.loaded = true;
+  } catch (error) {
+    if (state.data?.input) state.fileStatus.input.loaded = true;
+    console.warn('Input auto-load failed:', error);
+  }
+  await loadDefaultPngs();
+  updateFileAccessPanel();
+  drawDashboard();
+}
+async function loadDefaultPngs() {
+  const names = readPath(state.data, 'png_outputs', ['01_telemetry.png','02_tracking.png','03_angular_momentum.png','04_ground_track.png','05_orbit_3d_ecef.png','06_orbit_3d_eci.png']);
+  names.forEach((name) => state.pngFiles.set(name, AUTO_DATA_DIR + name));
+  /* Local browsers often block fetch/HEAD on file:// URLs, while <img> can still render
+     relative PNG files correctly. Therefore the gallery is populated optimistically. */
+  state.fileStatus.png.loaded = state.pngFiles.size > 0;
+  state.fileStatus.png.count = state.pngFiles.size;
+  state.fileStatus.png.path = AUTO_DATA_DIR + '01_telemetry.png … 06_orbit_3d_eci.png';
+}
+
+async function loadFromStarRoot() {
+  if (!('showDirectoryPicker' in window)) {
+    $('data-folder-input').click();
+    return;
+  }
+  try {
+    const root = await window.showDirectoryPicker({ mode: 'read', id: 'star-root-attitude', startIn: 'desktop' });
+    const inputHandle = await root.getDirectoryHandle('Input');
+    const outputHandle = await root.getDirectoryHandle('Output');
+    const resultsHandle = await outputHandle.getDirectoryHandle('results_attitude_propagator');
+    await loadInputFromFiles(await collectFilesFromDirectoryHandle(inputHandle, `${root.name}/Input/`), `${root.name}/Input`);
+    await loadDataFromFiles(await collectFilesFromDirectoryHandle(resultsHandle, `${root.name}/Output/results_attitude_propagator/`), `${root.name}/Output/results_attitude_propagator`);
+    updateFileAccessPanel();
+    drawDashboard();
+  } catch (error) {
+    if (error?.name !== 'AbortError') console.warn('RUN folder loading failed:', error);
+  }
+}
+
+
+function getParentAttitudeData() {
+  try {
+    if (window.parent && window.parent !== window && window.parent.attitudePropagationData) return window.parent.attitudePropagationData;
+  } catch (_) {}
+  return null;
+}
+window.receiveAttitudeDataFromParent = function(data, sourceLabel = 'Selected RUN folder') {
+  try {
+    state.data = JSON.parse(JSON.stringify(data || {}));
+    if (state.data && state.data.input && !state.input) state.input = state.data.input;
+    state.fileStatus.data.loaded = Boolean(state.data);
+    state.fileStatus.data.path = `${sourceLabel}/attitude_propagation_plots_data.js`;
+    if (state.data && state.data.input) {
+      state.fileStatus.input.loaded = true;
+      state.fileStatus.input.path = `${sourceLabel}: embedded input block`;
+    }
+    updateFileAccessPanel();
+    drawDashboard();
+    return true;
+  } catch (error) {
+    console.warn('Unable to receive attitude data from the parent dashboard:', error);
+    return false;
+  }
+};
+window.receiveAttitudeFilesFromParent = async function(payload = {}, labels = {}) {
+  try {
+    const resultFiles = Array.from(payload.resultFiles || payload.files || []);
+    const inputFiles = Array.from(payload.inputFiles || []);
+    if (resultFiles.length) {
+      await loadDataFromFiles(resultFiles, labels.results || 'Selected RUN attitude results folder');
+      loadPngFromFiles(resultFiles, labels.results || 'Selected RUN attitude results folder');
+      await loadKpiFromFiles(resultFiles, labels.results || 'Selected RUN attitude results folder');
+      await loadPassesFromFiles(resultFiles);
+    }
+    if (inputFiles.length) {
+      await loadInputFromFiles(inputFiles, labels.input || 'Selected RUN END-003 folder');
+    } else if (state.data && state.data.input) {
+      state.input = state.data.input;
+      state.fileStatus.input.loaded = true;
+      state.fileStatus.input.path = `${labels.results || 'Selected RUN attitude results folder'}: embedded input block`;
+    }
+    updateFileAccessPanel();
+    drawDashboard();
+    return true;
+  } catch (error) {
+    console.warn('Unable to receive attitude files from the parent dashboard:', error);
+    updateFileAccessPanel();
+    drawDashboard();
+    return false;
+  }
+};
+window.refreshAttitudeDashboard = function() {
+  populatePassesCard();
+  updateFileAccessPanel();
+  drawDashboard();
+};
+
+function populateInputsPanel() {
+  const input = state.input || readPath(state.data, 'input', null);
+  if (!input) {
+    $('input-status').textContent = 'missing';
+    $('inputs-panel').innerHTML = '<div class="empty-cell">Input JSON not available.</div>';
+    return;
+  }
+  $('input-status').textContent = 'loaded';
+  $('inputs-panel').innerHTML = [
+    row('Attitude mode', readPath(input, 'sat.attitude_mode', '—')),
+    row('Simulation start', readPath(input, 'sim_start_date', '—')),
+    row('Duration', `${readPath(input, 'sim_hours', '—')} h`),
+    row('Site lat/lon', `${fmt(readPath(input, 'target.site_lat_deg'),4)} / ${fmt(readPath(input, 'target.site_lon_deg'),4)} deg`),
+    row('Elevation threshold', `${readPath(input, 'target.elev_threshold', '—')} deg`),
+    row('Altitude perigee/apogee', `${fmt(readPath(input, 'orbit.alt_perigee_m')/1000,1)} / ${fmt(readPath(input, 'orbit.alt_apogee_m')/1000,1)} km`),
+    row('Inclination', `${fmt(readPath(input, 'orbit.inclination_deg'),4)} deg`),
+    row('RAAN', `${fmt(readPath(input, 'orbit.raan_deg'),4)} deg`)
+  ].join('');
+}
+function populateSummary() {
+  if (!state.data) {
+    $('summary-panel').innerHTML = '<div class="empty-cell">Interactive dashboard data are missing. MATLAB PNG figures are shown if available.</div>';
+    $('torque-report-panel').innerHTML = '<div class="empty-cell">No report data available.</div>';
+    return;
+  }
+  const s = state.data.summary || {};
+  $('summary-panel').innerHTML = [
+    row('Mode', s.attitude_mode || '—'),
+    row('Samples', s.sample_count || '—'),
+    row('Best elevation', `${fmt(s.best_elevation_deg,2)} deg`),
+    row('Pass samples', s.exported_pass_sample_count || '—')
+  ].join('');
+
+  const mt = readPath(state.data, 'report.mean_torques', null);
+  if (!mt) return;
+  $('torque-report-panel').innerHTML = [
+    row('GG perigee/apogee', `${fmt(readPath(mt,'perigee.gravity_gradient_Nm'),3)} / ${fmt(readPath(mt,'apogee.gravity_gradient_Nm'),3)} Nm`),
+    row('SRP perigee/apogee', `${fmt(readPath(mt,'perigee.solar_radiation_pressure_Nm'),3)} / ${fmt(readPath(mt,'apogee.solar_radiation_pressure_Nm'),3)} Nm`),
+    row('Drag perigee/apogee', `${fmt(readPath(mt,'perigee.drag_Nm'),3)} / ${fmt(readPath(mt,'apogee.drag_Nm'),3)} Nm`)
+  ].join('');
+}
+
+function baseLayout(titleY, showLegend = true) {
+  const c = colors();
+  return {
+    autosize:true,
+    paper_bgcolor:c.panel,
+    plot_bgcolor:c.plotBg,
+    font:{color:c.text,family:'Space Mono, monospace',size:10},
+    margin:{t:16,b:36,l:54,r:10},
+    xaxis:{title:'Time [h]',gridcolor:c.border,zerolinecolor:c.border,automargin:true,autorange:true,fixedrange:false},
+    yaxis:{title:titleY,gridcolor:c.border,zerolinecolor:c.border,automargin:true,autorange:true,fixedrange:false},
+    showlegend:showLegend,
+    legend:{
+      orientation:'h',
+      x:0.01,
+      y:0.99,
+      xanchor:'left',
+      yanchor:'top',
+      font:{size:9},
+      bgcolor:'rgba(9,10,13,.55)',
+      bordercolor:'rgba(114,125,151,.18)',
+      borderwidth:1,
+      itemclick:'toggleothers',
+      itemdoubleclick:'toggle',
+      traceorder:'normal'
+    }
+  };
+}
+function lineTrace(name, x, y) {
+  return { type:'scatter', mode:'lines', name, x, y, line:{width:2}, hovertemplate:`${name}<br>t=%{x:.3f} h<br>value=%{y:.6g}<extra></extra>` };
+}
+function linePlot(div, traces, yTitle, extra = {}) {
+  const showLegend = Array.isArray(traces) && traces.length > 1;
+  const base = baseLayout(yTitle, showLegend);
+  const layout = { ...base, ...extra };
+  layout.xaxis = { ...base.xaxis, ...(extra.xaxis || {}), autorange:true, fixedrange:false };
+  layout.yaxis = { ...base.yaxis, ...(extra.yaxis || {}), autorange:true, fixedrange:false };
+  const el = typeof div === 'string' ? $(div) : div;
+  Plotly.react(el, traces, layout, { responsive:true, displaylogo:false, scrollZoom:true, doubleClick:'autosize' })
+    .then(() => Plotly.Plots.resize(el));
+}
+function drawTimeSeries() {
+  const d = state.data;
+  if (!d) return;
+  const t = d.time_h || [];
+  const w = d.angular_velocity_deg_s || [];
+  const e = d.euler_angles_deg || [];
+  const H = readPath(d, 'angular_momentum.direction_eci', []);
+
+  linePlot('plotAngularVelocity', [0,1,2].map((i)=>lineTrace(['w_x','w_y','w_z'][i],t,w.map(r=>r?.[i]))), 'Angular velocity [deg/s]');
+  linePlot('plotEulerAngles', [0,1,2].map((i)=>lineTrace(['Z','Y','X'][i],t,e.map(r=>r?.[i]))), 'Euler angles [deg]');
+
+  const tor = d.torques || {};
+  const torqueTraces = [
+    lineTrace('GG', t, tor.gravity_gradient_Nm || []),
+    lineTrace('SRP', t, tor.solar_radiation_pressure_Nm || []),
+    lineTrace('Drag', t, tor.drag_Nm || [])
+  ];
+  linePlot('plotTorquesLinear', torqueTraces, 'Torque [Nm]');
+  linePlot('plotTorquesLog', torqueTraces.map(tr => ({...tr, y:(tr.y || []).map(v=>Math.max(Number(v)||0,1e-25))})), 'Torque [Nm]', { yaxis:{...baseLayout().yaxis,type:'log',title:'Torque [Nm]',range:[-15,-4]} });
+
+  linePlot('plotEnergy', [lineTrace('Rotational energy', t, d.rotational_energy_J || [])], 'Energy [J]');
+  linePlot('plotAltitude', [lineTrace('Altitude', t, d.altitude_km || [])], 'Altitude [km]');
+  linePlot('plotElevation', [lineTrace('Elevation', t, d.elevation_deg || [])], 'Elevation [deg]');
+  linePlot('plotNadirOffset', [lineTrace('Nadir offset', t, d.nadir_offset_deg || [])], 'Nadir offset [deg]');
+  linePlot('plotTargetOffset', [lineTrace('Target offset', t, d.target_offset_deg || [])], 'Target offset [deg]');
+  linePlot('plotHMag', [lineTrace('|H|', t, readPath(d,'angular_momentum.magnitude_Nms',[]))], '|H| [Nms]');
+  linePlot('plotHDir', [0,1,2].map((i)=>lineTrace(['H_x','H_y','H_z'][i],t,H.map(r=>r?.[i]))), 'Direction components');
+}
+
+function drawGroundTrack() {
+  const d = state.data;
+  if (!d) return;
+  const c = colors();
+  const lon = readPath(d,'orbit.ground_lon_deg',[]);
+  const lat = readPath(d,'orbit.ground_lat_deg',[]);
+  const traces = [{
+    type:'scattergeo', mode:'lines', lon, lat, name:'Ground track',
+    line:{color:c.accent2,width:1.6}, hovertemplate:'lon=%{lon:.2f}<br>lat=%{lat:.2f}<extra></extra>'
+  }];
+  asArray(readPath(d,'orbit.coverage',[])).forEach((seg,i)=>{
+    traces.push({ type:'scattergeo', mode:'lines', lon:seg.ground_lon_deg, lat:seg.ground_lat_deg, name:`Coverage ${i+1}`, line:{color:c.accent,width:4}, hoverinfo:'skip' });
+  });
+  const site = d.site || {};
+  traces.push({ type:'scattergeo', mode:'markers+text', lon:[site.lon_deg], lat:[site.lat_deg], text:['GS'], textposition:'top center', marker:{size:9,color:'#ff5c7a',symbol:'triangle-up'}, textfont:{color:'#ff5c7a',family:'Space Mono'}, name:'Ground station' });
+  Plotly.react('plotGroundTrack', traces, { paper_bgcolor:c.panel, font:{color:c.text,family:'Space Mono, monospace',size:11}, margin:{t:8,b:8,l:8,r:8}, geo:{projection:{type:'equirectangular'},showland:true,landcolor:'#314229',showocean:true,oceancolor:'#0b1b2f',showlakes:true,lakecolor:'#0b1b2f',showcountries:true,countrycolor:'rgba(220,235,255,.20)',coastlinecolor:c.accent,showcoastlines:true,bgcolor:c.plotBg,lonaxis:{showgrid:true,gridcolor:'rgba(220,235,255,.15)',dtick:30},lataxis:{showgrid:true,gridcolor:'rgba(220,235,255,.15)',dtick:15}} }, {responsive:true,displaylogo:false});
+}
+
+function latLonToXyz(lon, lat, r) {
+  const lambda = lon * Math.PI / 180;
+  const phi = lat * Math.PI / 180;
+  const c = Math.cos(phi);
+  return [r * c * Math.cos(lambda), r * c * Math.sin(lambda), r * Math.sin(phi)];
+}
+function asArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === 'object') return [value];
+  return [];
+}
+function validVec3(row) {
+  return Array.isArray(row) && row.length >= 3 && row.slice(0,3).every(v => Number.isFinite(Number(v)));
+}
+function vecColumn(rows, index) {
+  return rows.filter(validVec3).map(row => Number(row[index]));
+}
+
+const EARTH_SURFACE_ROWS=241;
+const EARTH_SURFACE_COLS=481;
+const EARTH_MAP_ROWS=["2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200020222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022222222222222222222222220200000000000000200002202220222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022222222222222222222222222222222222200022202222220222022222222222222222222220222222222202222000200222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002222000000020222222222222222222222222000002222222222222222222222222222222222222222222222222222202222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200202002200022000000000000000000000000000000000000002220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222222222222022000222222222222222220000222222222222222222222222222222222222222222222222222222222222222022200000000000000000000000000000000000000000000000002002222000000000000000000000000000002220000020002220000000000000000000000000000000000000000000002222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022222222222220222222222222222200000000000222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000002220220220202222222200000000000000000000000000000000000000000000000000000000000000000000200000000000000000000002222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222200220000222222222022220222222222220000002222222222222222222222222222222222222222222222222222222222222222200200000000000000000000000000000000000000000222222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002222220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222000000000000220022220000000000000222222222222200002222222222222222222222222222222222222222222222222222222222222222222200000000000000000000000000000000000000000000000022222000022000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000002222200000000000000200000000000000000002000022222202000000000000000222222222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000000000000022220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000222220000000000220000020000220200222222222202202220222220000000000000022222222222222222222222222222222222222222222222222222222222222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022200000000000000000000000000000000000000000002222222022222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000200222222200022222000220222200002000222200000020220000000000000000000000000000022222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222222220000000000000000000000000000000000000222222222222222222222222222200000000000000000000000000000000222222222000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000022202220000000022000222200222222222222222000000000000000000000000000000222222222222222222222222222222222222222222222222222020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002222222000000000000000000000000000000000000222222222222222222222222222222222000000000000000000000000000000000222222222000022222000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000022222220000000000000000000000000000000000000000000000000000000000000000000000000000000000002222222222222222222222222222222222222222222222220200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002222000000000000000000000000000000000000022222222222222222222222222222220022200000000000000000000000000000000000000000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000002222222222220000000000022200002222220022222200002220002220222200000000000000000000000000000222222222222222222222222222222222222222222022220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222200000000000000000000000000000002222222222222222222222222222222222200002222222222220000002220000000000000000000022220000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000022222222002222022200202222000220022222022022000222202222222020000000000000000000000000000000022222222222222222222222222222222222222020222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222220000000000000000002222000200000202222222222222222222222222222222222222222222222222222222222222222200000000000000020000000000000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000222222200222222222222220222200000022222002000000222202222222222222222000000000000000000000000222222222222222222222222222222222222222222220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002222200000000000000000022222000200002220002222222222222222222222222222222222222222222222222222222222222000000000000000222222222222200000000000000000000000000000000000000002","2222000000000000000000000000000200000000000000000000000000000000000000000000200000000222222222222222200000000000222220000022222222222222222222222200000000000000000000000020222222222222222222222222222222222220220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000202220000000000000002222222022200022222200222222222222222222222222222222222222222222222222222222222222200022222222022222222222222222200000000000000000000000000000000000022","2000000000000000000000000002222222222200000000000000000000000000000000000000000000000000000222222222222000200000222222000022222222222222222222222222200000000000000000002220222222222222222222222222222222020000020200000000000000000000000000000000000000000000000000000000000022020222200000000000000000000000000000000000000000000000002222222200222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222000000000000000000000000002","2000000000000000000000022222222222222222222222222222000000000000022202200200222000002222222222222222222202000220022220000000002200002220002222222222222000000000000000002220202222222222222222222222222222222222200000000000000000000000000000000000000000000000000000000222222222222222020200000000000000000000000000000000000020200000002222222002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222000000000002002220222200002","2000000000000000000000222222222222222222222222222222222220002222222222222222222222200000022222222000222220202222200222220200000022220002002222222222220000000000000000000000222222222222222222222222222222222200000000000000000000000000000000000000000000000000000002002222222222222222222222222000000000000000022000000000000000222222200022222000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222002222222222222","2222000000000000000222222222222222222222222222222222222222222222222222222222222222222222000000022002200000000220000222222220002222200000002202022222222000000000000000000022222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000222222222222222222222222222222000000022200000022200022222222222222222022222200222002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","1111111000000000000000111111111111111111111111111111111111111111111111111111111111111111111111100111111111111111011111111110011111110000001100001111111111100000000000000111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111000011000111111111111111111111111111111111000111100111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111","1111111101110000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111101100000000000011111111111111110000000000011111111111111111111111110000000000000000000000000000000000000000000000000000000000000000111111111111111111111111100111111111000001111111111111111111111111111111110110011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111","1011111111111100001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110010000000000001111111111001111100000000000111111111111111111111111000000000000000010101011111100000000000000000000000000000000000001111111111111111111111111111100000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111","1000001111100000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110001000000000011111111111111000110000000000000011111111111111111100000000000000000000000111111111110000000000000000000000000000000000011111111111100000111111111111000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111","1000000010100000000010010011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110011111100000111010111111111111000000000000000001101111111111110000000000000000000000000111111111100000000000000000000000000000000001111111111111100001111111111111100011110111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110001","1000000000010000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110110000111110111100000000001111111110000000000000000000111111111111110000000000000000000000000001111000000000000000000000000000000000000110111111111111000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111101","1000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000111110011000000000000000000011111111111000000000000000000000000000000000000000000000000000000000000000000101111111111111000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111","1000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000001000010111101100000011100000000000000000000001111111111000000000000000000000000000000000000000000000000000000000000000001111111111111110000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111101111111111111111000001","1000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000011111111000000001000000000000000000000111111111000000000000000000000000000000000000000000000000000000000000000111111111111111100000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000111001111111111111000000001","1000000000000000000010011111111111111101110001111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000011111111111000000000000000000000000000010011110000000000000000000000000000000000000000000000000000000000000000011111111111111110000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000100011111111111000000000001","1000000000000000001100111111111111111011111000001001111111111111111111111111111111111111111111111111111111111111110000000000000000000000001111111110000000100000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000001111111111111111100001100000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000001111101000010000000000001","1000000000000000000000000111111111100010000000000000000111111111111111111111111111111111111111111111111111111111110000000000000000000000011111111111000001110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000101111111111111111000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100001001000011110000000111100000000000000000000001","1000000000000000000000000000100111100000000000000000000001110111111111111111111111111111111111111111111111111111111100000000000000000000111111111111110001110000000000000000000000000000000000000000000000000000000000000000000000000000001100000000000011110000111111100000001011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000001111010000000000000000000001","1000000000000000000000000000001110011000000000000000000000010111111111111111111111111111111111111111111111111111111110000000000000000000001111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000111111100100000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000001111111100000000000000000000001","1000000000000000000000000000011000110000000000000000000000011011111111111111111111111111111111111111111111111111111110110000000000000000001111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000011111000000000000001100011111100000011101111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000011111111100000000000000000000001","1000000000000000000000000001110000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111110000000000001001111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000011110000000000000011100001111100000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000111111111100000000000000000000001","1000000000000000000000001110000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111110000000000011111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000011111000000000000011111101100000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000111111110000000000000000000000001","1000000000000000000001100000000000000000000000000000000000000001000111111111111111111111111111111111111111111111111111111111111111100001111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000111101011100000000000001101100000001001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000100000000000000000000000111111111000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000001101111111111111111111111111111111111111111111111111111111111111111100001111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000011111000001110000000000000110111011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110001000000000000000000000111111000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000100011111111111111111111111111111111111111111111111111111111111111100001111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000001111001111111000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110100000000000000000011111000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111110000111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000001111000111111110000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110110000000000000000011100000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111001111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000011000001111111100001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110110000000000000000011000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110001000000000000000000000000000000000000000000000000000000000000000000001111111101111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100110000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000111011111111111111111111111111111111111111111111111111111111111111111111111111111100000111100010000000000000000000000000000000000000000000000000000000000000000000010100000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100110000000000000001000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000001101111111111111111111111111111111111111111111111111111111111111111111111111111000001000000111000000000000000000000000000000000000000000000000000000000000000000000000100111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100111000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000011011111111111111111111111111111111111111111111111111111111111111111111111101111100000001111110000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000100000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000011101111111111111111111111111111111111111111111111111111111111111111111110111100000000011111111100000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000100000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111101111111000000000000001100000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000100000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111000001000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111110011110001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111011000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111000001100001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111000111100000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111100011111111111111111111000001110011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000001100000010000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111000011100000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111110111100001111111111111111110000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000001110000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000111100000111111111111000011111000111111111111111110000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000001111100000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111100000000001111000001111111111111100000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000111110000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111100000001000111100000011111111111100000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000100010000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000001111000001111111111110001111111100000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000010000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111000000000001100000011111011111100000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100011111111100000000000000110000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000100000001000000000100001111000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000110011110000000000000000111000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110010000000001000000000100000011000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100001000011110000000000000000110000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111110000000000000000000000000000000100001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000011111000000000000001110000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111100000000000000000001110000000011100000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110010000000111100000000000011110000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111000000111011111100000010000000001000000101101111110111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000111100000000000111100000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000111100000000011111100000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110110111111111111111110000000000000000011110000000011001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000111100001111111110100000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111110000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000100000011111110000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111100000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000011001110100000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000011101000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111110000001111000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000001100000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000110011111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111110000001111111110000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000001100000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000011001111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000011001111111111111111111111111111111000001101110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111100111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110111111111111111111111110000010100000000110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111100011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110111111111111111111111000000000000000000111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111101111111111111111111100001111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110001111111111111111110000000000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000111111111111111111111111111111111111111111111111111111111111110001111111111111111110000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000100000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111000111111111111111110000000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111001111111111111111111000001110111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100011111111111111110000000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111000111111111111111111000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100011111111111111110000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111100011111111111111111110000001000111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110001111111111111100000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111100011111111111111111110000111000000000000001111111111111111111111111111111111111111111111111111111111111111111110001000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000011111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111110001111111111111111111111111100000000000001111111111111111111111111111111111111111111111111111111111111111111000011000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100001111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111110000111111111111111111111111111000000000000011111111111111111111111111111111111111111111111111111111111111110000010000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111100000000000000000011001110000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111000011111111111111111111111111100000000000000111111111111111111111111111111111111111111111111111111111100000000010000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111100000000000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111100011111111111111111111111111100000000000001111111111111111111111111010001111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111110000000001111100000000000111100100000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111100011111111111111111111111111000000000000000110011111111111111111100000001111111111111111111110001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111110000000001111000000000000011111000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111100001111111111111111111111110000000000000000000011111111111111111100000000111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000111111111111000000001111000000000000000000011110000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111100000111111111111111111111100000000000000000000011111111111111110000000000011111111111111111000011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000001111111111100000011111000000000000000000001111100000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111110000111111111111111111111000000000000000000000011111111111111100000000000011111111111111111000111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111110000000000000011000000100000110000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111000011111111111111111111000000000000000000000011111111111111000000000000000111111111111111000000000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111000001111111111111111100000000000000000000000011111111111110000000000000000111111111111111100000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111100001111111111111100000000000000000000000000011111111111100000000000000001110011111111111110000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000011111111011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111100000111111111111000000000000000000000000000001111111111000000000000000000000011111111111111000000000000000111000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111110000111111111100000000000000000000000000000001111111100000000000000000000000011111111111111100000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111100111111110000000000000000000000000000000000111111100000000000000000000000011111111111111100000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111110111110000000000000000000000000000000000000111111110000000000000000100000001111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000111111110000000000000000000000001101111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011110000000000000001100000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000011111100000000000000000000000001100001111111100000000000000000001010000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110000000000000011011100000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111100000011110000000000000000000000000000000001111100000000000000000000000001000001111111100000000000000000111110000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110000000000011111111111100011000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111111111111111111111100111111110000000000000000000000000000000001111100000000000000000000000001000000011110000000000000000000011000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000011110011111111111110000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000001111010000000000000000000000001000000011100000000000000000000010100000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110111100111111111111111111110000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000110010000000000000000000000001100000010000000000000000100000000011000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000111111111111111111111111100000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000100011000000000000000000000001100000000000000000000000000000011111000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010100111111111111111111111111110000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000011100000000000000000000000100000000000000000000000000000110111000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000011100000000000000000000000011000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111100000000000000000000000000000000000000000000000000000000000000011111111111111100000111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000011100000000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111100000000000000000000000000000000000000000000000000000000001111111111100000000011111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000010000011110000000000000000111111000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000010000000000000000011101111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000011100001110000000000000001111100000000000100000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000001110001110000000000000011111100000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000111100110001000000000111111000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000011100011000000000011111111100000000000001000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000001111001100000011011111111100000000010000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000111101000000011111111111100011111100000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000011111111111111111111111111111111111111001000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000111111000000011111111111000100000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111011111000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000011110000000011111111111000100010000010000011100100000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111101111111110000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000001001111100000001111111110000111110000010000111100000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111110111111000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000101111100000001111111110001111000001000000001000011111000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000111111101000101111100001101100000001110001110011111111000000000000100000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000011111000000000001110000101100000100000000011111111111110000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000001111000000000000000000100010000000000000000011111111111100000000011000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000111000000000000000000100010000000000000000000111111111110000010100000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000011111111111100111000001000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111000100000000000000000000000000000010000001111111111000000000000010000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111000000000000000000000000100000000011111111111100000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111100010000011100001000000000000110111110000110000000000000001000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000011000000000000000000011110000111100000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100001100000000000000000000000000000011100000000000000100000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110000000000000100000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100110000000100000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111110000000110000000000000000000000000000000000000000000000001","1000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111110000000000111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111100000001110000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111000000000011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110011111111100000001110000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111000000001111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111000000001111100000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111110000000011111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111110000001111100000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111100000001111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111001001111100000000000000000000000000000000000000000000011","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111110000000011111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111110011111110000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111100000000011111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111110000000000000000000000000000000000000000001101","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111000000000001111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111110000000000001111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111100000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111100000000000001111100000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111100000000000011111100000000010000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111000000000000000000000100100000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111110000000000111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111100000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111110000000000111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111100000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111110000000000011111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111110000000000011111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111100000000000011110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111110000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111111111111111111111111111111000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111011111111111111111111111111110000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111100000000011111111111111111111111110000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111000000000000011111111111111111111111100000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111110111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111000000000000000110111111111111111111000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111011110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111000000000000000000000100011111111111111111000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111110000000000000000000000000000001100000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000000000000000000000100000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000000000000000000000010000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111100000000000000000000000000000000001000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111001100000000000000000000000000000000000011111001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000011110001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111110000000000000000000000000000000010111000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011110000000000000000000000000000000111100000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011110000000000000000000000000000001111000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011110000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001011111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001011111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111110000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001100000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010111111100000000000111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111101100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011011111000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011111111100000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111110000000000000000000000000000000000000000000000000000011111111111000000000011100000000000000000000000000000000000000000000000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011011111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010011111111000000000000000000000000000000000000011111100111111111111111111111111001111111110000001111111110011111111111111110000001000000000000000000000000000000000000000000001","1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011011111111111111111000100000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000000000000000000000000000000000000001","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002222222222222222222222222222222222222000000000002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222220000000000000000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002220000222222220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022200000022222222222222222222222222222222222222222222220000022222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020002222022222222220000000000000000000000000000000000000000000000000000000000000000000000000000000022000000000000000002222220002000000000022222222222222022222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222000000000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222222222222222222000000000000000000000000000000000000000000000000000000000000000000000202222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222202000000000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022222222222222222000000000000000000000000000000000000000000000000000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222000000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022222222200000000000000000000000000022222222222222222222000000000000000000000000000000000000000000000000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000002","2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000222222222222222222220000000000000222000002222222222222222200000000000000000000000000000000000000000000000000000022222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000002","2000000000000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000002222222222222222222222000002222222222222222222222222222000000000000000000000000000000000000000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222020000000000000002","2000000000000000000000000000000000000000000000000000000000000000000002222222222222222222222220000000000002222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000022222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000000000002","2000000000000000000000000000000000000000000000000000000002222222222222222222222222222222222222200222200002222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222220000000000000000000002","2000000000000000000000000000000000000000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000000000000000000000000000000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000000000000002","2000000000000000000000000000000000000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000002222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000000000000002","2000000000000000000000000000022222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222200000000000000000000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222220002000000000000000002","2222000000000000000000000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222000000000000222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222","2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"];
+const EARTH_MAP=EARTH_MAP_ROWS.map(row=>Array.from(row,ch=>Number(ch)));
+function sampleEarthMap(lat,lon){const rows=EARTH_MAP.length,cols=EARTH_MAP[0].length;const normalizedLon=((lon+180)%360+360)%360;const u=normalizedLon/360*(cols-1);const v=(90-lat)/180*(rows-1);const i0=Math.max(0,Math.min(rows-1,Math.round(v)));const j0=Math.max(0,Math.min(cols-1,Math.round(u)));return EARTH_MAP[i0][j0];}
+function earthSurface(r){const rows=EARTH_SURFACE_ROWS,cols=EARTH_SURFACE_COLS,x=[],y=[],z=[],surfacecolor=[];for(let i=0;i<rows;i++){const lat=90-180*i/(rows-1),xr=[],yr=[],zr=[],cr=[];for(let j=0;j<cols;j++){const lon=-180+360*j/(cols-1),p=latLonToXyz(lon,lat,r);xr.push(p[0]);yr.push(p[1]);zr.push(p[2]);cr.push(sampleEarthMap(lat,lon));}x.push(xr);y.push(yr);z.push(zr);surfacecolor.push(cr);}return{type:'surface',x,y,z,surfacecolor,cmin:0,cmax:2,colorscale:[[0,'#0b1b2f'],[.49,'#0b1b2f'],[.50,'#314229'],[.74,'#314229'],[.75,'#dce8ef'],[1,'#ffffff']],showscale:false,opacity:1,hoverinfo:'skip',lighting:{ambient:.9,diffuse:.65,specular:.05,roughness:.92},name:'High-resolution Earth land-ocean map'};}
+
+function drawOrbit3D(div, frame) {
+  const el = $(div);
+  const d = state.data;
+  const fallbackName = frame === 'ECI' ? '06_orbit_3d_eci.png' : '05_orbit_3d_ecef.png';
+  if (!el) return;
+  if (!d) {
+    const url = state.pngFiles.get(fallbackName);
+    el.innerHTML = url ? `<div class="plot-fallback-wrap"><img class="plot-fallback-image" src="${url}" alt="${fallbackName}"></div>` : '';
+    return;
+  }
+
+  try {
+    const c = colors();
+    const site = d.site || {};
+    const R = 6371;
+    const fullRaw = frame === 'ECI' ? readPath(d,'orbit.r_eci_km',[]) : readPath(d,'orbit.r_ecef_km',[]);
+    const groundRaw = readPath(d,'orbit.r_ground_ecef_km',[]);
+    const full = asArray(fullRaw).filter(validVec3);
+    const ground = asArray(groundRaw).filter(validVec3);
+
+    if (!full.length) {
+      el.innerHTML = '<div class="empty-cell">3D orbit vectors not available in attitude_propagation_plots_data.js.</div>';
+      return;
+    }
+
+    const traces = [earthSurface(R)];
+    traces[0].showlegend = false;
+
+    traces.push({
+      type:'scatter3d', mode:'lines', name:'Orbit',
+      x:vecColumn(full,0), y:vecColumn(full,1), z:vecColumn(full,2),
+      line:{color:c.muted,width:3}, hoverinfo:'skip'
+    });
+
+    if (frame === 'ECEF' && ground.length) {
+      traces.push({
+        type:'scatter3d', mode:'lines', name:'Ground track',
+        x:vecColumn(ground,0), y:vecColumn(ground,1), z:vecColumn(ground,2),
+        line:{color:c.accent2,width:2,dash:'dot'}, hoverinfo:'skip'
+      });
+    }
+
+    asArray(readPath(d,'orbit.coverage',[])).forEach((seg,i)=>{
+      const arrRaw = frame === 'ECI' ? seg.r_eci_km : seg.r_ecef_km;
+      const arr = asArray(arrRaw).filter(validVec3);
+      if (arr.length) {
+        traces.push({
+          type:'scatter3d', mode:'lines', name:'Coverage', showlegend:i===0,
+          x:vecColumn(arr,0), y:vecColumn(arr,1), z:vecColumn(arr,2),
+          line:{color:c.accent,width:6}, hoverinfo:'skip'
+        });
+      }
+      const gArr = asArray(seg.r_ground_ecef_km).filter(validVec3);
+      if (frame === 'ECEF' && gArr.length) {
+        traces.push({
+          type:'scatter3d', mode:'lines', name:'Coverage ground', showlegend:i===0,
+          x:vecColumn(gArr,0), y:vecColumn(gArr,1), z:vecColumn(gArr,2),
+          line:{color:'#ffb84d',width:5}, hoverinfo:'skip'
+        });
+      }
+    });
+
+    const gs = Array.isArray(site.r_ecef_km) ? site.r_ecef_km : [];
+    if (gs.length === 3) {
+      traces.push({
+        type:'scatter3d', mode:'markers+text', name:'Ground station',
+        x:[Number(gs[0])], y:[Number(gs[1])], z:[Number(gs[2])],
+        text:['GS'], marker:{size:5,color:'#ff5c7a',symbol:'diamond'},
+        textposition:'top center', textfont:{color:'#ff5c7a',family:'Space Mono'}
+      });
+    }
+
+    const axis = {
+      gridcolor:c.border, zerolinecolor:c.border, showbackground:false,
+      autorange:true, fixedrange:false,
+      tickfont:{color:c.muted,size:9}, titlefont:{color:c.text,size:10}
+    };
+    const layout = {
+      autosize:true,
+      paper_bgcolor:c.panel,
+      plot_bgcolor:c.plotBg,
+      font:{color:c.text,family:'Space Mono, monospace',size:10},
+      margin:{t:4,b:4,l:4,r:4},
+      showlegend:true,
+      legend:{orientation:'h',x:0.01,y:0.99,xanchor:'left',yanchor:'top',font:{size:9},bgcolor:'rgba(9,10,13,.55)',bordercolor:'rgba(114,125,151,.18)',borderwidth:1},
+      scene:{
+        aspectmode:'cube',
+        camera:{eye:{x:1.35,y:1.35,z:1.04}},
+        xaxis:{...axis,title:'X [km]'},
+        yaxis:{...axis,title:'Y [km]'},
+        zaxis:{...axis,title:'Z [km]'}
+      }
+    };
+
+    Plotly.react(el, traces, layout, {responsive:true,displaylogo:false,scrollZoom:true,doubleClick:'autosize'})
+      .then(() => Plotly.Plots.resize(el));
+  } catch (error) {
+    console.error(`Unable to render ${frame} 3D orbit:`, error);
+    const url = state.pngFiles.get(fallbackName);
+    el.innerHTML = url ? `<div class="plot-fallback-wrap"><img class="plot-fallback-image" src="${url}" alt="${fallbackName}"></div>` : `<div class="empty-cell">3D render error: ${escapeHtml(error.message || error)}</div>`;
+  }
+}
+
+function populatePngGallery() {
+  const gallery = $('png-gallery');
+  if (!state.pngFiles.size) {
+    gallery.innerHTML = '<div class="empty-cell">No PNG files loaded.</div>';
+    return;
+  }
+  gallery.innerHTML = Array.from(state.pngFiles.entries()).map(([name,url]) => `<div class="gallery-item"><img src="${url}" alt="${escapeHtml(name)}" data-name="${escapeHtml(name)}"><div class="gallery-caption">${escapeHtml(name)}</div></div>`).join('');
+  gallery.querySelectorAll('img').forEach(img => img.addEventListener('click', () => openImageModal(img.src, img.dataset.name || img.alt || 'MATLAB figure')));
+}
+
+function showInteractiveDataMissingMessage() {
+  const message = '';
+  const ids = ['plotAngularVelocity','plotEulerAngles','plotTorquesLinear','plotTorquesLog','plotEnergy','plotAltitude','plotElevation','plotNadirOffset','plotTargetOffset','plotHMag','plotHDir','plotGroundTrack','plotOrbitECI','plotOrbitECEF'];
+  ids.forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.innerHTML = `<div class="empty-cell">${message}</div>`;
+  });
+}
+
+function drawDashboard() {
+  populateInputsPanel();
+  populateSummary();
+  populatePngGallery();
+  populateKpiTable();
+
+  if (!state.data) {
+    showInteractiveDataMissingMessage();
+    return;
+  }
+
+  drawTimeSeries();
+  drawGroundTrack();
+  drawOrbit3D('plotOrbitECI','ECI');
+  drawOrbit3D('plotOrbitECEF','ECEF');
+}
+
+
+function openImageModal(src, caption = '') {
+  const modal = $('image-modal');
+  const img = $('image-modal-img');
+  const cap = $('image-modal-caption');
+  if (!modal || !img) return;
+  img.src = src;
+  img.alt = caption || 'MATLAB figure preview';
+  if (cap) cap.textContent = caption || '';
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden','false');
+}
+function closeImageModal() {
+  const modal = $('image-modal');
+  const img = $('image-modal-img');
+  if (!modal || !img) return;
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden','true');
+  img.src = '';
+}
+
+function bindEvents() {
+  $('theme-switch').addEventListener('change', e => setTheme(e.target.checked ? 'light' : 'dark'));
+  $('star-root-button').addEventListener('click', loadFromStarRoot);
+  const modalClose = $('image-modal-close'); if (modalClose) modalClose.addEventListener('click', closeImageModal);
+  const modal = $('image-modal'); if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeImageModal(); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') closeImageModal(); });
+  $('data-folder-input').addEventListener('change', async (e)=>{await loadSelectedFolder('data', e.target.files, 'Selected results folder'); e.target.value='';});
+  $('input-folder-input').addEventListener('change', async (e)=>{await loadSelectedFolder('input', e.target.files, 'Selected input folder'); e.target.value='';});
+  window.addEventListener('resize',()=>['plotAngularVelocity','plotEulerAngles','plotTorquesLinear','plotTorquesLog','plotEnergy','plotAltitude','plotElevation','plotNadirOffset','plotTargetOffset','plotHMag','plotHDir','plotGroundTrack','plotOrbitECI','plotOrbitECEF'].forEach(id=>{const el=$(id);if(el?.data)Plotly.Plots.resize(el);}));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupTheme();
+  bindEvents();
+  updateFileAccessPanel();
+});
+window.addEventListener('load', () => {
+  loadDefaultRelativeData();
+});
+})();
+</script>
+<div id="image-modal" class="image-modal hidden" aria-hidden="true"><button id="image-modal-close" class="image-modal-close" type="button" aria-label="Close image preview">×</button><img id="image-modal-img" alt="MATLAB figure preview"><div id="image-modal-caption" class="image-modal-caption"></div></div>
+</body>
+</html>

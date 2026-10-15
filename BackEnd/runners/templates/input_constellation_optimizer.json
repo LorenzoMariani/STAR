@@ -1,0 +1,90 @@
+{
+    "TimeSettings": {
+        "StartDate": [2026, 5, 21],
+        "StartHour": 13,
+        "StartMin": 41,
+        "StartSec": 10
+    },
+    "GroundStations": [
+        {
+            "name": "Matera",
+            "lat": 40.6486,
+            "lon": 16.5528,
+            "alt": 536,
+            "mask": 5
+        }
+    ],
+    "RegionSettings": {
+    "AreaofInterest": "Italy",
+    "Default_LATkm": 25,
+    "Default_LONkm": 25,
+    "CustomCoordinates": [
+        [45.5, 12.2],
+        [44.1, 11.5],
+        [43.2, 13.1]
+    ]
+    },
+    "SensorSettings": {
+        "SAR_Configuration": "Left & Right",
+        "SAR_Theta_min": 15,
+        "SAR_Theta_max": 50,
+        "Optic_Steerable": "Field of View",
+        "Optic_CON_FOV": 15,
+        "Optic_PBS_FOV": 10,
+        "Optic_RECT_FOV_cross": 10,
+        "Optic_RECT_FOV_along": 10,
+        "Operative_Mode": "Single Sensor",
+        "Single_Sensor_Type": "PBS",
+        "Sun_Constraint": true
+    },
+    "OptimizerSettings": {
+        "Optimizer_Type": "MOGA NSGA-II",
+        "Population": 10,
+        "Iterations": 2,
+        "PlatEMO_Algorithm": "NSGA-III",
+        "Parallelize": true,
+        "Num_Coworkers": 8,
+        "Orbit_Type": "SSORGT",
+        "PropagationDays": 7,
+        "timeStep": 10,
+        "Evaluation_Mode": "GA_Optimization",
+        "Fitness_Engine": "Simulation",
+        "Surrogate_VerifyTopK": 30,
+        "Surrogate_Population": 100,
+        "Surrogate_Iterations": 100,
+        "Surrogate_Restarts": 3,
+        "SSORGT_AltitudeRange_km": [400, 1200],
+        "SSORGT_PlanesRange": [3, 10],
+        "SSORGT_SatsPerPlaneRange": [2, 10],
+        "SSORGT_TotalSatellitesRange": [6, 100],
+        "CompleteEval_TableCoverage": "Full",
+        "CompleteEval_RowStride": 5,
+        "CompleteEval_PlanesList": [3, 4, 5, 6, 7, 8, 9, 10],
+        "CompleteEval_SatsPerPlane": 4
+    },
+    "SpacecraftProperties": {
+        "Mass": 100,
+        "ADrag": 1,
+        "CD": 2.2
+    },
+    "MissionRequirements": {
+        "MaxRevisit_h": [5.5, 6],
+        "P90Revisit_h": [4.85, 5.75],
+        "MeanRevisit_h": [4.85, 5.75],
+        "MaxLatency_h": [0.929, 3.167],
+        "GSAccess_min": [9.32, 5]
+    },
+    "Weights": {
+        "MaxRevisitTime": 5,
+        "Percentile90RevisitTime": 10,
+        "MeanRevisitTime": 8,
+        "NumSatellites": 8,
+        "NumPlanes": 8,
+        "MaxLatency": 5,
+        "Robustness": 6,
+        "CollisionAvoidance": 10,
+        "Launch": 10,
+        "EndOfLife": 8,
+        "AvgGSAccessTime": 9
+    }
+}

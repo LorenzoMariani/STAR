@@ -1,0 +1,47 @@
+{
+  "paths": {
+    "unityExe": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\BuildAqua\\UnityLightCurveInversion.exe",
+    "inputCsv": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\Output\\output_attitude_propagation\\output_attitude_propagation.csv",
+    "eopFile": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\EOP.txt",
+    "tleFile": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\TLE_AQUA27052026.txt",
+    "stationsJson": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\stations.json",
+    "nutData": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\sgp4\\nut80.dat",
+    "deData": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\DE440.mat"
+  },
+  "simulation": {
+    "debug": true,
+    "observatory": "SCUDO",
+    "mask": 10,
+    "delta": 1,
+    "duration": 180,
+    "start": "2026-04-01T13:53:15"
+  },
+  "sat": {
+    "A_ref": 0.03,
+    "albedo": 0.2
+  },
+  "flags": {
+    "useInputCsv": true,
+    "orbitEphemeris": false,
+    "sunEphemeris": false,
+    "attEphemeris": false,
+    "obsEphemeris": false
+  },
+  "unityOpts": {
+    "maxFrameToRender": 10000,
+    "maxFrameToSave": 10000,
+    "camWidth": 512,
+    "camHeight": 512,
+    "camSize": 20,
+    "enableView": false,
+    "saveFrames": true,
+    "sumFlux": true,
+    "useOrtographic": true,
+    "useLinearSpace": true,
+    "drawAxis": false,
+    "UseRadiometricModel": false,
+    "UseFacetSum": false,
+    "lightCurveFilename": "flux.csv",
+    "logFile": "unityLog.log"
+  }
+}

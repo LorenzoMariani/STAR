@@ -1,0 +1,12 @@
+{
+    "llm_provider": "openai_compatible",
+    "requirement_extraction_mode": "rule_based",
+    "openai_compatible": {
+        "base_url": "http://localhost:11434/v1",
+        "api_key": "local",
+        "model": "qwen2.5:7b",
+        "temperature": 0.0,
+        "timeout_s": 300,
+        "max_output_tokens": 2200
+    }
+}

@@ -1,0 +1,141 @@
+module_id: END-006
+module_name: Scenario Generation
+module_type: digital_twin_module
+module_version: 0.1.0
+owner: TELESPAZIO
+description: 'Generates a mission-specific scenario package for synthetic data generation,
+  including local terrain, map layers, scene metadata and optional 3D objects or event
+  representations.
+
+  '
+capabilities:
+- scenario_generation
+- terrain_model_preparation
+- local_scene_definition
+- target_environment_modeling
+- simulation_ready_scene_packaging
+- volcanic_event_representation
+- 3d_object_placement
+domain_of_validity:
+  mission_phase:
+  - pre_phase_a
+  - phase_a
+  - design_trade_off
+  mission_type:
+  - earth_observation
+  - synthetic_data_generation
+  fidelity_level: preliminary_to_intermediate
+required_inputs:
+- name: area_of_interest
+  kind: parameter
+  data_type: geometry_or_string
+  unit: '-'
+  required: true
+  default_value: null
+  assumption_allowed: false
+  description: 'Target area to be represented in the scenario. It may be a named target,
+    bounding box, polygon or other agreed geospatial representation.
+
+    '
+  missing_information_reason: 'Required to locate the scene and define the scenario
+    extent.
+
+    '
+- name: terrain_data
+  kind: artifact
+  artifact_name: terrain_data
+  data_type: file_or_dataset
+  unit: '-'
+  required: true
+  default_value: null
+  assumption_allowed: false
+  description: 'DEM or equivalent terrain dataset used to construct the local terrain
+    representation.
+
+    '
+  missing_information_reason: 'Required to generate a terrain-aware scenario package.
+
+    '
+- name: surface_texture_or_color_map
+  kind: artifact
+  artifact_name: surface_texture_or_color_map
+  data_type: file_or_dataset
+  unit: '-'
+  required: false
+  default_value: null
+  assumption_allowed: false
+  description: 'Optional image, raster or map layer used as surface texture/color
+    information.
+
+    '
+  missing_information_reason: 'Required when a customized visual texture is needed.
+
+    '
+- name: target_3d_models
+  kind: artifact
+  artifact_name: target_3d_models
+  data_type: file_or_dataset
+  unit: '-'
+  required: false
+  default_value: null
+  assumption_allowed: false
+  description: 'Optional STL/OBJ or equivalent 3D models to be placed in the scene.
+
+    '
+  missing_information_reason: 'Required when object-level scene customization is requested.
+
+    '
+- name: event_data
+  kind: artifact
+  artifact_name: event_data
+  data_type: file_or_dataset
+  unit: '-'
+  required: false
+  default_value: null
+  assumption_allowed: false
+  description: 'Optional external data describing natural or operational events to
+    represent in the scene.
+
+    '
+  missing_information_reason: 'Required when the scenario must include event-specific
+    information such as volcanic activity.
+
+    '
+outputs:
+- name: scenario_package
+  kind: artifact
+  artifact_name: scenario_package
+  data_type: folder_or_json
+  description: 'Simulation-ready scenario package consumable by synthetic data generation
+    modules.
+
+    '
+- name: terrain_mesh
+  kind: artifact
+  artifact_name: terrain_mesh.obj
+  data_type: obj
+  description: 'Local terrain mesh or equivalent geometric representation.
+
+    '
+- name: scene_metadata
+  kind: artifact
+  artifact_name: scene_metadata.json
+  data_type: json
+  description: 'Metadata describing the scenario extent, coordinate reference, assets
+    and assumptions.
+
+    '
+execution:
+  estimated_runtime: 2
+  execution_mode: file_based_preprocessor
+  upstream_dependencies: []
+  downstream_dependencies:
+  - END-007
+  input_format: json
+  input_filename: END-006_input.json
+interface_notes: 'END-006 is expected to produce a scenario package that can be consumed
+  by END-007 Synthetic Data Generation. External DEMs, textures and 3D models shall
+  not be invented by the orchestrator; they must be provided or explicitly marked
+  as missing.
+
+  '

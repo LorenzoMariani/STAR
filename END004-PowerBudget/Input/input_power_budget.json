@@ -1,0 +1,41 @@
+{
+  "paths": {
+    "attitudeCsv": "",
+    "attitudeConfigJson": ""
+  },
+  "orbit": {
+    "daily_orbits": 15,
+    "period_min": 94.4691,
+    "sunlight_min": 59.4691,
+    "eclipse_min": 35.0
+  },
+  "generation": {
+    "power_generated_per_orbit_Wh": 3.0,
+    "solar_power_W": null
+  },
+  "battery": {
+    "capacity_Wh": 19.0
+  },
+  "margin_fraction": 0.10,
+  "operations": {
+    "mode_orbits_per_day": {
+      "idle": 7,
+      "tx_uhf": 0,
+      "tx_sband": 0,
+      "payload": 8
+    }
+  },
+  "subsystems": [
+    {"name": "OBDH", "powerW": 0.3, "duty": {"idle": {"sun": 1, "eclipse": 1}, "tx_uhf": {"sun": 1, "eclipse": 1}, "tx_sband": {"sun": 1, "eclipse": 1}, "payload": {"sun": 1, "eclipse": 1}}},
+    {"name": "EPS", "powerW": 0.16, "duty": {"idle": {"sun": 1, "eclipse": 1}, "tx_uhf": {"sun": 1, "eclipse": 1}, "tx_sband": {"sun": 1, "eclipse": 1}, "payload": {"sun": 1, "eclipse": 1}}},
+    {"name": "RX UHF", "powerW": 0.18, "duty": {"idle": {"sun": 1, "eclipse": 1}, "tx_uhf": {"sun": 1, "eclipse": 1}, "tx_sband": {"sun": 1, "eclipse": 1}, "payload": {"sun": 1, "eclipse": 1}}},
+    {"name": "TX UHF", "powerW": 2.64, "duty": {"idle": {"sun": 0, "eclipse": 0}, "tx_uhf": {"sun": 0, "eclipse": 0.2}, "tx_sband": {"sun": 0, "eclipse": 0}, "payload": {"sun": 0, "eclipse": 0}}},
+    {"name": "BEACON UHF", "powerW": 2.64, "duty": {"idle": {"sun": 0.0067, "eclipse": 0.0067}, "tx_uhf": {"sun": 0.0067, "eclipse": 0.0067}, "tx_sband": {"sun": 0.0067, "eclipse": 0.0067}, "payload": {"sun": 0.0067, "eclipse": 0.0067}}},
+    {"name": "RX S BAND", "powerW": 0.5, "duty": {"idle": {"sun": 0, "eclipse": 0}, "tx_uhf": {"sun": 0, "eclipse": 0}, "tx_sband": {"sun": 0, "eclipse": 0.2}, "payload": {"sun": 0, "eclipse": 0}}},
+    {"name": "TX S BAND", "powerW": 3.0, "duty": {"idle": {"sun": 0, "eclipse": 0}, "tx_uhf": {"sun": 0, "eclipse": 0}, "tx_sband": {"sun": 0, "eclipse": 0.2}, "payload": {"sun": 0, "eclipse": 0.2}}},
+    {"name": "ADCS", "powerW": 0.432, "duty": {"idle": {"sun": 0.0105, "eclipse": 0.0105}, "tx_uhf": {"sun": 0.0105, "eclipse": 0.0105}, "tx_sband": {"sun": 0.0105, "eclipse": 0.0105}, "payload": {"sun": 0.0105, "eclipse": 0.0105}}},
+    {"name": "THERMAL", "powerW": 3.0, "duty": {"idle": {"sun": 0, "eclipse": 0.1}, "tx_uhf": {"sun": 0, "eclipse": 0.1}, "tx_sband": {"sun": 0, "eclipse": 0.1}, "payload": {"sun": 0, "eclipse": 0}}},
+    {"name": "CAMERAS", "powerW": 1.5, "duty": {"idle": {"sun": 0, "eclipse": 0}, "tx_uhf": {"sun": 0, "eclipse": 0}, "tx_sband": {"sun": 0, "eclipse": 0}, "payload": {"sun": 0.017, "eclipse": 0}}},
+    {"name": "SDR", "powerW": 5.0, "duty": {"idle": {"sun": 0, "eclipse": 0}, "tx_uhf": {"sun": 0, "eclipse": 0}, "tx_sband": {"sun": 0, "eclipse": 0}, "payload": {"sun": 0.5, "eclipse": 0}}}
+  ]
+}

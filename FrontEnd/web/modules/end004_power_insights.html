@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR — Power Budget Insights</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;
+  --danger:#ff5c7a;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);
+  /* categorical slots 1-8 of the validated data-viz palette (dark steps) */
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  /* status colours: fixed, always shipped with icon + label */
+  --st-good:#0ca30c;--st-critical:#d03b3b;--st-warning:#fab219;
+  --sun-tint:rgba(154,163,180,.14);--ecl-tint:rgba(80,96,150,.30);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;
+  --danger:#bd2450;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  --sun-tint:rgba(102,112,133,.08);--ecl-tint:rgba(74,90,160,.20);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.hidden-file-input{display:none}
+.page{padding:0 0 28px;display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--panel) 95%,transparent);box-shadow:var(--shadow)}
+.topbar h2{margin:0;font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:14px;color:var(--text-strong)}
+.topbar .sub{color:var(--muted);font-size:11px;margin-top:2px}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ctl-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:10px;font-size:12px}
+.seg button .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.seg button.active{border-color:var(--text-strong);background:var(--panel-muted);color:var(--text-strong);font-weight:700}
+select{font:inherit;color:var(--text);background:var(--panel-strong);border:1px solid var(--border);border-radius:10px;padding:6px 10px}
+.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.status-dot{width:10px;height:10px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.banner{border:1px solid var(--border);border-left-width:6px;border-radius:14px;padding:12px 16px;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.banner .icon{font-size:18px;line-height:1.2}
+.banner.good{border-left-color:var(--st-good)}
+.banner.critical{border-left-color:var(--st-critical)}
+.banner.warning{border-left-color:var(--st-warning)}
+.banner b{color:var(--text-strong)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:16px;padding:12px 14px;background:var(--panel);min-width:0}
+.kpi .k-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .k-value{font-family:'Syne',Inter,system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text-strong);line-height:1.15;margin-top:4px;overflow-wrap:anywhere}
+.kpi .k-unit{font-size:12px;color:var(--muted-2);font-weight:400;margin-left:4px}
+.kpi .k-note{color:var(--muted-2);font-size:11px;margin-top:4px}
+.kpi .k-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:6px}
+.kpi .k-flag.good{color:var(--st-good)}.kpi .k-flag.critical{color:var(--st-critical)}.kpi .k-flag.warning{color:var(--st-warning)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-header h3{margin:0;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.card-header .hint{color:var(--muted);font-size:11px}
+.card-body{padding:10px 12px 12px}
+.plot{width:100%}
+.pies{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:6px}
+.pie-title{text-align:center;color:var(--muted-2);font-size:11px;margin:4px 0 0;text-transform:uppercase;letter-spacing:.04em}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:6px 8px 0;color:var(--text);font-size:11px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend i.tint-sun{background:var(--sun-tint);border:1px solid var(--muted)}
+.legend i.tint-ecl{background:var(--ecl-tint);border:1px solid var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+.note{color:var(--muted);font-size:11px;padding:0 4px 4px}
+details.tables{border:1px solid var(--border);border-radius:18px;background:var(--panel);overflow:hidden}
+details.tables>summary{cursor:pointer;padding:12px 16px;font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--text-strong);background:var(--panel-strong)}
+.table-wrap{overflow:auto;max-height:420px;border-top:1px solid var(--border-soft)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border-bottom:1px solid var(--border-soft);padding:6px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td.neg{color:var(--st-critical)}td.pos{color:var(--st-good)}
+.table-title{padding:10px 14px 4px;color:var(--muted-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+</style>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body>
+<div class="page">
+  <input id="powerFolderInput" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+  <div class="topbar">
+    <div>
+      <h2>Power Budget · Insights</h2>
+      <div class="sub" id="source-label">END-004 · timelines, power shares and trends derived from power_budget_summary.json</div>
+    </div>
+    <div class="controls">
+      <span class="status-pill"><span id="status-dot" class="status-dot"></span><span id="load-status">No data loaded</span></span>
+      <button id="manual-load" class="primary-action" type="button">Select END-004 Folder</button>
+    </div>
+  </div>
+
+  <div id="banner" class="banner" hidden></div>
+  <div id="kpis" class="kpis"></div>
+
+  <div class="topbar" id="mode-bar" hidden>
+    <div class="controls">
+      <span class="ctl-label">Operating mode</span>
+      <div class="seg" id="mode-seg" role="tablist" aria-label="Operating mode"></div>
+    </div>
+    <div class="controls">
+      <span class="ctl-label">Daily allocation order</span>
+      <select id="order-select" aria-label="Daily allocation order">
+        <option value="interleaved">Interleaved (illustrative)</option>
+        <option value="grouped">Grouped by mode</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid">
+    <article class="card wide">
+      <div class="card-header"><h3 id="t1-title">Subsystem ON/OFF over one orbit</h3><span class="hint">Schematic: block lengths are exact (duty cycle × phase duration); their position inside each phase is illustrative.</span></div>
+      <div class="card-body"><div id="plotTimeline" class="plot"></div>
+        <div class="legend" id="legend-groups"></div></div>
+    </article>
+
+    <article class="card wide">
+      <div class="card-header"><h3>Acquisition timeline over one day</h3><span class="hint" id="t2-hint">Mode budget per day as declared in the END-004 input; the order of the orbits is not defined by END-004.</span></div>
+      <div class="card-body"><div id="plotDaily" class="plot"></div>
+        <div class="legend" id="legend-modes"></div></div>
+    </article>
+
+    <article class="card wide">
+      <div class="card-header"><h3>Power shares</h3><span class="hint" id="pies-hint"></span></div>
+      <div class="card-body"><div class="pies">
+        <div><div class="pie-title">Energy per orbit by function</div><div id="pieEnergy" class="plot"></div></div>
+        <div><div class="pie-title">Average power · sunlight</div><div id="pieSun" class="plot"></div></div>
+        <div><div class="pie-title">Average power · eclipse</div><div id="pieEcl" class="plot"></div></div>
+        <div><div class="pie-title">Daily energy by operating mode</div><div id="pieDaily" class="plot"></div></div>
+      </div></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header"><h3>Battery energy over the day</h3><span class="hint">Starts fully charged · loads include the margin · bottom strip = mode of each orbit</span></div>
+      <div class="card-body"><div id="plotBattery" class="plot"></div></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header"><h3>Power profile over one orbit</h3><span class="hint">Average load per phase vs solar generation</span></div>
+      <div class="card-body"><div id="plotProfile" class="plot"></div></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header"><h3>Daily balance vs payload orbits</h3><span class="hint" id="sens-hint"></span></div>
+      <div class="card-body"><div id="plotSens" class="plot"></div></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header"><h3>Daily energy balance</h3><span class="hint">Generation vs consumption by mode (Wh/day, margin included)</span></div>
+      <div class="card-body"><div id="plotWaterfall" class="plot"></div></div>
+    </article>
+  </div>
+
+  <details class="tables" id="tables-details">
+    <summary>Table view · every plotted value</summary>
+    <div id="tables"></div>
+  </details>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* ---------- entities: fixed colour slots (colour follows the entity) ---------- */
+const MODE_DEFS = [
+  { key:'idle',     label:'Idle',      css:'--s1' },
+  { key:'tx_uhf',   label:'TX UHF',    css:'--s2' },
+  { key:'tx_sband', label:'TX S-BAND', css:'--s3' },
+  { key:'payload',  label:'Payload',   css:'--s4' }
+];
+const GROUP_DEFS = [
+  { key:'payload',  label:'Payload (SDR, cameras)',           css:'--s5', test:/camera|sdr/i },
+  { key:'comms',    label:'Communications (TX/RX/beacon)',    css:'--s6', test:/\b(tx|rx)\b|beacon|uhf|s band|s-band/i },
+  { key:'platform', label:'Platform (OBDH, EPS, ADCS)',       css:'--s7', test:/obdh|eps|adcs/i },
+  { key:'thermal',  label:'Thermal control',                  css:'--s8', test:/thermal/i }
+];
+function groupOf(name){
+  const n = String(name);
+  for (const g of GROUP_DEFS) { if (g.test.test(n)) return g.key; }
+  return 'platform';
+}
+
+const state = { data:null, model:null, mode:'payload', order:'interleaved', labels:{} };
+
+/* ---------- helpers ---------- */
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function esc(v){ return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function num(v, d = 0){ const n = Number(v); return Number.isFinite(n) ? n : d; }
+function fmt(v, d = 2){ return Number.isFinite(Number(v)) ? Number(v).toFixed(d) : '—'; }
+function sgn(v, d = 2){ const n = Number(v); return Number.isFinite(n) ? (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(d) : '—'; }
+function colors(){
+  const c = { text:css('--text'), strong:css('--text-strong'), muted:css('--muted'), muted2:css('--muted-2'), panel:css('--panel'),
+    panelStrong:css('--panel-strong'), border:css('--border'), grid:css('--border-soft'), sunTint:css('--sun-tint'), eclTint:css('--ecl-tint'),
+    good:css('--st-good'), critical:css('--st-critical'), modes:{}, groups:{} };
+  MODE_DEFS.forEach(m => c.modes[m.key] = css(m.css));
+  GROUP_DEFS.forEach(g => c.groups[g.key] = css(g.css));
+  return c;
+}
+function baseLayout(c, extra){
+  return Object.assign({
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:"'Space Mono', ui-monospace, monospace", size:11, color:c.text },
+    margin:{ l:64, r:18, t:10, b:46 },
+    hoverlabel:{ bgcolor:c.panelStrong, bordercolor:c.border, font:{ color:c.text, family:"'Space Mono', monospace", size:11 } },
+    legend:{ orientation:'h', x:0, y:1.13, font:{ size:11, color:c.text } }
+  }, extra || {});
+}
+function axis(c, extra){
+  return Object.assign({ gridcolor:c.grid, zerolinecolor:c.grid, linecolor:c.border, tickcolor:c.border, tickfont:{ color:c.muted2, size:11 }, titlefont:{ color:c.muted2, size:11 } }, extra || {});
+}
+const PLOT_CFG = { responsive:true, displaylogo:false, displayModeBar:false };
+function draw(id, traces, layout){
+  const el = $(id);
+  if (!el || !window.Plotly) return;
+  el.querySelectorAll('.empty').forEach(n => n.remove());   // drop a previous "no data" placeholder
+  Plotly.react(el, traces, layout, PLOT_CFG);
+}
+function empty(id, message){
+  const el = $(id);
+  if (!el) return;
+  if (window.Plotly) { try { Plotly.purge(el); } catch (_) {} }
+  el.innerHTML = `<div class="empty">${esc(message)}</div>`;
+}
+
+/* ---------- data model ---------- */
+function buildModel(data){
+  const cfg = data.input_config || {};
+  const orb = cfg.orbit || {};
+  const sum = data.orbit || {};
+  const period = num(orb.period_min, num(sum.periodMin, 0));
+  const sunMin = num(orb.sunlight_min, num(sum.sunlightMin, 0));
+  const eclMin = num(orb.eclipse_min, num(sum.eclipseMin, Math.max(0, period - sunMin)));
+  const N = Math.round(num(orb.daily_orbits, num(sum.dailyOrbits, 15)));
+  const genOrbit = num((cfg.generation || {}).power_generated_per_orbit_Wh, num(sum.powerGeneratedPerOrbitWh, 0));
+  const capacity = num((cfg.battery || {}).capacity_Wh, num(sum.batteryCapacityWh, 0));
+  const margin = num(cfg.margin_fraction, num((data.analysis || {}).margin_fraction, 0));
+  const counts = Object.assign({ idle:0, tx_uhf:0, tx_sband:0, payload:0 }, (cfg.operations || {}).mode_orbits_per_day || {});
+  const summaries = {};
+  (data.mode_summaries || []).forEach(s => { summaries[s.mode_key] = s; });
+  const subs = cfg.subsystems || [];
+  if (!(period > 0) || !subs.length) return null;
+
+  const modes = MODE_DEFS.map(def => {
+    const rows = subs.map(s => {
+      const duty = ((s.duty || {})[def.key]) || {};
+      const dutySun = num(duty.sun, 0), dutyEcl = num(duty.eclipse, 0), P = num(s.powerW, 0);
+      return { name:s.name, group:groupOf(s.name), P, dutySun, dutyEcl,
+        minSun:dutySun * sunMin, minEcl:dutyEcl * eclMin,
+        eSun:P * dutySun * sunMin / 60, eEcl:P * dutyEcl * eclMin / 60 };
+    });
+    const eSun = rows.reduce((a, r) => a + r.eSun, 0);
+    const eEcl = rows.reduce((a, r) => a + r.eEcl, 0);
+    const avgSunW = rows.reduce((a, r) => a + r.P * r.dutySun, 0);
+    const avgEclW = rows.reduce((a, r) => a + r.P * r.dutyEcl, 0);
+    const total = eSun + eEcl;
+    const totalM = total * (1 + margin);
+    const sm = summaries[def.key] || {};
+    return Object.assign({}, def, {
+      rows, eSun, eEcl, total, totalM, avgSunW, avgEclW,
+      count:num(counts[def.key], 0),
+      label:def.label,
+      fullLabel:sm.mode || def.label,
+      peakW:num(sm.peak_power_W, Math.max(avgSunW, avgEclW)),
+      dod:num(sm.orbital_DoD, capacity > 0 ? eEcl / capacity : NaN),
+      savedPerOrbit:genOrbit - totalM
+    });
+  });
+  const byKey = {}; modes.forEach(m => byKey[m.key] = m);
+
+  const orbitsInPlan = MODE_DEFS.reduce((a, d) => a + byKey[d.key].count, 0);
+  const genDay = N * genOrbit;
+  const consDay = modes.reduce((a, m) => a + m.count * m.totalM, 0);
+  const balance = genDay - consDay;
+  const genW = sunMin > 0 ? genOrbit / (sunMin / 60) : 0;
+
+  /* payload orbits the day can sustain (other modes kept as declared, idle fills the rest) */
+  const fixedNonIdle = byKey.tx_uhf.count * byKey.tx_uhf.totalM + byKey.tx_sband.count * byKey.tx_sband.totalM;
+  const nonPayloadNonIdle = byKey.tx_uhf.count + byKey.tx_sband.count;
+  const dE = byKey.payload.totalM - byKey.idle.totalM;
+  const nMax = dE > 1e-9 ? (genDay - fixedNonIdle - (N - nonPayloadNonIdle) * byKey.idle.totalM) / dE : Infinity;
+
+  return { period, sunMin, eclMin, N, genOrbit, genDay, genW, capacity, margin, counts, modes, byKey,
+    orbitsInPlan, consDay, balance, nMax, nonPayloadNonIdle, fixedNonIdle,
+    balanceReported:(data.analysis || {}).daily_balance_Wh, runId:(cfg.star_runtime || {}).run_id || data.run_id || '',
+    startUtc:sum.startUtc || '', attitudeMode:sum.attitudeMode || '' };
+}
+
+function buildSequence(model, order){
+  const keys = MODE_DEFS.map(d => d.key);
+  const total = keys.reduce((a, k) => a + model.byKey[k].count, 0);
+  const seq = [];
+  if (order === 'grouped') {
+    keys.forEach(k => { for (let i = 0; i < model.byKey[k].count; i++) seq.push(k); });
+    return seq;
+  }
+  const given = {}; keys.forEach(k => given[k] = 0);
+  for (let step = 1; step <= total; step++) {
+    let best = null, bestGap = -Infinity;
+    keys.forEach(k => {
+      const cnt = model.byKey[k].count;
+      if (!cnt || given[k] >= cnt) return;
+      const gap = cnt * step / total - given[k];
+      if (gap > bestGap + 1e-12) { bestGap = gap; best = k; }
+    });
+    given[best]++; seq.push(best);
+  }
+  return seq;
+}
+
+function simulateBattery(model, seq){
+  const cap = model.capacity, pts = [{ t:0, e:cap }];
+  let e = cap, t = 0, minE = cap, depleted = false;
+  const perOrbit = [];
+  const seg = (net, dt) => {
+    if (net > 0 && cap > 0) {
+      const tFull = (cap - e) / net;
+      if (tFull < dt) { pts.push({ t:t + tFull, e:cap }); e = cap; t += dt; pts.push({ t, e }); return; }
+    } else if (net < 0) {
+      const tEmpty = e / -net;
+      if (tEmpty < dt) { pts.push({ t:t + tEmpty, e:0 }); e = 0; depleted = true; t += dt; pts.push({ t, e }); return; }
+    }
+    e += net * dt; t += dt; pts.push({ t, e }); minE = Math.min(minE, e);
+  };
+  seq.forEach((k, i) => {
+    const m = model.byKey[k], f = 1 + model.margin;
+    const startE = e;
+    seg(model.genW - m.avgSunW * f, model.sunMin / 60);
+    seg(-m.avgEclW * f, model.eclMin / 60);
+    perOrbit.push({ orbit:i + 1, mode:k, startE, endE:e });
+  });
+  minE = Math.min(minE, ...pts.map(p => p.e));
+  return { pts, minE, depleted, perOrbit };
+}
+
+/* ---------- rendering ---------- */
+function renderBanner(model){
+  const el = $('banner');
+  const bal = model.balance;
+  const pay = model.byKey.payload;
+  let cls = 'good', icon = '✓', head;
+  const tight = Number.isFinite(model.nMax) && model.byKey.payload.count > 0 && (model.nMax - model.byKey.payload.count) < 1;
+  if (bal < 0) { cls = 'critical'; icon = '✕'; head = 'ENERGY DEFICIT'; }
+  else if (tight) { cls = 'warning'; icon = '!'; head = 'ENERGY POSITIVE — TIGHT MARGIN'; }
+  else { head = 'ENERGY POSITIVE'; }
+  const pct = model.consDay > 0 ? (bal / model.consDay * 100) : NaN;
+  let text = `<b>${head}</b> — the daily budget closes with <b>${sgn(bal)} Wh/day</b> (${fmt(model.genDay, 1)} Wh generated vs ${fmt(model.consDay, 1)} Wh consumed incl. ${fmt(model.margin * 100, 0)}% margin${Number.isFinite(pct) ? `, ${sgn(pct, 1)}% of consumption` : ''}).`;
+  if (pay.count > 0) {
+    text += ` Payload mode costs <b>${sgn(pay.savedPerOrbit)} Wh/orbit</b>${pay.savedPerOrbit < 0 ? ' and is recovered by the idle orbits' : ''}; the day sustains at most <b>${Number.isFinite(model.nMax) ? fmt(model.nMax, 1) : '∞'}</b> payload orbits (declared: ${pay.count}).`;
+  }
+  el.className = 'banner ' + cls;
+  el.innerHTML = `<div class="icon" aria-hidden="true">${icon}</div><div>${text}</div>`;
+  el.hidden = false;
+}
+
+function renderKpis(model, batt){
+  const pay = model.byKey.payload, peak = Math.max(...model.modes.map(m => m.peakW));
+  const peakMode = model.modes.reduce((a, m) => m.peakW > a.peakW ? m : a, model.modes[0]);
+  const worstDod = Math.max(...model.modes.filter(m => m.count > 0 || true).map(m => num(m.dod, 0)));
+  const items = [
+    { label:'Daily energy balance', value:sgn(model.balance), unit:'Wh/day', note:`${fmt(model.genDay, 1)} generated · ${fmt(model.consDay, 1)} consumed`,
+      flag:model.balance >= 0 ? { cls:'good', text:'✓ positive' } : { cls:'critical', text:'✕ deficit' } },
+    { label:'Payload orbit balance', value:sgn(pay.savedPerOrbit), unit:'Wh/orbit', note:`${fmt(pay.totalM, 2)} Wh used vs ${fmt(model.genOrbit, 2)} Wh generated`,
+      flag:pay.savedPerOrbit >= 0 ? { cls:'good', text:'✓ self-sustained' } : { cls:'warning', text:'! needs idle orbits' } },
+    { label:'Max payload orbits / day', value:Number.isFinite(model.nMax) ? fmt(model.nMax, 1) : '∞', unit:'', note:`declared ${pay.count} of ${model.N} orbits`,
+      flag:(!Number.isFinite(model.nMax) || model.nMax >= pay.count) ? { cls:(Number.isFinite(model.nMax) && model.nMax - pay.count < 1) ? 'warning' : 'good', text:(Number.isFinite(model.nMax) && model.nMax - pay.count < 1) ? '! margin < 1 orbit' : '✓ within limit' } : { cls:'critical', text:'✕ above limit' } },
+    { label:'Peak load', value:fmt(peak, 2), unit:'W', note:`${peakMode.label} · solar avg ${fmt(model.genW, 2)} W in sunlight` },
+    { label:'Battery', value:fmt(model.capacity, 0), unit:'Wh', note:`worst orbit DoD ${fmt(worstDod * 100, 1)}% · min charge ${fmt(model.capacity > 0 ? batt.minE / model.capacity * 100 : NaN, 0)}% over the day`,
+      flag:batt.depleted ? { cls:'critical', text:'✕ battery depleted' } : null },
+    { label:'Orbit', value:fmt(model.period, 1), unit:'min', note:`${fmt(model.sunMin, 1)} sunlight · ${fmt(model.eclMin, 1)} eclipse (${fmt(model.eclMin / model.period * 100, 0)}%)` }
+  ];
+  $('kpis').innerHTML = items.map(i => `<div class="kpi"><div class="k-label">${esc(i.label)}</div><div class="k-value">${esc(i.value)}<span class="k-unit">${esc(i.unit)}</span></div><div class="k-note">${esc(i.note)}</div>${i.flag ? `<div class="k-flag ${i.flag.cls}">${esc(i.flag.text)}</div>` : ''}</div>`).join('');
+}
+
+function renderModeBar(model, c){
+  const seg = $('mode-seg');
+  seg.innerHTML = model.modes.map(m => `<button type="button" role="tab" data-mode="${m.key}" class="${m.key === state.mode ? 'active' : ''}" aria-selected="${m.key === state.mode}"><span class="dot" style="background:${c.modes[m.key]}"></span>${esc(m.label)}${m.count ? ` <span style="color:var(--muted)">· ${m.count}/day</span>` : ''}</button>`).join('');
+  seg.querySelectorAll('button').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; renderAll(); });
+  $('mode-bar').hidden = false;
+}
+
+function renderTimeline(model, c){
+  const m = model.byKey[state.mode];
+  $('t1-title').textContent = `Subsystem ON/OFF over one orbit · ${m.fullLabel}`;
+  const rowLabel = r => `${r.name} · ${fmt(r.P, r.P < 1 ? 2 : 1)} W`;
+  const rows = m.rows.map(rowLabel);
+  const traces = GROUP_DEFS.map(g => ({ type:'bar', orientation:'h', name:g.label, x:[], base:[], y:[], text:[], customdata:[],
+    marker:{ color:c.groups[g.key], line:{ color:c.groups[g.key], width:1 } }, width:0.62, cliponaxis:false,
+    textposition:'inside', insidetextanchor:'middle', textfont:{ color:'#ffffff', size:10 },
+    hovertemplate:'%{y}<br>%{customdata}<extra></extra>', showlegend:false }));
+  const annotations = [];
+  const place = (r, start, len, phaseName, phaseLen, duty) => {
+    if (!(len > 1e-6)) return;
+    const g = traces[GROUP_DEFS.findIndex(x => x.key === r.group)];
+    const always = duty >= 0.999;
+    const s = always ? start : start + (phaseLen - len) / 2;   // partial duty: centred in the phase (schematic)
+    g.x.push(len); g.base.push(s); g.y.push(rowLabel(r));
+    g.text.push(len >= 6 ? `${fmt(len, len < 10 ? 1 : 0)} min` : '');
+    g.customdata.push(`${phaseName}: ON ${fmt(len, 2)} min of ${fmt(phaseLen, 1)} min (${fmt(duty * 100, 1)}% duty) · ${fmt(r.P, 2)} W`);
+  };
+  m.rows.forEach(r => {
+    place(r, 0, r.minSun, 'Sunlight', model.sunMin, r.dutySun);
+    place(r, model.sunMin, r.minEcl, 'Eclipse', model.eclMin, r.dutyEcl);
+    if (!(r.minSun > 1e-6) && !(r.minEcl > 1e-6)) {
+      annotations.push({ x:model.period / 2, y:rowLabel(r), text:'OFF in this mode', showarrow:false, font:{ color:c.muted, size:10 } });
+    }
+  });
+  annotations.push({ xref:'x', yref:'paper', x:model.sunMin / 2, y:1.0, yanchor:'bottom', text:`SUNLIGHT · ${fmt(model.sunMin, 1)} min`, showarrow:false, font:{ color:c.muted2, size:10 } });
+  annotations.push({ xref:'x', yref:'paper', x:model.sunMin + model.eclMin / 2, y:1.0, yanchor:'bottom', text:`ECLIPSE · ${fmt(model.eclMin, 1)} min`, showarrow:false, font:{ color:c.muted2, size:10 } });
+  const shapes = [
+    { type:'rect', xref:'x', yref:'paper', x0:0, x1:model.sunMin, y0:0, y1:1, fillcolor:c.sunTint, line:{ width:0 }, layer:'below' },
+    { type:'rect', xref:'x', yref:'paper', x0:model.sunMin, x1:model.period, y0:0, y1:1, fillcolor:c.eclTint, line:{ width:0 }, layer:'below' }
+  ];
+  draw('plotTimeline', traces, baseLayout(c, {
+    barmode:'overlay', height:Math.max(300, 46 + rows.length * 30), shapes, annotations,
+    margin:{ l:170, r:18, t:26, b:44 }, showlegend:false,
+    xaxis:axis(c, { range:[0, model.period], title:'Minutes from the start of sunlight', zeroline:false }),
+    yaxis:axis(c, { autorange:'reversed', categoryorder:'array', categoryarray:rows, showgrid:false })
+  }));
+  $('legend-groups').innerHTML = GROUP_DEFS.map(g => `<span><i style="background:${c.groups[g.key]}"></i>${esc(g.label)}</span>`).join('')
+    + `<span><i class="tint-sun"></i>Sunlight phase</span><span><i class="tint-ecl"></i>Eclipse phase</span>`;
+}
+
+function renderDaily(model, c, seq){
+  const T = model.period / 60;
+  const traces = MODE_DEFS.map(d => ({ type:'bar', orientation:'h', name:d.label, x:[], base:[], y:[], customdata:[],
+    marker:{ color:c.modes[d.key], line:{ color:c.panel, width:2 } }, width:0.7,
+    hovertemplate:'%{customdata}<extra></extra>', showlegend:false }));
+  const rowMode = 'Operating mode', rowPay = 'Payload acquisition', rowSun = 'Sunlight / eclipse';
+  const off = { type:'bar', orientation:'h', name:'Payload OFF', x:[], base:[], y:[], customdata:[], marker:{ color:c.muted, opacity:0.28, line:{ color:c.panel, width:2 } }, width:0.32, hovertemplate:'%{customdata}<extra></extra>', showlegend:false };
+  const sunBar = { type:'bar', orientation:'h', name:'Sunlight', x:[], base:[], y:[], marker:{ color:c.muted2, opacity:0.55, line:{ color:c.panel, width:2 } }, width:0.32, hovertemplate:'Sunlight %{x:.2f} h<extra></extra>', showlegend:false };
+  const eclBar = { type:'bar', orientation:'h', name:'Eclipse', x:[], base:[], y:[], marker:{ color:c.border, opacity:1, line:{ color:c.panel, width:2 } }, width:0.32, hovertemplate:'Eclipse %{x:.2f} h<extra></extra>', showlegend:false };
+  const payOn = traces[MODE_DEFS.findIndex(d => d.key === 'payload')];
+  seq.forEach((k, i) => {
+    const idx = MODE_DEFS.findIndex(d => d.key === k), tr = traces[idx];
+    const info = `Orbit ${i + 1} · ${model.byKey[k].fullLabel} · ${fmt(i * T, 1)}–${fmt((i + 1) * T, 1)} h`;
+    tr.x.push(T); tr.base.push(i * T); tr.y.push(rowMode); tr.customdata.push(info);
+    if (k === 'payload') {
+      // payload ON is drawn with the payload-mode trace itself (same entity colour)
+      payOn.x.push(T); payOn.base.push(i * T); payOn.y.push(rowPay); payOn.customdata.push(`Orbit ${i + 1} · payload ON (acquisition mode)`);
+    } else {
+      off.x.push(T); off.base.push(i * T); off.y.push(rowPay); off.customdata.push(`Orbit ${i + 1} · payload OFF (${model.byKey[k].fullLabel})`);
+    }
+    sunBar.x.push(model.sunMin / 60); sunBar.base.push(i * T); sunBar.y.push(rowSun);
+    eclBar.x.push(model.eclMin / 60); eclBar.base.push(i * T + model.sunMin / 60); eclBar.y.push(rowSun);
+  });
+  const all = traces.concat([off, sunBar, eclBar]);
+  const orbitsN = seq.length;
+  const shapes = [];
+  for (let i = 0; i <= orbitsN; i++) shapes.push({ type:'line', xref:'x', yref:'paper', x0:i * T, x1:i * T, y0:0, y1:1, line:{ color:c.grid, width:1 }, layer:'below' });
+  draw('plotDaily', all, baseLayout(c, {
+    barmode:'overlay', height:230, shapes, margin:{ l:150, r:18, t:10, b:46 }, showlegend:false,
+    xaxis:axis(c, { range:[0, orbitsN * T], title:`Orbit number (${fmt(model.period, 1)} min each · ${fmt(orbitsN * T, 1)} h in total)`, tickvals:Array.from({ length:orbitsN }, (_, i) => (i + 0.5) * T), ticktext:Array.from({ length:orbitsN }, (_, i) => String(i + 1)), zeroline:false, showgrid:false }),
+    yaxis:axis(c, { autorange:'reversed', categoryorder:'array', categoryarray:[rowMode, rowPay, rowSun], showgrid:false })
+  }));
+  $('legend-modes').innerHTML = MODE_DEFS.map(d => `<span><i style="background:${c.modes[d.key]}"></i>${esc(d.label)}${model.byKey[d.key].count ? ` · ${model.byKey[d.key].count} orbits` : ' · 0 orbits'}</span>`).join('')
+    + `<span><i style="background:${c.muted};opacity:.4"></i>Payload OFF</span>`;
+  const mismatch = model.orbitsInPlan !== model.N;
+  $('t2-hint').textContent = mismatch
+    ? `Warning: the declared mode orbits (${model.orbitsInPlan}) differ from the ${model.N} orbits/day of the orbit model.`
+    : `${model.N} orbits/day · mode budget as declared in the END-004 input; the order of the orbits is not defined by END-004.`;
+}
+
+function pie(id, labels, values, hover, cols, centerTop, centerBottom, c, unit){
+  const idx = values.map((v, i) => v > 1e-9 ? i : -1).filter(i => i >= 0);
+  if (!idx.length) { empty(id, 'No consumption in this mode'); return; }
+  draw(id, [{ type:'pie', hole:0.58, sort:false, direction:'clockwise', labels:idx.map(i => labels[i]), values:idx.map(i => values[i]),
+    customdata:idx.map(i => hover[i]), marker:{ colors:idx.map(i => cols[i]), line:{ color:c.panel, width:2 } },
+    textinfo:'percent', textposition:'outside', textfont:{ color:c.text, size:11 }, automargin:false,
+    hovertemplate:`%{label}<br>%{value:.3f} ${unit} (%{percent})<br>%{customdata}<extra></extra>`, showlegend:true }],
+  baseLayout(c, { height:300, margin:{ l:44, r:44, t:26, b:64 }, showlegend:true,
+    legend:{ orientation:'h', x:0.5, xanchor:'center', y:-0.02, yanchor:'top', font:{ size:10, color:c.text } },
+    annotations:[{ text:`<b style="font-size:16px">${centerTop}</b><br><span style="font-size:10px">${centerBottom}</span>`, showarrow:false, x:0.5, y:0.5, font:{ color:c.strong } }] }));
+}
+
+function groupTotals(m, fn){
+  return GROUP_DEFS.map(g => {
+    const rows = m.rows.filter(r => r.group === g.key);
+    return { value:rows.reduce((a, r) => a + fn(r), 0), rows };
+  });
+}
+
+function renderPies(model, c){
+  const m = model.byKey[state.mode];
+  $('pies-hint').textContent = `Function shares for the selected mode (${m.fullLabel}); the last pie compares operating modes.`;
+  const labels = GROUP_DEFS.map(g => g.label.split(' (')[0]);
+  const cols = GROUP_DEFS.map(g => c.groups[g.key]);
+  const eGroups = groupTotals(m, r => r.eSun + r.eEcl);
+  pie('pieEnergy', labels, eGroups.map(x => x.value),
+    eGroups.map(x => x.rows.filter(r => r.eSun + r.eEcl > 1e-9).map(r => `${r.name} ${fmt(r.eSun + r.eEcl, 3)} Wh`).join(' · ') || '—'),
+    cols, fmt(m.total, 2), 'Wh / orbit', c, 'Wh');
+  const sGroups = groupTotals(m, r => r.P * r.dutySun);
+  pie('pieSun', labels, sGroups.map(x => x.value),
+    sGroups.map(x => x.rows.filter(r => r.P * r.dutySun > 1e-9).map(r => `${r.name} ${fmt(r.P * r.dutySun, 3)} W`).join(' · ') || '—'),
+    cols, fmt(m.avgSunW, 2), 'W average', c, 'W');
+  const xGroups = groupTotals(m, r => r.P * r.dutyEcl);
+  pie('pieEcl', labels, xGroups.map(x => x.value),
+    xGroups.map(x => x.rows.filter(r => r.P * r.dutyEcl > 1e-9).map(r => `${r.name} ${fmt(r.P * r.dutyEcl, 3)} W`).join(' · ') || '—'),
+    cols, fmt(m.avgEclW, 2), 'W average', c, 'W');
+  const dayModes = model.modes.filter(x => x.count > 0);
+  pie('pieDaily', dayModes.map(x => `${x.label} ×${x.count}`), dayModes.map(x => x.count * x.totalM),
+    dayModes.map(x => `${fmt(x.totalM, 3)} Wh/orbit × ${x.count} orbits`), dayModes.map(x => c.modes[x.key]),
+    fmt(model.consDay, 1), `Wh/day · ${fmt(model.genDay, 1)} generated`, c, 'Wh');
+}
+
+function renderBattery(model, c, seq, batt){
+  if (!seq.length || !(model.capacity > 0)) { empty('plotBattery', 'No battery data'); return; }
+  const T = model.period / 60;
+  const shapes = seq.map((k, i) => ({ type:'rect', xref:'x', yref:'paper', x0:i * T, x1:(i + 1) * T, y0:0, y1:0.06, fillcolor:c.modes[k], opacity:0.85, line:{ color:c.panel, width:2 }, layer:'above' }));
+  const yMin = Math.max(0, Math.min(100, batt.minE / model.capacity * 100 - 6));
+  draw('plotBattery', [{ type:'scatter', mode:'lines', name:'Battery energy', x:batt.pts.map(p => p.t), y:batt.pts.map(p => p.e / model.capacity * 100),
+    customdata:batt.pts.map(p => p.e), line:{ color:c.modes.idle, width:2 }, hovertemplate:'%{x:.2f} h · %{y:.1f}% (%{customdata:.2f} Wh)<extra></extra>' }],
+  baseLayout(c, { height:300, shapes, showlegend:false,
+    annotations:[{ x:batt.pts.reduce((a, p) => p.e < a.e ? p : a, batt.pts[0]).t, y:batt.minE / model.capacity * 100, text:`min ${fmt(batt.minE / model.capacity * 100, 0)}%`, showarrow:true, arrowhead:0, ax:0, ay:-26, font:{ color:c.text, size:10 }, arrowcolor:c.muted }],
+    xaxis:axis(c, { title:'Hours from the start of the day', range:[0, seq.length * T], zeroline:false }),
+    yaxis:axis(c, { title:'State of charge [%]', range:[yMin, 101] }) }));
+}
+
+function renderProfile(model, c){
+  const traces = [{ type:'scatter', mode:'lines', name:`Solar generation (${fmt(model.genW, 2)} W)`, x:[0, model.sunMin, model.sunMin, model.period], y:[model.genW, model.genW, 0, 0], fill:'tozeroy',
+    fillcolor:c.muted2.startsWith('#') ? c.muted2 + '22' : 'rgba(150,160,180,.15)', line:{ color:c.muted2, width:2 }, hovertemplate:'generation %{y:.2f} W<extra></extra>' }];
+  const f = 1 + model.margin;
+  model.modes.forEach(m => traces.push({ type:'scatter', mode:'lines', name:m.label, x:[0, model.sunMin, model.sunMin, model.period],
+    y:[m.avgSunW * f, m.avgSunW * f, m.avgEclW * f, m.avgEclW * f], line:{ color:c.modes[m.key], width:2 }, hovertemplate:`${m.label}: %{y:.2f} W<extra></extra>` }));
+  draw('plotProfile', traces, baseLayout(c, { height:300,
+    shapes:[{ type:'rect', xref:'x', yref:'paper', x0:model.sunMin, x1:model.period, y0:0, y1:1, fillcolor:c.eclTint, line:{ width:0 }, layer:'below' }],
+    xaxis:axis(c, { title:'Minutes from the start of sunlight', range:[0, model.period], zeroline:false }),
+    yaxis:axis(c, { title:'Average power [W]', rangemode:'tozero' }) }));
+}
+
+function renderSensitivity(model, c){
+  const nMaxSweep = model.N - model.nonPayloadNonIdle;
+  const xs = [], ys = [];
+  for (let n = 0; n <= nMaxSweep; n++) {
+    xs.push(n);
+    const idle = model.N - n - model.nonPayloadNonIdle;
+    ys.push(model.genDay - model.fixedNonIdle - n * model.byKey.payload.totalM - idle * model.byKey.idle.totalM);
+  }
+  const cur = model.byKey.payload.count;
+  const traces = [{ type:'scatter', mode:'lines+markers', name:'Daily balance', x:xs, y:ys, line:{ color:c.modes.idle, width:2 }, marker:{ size:8, color:c.modes.idle, line:{ color:c.panel, width:2 } },
+    hovertemplate:'%{x} payload orbits → %{y:+.2f} Wh/day<extra></extra>' }];
+  const curIdx = xs.indexOf(cur);
+  if (curIdx >= 0) traces.push({ type:'scatter', mode:'markers+text', name:'Declared allocation', x:[cur], y:[ys[curIdx]], text:[`declared: ${cur} (${sgn(ys[curIdx])} Wh)`], textposition:'top right', textfont:{ color:c.strong, size:11 },
+    marker:{ size:14, color:c.modes.payload, line:{ color:c.strong, width:2 } }, hovertemplate:'declared allocation<extra></extra>' });
+  $('sens-hint').textContent = Number.isFinite(model.nMax) ? `Zero crossing at ${fmt(model.nMax, 1)} payload orbits/day` : 'Balance stays positive for every allocation';
+  draw('plotSens', traces, baseLayout(c, { height:300, showlegend:false,
+    xaxis:axis(c, { title:'Payload orbits per day (remaining orbits idle)', dtick:1, zeroline:false }),
+    yaxis:axis(c, { title:'Daily energy balance [Wh]', zeroline:true, zerolinecolor:c.muted, zerolinewidth:1.5 }) }));
+}
+
+function renderWaterfall(model, c){
+  const dayModes = model.modes.filter(x => x.count > 0);
+  const x = ['Generation'], base = [0], y = [model.genDay], cols = [c.muted2], text = [`+${fmt(model.genDay, 1)}`], hover = [`Generation: +${fmt(model.genDay, 2)} Wh/day`];
+  let running = model.genDay;
+  dayModes.forEach(m => {
+    const cons = m.count * m.totalM;
+    running -= cons;
+    x.push(`${m.label} ×${m.count}`); base.push(running); y.push(cons); cols.push(c.modes[m.key]);
+    text.push(`−${fmt(cons, 1)}`); hover.push(`${m.fullLabel}: −${fmt(cons, 2)} Wh/day (${m.count} orbits × ${fmt(m.totalM, 3)} Wh)`);
+  });
+  const net = running;
+  x.push('Net balance'); base.push(0); y.push(net); cols.push(net >= 0 ? c.good : c.critical);
+  text.push(`${sgn(net)} ${net >= 0 ? '✓' : '✕'}`); hover.push(`Net balance: ${sgn(net, 2)} Wh/day`);
+  draw('plotWaterfall', [{ type:'bar', x, y, base, text, textposition:'outside', textfont:{ color:c.text, size:11 }, cliponaxis:false,
+    marker:{ color:cols, line:{ color:c.panel, width:2 } }, width:0.55, hovertext:hover, hoverinfo:'text' }],
+  baseLayout(c, { height:300, showlegend:false, margin:{ l:64, r:18, t:26, b:60 },
+    xaxis:axis(c, { showgrid:false }), yaxis:axis(c, { title:'Energy [Wh/day]', zeroline:true, zerolinecolor:c.muted }) }));
+}
+
+function tableHtml(title, head, rows){
+  const th = head.map(h => `<th>${esc(h)}</th>`).join('');
+  const tr = rows.map(r => `<tr>${r.map(v => `<td class="${v && v.cls ? v.cls : ''}">${esc(v && v.t !== undefined ? v.t : v)}</td>`).join('')}</tr>`).join('');
+  return `<div class="table-title">${esc(title)}</div><div class="table-wrap"><table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+}
+function renderTables(model, seq, batt){
+  const t1 = tableHtml('Mode summary (per orbit)', ['Mode', 'Orbits/day', 'Sunlight Wh', 'Eclipse Wh', 'Total Wh', 'Total + margin Wh', 'Generated Wh', 'Saved Wh', 'Avg W sun', 'Avg W eclipse', 'Peak W', 'DoD %'],
+    model.modes.map(m => [m.fullLabel, m.count, fmt(m.eSun, 3), fmt(m.eEcl, 3), fmt(m.total, 3), fmt(m.totalM, 3), fmt(model.genOrbit, 3), { t:sgn(m.savedPerOrbit, 3), cls:m.savedPerOrbit >= 0 ? 'pos' : 'neg' }, fmt(m.avgSunW, 3), fmt(m.avgEclW, 3), fmt(m.peakW, 3), fmt(num(m.dod, 0) * 100, 2)]));
+  const m = model.byKey[state.mode];
+  const t2 = tableHtml(`Subsystems · ${m.fullLabel}`, ['Subsystem', 'Function', 'Power W', 'Duty sun %', 'Duty eclipse %', 'ON min sun', 'ON min eclipse', 'Wh sun', 'Wh eclipse'],
+    m.rows.map(r => [r.name, GROUP_DEFS.find(g => g.key === r.group).label.split(' (')[0], fmt(r.P, 3), fmt(r.dutySun * 100, 2), fmt(r.dutyEcl * 100, 2), fmt(r.minSun, 2), fmt(r.minEcl, 2), fmt(r.eSun, 4), fmt(r.eEcl, 4)]));
+  const t3 = tableHtml(`Daily allocation (${state.order})`, ['Orbit', 'Mode', 'Battery start Wh', 'Battery end Wh', 'Net Wh'],
+    batt.perOrbit.map(o => [o.orbit, model.byKey[o.mode].fullLabel, fmt(o.startE, 2), fmt(o.endE, 2), { t:sgn(o.endE - o.startE, 2), cls:(o.endE - o.startE) >= 0 ? 'pos' : 'neg' }]));
+  $('tables').innerHTML = t1 + t2 + t3;
+}
+
+function renderAll(){
+  if (!state.model) return;
+  const c = colors();
+  const seq = buildSequence(state.model, state.order);
+  const batt = simulateBattery(state.model, seq);
+  renderBanner(state.model);
+  renderKpis(state.model, batt);
+  renderModeBar(state.model, c);
+  renderTimeline(state.model, c);
+  renderDaily(state.model, c, seq);
+  renderPies(state.model, c);
+  renderBattery(state.model, c, seq, batt);
+  renderProfile(state.model, c);
+  renderSensitivity(state.model, c);
+  renderWaterfall(state.model, c);
+  renderTables(state.model, seq, batt);
+}
+
+/* ---------- data loading ---------- */
+function extractJs(text){
+  const m = String(text || '').match(/(?:window\.)?powerBudgetData\s*=\s*([\s\S]*?)\s*;?\s*$/);
+  return m ? JSON.parse(m[1]) : null;
+}
+function setLoaded(ok, label){
+  $('status-dot').classList.toggle('loaded', ok);
+  $('load-status').textContent = label;
+}
+function applyData(data, labels){
+  const model = buildModel(data || {});
+  if (!model) { setLoaded(false, 'END-004 data found, but the orbit/subsystem model is incomplete'); return false; }
+  state.data = data; state.model = model; state.labels = labels || {};
+  const run = model.runId ? `${model.runId} · ` : '';
+  setLoaded(true, `${run}Loaded · ${model.modes.length} modes · ${model.modes[0].rows.length} subsystems`);
+  if (labels && (labels.product || labels.all)) $('source-label').textContent = `${labels.product || labels.all} · derived from power_budget_summary.json`;
+  renderAll();
+  return true;
+}
+async function loadFiles(files, labels){
+  const arr = Array.from(files || []);
+  const sj = arr.find(f => f.name.toLowerCase() === 'power_budget_summary.json');
+  const js = arr.find(f => f.name.toLowerCase() === 'power_budget_tables.js');
+  let data = null;
+  try { if (sj) data = JSON.parse(await sj.text()); } catch (e) { console.warn(e); }
+  try { if (!data && js) data = extractJs(await js.text()); } catch (e) { console.warn(e); }
+  if (!data) { setLoaded(false, 'power_budget_summary.json not found in the selected folder'); return false; }
+  return applyData(data, labels);
+}
+async function collect(handle, prefix = ''){
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === 'file') { const f = await entry.getFile(); f.relativeDisplayPath = `${prefix}${name}`; files.push(f); }
+    else if (entry.kind === 'directory') files.push(...await collect(entry, `${prefix}${name}/`));
+  }
+  return files;
+}
+async function requestFolder(){
+  if (window.parent && window.parent !== window && typeof window.parent.STAR_PICK_DIRECTORY === 'function') {
+    const picked = await window.parent.STAR_PICK_DIRECTORY('power', 'all');
+    if (picked && picked.files) { await loadFiles(picked.files, { all:picked.label }); return; }
+  }
+  if ('showDirectoryPicker' in window) {
+    try { const h = await window.showDirectoryPicker({ mode:'read', id:'star-power-insights' }); await loadFiles(await collect(h, `${h.name}/`), { all:h.name }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; console.warn(e); }
+  }
+  $('powerFolderInput').click();
+}
+
+window.receivePowerInsightsFilesFromParent = async function(payload = {}, labels = {}){
+  await loadFiles([...(payload.productFiles || []), ...(payload.resultFiles || [])], labels);
+};
+window.loadPowerInsightsData = applyData;   // direct feed (tests / scripting)
+window.refreshPowerInsightsDashboard = function(){ if (state.model) renderAll(); };
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('manual-load').onclick = requestFolder;
+  $('powerFolderInput').addEventListener('change', async e => { await loadFiles(e.target.files, { all:'Selected END-004 folder' }); e.target.value = ''; });
+  $('order-select').addEventListener('change', e => { state.order = e.target.value; renderAll(); });
+  new MutationObserver(() => { if (state.model) renderAll(); }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  let t = null;
+  window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (state.model) renderAll(); }, 120); });
+  empty('plotTimeline', 'Select a RUN folder to load the END-004 power budget.');
+});
+})();
+</script>
+</body>
+</html>

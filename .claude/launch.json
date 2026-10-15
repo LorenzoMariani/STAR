@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend-web-static",
+      "runtimeExecutable": "C:/Users/s5oss/anaconda3/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8743", "--directory", "C:/Users/s5oss/Desktop/SIU/STAR/FrontEnd/web"],
+      "port": 8743
+    }
+  ]
+}

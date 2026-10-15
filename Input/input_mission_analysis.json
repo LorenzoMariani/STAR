@@ -1,0 +1,40 @@
+{
+    "TimeSettings": {
+        "StartDate": [2026, 5, 21],
+        "StartHour": 13,
+        "StartMin": 41,
+        "StartSec": 10,
+	"sim_hours": 48,
+    },
+    "sat": {
+        "m": 4,
+    	"A_ref": 0.03,
+    	"Cr": 1.2,
+    	"Cd": 2.2,
+    	"r_cp": [0.002, 0.002, 0.005],
+    	"Ix": 0.03,
+    	"Iy": 0.03,
+    	"Iz": 0.01
+    },
+    "SensorSettings": {
+        "SAR_Configuration": "Left & Right",
+        "SAR_Theta_min": 15,
+        "SAR_Theta_max": 50,
+        "Optic_Steerable": "Field of View",
+        "Optic_CON_FOV": 15,
+        "Optic_PBS_FOV": 15,
+        "Operative_Mode": "Single Sensor",
+        "Single_Sensor_Type": "SAR",
+        "Sun_Constraint": true
+    },
+    "RegionSettings": {
+    "AreaofInterest": "Italy",
+    "Default_LATkm": 25,
+    "Default_LONkm": 25,
+    "CustomCoordinates": [
+        [45.5, 12.2],
+        [44.1, 11.5],
+        [43.2, 13.1]
+    ]
+    },
+}

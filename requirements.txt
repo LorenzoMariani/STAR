@@ -1,0 +1,4 @@
+pywebview
+PyYAML
+openai
+python-docx

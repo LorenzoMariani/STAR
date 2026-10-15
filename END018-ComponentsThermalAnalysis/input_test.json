@@ -1,0 +1,12 @@
+{
+  "star_input_dir": "./esempi_io_star",
+  "output_dir": "./output_test",
+
+  "form_factor": "3U",
+  "panels": "deployable",
+  "n_internal_nodes": 3,
+
+  "sar_power_W": 200,
+  "sar_source": "duty",
+  "sar_duty": 0.30
+}

@@ -1,0 +1,6 @@
+satellite_index,source_json,sim_start_date,sim_hours,alt_perigee_m,alt_apogee_m,inclination_deg,raan_deg,omega_deg,nu_deg
+1,satellite_01.json,2026-05-21 13:41:10,48,1.19966e+06,1.19966e+06,100.419,132.404,0,0
+2,satellite_02.json,2026-05-21 13:41:10,48,1.19966e+06,1.19966e+06,100.419,168.404,0,144
+3,satellite_03.json,2026-05-21 13:41:10,48,1.19966e+06,1.19966e+06,100.419,-155.596,0,288
+4,satellite_04.json,2026-05-21 13:41:10,48,1.19966e+06,1.19966e+06,100.419,-119.596,0,72
+5,satellite_05.json,2026-05-21 13:41:10,48,1.19966e+06,1.19966e+06,100.419,-83.5955,0,216

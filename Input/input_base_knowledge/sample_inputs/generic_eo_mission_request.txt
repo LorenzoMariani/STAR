@@ -1,0 +1,1 @@
+A preliminary Earth observation mission is required to monitor a target area with frequent acquisitions. The mission concept is not yet fully defined. The system shall identify missing mission parameters and support a first feasibility assessment.

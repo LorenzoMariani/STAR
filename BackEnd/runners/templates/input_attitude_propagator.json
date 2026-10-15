@@ -1,0 +1,44 @@
+{
+  "sim_start_date": "2026-05-21 13:41:10",
+  "sim_hours": 48,
+  "sat": {
+    "attitude_mode": "nadir",
+    "q0": [0, 0, 0, 1],
+    "w0": [0.00015, 0.0008, 0.0004],
+    "m": 4,
+    "A_ref": 0.03,
+    "Cr": 1.2,
+    "Cd": 2.2,
+    "r_cp": [0.002, 0.002, 0.005],
+    "Ix": 0.03,
+    "Iy": 0.03,
+    "Iz": 0.01
+  },
+  "env": {
+    "Re": 6371000,
+    "flags": {
+      "gg": true,
+      "srp": true,
+      "drag": true,
+      "pert": true,
+      "j2": true,
+      "j3": true
+    }
+  },
+  "target": {
+    "site_lat_deg": 44.4056,
+    "site_lon_deg": 8.9463,
+    "elev_threshold": 10,
+	"Sun_Constraint": true,
+	"Sun_Constraint_Mode": "day",
+	"Sun_Elevation_Threshold_Deg": 0
+  },
+  "orbit": {
+    "alt_perigee_m": 791000,
+    "alt_apogee_m": 791000,
+    "inclination_deg": 98.565089422217142,
+    "raan_deg": -87.213552991799986,
+    "omega_deg": 0,
+    "nu_deg": 160
+  }
+}

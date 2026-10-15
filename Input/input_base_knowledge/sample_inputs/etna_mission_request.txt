@@ -1,0 +1,1 @@
+The mission shall monitor volcanic activity over Mount Etna using an optical Earth observation payload. The system should provide frequent revisit over the target area and generate acquisition opportunities. A preliminary power feasibility assessment shall be performed.

@@ -1,0 +1,416 @@
+module_id: END-003
+module_name: attitude propagation
+module_type: digital_twin_module
+module_version: "0.1.0"
+owner: UNIRM1
+
+responsible:
+  leader: Lorenzo Mariani
+  co_leader: Fabrizio Piergentili
+
+source_documents:
+  - STAR_IDD_END-003.md
+
+description: >
+  Propagate the spacecraft orbital path together with spacecraft attitude
+  kinematics and, when required, attitude dynamics. The module generates
+  time-tagged orbital state vectors, attitude quaternions and pointing-error
+  telemetry during selected visibility or tracking windows. These outputs
+  provide downstream modules with the spacecraft-target geometry and attitude
+  state information required for synthetic data generation, observation
+  simulation and attitude visualization. When END-001 delivers a constellation,
+  the module screens every satellite and selects (1) the satellite and the
+  daylight pass in visibility of the target site used by END-007, and (2) a
+  night pass, visible from a ground observer (e.g. the Matera telescope) with
+  the satellite sunlit, used by END-010. The selected satellite, pass date and
+  pass start/end times are written to selected_passes.json.
+
+capabilities:
+  - orbital_propagation
+  - attitude_propagation
+  - attitude_kinematics
+  - attitude_dynamics
+  - nadir_pointing_simulation
+  - target_tracking
+  - follow_site_pointing
+  - environmental_disturbance_torque_modeling
+  - gravity_gradient_torque_modeling
+  - solar_radiation_pressure_torque_modeling
+  - aerodynamic_drag_torque_modeling
+  - visibility_filtering
+  - ground_station_pass_selection
+  - pointing_error_estimation
+  - spacecraft_state_telemetry_generation
+  - synthetic_data_geometry_support
+  - attitude_visualization_support
+  - constellation_pass_planning
+  - daylight_imaging_pass_selection
+  - night_pass_selection_for_light_curve
+
+domain_of_validity:
+  mission_phase:
+    - pre_phase_a
+    - phase_a
+    - design_trade_off
+    - simulation_support
+  mission_type:
+    - earth_observation
+    - remote_sensing
+    - observation_planning
+    - synthetic_data_generation
+    - attitude_sensitivity_analysis
+  fidelity_level: preliminary_to_intermediate
+  notes: >
+    The registry entry describes the interface contract required by STAR.
+    The internal propagation algorithms and MATLAB implementation remain owned
+    by the module provider. The module is especially relevant when downstream
+    analyses require time-varying spacecraft attitude, quaternion profiles,
+    line-of-sight geometry, pointing offsets or visibility-filtered trajectory
+    data.
+
+planning_guidance: >
+  Select this module when the requested outputs or downstream modules require
+  spacecraft attitude profiles, pointing-law simulation, target tracking,
+  visibility-window telemetry, quaternion time histories or pointing-error
+  assessment. For Earth observation workflows, this module is normally useful
+  between orbit/constellation-level analysis and synthetic data generation when
+  synthetic observations must reflect spacecraft attitude and sensor-target
+  geometry. Do not select this module for a purely constellation-level revisit
+  estimate unless attitude or pointing information is explicitly required.
+
+required_inputs:
+  - name: simulation_start_date
+    kind: parameter
+    data_type: string
+    unit: UTC
+    required: true
+    default_value: null
+    assumption_allowed: true
+    description: >
+      UTC start date of the propagation window, corresponding to
+      cfg.sim_start_date in the module input JSON.
+    missing_information_reason: >
+      Required to define the temporal baseline of the orbital and attitude
+      propagation.
+
+  - name: simulation_duration_hours
+    kind: parameter
+    data_type: float
+    unit: h
+    required: true
+    default_value: 48
+    valid_range:
+      min: 0.1
+      max: 8760
+    assumption_allowed: true
+    description: >
+      Duration of the propagation window, corresponding to cfg.sim_hours in the
+      module input JSON.
+    missing_information_reason: >
+      Required to define the time span over which visibility windows, attitude
+      states and pointing errors are computed.
+
+  - name: orbit_initial_conditions
+    kind: parameter_group
+    data_type: object
+    unit: mixed
+    required: true
+    default_value: null
+    assumption_allowed: true
+    produced_by:
+      module_id: END-001
+      output: constellation_trajectories
+    fields:
+      - alt_perigee_m
+      - alt_apogee_m
+      - inclination_deg
+      - raan_deg
+      - omega_deg
+      - nu_deg
+    description: >
+      Keplerian initial conditions used by the propagator, corresponding to
+      cfg.orbit in the module input JSON.
+    missing_information_reason: >
+      Required to initialize the orbital propagation. These values may be
+      provided by the user, assumed for a preliminary case, or derived from an
+      upstream orbit/constellation analysis.
+
+  - name: target_site
+    kind: parameter_group
+    data_type: object
+    unit: mixed
+    required: true
+    default_value: null
+    assumption_allowed: false
+    fields:
+      - site_lat_deg
+      - site_lon_deg
+      - elev_threshold_deg
+    description: >
+      Ground target or station coordinates and minimum topocentric elevation
+      threshold, corresponding to cfg.target in the module input JSON.
+    missing_information_reason: >
+      Required to evaluate target visibility, tracking windows and pass
+      selection. If only a named target is provided, coordinates or a resolved
+      site definition are still required before execution.
+
+  - name: attitude_mode
+    kind: parameter
+    data_type: string
+    unit: "-"
+    required: true
+    default_value: nadir
+    allowed_values:
+      - dynamics
+      - nadir
+      - follow_site
+    assumption_allowed: true
+    description: >
+      Operational attitude configuration. The dynamics mode propagates Euler
+      rotational dynamics and quaternion kinematics; nadir mode enforces ideal
+      geocentric nadir alignment; follow_site mode uses nadir pointing with an
+      automated maneuver toward the target site during visibility windows.
+    missing_information_reason: >
+      Required to determine whether the module should perform dynamic attitude
+      propagation, ideal nadir pointing or target-tracking behaviour.
+
+  - name: initial_attitude_state
+    kind: parameter_group
+    data_type: object
+    unit: mixed
+    required: false
+    default_value:
+      q0: [1.0, 0.0, 0.0, 0.0]
+      w0_rad_s: [0.0, 0.0, 0.0]
+    assumption_allowed: true
+    fields:
+      - q0
+      - w0
+    description: >
+      Initial spacecraft attitude quaternion and angular velocity, corresponding
+      to cfg.sat.q0 and cfg.sat.w0 in the module input JSON.
+    missing_information_reason: >
+      Required for dynamic attitude propagation and useful for reproducible
+      attitude simulations.
+
+  - name: spacecraft_physical_properties
+    kind: parameter_group
+    data_type: object
+    unit: mixed
+    required: false
+    required_when: attitude_mode == dynamics
+    default_value: null
+    assumption_allowed: true
+    fields:
+      - m
+      - A_ref
+      - Cr
+      - Cd
+      - r_cp
+      - Ix
+      - Iy
+      - Iz
+    description: >
+      Spacecraft mass properties, aerodynamic and radiation-pressure parameters,
+      centre-of-pressure vector and principal inertia components, corresponding
+      to cfg.sat in the module input JSON.
+    missing_information_reason: >
+      Required when environmental disturbance torques or full attitude dynamics
+      are propagated.
+
+  - name: environmental_flags
+    kind: parameter_group
+    data_type: object
+    unit: "-"
+    required: true
+    default_value:
+      gg: true
+      srp: false
+      drag: false
+      pert: true
+      j2: true
+      j3: true
+    assumption_allowed: true
+    fields:
+      - gg
+      - srp
+      - drag
+      - pert
+      - j2
+      - j3
+    description: >
+      Environmental and perturbation flags controlling gravity-gradient torque,
+      solar radiation pressure, aerodynamic drag and orbital perturbations up to
+      J2/J3, corresponding to cfg.env.flags in the module input JSON.
+    missing_information_reason: >
+      Required to define propagation fidelity and environmental disturbance
+      modelling assumptions.
+
+  - name: output_directory
+    kind: execution_parameter
+    data_type: string
+    unit: "-"
+    required: false
+    default_value: simulation_outputs
+    assumption_allowed: true
+    description: >
+      Destination folder where CSV telemetry and validation figures are written.
+    missing_information_reason: >
+      Required only for execution management; if not provided, the module uses
+      its default output folder.
+
+outputs:
+  - name: ground_station_pass_telemetry
+    kind: artifact
+    artifact_name: gs_pass.csv
+    data_type: csv
+    description: >
+      Visibility-filtered trajectory and attitude telemetry for the selected
+      tracking pass. The file includes timestamp_utc, ECI position components,
+      scalar-first ECI-to-Body quaternion components and nadir pointing offset.
+
+  - name: eci_position_profile
+    kind: result
+    artifact_name: gs_pass.csv
+    data_type: csv
+    description: >
+      Time-tagged spacecraft ECI position profile expressed in kilometres and
+      embedded in the gs_pass.csv telemetry artifact.
+
+  - name: attitude_quaternion_profile
+    kind: result
+    artifact_name: gs_pass.csv
+    data_type: csv
+    description: >
+      Time-tagged scalar-first ECI-to-Body attitude quaternion profile embedded
+      in the gs_pass.csv telemetry artifact.
+
+  - name: pointing_error_profile
+    kind: result
+    artifact_name: gs_pass.csv
+    data_type: csv
+    description: >
+      Time-tagged nadir pointing-offset profile expressed in degrees and
+      embedded in the gs_pass.csv telemetry artifact.
+
+  - name: telemetry_validation_plot
+    kind: artifact
+    artifact_name: 01_telemetry.png
+    data_type: png
+    description: >
+      Validation figure containing angular kinematics, torque and altitude
+      histories.
+
+  - name: tracking_validation_plot
+    kind: artifact
+    artifact_name: 02_tracking.png
+    data_type: png
+    description: >
+      Validation figure containing elevation profiles and pointing-error
+      matrices.
+
+  - name: angular_momentum_plot
+    kind: artifact
+    artifact_name: 03_angular_momentum.png
+    data_type: png
+    description: >
+      Validation figure representing spacecraft angular momentum modulus and
+      direction in ECI.
+
+  - name: ground_track_plot
+    kind: artifact
+    artifact_name: 04_ground_track.png
+    data_type: png
+    description: >
+      Two-dimensional geographic projection of complete and active-pass arcs.
+
+  - name: orbit_3d_ecef_plot
+    kind: artifact
+    artifact_name: 05_orbit_3d_ecef.png
+    data_type: png
+    description: >
+      Three-dimensional orbital trajectory representation in the ECEF frame.
+
+  - name: orbit_3d_eci_plot
+    kind: artifact
+    artifact_name: 06_orbit_3d_eci.png
+    data_type: png
+    description: >
+      Three-dimensional orbital trajectory representation in the ECI frame.
+
+  - name: selected_passes
+    kind: result
+    artifact_name: selected_passes.json
+    data_type: json
+    description: >
+      Satellite and pass selected by the END-003 pass planner: imaging pass in
+      daylight over the target site (consumed by END-007) and night light-curve
+      pass visible from the observer, e.g. Matera (consumed by END-010), each
+      with satellite index, pass date, start time, end time (UTC), peak
+      elevation and Sun elevation.
+
+  - name: selected_pass_summary
+    kind: result
+    artifact_name: selected_pass_summary.csv
+    data_type: csv
+    description: Flat table of the selected imaging and light-curve passes.
+
+  - name: pass_candidates
+    kind: result
+    artifact_name: pass_candidates.csv
+    data_type: csv
+    description: All evaluated imaging pass candidates over the target site, with the selected one flagged.
+
+  - name: lightcurve_pass_ephemeris
+    kind: artifact
+    artifact_name: output_attitude_propagation_lightcurve_ECI.csv
+    data_type: csv
+    description: >
+      ECI position and nadir attitude of the satellite during the selected night
+      pass visible from the observer, sampled every 10 s; ephemeris input of END-010.
+
+  - name: performance_kpi_catalog
+    kind: result
+    artifact_name: attitude_summary.json
+    data_type: json
+    description: >
+      Numbered key-performance-indicator catalog (run_validity,
+      pointing_performance, disturbance_environment and momentum_and_rates
+      categories) summarizing the propagation run -- ground-station pass
+      validity, pointing accuracy during the selected pass, mean disturbance
+      torques, eclipse fraction and angular-momentum accumulation. Intended to
+      support orchestrator-driven decisions on whether to re-run the module
+      with different parameters.
+
+execution:
+  estimated_runtime: 5
+  execution_mode: sequential
+  input_format: json
+  input_filename: input_attitude_propagator.json
+  runner_module: null
+  runner_function: null
+  upstream_dependencies:
+    - END-001
+  downstream_dependencies:
+    - END-004
+    - END-007
+  software:
+    operating_system:
+      - Windows 10/11
+      - Linux Ubuntu 20.04 LTS or higher
+      - macOS
+    execution_core: MATLAB R2021a or newer
+    required_libraries:
+      - Aerospace Toolbox
+    hardware:
+      processor: x86-64 or Apple Silicon, minimum 4 physical cores
+      memory: 8 GB RAM minimum
+      disk_space: less than 10 MB for local text telemetry logs
+
+interface_notes: >
+  END-003 provides attitude and spacecraft-state telemetry that can be consumed
+  by END-007 Synthetic Data Generation to synthesize high-fidelity payload data
+  with realistic time-varying line-of-sight and pointing information. It can
+  also provide outputs to END-004 Attitude Visualization. If no valid visibility
+  pass is found above the elevation threshold, the module may export the full
+  orbital trajectory dataset to preserve downstream execution continuity.

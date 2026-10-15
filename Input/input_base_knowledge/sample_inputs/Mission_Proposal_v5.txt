@@ -1,0 +1,98 @@
+AGENZIA SPAZIALE ITALIANA
+CALL FOR PROPOSALS
+PATRIMONIO - Preliminary Design of a High-Resolution Optical Constellation
+for the Monitoring of Major Italian Cultural Heritage Monuments
+Reference: ASI-CFP-2026-PATRIMONIO-01
+
+1. Background and objectives
+
+Major Italian cultural heritage monuments are visited by millions of people
+every year and require continuous monitoring to support their conservation,
+their structural condition assessment and their protection from the effects
+of urban development, tourism pressure and environmental change. Frequent,
+high-resolution optical imagery from a dedicated small-satellite constellation
+can support the national heritage authorities in this task. The Italian Space
+Agency (ASI) therefore launches this call for the preliminary design of
+PATRIMONIO, a small-satellite optical Earth-observation constellation
+dedicated to frequent high-resolution daylight imaging of Italy's major
+cultural heritage monuments, while remaining as faint as possible for
+ground-based telescopes, in line with international recommendations to
+protect dark and quiet skies from the interference of satellite
+constellations.
+
+2. Constellation and mission concept
+
+The area of interest is defined by a representative set of major Italian
+cultural heritage monuments distributed across the country, including the
+Colosseum in Rome, the Cathedral (Duomo) of Milan, the Leaning Tower of Pisa,
+St Mark's Square in Venice, and the archaeological site of Pompeii, spanning
+latitude 40 deg N to 46 deg N. The constellation shall have at most 12
+satellites, in sun-synchronous orbits between 500 km and 1200 km of altitude,
+for a mission lifetime of five years. The number of satellites and of orbital
+planes shall be optimised to minimise the revisit time and to maximise the
+coverage of these monuments, propagating the orbits for at least 7 days with
+the Earth oblateness (J2) and the atmospheric drag. Each satellite has a mass
+not exceeding 100 kg, a drag cross-section of 1 m2 and a drag coefficient of
+2.2, is three-axis stabilised and points nominally at nadir. Each satellite
+shall carry a visible-spectrum push-broom camera with a panchromatic Ground
+Sample Distance of 1.0 m and a swath of 12 km at nadir, acquire images in
+daylight only and send them to the ground through UHF and S-band links.
+
+3. Reference operational cases
+
+The design shall be checked on two reference cases over 48 hours starting on
+21 May 2026 at 13:41 UTC. In the first case a satellite images the Colosseum
+in Rome (latitude 41.8902 deg N, longitude 12.4922 deg E) in daylight, above
+10 deg of elevation and with the Sun above the horizon at the target,
+preferably higher than 20 deg. In the second case a satellite crosses the sky
+of the ASI Space Geodesy Centre "G. Colombo" at Matera (latitude 40.6492
+deg N, longitude 16.7039 deg E, altitude 400 m), home of the Matera Laser
+Ranging Observatory, at night: it shall be above 10 deg of elevation and
+illuminated by the Sun, while the Sun is more than 12 deg below the horizon
+at the site. For each case the applicant shall identify the satellite and the
+pass among all those of the constellation and shall report the satellite,
+the date and the start and end time (UTC) of the pass.
+
+4. Operations and energy
+
+Each satellite alternates imaging orbits and idle orbits: in a day of 15
+orbits, 8 are imaging orbits and 7 are idle orbits, with downlink through the
+UHF or S-band transmitters. The electrical power budget shall be closed in
+sunlight and in eclipse for every operating mode (idle, payload acquisition,
+UHF downlink and S-band downlink), with the duty cycle of each subsystem and a
+design margin of 10 percent. The daily energy balance shall not be negative
+and the battery depth of discharge shall not exceed 30 percent in any orbit.
+
+5. Verification requirements
+
+Compliance shall be verified by simulation and analysis only. The applicant
+shall provide evidence of the optimised constellation architecture and its
+revisit-time and coverage performance over the identified heritage monuments;
+the propagated orbit and attitude of the satellites and the two reference
+passes identified in Section 3, with the satellite, date and start and end
+time reported for each; the electrical power budget of the operational
+concept described in Section 4; representative simulated imagery of the
+daylight reference pass over the Colosseum, showing imaging geometry,
+footprint and ground illumination consistent with the acquisition time; and
+the light reflected by the satellite during the night reference pass over
+Matera, expressed as a light curve together with the phase angle, the range
+and the estimated apparent visual magnitude over the pass. The peak apparent
+visual magnitude of the satellite seen from Matera shall be fainter than
+magnitude 7, the conventional limit of naked-eye visibility, and the
+light-pollution impact of the constellation shall be reported against this
+limit.
+
+6. Deliverables and evaluation
+
+Proposals shall provide the optimised constellation architecture with its
+revisit time and coverage over the identified heritage monuments; the
+satellites, dates and start and end times of the two reference passes; the
+electrical power budget tables and figures; the simulated images of the
+daylight pass over the Colosseum; and the light curve, apparent magnitude and
+light-pollution assessment from Matera. Proposals will be evaluated on
+compliance with the requirements above, on the technical quality of the
+design and on the lowest impact on astronomy. Costs and lifecycle economics
+are outside the scope of this call.
+
+This is a simulated call prepared as an example for a mission-analysis
+exercise; it is not an official ASI document.

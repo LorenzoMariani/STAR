@@ -1,0 +1,32 @@
+# STAR repository (2026-10-15): code, configuration and documentation.
+# What is left out and how to restore it: README.md.
+
+# Run outputs
+/Output/
+
+# END-007 (own repository) and old versions
+/END007-SyntheticDataGeneration/
+/_old_versions/
+_old*/
+
+# Local LLM models (Ollama, 4.4 GB)
+/STAR-ORCHESTRATOR/OllamaModels/
+
+# Files over 50 MB and builds: copied by hand
+/Documentation/Articles and presentations/STAR_Presentazione_Spoke2.pptx
+/Documentation/Articles and presentations/video_ terra.mp4
+/END010-ReflectanceDetermination/lib/data/DE440.mat
+/END010-ReflectanceDetermination/lib/BuildAqua/
+/END019-ComponentSelector.zip
+
+# Credentials (space-track.org login): stay on this machine only
+/END016-CollisionAvoidance/lib/loginSpaceTrack.m
+
+# Python, MATLAB, editor and OS leftovers
+__pycache__/
+*.pyc
+*.asv
+*.log
+desktop.ini
+/.claude/settings.local.json
+/.claude/*.lock

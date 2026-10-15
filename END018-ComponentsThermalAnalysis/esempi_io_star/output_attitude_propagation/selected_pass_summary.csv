@@ -1,0 +1,3 @@
+purpose,satellite_index,satellite_label,date_utc,start_utc,end_utc,duration_min,peak_time_utc,peak_elevation_deg,ground_site,site_lat_deg,site_lon_deg,sun_elevation_at_peak_deg,satellite_sunlit_fraction
+imaging_END-007,1,SAT-01,2026-05-21,2026-05-21T15:37:35Z,2026-05-21T15:50:22Z,12.78,2026-05-21T15:43:58Z,80.67,target_site,44.4056,8.9463,31.16,1.000
+lightcurve_END-010,4,SAT-04,2026-05-22,2026-05-22T22:22:05Z,2026-05-22T22:29:58Z,7.88,2026-05-22T22:23:15Z,87.60,Matera,40.6492,16.7039,-28.51,1.000

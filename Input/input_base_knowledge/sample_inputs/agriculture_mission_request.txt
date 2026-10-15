@@ -1,0 +1,1 @@
+The mission shall provide weekly multispectral imaging of agricultural areas in Southern Italy. The system shall support vegetation monitoring and generate preliminary acquisition schedules. A preliminary assessment of data acquisition opportunities shall be performed.

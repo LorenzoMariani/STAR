@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>STAR — Reflectance Determination Viewer</title>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+:root{
+  --bg:#090a0d;
+  --panel:#11141c;
+  --panel-strong:#151925;
+  --panel-muted:#0d1017;
+  --border:#232838;
+  --border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;
+  --text-strong:#ffffff;
+  --muted:#7d879a;
+  --muted-2:#9aa3b4;
+  --accent:#e8ff47;
+  --accent-2:#4dffc3;
+  --danger:#ff5c7a;
+  --success:#61f6a8;
+  --plot-bg:#090a0d;
+  --shadow:0 24px 80px rgba(0,0,0,.32);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f3f5f8;
+  --panel:#ffffff;
+  --panel-strong:#f8fafc;
+  --panel-muted:#eef2f7;
+  --border:#d9e0eb;
+  --border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;
+  --text-strong:#070b12;
+  --muted:#667085;
+  --muted-2:#475467;
+  --accent:#667c00;
+  --accent-2:#007a66;
+  --danger:#bd2450;
+  --success:#047857;
+  --plot-bg:#ffffff;
+  --shadow:0 18px 60px rgba(31,41,55,.12);
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),
+    radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),
+    var(--bg);
+  color:var(--text);
+  font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  font-size:13px;
+  line-height:1.5;
+}
+button,input,select{font:inherit}
+button{
+  border:1px solid var(--border);
+  background:var(--panel-strong);
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+button:hover{transform:translateY(-1px);border-color:var(--accent-2)}
+button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.primary-action{
+  border-color:transparent;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#07100d;
+  font-weight:700;
+}
+select,input[type="number"]{
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--panel-muted);
+  color:var(--text);
+  padding:7px 8px;
+}
+input[type="range"]{width:100%}
+
+.app-shell{width:min(1920px,100%);margin:0 auto;padding:18px}
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px 20px;
+  border:1px solid var(--border);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--panel) 92%,transparent);
+  box-shadow:var(--shadow);
+  position:sticky;
+  top:12px;
+  z-index:20;
+  backdrop-filter:blur(18px);
+}
+.header h1{
+  margin:0;
+  font-family:'Syne',Inter,system-ui,sans-serif;
+  font-size:clamp(19px,2vw,28px);
+  line-height:1.05;
+  color:var(--text-strong);
+  letter-spacing:-.03em;
+  text-transform:uppercase;
+}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.theme-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  padding:7px 11px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--panel-muted);
+  color:var(--muted-2);
+  user-select:none;
+}
+.switch{position:relative;width:48px;height:26px;display:inline-flex;align-items:center}
+.switch input{opacity:0;width:0;height:0}
+.slider-switch{
+  position:absolute;
+  inset:0;
+  border-radius:999px;
+  background:var(--border);
+  transition:.22s ease;
+  box-shadow:inset 0 0 0 1px var(--border-soft);
+}
+.slider-switch:before{
+  content:'';
+  position:absolute;
+  width:20px;
+  height:20px;
+  left:3px;
+  top:3px;
+  border-radius:50%;
+  background:var(--text-strong);
+  transition:.22s ease;
+}
+.switch input:checked+.slider-switch{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.switch input:checked+.slider-switch:before{transform:translateX(22px);background:#07100d}
+
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:minmax(330px,430px) minmax(0,1fr);
+  gap:18px;
+  margin-top:18px;
+  align-items:start;
+}
+.panel,.card{
+  border:1px solid var(--border);
+  background:color-mix(in srgb,var(--panel) 95%,transparent);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.sidebar{
+  position:sticky;
+  top:118px;
+  max-height:calc(100vh - 136px);
+  overflow-y:auto;
+}
+.panel-header,.card-header{
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  background:var(--panel-strong);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.panel-header h2,.card h3,.sidebar-section h2{
+  margin:0;
+  color:var(--text-strong);
+  font-family:'Syne',Inter,system-ui,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  font-size:13px;
+}
+.sidebar-section{padding:18px}
+.sidebar-section+.sidebar-section{border-top:1px solid var(--border)}
+.sidebar-section h2{margin-bottom:12px}
+.muted,.small{color:var(--muted)}
+.small{font-size:11px}
+.main-content{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card-body{padding:8px 18px}
+.plot-grid{display:grid;gap:18px}
+.plot-grid.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}
+.plot{width:100%;min-height:280px;background:var(--plot-bg);border-radius:16px;overflow:hidden}
+@media(max-width:980px){.plot-grid.two-col{grid-template-columns:1fr}}
+
+.data-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;
+  align-items:baseline;
+  padding:9px 0;
+  border-bottom:1px solid var(--border-soft);
+}
+.data-row:last-child{border-bottom:0}
+.data-label{color:var(--muted);font-size:12px}
+.data-value{color:var(--accent);font-weight:700;text-align:right;overflow-wrap:anywhere}
+
+.file-status-row{
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:start;
+  padding:11px 0;
+  border-bottom:1px solid var(--border-soft);
+}
+.file-status-row:last-child{border-bottom:0}
+.status-dot{
+  width:11px;
+  height:11px;
+  margin-top:4px;
+  border-radius:999px;
+  background:var(--danger);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent);
+}
+.status-dot.loaded{
+  background:var(--success);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent);
+}
+.file-title{color:var(--text-strong);font-weight:700}
+.file-path{color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:3px}
+.file-row-button{padding:7px 10px;border-radius:10px;font-size:11px;white-space:nowrap}
+.hidden-file-input{display:none}
+
+.viewer-layout{
+  display:grid;
+  grid-template-columns:minmax(420px,1fr) 6px minmax(360px,560px);
+  gap:0;
+  min-height:calc(100vh - 158px);
+  overflow:hidden;
+}
+.chart-panel,.image-panel{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+.chart-panel{border-right:1px solid var(--border)}
+.chart-header,.image-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  color:var(--muted);
+  font-size:11px;
+}
+.legend{display:flex;gap:12px;align-items:center}
+.legend .item{display:flex;gap:6px;align-items:center}
+.swatch{width:12px;height:12px;border-radius:3px}
+.sw-flux{background:var(--accent)}
+#chart-container{
+  flex:1;
+  position:relative;
+  min-height:380px;
+  background:var(--plot-bg);
+}
+#chart-canvas{width:100%;height:100%;display:block;cursor:crosshair}
+
+.resizer{
+  background:var(--border);
+  cursor:col-resize;
+  width:6px;
+  z-index:10;
+  user-select:none;
+  transition:background .2s;
+}
+.resizer:hover,.resizer.dragging{background:var(--accent-2)}
+
+.frame-display{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  cursor:grab;
+  background:var(--plot-bg);
+}
+.frame-display:active{cursor:grabbing}
+.frame-display .no-image{
+  color:var(--muted);
+  text-align:center;
+  line-height:1.6;
+  max-width:430px;
+}
+.frame-display img{
+  position:absolute;
+  inset:0;
+  margin:auto;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  border:1px solid var(--border);
+  opacity:1;
+  transform-origin:center center;
+  will-change:transform;
+}
+.frame-meta{
+  padding:12px 14px;
+  border-top:1px solid var(--border);
+  font-size:12px;
+  color:var(--muted);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.val{color:var(--accent);overflow-wrap:anywhere}
+.playback-controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:12px 14px;
+  border-top:1px solid var(--border);
+  background:var(--panel-strong);
+  flex-wrap:wrap;
+}
+.range-wrap{flex:1;min-width:160px}
+.progress{
+  height:4px;
+  background:var(--border);
+  position:relative;
+  margin-top:12px;
+  border-radius:999px;
+  overflow:hidden;
+}
+.progress>i{
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  background:var(--accent);
+  width:0%;
+}
+.empty-cell{color:var(--muted);text-align:center;padding:28px}
+.data-value.ok{color:var(--success)}
+.data-value.bad{color:var(--danger)}
+.data-value.neutral{color:var(--muted-2)}
+.kpi-category{margin-bottom:16px}
+.kpi-category:last-child{margin-bottom:0}
+.kpi-category h4{margin:0 0 8px;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.kpi-threshold{font-size:10px;color:var(--muted);display:block;font-weight:400;text-align:right}
+.status-message{
+  color:var(--muted);
+  border:1px dashed var(--border);
+  border-radius:14px;
+  background:var(--panel-muted);
+  padding:12px;
+  font-size:11px;
+}
+
+@media(max-width:1280px){
+  .dashboard-grid{grid-template-columns:1fr}
+  .sidebar{position:static;max-height:none}
+}
+@media(max-width:980px){
+  .header{align-items:flex-start;flex-direction:column;position:static}
+  .header-actions{justify-content:flex-start;width:100%}
+  .viewer-layout{grid-template-columns:1fr;min-height:auto}
+  .resizer{display:none}
+  .chart-panel{min-height:460px;border-right:0;border-bottom:1px solid var(--border)}
+  .image-panel{min-height:560px}
+}
+@media(max-width:640px){
+  .app-shell{padding:10px}
+  .file-status-row{grid-template-columns:18px minmax(0,1fr)}
+  .file-row-button{grid-column:2;width:max-content}
+  .frame-meta{grid-template-columns:1fr}
+}
+</style>
+
+<style id="star-merged-iframe-style">
+html,body{min-height:100%;height:auto!important;}
+.app-shell{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;}
+header.header{display:none!important;}
+.dashboard-grid{margin-top:0!important;}
+.sidebar{top:0!important;max-height:calc(100vh - 48px)!important;}
+</style>
+
+</head>
+
+<body>
+<div class="app-shell">
+  <header class="header">
+    <h1>STAR · Reflectance Determination Viewer</h1>
+    <div class="header-actions">
+      <label class="theme-toggle" title="Switch interface theme">
+        <span id="theme-label">Dark</span>
+        <span class="switch">
+          <input id="theme-switch" type="checkbox" aria-label="Toggle light theme" />
+          <span class="slider-switch"></span>
+        </span>
+      </label>
+    </div>
+  </header>
+
+  <input id="csvFolderInput" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+  <input id="framesFolderInput" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+  <input id="kpiFolderInput" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+
+  <div class="dashboard-grid">
+    <aside class="panel sidebar">
+      <div class="panel-header">
+        <h2>Reflectance Data</h2>
+        <span class="muted" id="load-status">pending</span>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>File Access Status</h2>
+        <div id="file-access-panel"></div>
+        <div class="status-message" style="margin-top:14px">
+          Automatic relative loading is attempted from the FrontEnd folder. If the browser blocks local file access, select the CSV folder and the Frames folder manually from this panel.
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>Dataset Summary</h2>
+        <div id="dataset-summary">
+          <div class="data-row"><span class="data-label">CSV points</span><span class="data-value" id="ft-points-sim">—</span></div>
+          <div class="data-row"><span class="data-label">Frames</span><span class="data-value" id="ft-frames">—</span></div>
+          <div class="data-row"><span class="data-label">Time range</span><span class="data-value" id="ft-trange">—</span></div>
+          <div class="data-row"><span class="data-label">Flux range</span><span class="data-value" id="ft-magrange">—</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>Default Relative Paths</h2>
+        <div class="data-row"><span class="data-label">CSV</span><span class="data-value">./modules_output/END-010/output_reflectance_determination/flux.csv</span></div>
+        <div class="data-row"><span class="data-label">Frames</span><span class="data-value">./modules_output/END-010/results_reflectance_determination/Frames</span></div>
+        <div class="data-row"><span class="data-label">KPI</span><span class="data-value">./modules_output/END-010/results_reflectance_determination/reflectance_summary.json</span></div>
+        <div class="data-row"><span class="data-label">Time series</span><span class="data-value">./modules_output/END-010/results_reflectance_determination/reflectance_timeseries.json</span></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="card viewer-layout" id="main-layout">
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+              <div>TIME SERIES · FLUX</div>
+              <div class="legend">
+                <div class="item"><span class="swatch sw-flux"></span><span class="small">Flux signal</span></div>
+              </div>
+            </div>
+            <div class="small">T: <span id="stat-t">—</span> &nbsp; FLUX: <span id="stat-mag">—</span> &nbsp; FRAME: <span id="stat-frame">—</span></div>
+          </div>
+          <div id="chart-container">
+            <canvas id="chart-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="resizer" id="panel-resizer" title="Drag to resize chart and frame panels"></div>
+
+        <div class="image-panel" id="image-panel">
+          <div class="image-header">
+            <div>FRAME VIEWER</div>
+            <div id="frame-counter" class="small">— / —</div>
+          </div>
+
+          <div class="frame-display" id="frame-display">
+            <div class="no-image" id="no-image-placeholder">
+              Load <strong>flux.csv</strong> and the simulation frames from the file-access panel.
+            </div>
+          </div>
+
+          <div class="frame-meta">
+            <div>FILENAME <div class="val" id="meta-name">—</div></div>
+            <div>TIME <div class="val" id="meta-time">—</div></div>
+            <div>FLUX <div class="val" id="meta-mag-sim">—</div></div>
+            <div>INDEX <div class="val" id="meta-idx">—</div></div>
+          </div>
+
+          <div class="playback-controls" aria-label="playback controls">
+            <button id="prevBtn" type="button">⟨</button>
+            <button id="playBtn" class="primary-action" type="button">Play</button>
+            <button id="nextBtn" type="button">⟩</button>
+            <label class="small">Speed</label>
+            <select id="speedSel" class="small">
+              <option value="0.25">0.25x</option>
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+            <label class="small">FPS</label>
+            <input id="fpsInput" type="number" min="1" max="60" value="24" style="width:68px" class="small" />
+            <label class="small"><input type="checkbox" id="loopChk" /> Loop</label>
+            <div class="range-wrap">
+              <input id="seekRange" type="range" min="0" max="1" value="0" />
+            </div>
+          </div>
+
+          <div class="progress"><i id="loadProgress"></i></div>
+        </div>
+      </section>
+
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>Elevation vs Time</h3></div><div class="card-body"><div id="plot-elevation" class="plot"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Object-Station Range vs Time</h3></div><div class="card-body"><div id="plot-range" class="plot"></div></div></article>
+      </section>
+      <section class="plot-grid two-col">
+        <article class="card"><div class="card-header"><h3>Phase Angle vs Time</h3></div><div class="card-body"><div id="plot-phase" class="plot"></div></div></article>
+        <article class="card"><div class="card-header"><h3>Apparent Magnitude vs Time (Lambertian Est.)</h3></div><div class="card-body"><div id="plot-magnitude" class="plot"></div></div></article>
+      </section>
+
+      <article class="card"><div class="card-header"><h3>Performance KPI Catalog</h3></div><div class="card-body"><div id="kpi-table"><div class="empty-cell">Load the reflectance results to populate the KPI catalog.</div></div></div></article>
+    </main>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const DEFAULT_CSV_PATH = './modules_output/END-010/output_reflectance_determination/flux.csv';
+const DEFAULT_FRAMES_PATH = './modules_output/END-010/results_reflectance_determination/Frames/';
+const DEFAULT_KPI_PATH = './modules_output/END-010/results_reflectance_determination/reflectance_summary.json';
+const ABSOLUTE_CSV_FILE = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Output/RUN_XXXXX/modules_output/END-010/output_reflectance_determination/flux.csv';
+const ABSOLUTE_FRAMES_DIR = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/Frames/';
+const ABSOLUTE_KPI_FILE = 'file:///C:/Users/s5oss/Desktop/SIU/STAR/Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/reflectance_summary.json';
+const KPI_JSON_NAME = 'reflectance_summary.json';
+const DEFAULT_TIMESERIES_PATH = './modules_output/END-010/results_reflectance_determination/reflectance_timeseries.json';
+const ABSOLUTE_TIMESERIES_FILE = 'file:///C:/Users/s5oss/Desktop/SIU/STAR/Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/reflectance_timeseries.json';
+const TIMESERIES_JSON_NAME = 'reflectance_timeseries.json';
+
+let kpiData = null;
+let timeSeriesData = null;
+let csvData = [];
+let csvIsTimeDate = false;
+let frameFiles = [];
+let frameURLs = [];
+let imgCache = [];
+let currentFrameIdx = -1;
+
+let isPlaying = false;
+let playRequest = null;
+let lastPlayTS = 0;
+let accumulated = 0;
+let baseFrameInterval = 1000 / 24;
+let speedMultiplier = 1;
+let loopPlayback = true;
+let isScrubbing = false;
+
+let imgScale = 1;
+let imgPanX = 0;
+let imgPanY = 0;
+let isPanning = false;
+let startPanX = 0;
+let startPanY = 0;
+
+let isDraggingResizer = false;
+
+const fileStatus = {
+  csv: { loaded:false, path:DEFAULT_CSV_PATH },
+  frames: { loaded:false, path:DEFAULT_FRAMES_PATH, count:0 },
+  kpi: { loaded:false, path:DEFAULT_KPI_PATH },
+  timeseries: { loaded:false, path:DEFAULT_TIMESERIES_PATH }
+};
+
+const $ = (id) => document.getElementById(id);
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const themeColors = () => ({
+  bg: cssVar('--bg'),
+  panel: cssVar('--panel'),
+  plotBg: cssVar('--plot-bg'),
+  border: cssVar('--border'),
+  text: cssVar('--text'),
+  strong: cssVar('--text-strong'),
+  muted: cssVar('--muted'),
+  accent: cssVar('--accent'),
+  accent2: cssVar('--accent-2')
+});
+
+const csvFolderInput = $('csvFolderInput');
+const framesFolderInput = $('framesFolderInput');
+const kpiFolderInput = $('kpiFolderInput');
+const loadStatus = $('load-status');
+const fileAccessPanel = $('file-access-panel');
+
+const mainLayout = $('main-layout');
+const panelResizer = $('panel-resizer');
+const chartCanvas = $('chart-canvas');
+const chartContainer = $('chart-container');
+const ctx = chartCanvas.getContext('2d');
+
+const frameDisplay = $('frame-display');
+const metaName = $('meta-name');
+const metaTime = $('meta-time');
+const metaFlux = $('meta-mag-sim');
+const metaIdx = $('meta-idx');
+const frameCounter = $('frame-counter');
+
+const playBtn = $('playBtn');
+const prevBtn = $('prevBtn');
+const nextBtn = $('nextBtn');
+const speedSel = $('speedSel');
+const fpsInput = $('fpsInput');
+const loopChk = $('loopChk');
+const seekRange = $('seekRange');
+
+const ftPoints = $('ft-points-sim');
+const ftFrames = $('ft-frames');
+const ftTrange = $('ft-trange');
+const ftFluxRange = $('ft-magrange');
+const statT = $('stat-t');
+const statFlux = $('stat-mag');
+const statFrame = $('stat-frame');
+const loadProgress = $('loadProgress');
+
+const PAD = { top: 22, right: 22, bottom: 44, left: 64 };
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+
+function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+function formatSecondsLabel(seconds) {
+  if (seconds >= 3600) {
+    const hh = Math.floor(seconds / 3600);
+    const mm = Math.floor((seconds % 3600) / 60);
+    const ss = Math.floor(seconds % 60);
+    return `${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
+  return seconds.toFixed(2);
+}
+
+function formatNumber(value, digits = 4) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(digits) : '—';
+}
+
+/* ---------------------------
+   Theme
+   --------------------------- */
+function setupTheme() {
+  const saved = localStorage.getItem('star-reflectance-theme') || 'dark';
+  const theme = saved === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  $('theme-switch').checked = theme === 'light';
+  $('theme-label').textContent = theme === 'light' ? 'Light' : 'Dark';
+}
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('star-reflectance-theme', theme);
+  $('theme-switch').checked = theme === 'light';
+  $('theme-label').textContent = theme === 'light' ? 'Light' : 'Dark';
+  drawChart();
+  drawGeometryCharts();
+}
+
+/* ---------------------------
+   File access panel
+   --------------------------- */
+function updateFileAccessPanel() {
+  fileAccessPanel.innerHTML = `
+    ${fileStatusRow('Flux CSV file', fileStatus.csv.loaded, fileStatus.csv.path, 'csv-folder-button', 'Select CSV Folder')}
+    ${fileStatusRow(`Frame image files (${fileStatus.frames.count})`, fileStatus.frames.loaded, fileStatus.frames.path, 'frames-folder-button', 'Select Frames Folder')}
+    ${fileStatusRow('Performance KPI catalog', fileStatus.kpi.loaded, fileStatus.kpi.path, 'kpi-folder-button', 'Select Results Folder')}
+    ${fileStatusRow('Geometry/photometry time series', fileStatus.timeseries.loaded, fileStatus.timeseries.path, 'timeseries-folder-button', 'Select Results Folder')}
+  `;
+  bindFileAccessButtons();
+  loadStatus.textContent = fileStatus.csv.loaded && fileStatus.frames.loaded ? 'loaded' : 'partial';
+}
+
+function fileStatusRow(title, loaded, path, buttonId, buttonText) {
+  return `
+    <div class="file-status-row">
+      <span class="status-dot ${loaded ? 'loaded' : ''}"></span>
+      <div>
+        <div class="file-title">${escapeHtml(title)} · ${loaded ? 'Loaded' : 'Missing'}</div>
+        <div class="file-path">${escapeHtml(path)}</div>
+      </div>
+      <button id="${buttonId}" class="file-row-button" type="button">${escapeHtml(buttonText)}</button>
+    </div>
+  `;
+}
+
+function bindFileAccessButtons() {
+  const csvButton = $('csv-folder-button');
+  const framesButton = $('frames-folder-button');
+  const kpiButton = $('kpi-folder-button');
+  const timeseriesButton = $('timeseries-folder-button');
+  if (csvButton) csvButton.onclick = () => requestFolder('csv', 'csvFolderInput');
+  if (framesButton) framesButton.onclick = () => requestFolder('frames', 'framesFolderInput');
+  if (kpiButton) kpiButton.onclick = () => requestFolder('kpi', 'kpiFolderInput');
+  if (timeseriesButton) timeseriesButton.onclick = () => requestFolder('kpi', 'kpiFolderInput');
+}
+
+async function collectFilesFromDirectoryHandle(handle, pathPrefix = '') {
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === 'file') {
+      const file = await entry.getFile();
+      file.relativeDisplayPath = `${pathPrefix}${name}`;
+      files.push(file);
+    } else if (entry.kind === 'directory') {
+      files.push(...await collectFilesFromDirectoryHandle(entry, `${pathPrefix}${name}/`));
+    }
+  }
+  return files;
+}
+
+async function requestFolder(kind, inputId) {
+  if (window.parent && window.parent !== window && typeof window.parent.STAR_PICK_DIRECTORY === 'function') {
+    const picked = await window.parent.STAR_PICK_DIRECTORY('reflectance', kind);
+    if (picked && picked.files) {
+      await loadSelectedFolder(kind, picked.files, picked.label || 'STAR');
+      return;
+    }
+  }
+  if ('showDirectoryPicker' in window) {
+    try {
+      const handle = await window.showDirectoryPicker({ mode:'read', id:'star-reflectance-picker' });
+      const files = await collectFilesFromDirectoryHandle(handle, `${handle.name}/`);
+      await loadSelectedFolder(kind, files, handle.name);
+      return;
+    } catch (error) {
+      if (error && error.name === 'AbortError') return;
+      console.warn('Directory picker failed; falling back to directory input:', error);
+    }
+  }
+  $(inputId).click();
+}
+
+function fileRelativePath(file) {
+  return file.relativeDisplayPath || file.webkitRelativePath || file.name;
+}
+
+async function loadSelectedFolder(kind, files, label = 'Selected folder') {
+  const fileArray = Array.from(files || []);
+  if (kind === 'csv') await loadCSVFromFolderFiles(fileArray, label);
+  if (kind === 'frames') await loadFramesFromFolderFiles(fileArray, label);
+  if (kind === 'kpi') {
+    await loadKpiFromFolderFiles(fileArray, label);
+    await loadTimeSeriesFromFolderFiles(fileArray, label);
+  }
+  updateFileAccessPanel();
+}
+
+function fmtNum(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return String(n);
+  if (v !== 0 && Math.abs(v) < 0.01) return v.toExponential(2);
+  return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+async function loadKpiFromFolderFiles(files, label) {
+  const kpiFile = files.find(file => file.name.toLowerCase() === KPI_JSON_NAME);
+  if (!kpiFile) {
+    kpiData = null;
+    fileStatus.kpi.loaded = false;
+    fileStatus.kpi.path = `${label}: ${KPI_JSON_NAME} not found`;
+    populateKpiTable();
+    return;
+  }
+  try {
+    kpiData = JSON.parse(await kpiFile.text());
+    fileStatus.kpi.loaded = true;
+    fileStatus.kpi.path = fileRelativePath(kpiFile);
+  } catch (error) {
+    kpiData = null;
+    fileStatus.kpi.loaded = false;
+    fileStatus.kpi.path = `${fileRelativePath(kpiFile)}: ${error.message}`;
+  }
+  populateKpiTable();
+}
+
+function populateKpiTable() {
+  const container = $('kpi-table');
+  if (!container) return;
+  const kpis = kpiData && Array.isArray(kpiData.kpis) ? kpiData.kpis : null;
+  if (!kpis || !kpis.length) {
+    container.innerHTML = '<div class="empty-cell">No KPI catalog loaded.</div>';
+    return;
+  }
+  const catLabels = {
+    run_validity: 'Run Validity',
+    geometry_observability: 'Geometry & Observability',
+    light_curve_photometry: 'Light Curve Photometry',
+    light_pollution_detectability: 'Light Pollution & Detectability'
+  };
+  const cats = [...new Set(kpis.map((k) => k.category))];
+  container.innerHTML = cats.map((cat) => {
+    const rows = kpis.filter((k) => k.category === cat).map((k) => {
+      let cls = 'neutral';
+      if (k.meets_requirement === true) cls = 'ok'; else if (k.meets_requirement === false) cls = 'bad';
+      let valueText = (k.value === null || k.value === undefined) ? '—' : (typeof k.value === 'number' ? fmtNum(k.value) : String(k.value));
+      if (k.unit && k.unit !== '-' && valueText !== '—') valueText += ' ' + k.unit;
+      let thr = '';
+      if (k.threshold_ok !== null && k.threshold_ok !== undefined && k.threshold_bad !== null && k.threshold_bad !== undefined) {
+        thr = `<span class="kpi-threshold">thresholds: ok ${fmtNum(k.threshold_ok)} · bad ${fmtNum(k.threshold_bad)}</span>`;
+      } else if (k.threshold_ok !== null && k.threshold_ok !== undefined) {
+        thr = `<span class="kpi-threshold">threshold: ${fmtNum(k.threshold_ok)}</span>`;
+      }
+      return `<div class="data-row"><span class="data-label">${escapeHtml(k.id)} · ${escapeHtml(k.name)}</span><span class="data-value ${cls}">${escapeHtml(valueText)}${thr}</span></div>`;
+    }).join('');
+    return `<div class="kpi-category"><h4>${escapeHtml(catLabels[cat] || cat)}</h4>${rows}</div>`;
+  }).join('');
+}
+
+async function loadTimeSeriesFromFolderFiles(files, label) {
+  const file = files.find(f => f.name.toLowerCase() === TIMESERIES_JSON_NAME);
+  if (!file) {
+    timeSeriesData = null;
+    fileStatus.timeseries.loaded = false;
+    fileStatus.timeseries.path = `${label}: ${TIMESERIES_JSON_NAME} not found`;
+    drawGeometryCharts();
+    return;
+  }
+  try {
+    timeSeriesData = JSON.parse(await file.text());
+    fileStatus.timeseries.loaded = true;
+    fileStatus.timeseries.path = fileRelativePath(file);
+  } catch (error) {
+    timeSeriesData = null;
+    fileStatus.timeseries.loaded = false;
+    fileStatus.timeseries.path = `${fileRelativePath(file)}: ${error.message}`;
+  }
+  drawGeometryCharts();
+}
+
+function drawGeometryCharts() {
+  if (typeof Plotly === 'undefined') return;
+  const ids = ['plot-elevation', 'plot-range', 'plot-phase', 'plot-magnitude'];
+  const ts = timeSeriesData;
+  if (!ts || !Array.isArray(ts.time_iso) || !ts.time_iso.length) {
+    ids.forEach((id) => {
+      const el = $(id);
+      if (el) el.innerHTML = '<div class="empty-cell">No time series data loaded.</div>';
+    });
+    return;
+  }
+  const c = themeColors();
+  const base = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: c.plotBg,
+    font: { color: c.text, family: "'Space Mono',monospace", size: 11 },
+    margin: { l: 58, r: 16, t: 10, b: 40 },
+    xaxis: { title: 'Time (UTC)', gridcolor: c.border, type: 'date' }
+  };
+  const opts = { responsive: true, displayModeBar: false };
+  const x = ts.time_iso;
+
+  Plotly.newPlot('plot-elevation',
+    [{ x, y: ts.elevation_deg, mode: 'lines', line: { color: c.accent, width: 2 } }],
+    { ...base, yaxis: { title: 'Elevation (deg)', gridcolor: c.border } }, opts);
+
+  Plotly.newPlot('plot-range',
+    [{ x, y: ts.range_km, mode: 'lines', line: { color: c.accent2, width: 2 } }],
+    { ...base, yaxis: { title: 'Range (km)', gridcolor: c.border } }, opts);
+
+  Plotly.newPlot('plot-phase',
+    [{ x, y: ts.phase_angle_deg, mode: 'lines', line: { color: c.accent, width: 2 } }],
+    { ...base, yaxis: { title: 'Phase Angle (deg)', gridcolor: c.border } }, opts);
+
+  // Astronomical convention: brighter (lower magnitude) at the top.
+  Plotly.newPlot('plot-magnitude',
+    [{ x, y: ts.apparent_magnitude_std, mode: 'lines', line: { color: c.accent2, width: 2 } }],
+    { ...base, yaxis: { title: 'Apparent magnitude (est.)', gridcolor: c.border, autorange: 'reversed' } }, opts);
+}
+
+async function loadCSVFromFolderFiles(files, label) {
+  const csvFile = files.find(file => file.name.toLowerCase() === 'flux.csv')
+    || files.find(file => /\.(csv|txt)$/i.test(file.name));
+
+  if (!csvFile) {
+    fileStatus.csv.loaded = false;
+    fileStatus.csv.path = `${label}: flux.csv not found`;
+    return;
+  }
+
+  try {
+    const text = await csvFile.text();
+    parseCSVText(text);
+    fileStatus.csv.loaded = true;
+    fileStatus.csv.path = fileRelativePath(csvFile);
+  } catch (error) {
+    fileStatus.csv.loaded = false;
+    fileStatus.csv.path = `${fileRelativePath(csvFile)}: ${error.message}`;
+  }
+}
+
+async function loadFramesFromFolderFiles(files, label) {
+  const imageFiles = files
+    .filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file.name))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+
+  if (!imageFiles.length) {
+    fileStatus.frames.loaded = false;
+    fileStatus.frames.count = 0;
+    fileStatus.frames.path = `${label}: no PNG/JPG/WEBP frames found`;
+    resetFramesOnly();
+    return;
+  }
+
+  loadFramesFromFiles(imageFiles, label);
+  fileStatus.frames.loaded = true;
+  fileStatus.frames.count = imageFiles.length;
+  fileStatus.frames.path = `${label}: ${imageFiles.length} image frame(s)`;
+}
+
+/* ---------------------------
+   CSV parsing
+   --------------------------- */
+function parseCSVText(raw) {
+  const lines = String(raw)
+    .replace(/\r\n/g,'\n')
+    .replace(/\r/g,'\n')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return;
+
+  const parsed = [];
+  let dateCount = 0;
+
+  for (const line of lines) {
+    const parts = line.split(/[,;\t]+/).map(part => part.trim());
+    if (parts.length < 2) continue;
+
+    const first = parts[0];
+    const second = parts[1];
+    const timeNumber = Number(first);
+    const fluxNumber = Number(second);
+
+    if (!Number.isFinite(fluxNumber)) continue;
+
+    if (Number.isFinite(timeNumber) && first !== '') {
+      parsed.push({ rawT:timeNumber, flux:fluxNumber });
+    } else {
+      const ms = Date.parse(first);
+      if (!Number.isNaN(ms)) {
+        parsed.push({ rawT:ms, flux:fluxNumber, isDate:true });
+        dateCount += 1;
+      }
+    }
+  }
+
+  if (!parsed.length) return;
+
+  const isDate = dateCount > 0;
+  parsed.sort((a, b) => a.rawT - b.rawT);
+  csvData = isDate
+    ? parsed.map(row => ({ t:(row.rawT - parsed[0].rawT) / 1000, flux:row.flux }))
+    : parsed.map(row => ({ t:row.rawT, flux:row.flux }));
+
+  csvIsTimeDate = isDate;
+  updateFooter();
+  resizeCanvas();
+  drawChart();
+
+  if (frameURLs.length) showFrame(currentFrameIdx >= 0 ? currentFrameIdx : 0, { force:true });
+}
+
+/* ---------------------------
+   Frame loading
+   --------------------------- */
+function revokeFrameURLs() {
+  frameURLs.forEach(url => {
+    if (String(url).startsWith('blob:')) {
+      try { URL.revokeObjectURL(url); } catch (_) {}
+    }
+  });
+}
+
+function resetFramesOnly() {
+  revokeFrameURLs();
+  frameFiles = [];
+  frameURLs = [];
+  imgCache = [];
+  currentFrameIdx = -1;
+  resetImageTransform();
+  stopPlayback();
+  frameDisplay.innerHTML = '<div class="no-image" id="no-image-placeholder">Load the simulation frames from the file-access panel.</div>';
+  metaName.textContent = '—';
+  metaTime.textContent = '—';
+  metaFlux.textContent = '—';
+  metaIdx.textContent = '—';
+  frameCounter.textContent = '— / —';
+  statFrame.textContent = '—';
+  seekRange.max = 1;
+  seekRange.value = 0;
+  updateFooter();
+  drawChart();
+}
+
+function loadFramesFromFiles(files, label = 'Selected folder') {
+  revokeFrameURLs();
+  imgCache.length = 0;
+  frameFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+  frameURLs = frameFiles.map(file => URL.createObjectURL(file));
+  imgCache = new Array(frameURLs.length).fill(null);
+  currentFrameIdx = -1;
+  resetImageTransform();
+  loadProgress.style.width = '0%';
+
+  let loaded = 0;
+  for (let i = 0; i < frameURLs.length; i += 1) {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = frameURLs[i];
+    img.onload = () => {
+      imgCache[i] = img;
+      loaded += 1;
+      loadProgress.style.width = `${Math.round(loaded / frameURLs.length * 100)}%`;
+      if (loaded === 1 && currentFrameIdx === -1) showFrame(0, { noFade:true });
+      if (loaded === frameURLs.length) setTimeout(() => { loadProgress.style.width = '0%'; }, 250);
+    };
+    img.onerror = () => {
+      loaded += 1;
+      loadProgress.style.width = `${Math.round(loaded / frameURLs.length * 100)}%`;
+    };
+  }
+
+  ftFrames.textContent = frameURLs.length || '—';
+  updateFooter();
+  drawChart();
+}
+
+function loadFramesFromURLs(urls, fileNames) {
+  revokeFrameURLs();
+  frameURLs = urls.slice();
+  frameFiles = fileNames.map(name => ({ name }));
+  imgCache = new Array(frameURLs.length).fill(null);
+  currentFrameIdx = -1;
+  resetImageTransform();
+
+  let loaded = 0;
+  for (let i = 0; i < frameURLs.length; i += 1) {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = frameURLs[i];
+    img.onload = () => {
+      imgCache[i] = img;
+      loaded += 1;
+      loadProgress.style.width = `${Math.round(loaded / frameURLs.length * 100)}%`;
+      if (loaded === 1 && currentFrameIdx === -1) showFrame(0, { noFade:true });
+      if (loaded === frameURLs.length) setTimeout(() => { loadProgress.style.width = '0%'; }, 250);
+    };
+    img.onerror = () => { loaded += 1; };
+  }
+
+  fileStatus.frames.loaded = true;
+  fileStatus.frames.count = frameURLs.length;
+  fileStatus.frames.path = DEFAULT_FRAMES_PATH;
+  updateFooter();
+  updateFileAccessPanel();
+}
+
+/* ---------------------------
+   Default relative loading
+   --------------------------- */
+async function tryFetchText(urls) {
+  const list = Array.isArray(urls) ? urls : [urls];
+  const errors = [];
+
+  for (const url of list) {
+    try {
+      const response = await fetch(url, { cache:'no-store' });
+      if (response.ok) return await response.text();
+      errors.push(`${url}: HTTP ${response.status}`);
+    } catch (error) {
+      errors.push(`${url}: ${error.message}`);
+    }
+  }
+
+  throw new Error(errors.join(' | '));
+}
+
+async function loadDefaultPaths() {
+  try {
+    const text = await tryFetchText([DEFAULT_CSV_PATH, ABSOLUTE_CSV_FILE]);
+    parseCSVText(text);
+    fileStatus.csv.loaded = true;
+    fileStatus.csv.path = DEFAULT_CSV_PATH;
+  } catch (error) {
+    console.warn('Default CSV loading failed. Manual folder selection is available:', error);
+    fileStatus.csv.loaded = false;
+  }
+
+  updateFileAccessPanel();
+
+  try {
+    await loadDefaultFramesByPattern();
+  } catch (error) {
+    console.warn('Default frame loading failed. Manual folder selection is available:', error);
+    fileStatus.frames.loaded = false;
+    updateFileAccessPanel();
+  }
+
+  try {
+    const text = await tryFetchText([DEFAULT_KPI_PATH, ABSOLUTE_KPI_FILE]);
+    kpiData = JSON.parse(text);
+    fileStatus.kpi.loaded = true;
+    fileStatus.kpi.path = DEFAULT_KPI_PATH;
+  } catch (error) {
+    console.warn('Default KPI catalog loading failed. Manual folder selection is available:', error);
+    kpiData = null;
+    fileStatus.kpi.loaded = false;
+  }
+  populateKpiTable();
+
+  try {
+    const text = await tryFetchText([DEFAULT_TIMESERIES_PATH, ABSOLUTE_TIMESERIES_FILE]);
+    timeSeriesData = JSON.parse(text);
+    fileStatus.timeseries.loaded = true;
+    fileStatus.timeseries.path = DEFAULT_TIMESERIES_PATH;
+  } catch (error) {
+    console.warn('Default time series loading failed. Manual folder selection is available:', error);
+    timeSeriesData = null;
+    fileStatus.timeseries.loaded = false;
+  }
+  drawGeometryCharts();
+  updateFileAccessPanel();
+}
+
+function framePatterns() {
+  const patterns = [];
+  const stems = ['frame_', 'Frame_', ''];
+  const extensions = ['png', 'jpg', 'jpeg', 'webp'];
+  const widths = [4, 3, 2, 0];
+  const starts = [0, 1];
+
+  for (const ext of extensions) {
+    for (const stem of stems) {
+      for (const width of widths) {
+        for (const start of starts) {
+          patterns.push({
+            start,
+            name: (idx) => `${stem}${width ? String(idx).padStart(width, '0') : String(idx)}.${ext}`
+          });
+        }
+      }
+    }
+  }
+  return patterns;
+}
+
+async function urlExists(url) {
+  try {
+    const response = await fetch(url, { method:'HEAD', cache:'no-store' });
+    if (response.ok) return true;
+  } catch (_) {}
+
+  try {
+    const response = await fetch(url, { cache:'no-store' });
+    return response.ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function loadDefaultFramesByPattern() {
+  let active = null;
+  for (const pattern of framePatterns()) {
+    const probe = DEFAULT_FRAMES_PATH + pattern.name(pattern.start);
+    if (await urlExists(probe)) {
+      active = pattern;
+      break;
+    }
+  }
+
+  if (!active) return;
+
+  const urls = [];
+  const names = [];
+  const maxFrames = csvData.length ? Math.min(Math.max(csvData.length, 1), 20000) : 20000;
+  let missingCount = 0;
+  let idx = active.start;
+
+  while (urls.length < maxFrames && missingCount < 3) {
+    const name = active.name(idx);
+    const url = DEFAULT_FRAMES_PATH + name;
+    if (await urlExists(url)) {
+      urls.push(url);
+      names.push(name);
+      missingCount = 0;
+    } else {
+      missingCount += 1;
+    }
+    idx += 1;
+  }
+
+  if (urls.length) {
+    loadFramesFromURLs(urls, names);
+  }
+}
+
+/* ---------------------------
+   Image zoom and pan
+   --------------------------- */
+frameDisplay.addEventListener('wheel', (event) => {
+  if (!frameURLs.length) return;
+  event.preventDefault();
+  const delta = event.deltaY * -0.0015;
+  imgScale = clamp(imgScale + delta, 0.1, 20);
+  updateImageTransform();
+});
+
+frameDisplay.addEventListener('mousedown', (event) => {
+  if (event.button !== 0 || !frameURLs.length) return;
+  event.preventDefault();
+  isPanning = true;
+  startPanX = event.clientX - imgPanX;
+  startPanY = event.clientY - imgPanY;
+});
+
+window.addEventListener('mousemove', (event) => {
+  if (!isPanning) return;
+  imgPanX = event.clientX - startPanX;
+  imgPanY = event.clientY - startPanY;
+  updateImageTransform();
+});
+
+window.addEventListener('mouseup', () => {
+  isPanning = false;
+});
+
+function updateImageTransform() {
+  const img = $('displayed-img');
+  if (img) img.style.transform = `translate(${imgPanX}px, ${imgPanY}px) scale(${imgScale})`;
+}
+
+function resetImageTransform() {
+  imgScale = 1;
+  imgPanX = 0;
+  imgPanY = 0;
+  updateImageTransform();
+}
+
+/* ---------------------------
+   Resizable panels
+   --------------------------- */
+panelResizer.addEventListener('mousedown', () => {
+  isDraggingResizer = true;
+  panelResizer.classList.add('dragging');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+
+window.addEventListener('mousemove', (event) => {
+  if (!isDraggingResizer) return;
+  const rect = mainLayout.getBoundingClientRect();
+  const pointerX = event.clientX - rect.left;
+  const minWidth = 320;
+  const targetImageWidth = clamp(rect.width - pointerX - 3, minWidth, rect.width - minWidth);
+  mainLayout.style.gridTemplateColumns = `1fr 6px ${targetImageWidth}px`;
+  resizeCanvas();
+});
+
+window.addEventListener('mouseup', () => {
+  if (!isDraggingResizer) return;
+  isDraggingResizer = false;
+  panelResizer.classList.remove('dragging');
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+  resizeCanvas();
+});
+
+/* ---------------------------
+   Canvas chart
+   --------------------------- */
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = chartContainer.clientWidth;
+  const cssHeight = chartContainer.clientHeight;
+  chartCanvas.width = Math.max(1, Math.round(cssWidth * dpr));
+  chartCanvas.height = Math.max(1, Math.round(cssHeight * dpr));
+  chartCanvas.style.width = `${cssWidth}px`;
+  chartCanvas.style.height = `${cssHeight}px`;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  drawChart();
+}
+
+function getPlotDims() {
+  const dpr = window.devicePixelRatio || 1;
+  const W = chartCanvas.width / dpr;
+  const H = chartCanvas.height / dpr;
+  return { W, H, pw: W - PAD.left - PAD.right, ph: H - PAD.top - PAD.bottom };
+}
+
+function findNearestIndexByTime(arr, t) {
+  if (!arr.length) return 0;
+  let low = 0;
+  let high = arr.length - 1;
+
+  while (high - low > 8) {
+    const mid = Math.floor((low + high) / 2);
+    if (arr[mid].t < t) low = mid;
+    else high = mid;
+  }
+
+  let best = low;
+  let bestDistance = Math.abs(arr[low].t - t);
+  for (let i = low + 1; i <= high; i += 1) {
+    const distance = Math.abs(arr[i].t - t);
+    if (distance < bestDistance) {
+      best = i;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+function drawChart(cursorX) {
+  const c = themeColors();
+  const { W, H, pw, ph } = getPlotDims();
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = c.plotBg;
+  ctx.fillRect(0,0,W,H);
+
+  if (!csvData.length) {
+    ctx.fillStyle = c.muted;
+    ctx.font = '12px Space Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Load flux.csv to display the flux time series', W / 2, H / 2);
+    return;
+  }
+
+  const tMin = csvData[0].t;
+  const tMax = csvData[csvData.length - 1].t;
+  const fluxValues = csvData.map(row => row.flux);
+  const fluxMin = Math.min(...fluxValues);
+  const fluxMax = Math.max(...fluxValues);
+  const fluxPad = (fluxMax - fluxMin) * 0.08 || 1;
+  const yMin = fluxMin - fluxPad;
+  const yMax = fluxMax + fluxPad;
+
+  ctx.strokeStyle = c.border;
+  ctx.lineWidth = 1;
+
+  const yTicks = 6;
+  for (let i = 0; i <= yTicks; i += 1) {
+    const y = PAD.top + (1 - i / yTicks) * ph;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y);
+    ctx.lineTo(PAD.left + pw, y);
+    ctx.stroke();
+  }
+
+  const xTicks = 6;
+  for (let i = 0; i <= xTicks; i += 1) {
+    const x = PAD.left + (i / xTicks) * pw;
+    ctx.beginPath();
+    ctx.moveTo(x, PAD.top);
+    ctx.lineTo(x, PAD.top + ph);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = c.muted;
+  ctx.beginPath();
+  ctx.rect(PAD.left, PAD.top, pw, ph);
+  ctx.stroke();
+
+  ctx.fillStyle = c.muted;
+  ctx.font = '11px Space Mono, monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= yTicks; i += 1) {
+    const flux = yMin + (yMax - yMin) * i / yTicks;
+    const y = PAD.top + (1 - (flux - yMin) / (yMax - yMin || 1)) * ph;
+    ctx.fillText(flux.toFixed(2), PAD.left - 8, y + 4);
+  }
+
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= xTicks; i += 1) {
+    const t = tMin + (tMax - tMin) * i / xTicks;
+    const x = PAD.left + (t - tMin) / (tMax - tMin || 1) * pw;
+    ctx.fillText(formatSecondsLabel(t), x, PAD.top + ph + 18);
+  }
+
+  ctx.beginPath();
+  ctx.strokeStyle = c.accent;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  for (let i = 0; i < csvData.length; i += 1) {
+    const x = PAD.left + (csvData[i].t - tMin) / (tMax - tMin || 1) * pw;
+    const y = PAD.top + (1 - (csvData[i].flux - yMin) / (yMax - yMin || 1)) * ph;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  if (frameURLs.length > 1) {
+    ctx.strokeStyle = c.accent2;
+    for (let i = 0; i < frameURLs.length; i += 1) {
+      const frac = i / (frameURLs.length - 1);
+      const x = PAD.left + frac * pw;
+      ctx.globalAlpha = 0.18;
+      ctx.beginPath();
+      ctx.moveTo(x, PAD.top + ph);
+      ctx.lineTo(x, PAD.top + ph + 6);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  if (typeof cursorX === 'number') {
+    const clampedX = clamp(cursorX, PAD.left, PAD.left + pw);
+    ctx.setLineDash([4,4]);
+    ctx.strokeStyle = c.accent;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(clampedX, PAD.top);
+    ctx.lineTo(clampedX, PAD.top + ph);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const tHover = tMin + (clampedX - PAD.left) / (pw || 1) * (tMax - tMin || 1);
+    const idx = findNearestIndexByTime(csvData, tHover);
+    const nearest = csvData[idx];
+    const xNearest = PAD.left + (nearest.t - tMin) / (tMax - tMin || 1) * pw;
+    const yNearest = PAD.top + (1 - (nearest.flux - yMin) / (yMax - yMin || 1)) * ph;
+
+    ctx.beginPath();
+    ctx.arc(xNearest, yNearest, 5, 0, Math.PI * 2);
+    ctx.fillStyle = c.strong;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = c.accent;
+    ctx.stroke();
+
+    statT.textContent = nearest.t.toFixed(4);
+    statFlux.textContent = nearest.flux.toFixed(4);
+
+    if (frameURLs.length) {
+      const frac = (nearest.t - tMin) / (tMax - tMin || 1);
+      const frameIdx = clamp(Math.round(frac * (frameURLs.length - 1)), 0, frameURLs.length - 1);
+      statFrame.textContent = `${frameIdx + 1}/${frameURLs.length}`;
+      seekRange.max = Math.max(1, frameURLs.length - 1);
+      seekRange.value = frameIdx;
+    }
+  }
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+/* ---------------------------
+   Scrubbing
+   --------------------------- */
+function frameIndexFromCanvasX(x) {
+  if (!frameURLs.length) return 0;
+  const dims = getPlotDims();
+  const clamped = clamp(x, PAD.left, PAD.left + dims.pw);
+  const frac = (clamped - PAD.left) / (dims.pw || 1);
+  return clamp(Math.round(frac * (frameURLs.length - 1)), 0, frameURLs.length - 1);
+}
+
+chartCanvas.addEventListener('mousedown', (event) => {
+  if (!frameURLs.length) return;
+  isScrubbing = true;
+  stopPlayback();
+  const rect = chartCanvas.getBoundingClientRect();
+  showFrame(frameIndexFromCanvasX(event.clientX - rect.left));
+});
+
+window.addEventListener('mousemove', (event) => {
+  if (!isScrubbing) return;
+  const rect = chartCanvas.getBoundingClientRect();
+  showFrame(frameIndexFromCanvasX(event.clientX - rect.left));
+});
+
+window.addEventListener('mouseup', () => {
+  isScrubbing = false;
+});
+
+chartCanvas.addEventListener('mousemove', (event) => {
+  if (isScrubbing) return;
+  const rect = chartCanvas.getBoundingClientRect();
+  drawChart(event.clientX - rect.left);
+});
+
+chartCanvas.addEventListener('mouseleave', () => {
+  if (isScrubbing) return;
+  drawChart();
+  statT.textContent = '—';
+  statFlux.textContent = '—';
+  statFrame.textContent = '—';
+});
+
+/* ---------------------------
+   Frame display
+   --------------------------- */
+function ensureDisplayedImage() {
+  let image = $('displayed-img');
+  if (image) return image;
+
+  image = document.createElement('img');
+  image.id = 'displayed-img';
+  image.alt = 'frame';
+  frameDisplay.innerHTML = '';
+  frameDisplay.appendChild(image);
+  return image;
+}
+
+function getXForFrameIndex(idx) {
+  const dims = getPlotDims();
+  if (!csvData.length) {
+    const frac = frameURLs.length > 1 ? idx / (frameURLs.length - 1) : 0;
+    return PAD.left + frac * dims.pw;
+  }
+
+  const tMin = csvData[0].t;
+  const tMax = csvData[csvData.length - 1].t;
+  const frac = frameURLs.length > 1 ? idx / (frameURLs.length - 1) : 0;
+  const t = tMin + frac * (tMax - tMin || 1);
+  return PAD.left + (t - tMin) / (tMax - tMin || 1) * dims.pw;
+}
+
+function showFrame(idx, options = {}) {
+  if (!frameURLs.length) return;
+
+  idx = clamp(Math.round(idx), 0, frameURLs.length - 1);
+  if (idx === currentFrameIdx && !options.force) return;
+
+  const displayed = ensureDisplayedImage();
+  const cached = imgCache[idx];
+
+  if (cached && cached.complete) displayed.src = cached.src;
+  else displayed.src = frameURLs[idx];
+
+  updateImageTransform();
+
+  displayed.alt = frameFiles[idx]?.name || `frame-${idx + 1}`;
+  frameCounter.textContent = `${idx + 1} / ${frameURLs.length}`;
+  metaName.textContent = frameFiles[idx]?.name || '—';
+  metaIdx.textContent = idx + 1;
+
+  if (csvData.length) {
+    const frac = idx / Math.max(1, frameURLs.length - 1);
+    const tMin = csvData[0].t;
+    const tMax = csvData[csvData.length - 1].t;
+    const t = tMin + frac * (tMax - tMin || 1);
+    const nearestIdx = findNearestIndexByTime(csvData, t);
+    metaTime.textContent = csvData[nearestIdx].t.toFixed(4);
+    metaFlux.textContent = csvData[nearestIdx].flux.toFixed(4);
+  } else {
+    metaTime.textContent = '—';
+    metaFlux.textContent = '—';
+  }
+
+  seekRange.max = Math.max(1, frameURLs.length - 1);
+  seekRange.value = idx;
+  statFrame.textContent = `${idx + 1}/${frameURLs.length}`;
+  currentFrameIdx = idx;
+  drawChart(getXForFrameIndex(idx));
+}
+
+/* ---------------------------
+   Playback
+   --------------------------- */
+prevBtn.addEventListener('click', () => {
+  if (!frameURLs.length) return;
+  showFrame(currentFrameIdx <= 0 ? (loopPlayback ? frameURLs.length - 1 : 0) : currentFrameIdx - 1);
+});
+
+nextBtn.addEventListener('click', () => {
+  if (!frameURLs.length) return;
+  showFrame(currentFrameIdx >= frameURLs.length - 1 ? (loopPlayback ? 0 : frameURLs.length - 1) : currentFrameIdx + 1);
+});
+
+seekRange.addEventListener('input', (event) => showFrame(Number(event.target.value)));
+playBtn.addEventListener('click', () => isPlaying ? stopPlayback() : startPlayback());
+speedSel.addEventListener('change', () => { speedMultiplier = Number(speedSel.value) || 1; });
+fpsInput.addEventListener('change', () => { baseFrameInterval = 1000 / (Number(fpsInput.value) || 24); });
+loopChk.addEventListener('change', () => { loopPlayback = loopChk.checked; });
+
+loopChk.checked = true;
+speedMultiplier = Number(speedSel.value) || 1;
+baseFrameInterval = 1000 / (Number(fpsInput.value) || 24);
+
+function startPlayback() {
+  if (!frameURLs.length || isPlaying) return;
+  isPlaying = true;
+  playBtn.textContent = 'Pause';
+  lastPlayTS = performance.now();
+  accumulated = 0;
+  playLoop(lastPlayTS);
+}
+
+function stopPlayback() {
+  if (!isPlaying) return;
+  isPlaying = false;
+  playBtn.textContent = 'Play';
+  if (playRequest) cancelAnimationFrame(playRequest);
+  playRequest = null;
+}
+
+function playLoop(timestamp) {
+  if (!isPlaying) return;
+  playRequest = requestAnimationFrame(playLoop);
+  const delta = timestamp - lastPlayTS;
+  lastPlayTS = timestamp;
+  accumulated += delta;
+  const interval = baseFrameInterval / (speedMultiplier || 1);
+
+  if (accumulated >= interval) {
+    const steps = Math.floor(accumulated / interval);
+    accumulated -= steps * interval;
+    let nextIndex = (currentFrameIdx < 0 ? 0 : currentFrameIdx) + steps;
+
+    if (nextIndex > frameURLs.length - 1) {
+      if (loopPlayback) nextIndex %= frameURLs.length;
+      else nextIndex = frameURLs.length - 1;
+    }
+
+    showFrame(nextIndex);
+  } else if (currentFrameIdx >= 0 && frameURLs.length > 1) {
+    const progress = accumulated / (interval || 1);
+    const nextIdx = Math.min(frameURLs.length - 1, currentFrameIdx + 1);
+    const x0 = getXForFrameIndex(currentFrameIdx);
+    const x1 = getXForFrameIndex(nextIdx);
+    drawChart(x0 + (x1 - x0) * progress);
+  }
+}
+
+/* ---------------------------
+   Footer
+   --------------------------- */
+function updateFooter() {
+  ftPoints.textContent = csvData.length || '—';
+  ftFrames.textContent = frameURLs.length || '—';
+
+  if (csvData.length) {
+    const tMin = csvData[0].t;
+    const tMax = csvData[csvData.length - 1].t;
+    const fluxValues = csvData.map(row => row.flux);
+    ftTrange.textContent = `${tMin.toFixed(2)} → ${tMax.toFixed(2)}`;
+    ftFluxRange.textContent = `${Math.min(...fluxValues).toFixed(2)} → ${Math.max(...fluxValues).toFixed(2)}`;
+  } else {
+    ftTrange.textContent = '—';
+    ftFluxRange.textContent = '—';
+  }
+}
+
+/* ---------------------------
+   Drag and drop
+   --------------------------- */
+['dragenter','dragover'].forEach(eventName => {
+  window.addEventListener(eventName, event => event.preventDefault());
+});
+
+window.addEventListener('drop', async (event) => {
+  event.preventDefault();
+  const files = Array.from(event.dataTransfer.files || []);
+  const csvs = files.filter(file => /\.(csv|txt)$/i.test(file.name));
+  const imgs = files.filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file.name));
+  const kpiFile = files.find(file => file.name.toLowerCase() === KPI_JSON_NAME);
+  const timeseriesFile = files.find(file => file.name.toLowerCase() === TIMESERIES_JSON_NAME);
+
+  if (csvs.length) {
+    await loadCSVFromFolderFiles(csvs, 'Dropped files');
+    fileStatus.csv.loaded = true;
+    fileStatus.csv.path = csvs[0].name;
+  }
+
+  if (imgs.length) {
+    loadFramesFromFiles(imgs, 'Dropped files');
+    fileStatus.frames.loaded = true;
+    fileStatus.frames.count = imgs.length;
+    fileStatus.frames.path = `${imgs.length} dropped image frame(s)`;
+  }
+
+  if (kpiFile) {
+    await loadKpiFromFolderFiles([kpiFile], 'Dropped files');
+  }
+
+  if (timeseriesFile) {
+    await loadTimeSeriesFromFolderFiles([timeseriesFile], 'Dropped files');
+  }
+
+  updateFileAccessPanel();
+});
+
+
+window.receiveReflectanceFilesFromParent = async function(payload = {}, labels = {}) {
+  try {
+    if (payload.csvFiles) await loadCSVFromFolderFiles(Array.from(payload.csvFiles || []), labels.csv || 'RUN folder · END-010 flux output');
+    if (payload.frameFiles) await loadFramesFromFolderFiles(Array.from(payload.frameFiles || []), labels.frames || 'RUN folder · END-010 rendered frames');
+    if (payload.kpiData) {
+      kpiData = payload.kpiData;
+      fileStatus.kpi.loaded = true;
+      fileStatus.kpi.path = `${labels.results || 'RUN folder · END-010 results'}: embedded KPI catalog`;
+      populateKpiTable();
+    } else if (payload.resultFiles) {
+      await loadKpiFromFolderFiles(Array.from(payload.resultFiles || []), labels.results || 'RUN folder · END-010 results');
+    }
+    if (payload.timeSeriesData) {
+      timeSeriesData = payload.timeSeriesData;
+      fileStatus.timeseries.loaded = true;
+      fileStatus.timeseries.path = `${labels.results || 'RUN folder · END-010 results'}: embedded time series`;
+      drawGeometryCharts();
+    } else if (payload.resultFiles) {
+      await loadTimeSeriesFromFolderFiles(Array.from(payload.resultFiles || []), labels.results || 'RUN folder · END-010 results');
+    }
+    updateFileAccessPanel();
+    updateFooter();
+    resizeCanvas();
+    drawChart();
+  } catch (error) {
+    console.warn('Unable to load END-010 data from the selected RUN folder:', error);
+  }
+};
+window.refreshReflectanceDashboard = function() {
+  try { updateFileAccessPanel(); updateFooter(); populateKpiTable(); drawGeometryCharts(); resizeCanvas(); drawChart(); if (currentFrameIdx >= 0) showFrame(currentFrameIdx, { force:true }); } catch (error) { console.warn(error); }
+};
+
+/* ---------------------------
+   Input bindings
+   --------------------------- */
+csvFolderInput.addEventListener('change', async (event) => {
+  await loadSelectedFolder('csv', event.target.files, 'Selected CSV folder');
+  event.target.value = '';
+});
+
+framesFolderInput.addEventListener('change', async (event) => {
+  await loadSelectedFolder('frames', event.target.files, 'Selected Frames folder');
+  event.target.value = '';
+});
+
+kpiFolderInput.addEventListener('change', async (event) => {
+  await loadSelectedFolder('kpi', event.target.files, 'Selected Results folder');
+  event.target.value = '';
+});
+
+$('theme-switch').addEventListener('change', event => setTheme(event.target.checked ? 'light' : 'dark'));
+
+/* ---------------------------
+   Initialisation
+   --------------------------- */
+function initialise() {
+  setupTheme();
+  updateFileAccessPanel();
+  resizeCanvas();
+  loadDefaultPaths();
+}
+
+window.addEventListener('load', () => {
+  initialise();
+  setTimeout(resizeCanvas, 80);
+});
+</script>
+</body>
+</html>

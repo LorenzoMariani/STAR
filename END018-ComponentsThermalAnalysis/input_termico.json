@@ -1,0 +1,12 @@
+{
+  "star_input_dir": "./esempi_io_star",
+  "output_dir": "./output_thermal",
+
+  "form_factor": "3U",
+  "panels": "both",
+  "n_internal_nodes": 3,
+
+  "sar_power_W": 200,
+  "sar_source": "passes",
+  "sar_duty": 0.10
+}

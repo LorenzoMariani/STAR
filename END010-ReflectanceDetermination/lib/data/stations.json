@@ -1,0 +1,22 @@
+{
+  "SCUDO": {"lon": 13.375032, "lat": 41.765297, "alt": 601.8, "city": "Collepardo (IT)"},
+  "RESDOS": {"lon": 12.5056, "lat": 41.9578, "alt": 76, "city": "Rome (IT)"},
+  "MITO": {"lon": 12.5056, "lat": 41.9578, "alt": 76, "city": "Rome (IT)"},
+  "SPADE": {"lon": 16.7039, "lat": 40.6492, "alt": 400, "city": "Matera (IT)"},
+  "Mammendorf": {"lon": 11.1657, "lat": 48.2103, "alt": 0, "city": "Mammendorf (DE)"},
+  "WASC": {"lon": 115.3454, "lat": -29.0462, "alt": 268, "city": "Geraldton (AU)"},
+  "MarioZucchelli": {"lon": 164.1133, "lat": -74.6948, "alt": 0, "city": "Antartica"},
+  "CONCORDIA": {"lon": 123.3461, "lat": -75.1008, "alt": 3220, "city": "Antartica"},
+  "EDUSCOPE": {"lon": 12.494, "lat": 41.8931, "alt": 55, "city": "Rome"},
+  "ANGELL HALL": {"lon": -83.7483, "lat": 42.2814, "alt": 50, "city": "Ann Arbor (US)"},
+  "EQUO": {"lon": 40.1951, "lat": -2.995, "alt": 2, "city": "Malindi"},
+  "AWARE": {"lon": 115.3452, "lat": -29.0462, "alt": 240, "city": "Geraldton (AU)"},
+  "ASIAGO": {"lon": 11.5688, "lat": 45.8494, "alt": 1369.9, "city": "Asiago (IT)"},
+  "ZIMMERWALD": {"lon": 7.465, "lat": 46.8766, "alt": 900, "city": "Bern (CH)"},
+  "GALHASSIN": {"lon": 14.0206, "lat": 37.9394, "alt": 600, "city": "Isnello (IT)"},
+  "Loiano": {"lon": 11.3344, "lat": 44.2592, "alt": 842, "city": "Loiano (IT)"},
+  "TIRA": {"lon": 7.13068, "lat": 50.61792, "alt": 50, "city": "Wachtberg (DE)"},
+  "PAN14": {"lon": -70.8530, "lat": -30.52634, "alt": 1738.0, "city": "Chile (CH)"},
+  "PAN2": {"lon": -6.627685, "lat": 38.215914, "alt": 580.0, "city": "Spain (ES)"}
+
+}
