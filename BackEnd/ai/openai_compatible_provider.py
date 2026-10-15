@@ -191,7 +191,7 @@ FILTERING PROCESS
 - Do not expose these steps in the output.
 
 EXTRACTION CONTROL RULES
-- Extract at most 16 high-level technical requirements.
+- Extract at most 24 high-level technical requirements.
 - Prefer mission-driving and STAR-analysis-relevant requirements over implementation narrative.
 - Do not create a separate requirement for every numerical detail.
 - Group closely related numerical details into one requirement when they define the same technical need.
@@ -301,7 +301,7 @@ ECSS-E-ST-10-06C operational checklist:
         normalized = []
         seen_texts = set()
 
-        for index, req in enumerate(requirements[:16], start=1):
+        for index, req in enumerate(requirements[:24], start=1):     # 16 until 2026-10-15: richer requests lost key facts
             text = str(req.get("text") or "").strip()
 
             if not text:

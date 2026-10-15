@@ -8,23 +8,42 @@ from typing import Any, Callable, Iterable
 
 LogCallback = Callable[[str, str], Any]
 
-# STAR run modes (2026-10-15): 'demo' (default inside STAR: fast settings with
-# meaningful results, for presentations), 'test' (smoke test: the fastest
-# settings that still run every step of each module, results not meaningful),
-# 'full' (the modules' complete settings). The frontend writes the mode into
-# every module input file ("run_mode") and into STAR_RUN_MODE; each runner maps
-# it onto its module (END-007 / Unreal always runs in full).
-RUN_MODES = ("demo", "test", "full")
+# STAR run modes (2026-10-15): 'test' (default: the fastest settings of every
+# module) and 'full' (the modules' complete settings, with an accuracy level
+# 1-5 that sets how long the searches run, 3 = the modules' templates). The
+# frontend writes them into every module input file ("run_mode", "run_level")
+# and into STAR_RUN_MODE / STAR_RUN_LEVEL; each runner maps them onto its module
+# (END-007 / Unreal always runs in full). The 'demo' mode existed until
+# 2026-10-15 with the settings of test: old input files are read as test.
+RUN_MODES = ("test", "full")
+FULL_LEVELS = {1: "Low", 2: "Medium", 3: "High", 4: "Extra high", 5: "Max"}
+DEFAULT_FULL_LEVEL = 3
 
 
 def star_run_mode(star_payload: dict[str, Any] | None = None) -> str:
-    """Run mode of this STAR run: the module input file's run_mode, else STAR_RUN_MODE, else 'demo'."""
+    """Run mode of this STAR run: the module input file's run_mode, else STAR_RUN_MODE, else 'test'."""
     import os
     for value in ((star_payload or {}).get("run_mode"), os.environ.get("STAR_RUN_MODE")):
         mode = str(value or "").strip().lower()
+        if mode == "demo":
+            return "test"
         if mode in RUN_MODES:
             return mode
-    return "demo"
+    return "test"
+
+
+def star_run_level(star_payload: dict[str, Any] | None = None) -> int:
+    """Accuracy level (1-5) of a full run: the module input file's run_level, else STAR_RUN_LEVEL, else 3."""
+    import os
+    for value in ((star_payload or {}).get("run_level"), os.environ.get("STAR_RUN_LEVEL")):
+        try:
+            level = int(float(str(value).strip()))
+        except (TypeError, ValueError):
+            continue
+        if level in FULL_LEVELS:
+            return level
+    return DEFAULT_FULL_LEVEL
+
 
 MODULE_OUTPUT_LAYOUT: dict[str, tuple[str, str]] = {
     "END-001": ("output_constellation_optimizer", "results_constellation_optimizer"),

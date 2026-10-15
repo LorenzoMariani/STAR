@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR — Collision Avoidance</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;
+  --danger:#ff5c7a;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);
+  /* categorical slots 1-8 of the validated data-viz palette (dark steps) */
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --st-good:#0ca30c;--st-critical:#d03b3b;--st-warning:#fab219;
+  --thr:rgba(208,59,59,.85);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;
+  --danger:#bd2450;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  --thr:rgba(208,59,59,.85);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.hidden-file-input{display:none}
+.page{padding:0 0 28px;display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--panel) 95%,transparent);box-shadow:var(--shadow)}
+.topbar h2{margin:0;font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:14px;color:var(--text-strong)}
+.topbar .sub{color:var(--muted);font-size:11px;margin-top:2px}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ctl-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:6px 12px;border-radius:10px;font-size:12px}
+.seg button.active{border-color:var(--text-strong);background:var(--panel-muted);color:var(--text-strong);font-weight:700}
+.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.status-dot{width:10px;height:10px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.banner{border:1px solid var(--border);border-left-width:6px;border-radius:14px;padding:12px 16px;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.banner .icon{font-size:18px;line-height:1.2}
+.banner.good{border-left-color:var(--st-good)}.banner.critical{border-left-color:var(--st-critical)}.banner.warning{border-left-color:var(--st-warning)}
+.banner b{color:var(--text-strong)}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:12px;padding:8px 12px;background:var(--panel);min-width:150px}
+.chip .c-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.chip .c-value{color:var(--text-strong);font-weight:700;font-size:14px}
+.chip .c-src{color:var(--muted-2);font-size:10px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:16px;padding:12px 14px;background:var(--panel);min-width:0}
+.kpi .k-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .k-value{font-family:'Syne',Inter,system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text-strong);line-height:1.15;margin-top:4px}
+.kpi .k-unit{font-size:12px;color:var(--muted-2);font-weight:400;margin-left:4px}
+.kpi .k-note{color:var(--muted-2);font-size:11px;margin-top:4px}
+.kpi .k-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:6px}
+.kpi .k-flag.good{color:var(--st-good)}.kpi .k-flag.critical{color:var(--st-critical)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-header h3{margin:0;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.card-header .hint{color:var(--muted);font-size:11px}
+.card-body{padding:10px 12px 12px}
+.plot{width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:6px 8px 0;color:var(--text);font-size:11px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--muted)}
+.legend i.tint-ecl{background:var(--ecl-tint)}.legend i.tint-sar{background:var(--sar-tint)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+details.tables{border:1px solid var(--border);border-radius:18px;background:var(--panel);overflow:hidden}
+details.tables>summary{cursor:pointer;padding:12px 16px;font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--text-strong);background:var(--panel-strong)}
+.table-wrap{overflow:auto;max-height:420px;border-top:1px solid var(--border-soft)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border-bottom:1px solid var(--border-soft);padding:6px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td.flag{color:var(--st-critical);font-weight:700}
+.table-title{padding:10px 14px 4px;color:var(--muted-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+pre.json{margin:0;padding:12px 14px;max-height:420px;overflow:auto;font-size:11px;color:var(--text);border-top:1px solid var(--border-soft)}
+</style>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body>
+<div class="page">
+  <input id="collisionFolderInput" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+  <div class="topbar">
+    <div>
+      <h2>Collision Avoidance · Space Safety</h2>
+      <div class="sub" id="source-label">END-016 · close approaches between the satellites of the END-001 constellation · orbital lifetime and post-mission disposal</div>
+    </div>
+    <div class="controls">
+      <span class="status-pill"><span id="status-dot" class="status-dot"></span><span id="load-status">No data loaded</span></span>
+      <button id="manual-load" class="primary-action" type="button">Select END-016 Folder</button>
+    </div>
+  </div>
+
+  <div id="banner" class="banner" hidden></div>
+  <div id="config" class="chips"></div>
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid">
+    <article class="card">
+      <div class="card-header"><h3>Closest approach between satellites</h3><span class="hint">Minimum distance of every pair over the window [km] · red = below the screening distance</span></div>
+      <div class="card-body"><div id="plotPairs" class="plot"></div></div>
+    </article>
+    <article class="card">
+      <div class="card-header"><h3>Distance over time</h3><span class="hint" id="hist-hint">Closest pair · dashed = screening distance</span></div>
+      <div class="card-body"><div id="plotHistory" class="plot"></div></div>
+    </article>
+    <article class="card">
+      <div class="card-header"><h3>Orbital decay after the mission</h3><span class="hint">Mean altitude under drag (NRLMSISE-00) · dashed = disposal deadlines</span></div>
+      <div class="card-body"><div id="plotDecay" class="plot"></div></div>
+    </article>
+    <article class="card">
+      <div class="card-header"><h3>Disposal delta-v</h3><span class="hint">Perigee-lowering burn that brings the lifetime within each rule [m/s]</span></div>
+      <div class="card-body"><div id="plotDv" class="plot"></div></div>
+    </article>
+  </div>
+
+  <details class="tables" id="tables-details">
+    <summary>Table view · close approaches, lifetime and disposal, model summary</summary>
+    <div id="tables"></div>
+  </details>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const SLOTS = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'];
+const state = { summary:null, runInfo:null, labels:{} };
+
+/* ---------- helpers ---------- */
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function esc(v){ return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function num(v){ if (v === null || v === undefined || v === '') return NaN; if (v === 'Inf' || v === Infinity) return Infinity; const x = Number(v); return Number.isFinite(x) ? x : NaN; }
+function fmt(v, d = 1){ const x = num(v); return x === Infinity ? '> 200' : (Number.isFinite(x) ? x.toFixed(d) : '—'); }
+function fmtE(v){ const x = num(v); return Number.isFinite(x) ? (x === 0 ? '0' : x.toExponential(1)) : '—'; }
+function colors(){
+  return { text:css('--text'), strong:css('--text-strong'), muted:css('--muted'), muted2:css('--muted-2'), panelStrong:css('--panel-strong'),
+    border:css('--border'), grid:css('--border-soft'), thr:css('--thr'), good:css('--st-good'), critical:css('--st-critical'), slots:SLOTS.map(css) };
+}
+function baseLayout(c, extra){
+  return Object.assign({ paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:"'Space Mono', ui-monospace, monospace", size:11, color:c.text }, margin:{ l:64, r:18, t:10, b:46 },
+    hoverlabel:{ bgcolor:c.panelStrong, bordercolor:c.border, font:{ color:c.text, family:"'Space Mono', monospace", size:11 } },
+    legend:{ orientation:'h', x:0, y:1.16, font:{ size:11, color:c.text } } }, extra || {});
+}
+function axis(c, extra){ return Object.assign({ gridcolor:c.grid, zerolinecolor:c.grid, linecolor:c.border, tickcolor:c.border, tickfont:{ color:c.muted2, size:11 }, titlefont:{ color:c.muted2, size:11 } }, extra || {}); }
+const PLOT_CFG = { responsive:true, displaylogo:false, displayModeBar:false };
+function draw(id, traces, layout){ const el = $(id); if (!el || !window.Plotly) return; el.querySelectorAll('.empty').forEach(n => n.remove()); Plotly.react(el, traces, layout, PLOT_CFG); }
+function empty(id, message){ const el = $(id); if (!el) return; if (window.Plotly) { try { Plotly.purge(el); } catch (_) {} } el.innerHTML = `<div class="empty">${esc(message)}</div>`; }
+function asArray(x){ return Array.isArray(x) ? x : (x == null ? [] : [x]); }
+function solarName(f){ const v = num(f); if (v <= 90) return `low activity (F10.7 ${v})`; if (v >= 180) return `high activity (F10.7 ${v})`; return `mean activity (F10.7 ${v})`; }
+function kpi(label, value, unit, note, flag){
+  return `<div class="kpi"><div class="k-label">${esc(label)}</div><div class="k-value">${value}<span class="k-unit">${esc(unit)}</span></div>${note ? `<div class="k-note">${esc(note)}</div>` : ''}${flag ? `<div class="k-flag ${flag.cls}">${flag.icon} ${esc(flag.text)}</div>` : ''}</div>`;
+}
+
+/* ---------- rendering ---------- */
+function renderBanner(){
+  const b = $('banner'), s = state.summary, info = state.runInfo;
+  if (!s && !info) { b.hidden = true; return; }
+  let cls = 'good', icon = '✓', head = '<b>No safety issue found</b>';
+  const items = [];
+  if (info && info.status && info.status !== 'completed') {
+    cls = info.status === 'failed' ? 'critical' : 'warning'; icon = info.status === 'failed' ? '✕' : '!';
+    head = `<b>END-016 ${esc(info.status)}</b> — ${esc(info.evidence_text || '')}`;
+  } else if (s) {
+    const k = s.kpis || {}, cfg = s.config || {};
+    const rules = asArray(cfg.disposal_rules_years);
+    if (num(k.n_events_below_screening) > 0) items.push(`${k.n_events_below_screening} close approach(es) below ${fmt(cfg.screening_km, 0)} km between satellites of the constellation`);
+    if (num(k.n_events_above_pc_threshold) > 0) items.push(`${k.n_events_above_pc_threshold} with Pc above ${fmtE(cfg.pc_threshold)}`);
+    for (const r of rules) {
+      const ok = k[`complies_${r}y_rule_mean_activity`];
+      if (ok === false) items.push(`${r}-year disposal rule not met at mean solar activity: disposal delta-v ${fmt(k[`disposal_dv_m_s_${r}y_rule_mean_activity`])} m/s`);
+    }
+    if (k.orbit_maintenance_needed) items.push('the orbit decays before the end of the mission: orbit maintenance needed');
+    if (items.length) { cls = 'warning'; icon = '!'; head = '<b>Space-safety findings</b>'; }
+    if (info && info.evidence_text) head += ` — ${esc(info.evidence_text)}`;
+  }
+  const notes = (info && info.notes) || [];
+  b.className = `banner ${cls}`; b.hidden = false;
+  b.innerHTML = `<span class="icon" aria-hidden="true">${icon}</span><div>${head}${items.length ? `<ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}${notes.length ? `<div style="margin-top:6px;color:var(--muted-2);font-size:11px">${notes.map(esc).join(' · ')}</div>` : ''}</div>`;
+}
+function renderConfig(){
+  const info = state.runInfo, s = state.summary, el = $('config');
+  const cfg = (s && s.config) || (info && info.config) || null;
+  if (!cfg) { el.innerHTML = ''; return; }
+  const prov = (info && info.provenance) || {};
+  const chips = [
+    ['Mass', `${fmt(cfg.mass_kg, 1)} kg`, prov['spacecraft.mass_kg']],
+    ['Drag area · Cd', `${fmt(cfg.drag_area_m2, 3)} m² · ${fmt(cfg.cd, 2)}`, prov['spacecraft.drag_area_m2']],
+    ['Hard-body radius', `${fmt(cfg.hard_body_radius_m, 2)} m`, prov.hard_body_radius_m],
+    ['Position 1σ (R, T, N)', `${asArray(cfg.position_sigma_rtn_m).map(x => fmt(x, 0)).join(' · ')} m`, prov.position_sigma_rtn_m],
+    ['Screening distance', `${fmt(cfg.screening_km, 0)} km`, prov.screening_km],
+    ['Pc threshold', fmtE(cfg.pc_threshold), prov.pc_threshold],
+    ['Mission lifetime', Number.isFinite(num(cfg.mission_lifetime_years)) ? `${fmt(cfg.mission_lifetime_years, 0)} y` : 'not stated', prov.mission_lifetime_years],
+    ['Disposal rules', asArray(cfg.disposal_rules_years).map(r => `${r} y`).join(' · '), prov.disposal_rules_years],
+    ['Solar activity F10.7', asArray(cfg.solar_f107).join(' · '), prov.solar_f107],
+  ];
+  el.innerHTML = chips.map(([l, v, p]) => `<div class="chip"><div class="c-label">${esc(l)}</div><div class="c-value">${esc(v)}</div><div class="c-src">${esc(p || '')}</div></div>`).join('');
+}
+function renderKpis(){
+  const s = state.summary; if (!s) { $('kpis').innerHTML = ''; return; }
+  const k = s.kpis || {}, cfg = s.config || {}, win = s.window || {};
+  const rules = asArray(cfg.disposal_rules_years);
+  const cards = [];
+  if (num(k.n_pairs) > 0) {
+    const sep = num(k.min_separation_km), scr = num(cfg.screening_km);
+    cards.push(kpi('Minimum separation', fmt(sep, sep < 10 ? 3 : 0), 'km', `${k.min_separation_pair} · ${String(k.min_separation_tca_utc || '').replace('T', ' ').slice(0, 19)} UTC`,
+      sep < scr ? { cls:'critical', icon:'✕', text:`below the ${fmt(scr, 0)} km screening distance` } : { cls:'good', icon:'✓', text:`above the ${fmt(scr, 0)} km screening distance` }));
+    cards.push(kpi('Close approaches', String(k.n_events_below_screening ?? 0), '', `below ${fmt(scr, 0)} km in ${fmt(win.hours, 0)} h · ${fmt(k.events_per_day, 1)} per day · ${k.n_events_below_1km ?? 0} below 1 km`));
+    cards.push(kpi('Highest Pc', fmtE(k.max_pc), '', `declared uncertainty · worst case over any uncertainty ${fmtE(k.max_pc_max)}`,
+      num(k.max_pc) > num(cfg.pc_threshold) ? { cls:'critical', icon:'✕', text:`above ${fmtE(cfg.pc_threshold)}` } : { cls:'good', icon:'✓', text:`below ${fmtE(cfg.pc_threshold)}` }));
+  } else {
+    cards.push(kpi('Minimum separation', '—', '', 'one satellite: no pair to check'));
+  }
+  cards.push(kpi('Passive lifetime', fmt(k.passive_lifetime_years_mean_activity), 'years', `mean solar activity · range ${fmt(k.passive_lifetime_years_min)} – ${fmt(k.passive_lifetime_years_max)} y`));
+  for (const r of rules) {
+    const ok = k[`complies_${r}y_rule_mean_activity`];
+    cards.push(kpi(`${r}-year disposal rule`, ok ? '0' : fmt(k[`disposal_dv_m_s_${r}y_rule_mean_activity`]), 'm/s', 'disposal delta-v at mean solar activity',
+      ok ? { cls:'good', icon:'✓', text:'met by natural decay' } : { cls:'critical', icon:'✕', text:'not met by natural decay' }));
+  }
+  cards.push(kpi('Drag make-up', fmt(k.drag_makeup_dv_m_s_per_year_mean_activity, 2), 'm/s per year', 'to hold the operational altitude (mean activity)',
+    k.orbit_maintenance_needed === true ? { cls:'critical', icon:'✕', text:'needed within the mission lifetime' } : (k.orbit_maintenance_needed === false ? { cls:'good', icon:'✓', text:'orbit lasts beyond the mission' } : null)));
+  $('kpis').innerHTML = cards.join('');
+}
+function renderPairs(c){
+  const s = state.summary; const sats = asArray(s && s.satellites).map(x => x.label);
+  const M = s && Array.isArray(s.pair_min_distance_km) ? s.pair_min_distance_km : null;
+  if (!M || sats.length < 2) { empty('plotPairs', 'One satellite: no pair to check.'); return; }
+  const z = M.map((row, i) => asArray(row).map((v, j) => i === j ? null : num(v)));
+  const text = z.map(row => row.map(v => v == null ? '' : (v < 10 ? v.toFixed(3) : v.toFixed(0))));
+  const scr = num(s.config.screening_km);
+  const zmax = Math.max(scr * 2, ...z.flat().filter(v => v != null));
+  const f = Math.min(0.98, scr / zmax);          // red only below the screening distance
+  draw('plotPairs', [{ type:'heatmap', x:sats, y:sats, z, text, texttemplate:'%{text}', textfont:{ size:10 }, hovertemplate:'%{y} – %{x}: %{z:.3f} km<extra></extra>',
+    colorscale:[[0, c.critical], [f, c.critical], [Math.min(1, f + 0.001), c.slots[3]], [1, c.slots[0]]],
+    zmin:0, zmax, showscale:true, colorbar:{ title:{ text:'km', font:{ color:c.muted2 } }, tickfont:{ color:c.muted2 } } }],
+    baseLayout(c, { height: Math.max(280, 34*sats.length + 90), margin:{ l:70, r:20, t:10, b:60 }, xaxis:axis(c), yaxis:axis(c, { autorange:'reversed' }) }));
+}
+function renderHistory(c){
+  const s = state.summary, h = s && s.closest_pair;
+  if (!h || !asArray(h.history_t_hours).length) { empty('plotHistory', 'One satellite: no pair to check.'); return; }
+  $('hist-hint').textContent = `Closest pair ${h.pair} · dashed = screening distance`;
+  const t0 = new Date(String(s.window.start_utc));
+  const x = asArray(h.history_t_hours).map(th => new Date(t0.getTime() + th*3600e3).toISOString());
+  const scr = num(s.config.screening_km);
+  draw('plotHistory', [{ x, y:asArray(h.history_distance_km), type:'scattergl', mode:'lines', name:h.pair, line:{ color:c.slots[0], width:1.6 }, hovertemplate:'%{y:.1f} km<extra></extra>' }],
+    baseLayout(c, { height:320, showlegend:false, shapes:[{ type:'line', xref:'paper', x0:0, x1:1, y0:scr, y1:scr, line:{ color:c.thr, width:1.4, dash:'dash' } }],
+      xaxis:axis(c, { title:'UTC' }), yaxis:axis(c, { title:'Distance [km]', rangemode:'tozero' }) }));
+}
+function renderDecay(c){
+  const s = state.summary, life = asArray(s && s.lifetime);
+  if (!life.length) { empty('plotDecay', 'No lifetime result.'); return; }
+  const shells = [...new Set(life.map(L => `${fmt(L.alt_km, 0)} km`))];
+  const traces = life.map((L, i) => ({ x:asArray(L.curve_t_years), y:asArray(L.curve_alt_km), type:'scatter', mode:'lines',
+    name:`${shells.length > 1 ? fmt(L.alt_km, 0) + ' km · ' : ''}${solarName(L.f107)}`, line:{ color:c.slots[i % c.slots.length], width:1.8 },
+    hovertemplate:'%{x:.1f} y: %{y:.0f} km<extra></extra>' }));
+  const rules = asArray(s.config.disposal_rules_years);
+  const shapes = rules.map(r => ({ type:'line', x0:r, x1:r, yref:'paper', y0:0, y1:1, line:{ color:c.thr, width:1.2, dash:'dash' } }));
+  const ann = rules.map(r => ({ x:r, yref:'paper', y:1, yanchor:'bottom', text:`${r} y`, showarrow:false, font:{ size:10, color:c.thr } }));
+  const maxT = Math.max(...life.map(L => Math.max(...asArray(L.curve_t_years))), ...rules) * 1.05;
+  draw('plotDecay', traces, baseLayout(c, { height:330, margin:{ l:64, r:18, t:26, b:46 }, shapes, annotations:ann, xaxis:axis(c, { title:'Years after the end of the mission', range:[0, maxT] }),
+    yaxis:axis(c, { title:'Mean altitude [km]' }) }));
+}
+function renderDv(c){
+  const s = state.summary, life = asArray(s && s.lifetime);
+  if (!life.length) { empty('plotDv', 'No lifetime result.'); return; }
+  const rules = asArray(s.config.disposal_rules_years).map(r => `${r}-year rule`);
+  const traces = life.map((L, i) => ({ type:'bar', name:solarName(L.f107) + (life.length > asArray(s.config.solar_f107).length ? ` · ${fmt(L.alt_km, 0)} km` : ''),
+    x:rules, y:asArray(L.disposal_dv_m_s).map(num), marker:{ color:c.slots[i % c.slots.length] }, hovertemplate:'%{x}: %{y:.1f} m/s<extra></extra>' }));
+  draw('plotDv', traces, baseLayout(c, { height:320, barmode:'group', xaxis:axis(c), yaxis:axis(c, { title:'Delta-v [m/s]', rangemode:'tozero' }) }));
+}
+function renderTables(){
+  const s = state.summary; let html = '';
+  if (s) {
+    const ev = asArray(s.events);
+    html += `<div class="table-title">Close approaches below ${fmt(s.config.screening_km, 0)} km (${ev.length})</div>`;
+    html += ev.length ? `<div class="table-wrap"><table><thead><tr><th>Pair</th><th>TCA (UTC)</th><th>Miss km</th><th>Radial km</th><th>In-track km</th><th>Cross-track km</th><th>Rel. speed km/s</th><th>Lat</th><th>Lon</th><th>Pc</th><th>Pc bound</th><th>Pc max</th></tr></thead><tbody>${
+      ev.map(e => `<tr><td>${esc(e.pair)}</td><td>${esc(String(e.tca_utc).replace('T', ' ').slice(0, 23))}</td><td>${fmt(e.miss_km, 3)}</td><td>${fmt(e.radial_km, 3)}</td><td>${fmt(e.intrack_km, 3)}</td><td>${fmt(e.crosstrack_km, 3)}</td><td>${fmt(e.rel_speed_km_s, 2)}</td><td>${fmt(e.lat_deg, 1)}</td><td>${fmt(e.lon_deg, 1)}</td><td class="${num(e.pc) > num(s.config.pc_threshold) ? 'flag' : ''}">${fmtE(e.pc)}</td><td>${fmtE(e.pc_upper_bound)}</td><td>${fmtE(e.pc_max)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty" style="padding:14px">None: every pair stays farther than the screening distance.</div>';
+    const rules = asArray(s.config.disposal_rules_years);
+    html += `<div class="table-title">Lifetime and disposal</div><div class="table-wrap"><table><thead><tr><th>Shell</th><th>Solar activity</th><th>Passive lifetime y</th><th>Drag make-up m/s/y</th>${rules.map(r => `<th>${r}-y rule</th><th>dv ${r}-y m/s</th><th>Perigee ${r}-y km</th>`).join('')}</tr></thead><tbody>${
+      asArray(s.lifetime).map(L => `<tr><td>${fmt(L.alt_km, 1)} km · ${fmt(L.incl_deg, 2)}°</td><td>${esc(solarName(L.f107))}</td><td>${fmt(L.passive_years)}</td><td>${fmt(L.drag_dv_m_s_per_year, 2)}</td>${
+        rules.map((r, i) => { const ok = num(L.passive_years) <= r; return `<td class="${ok ? '' : 'flag'}">${ok ? 'met' : 'not met'}</td><td>${fmt(asArray(L.disposal_dv_m_s)[i])}</td><td>${fmt(asArray(L.disposal_perigee_km)[i], 0)}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
+    html += `<div class="table-title">space_safety_summary.json (without histories)</div><pre class="json">${esc(JSON.stringify(Object.assign({}, s, { closest_pair: s.closest_pair ? { pair: s.closest_pair.pair } : null, lifetime: asArray(s.lifetime).map(L => Object.assign({}, L, { curve_t_years: '…', curve_alt_km: '…' })) }), null, 1))}</pre>`;
+  }
+  if (state.runInfo) html += `<div class="table-title">collision_run_info.json</div><pre class="json">${esc(JSON.stringify(state.runInfo, null, 1))}</pre>`;
+  $('tables').innerHTML = html || '<div class="empty">Nothing loaded.</div>';
+}
+function renderAll(){
+  const c = colors();
+  renderBanner(); renderConfig(); renderKpis(); renderTables();
+  if (state.summary) { renderPairs(c); renderHistory(c); renderDecay(c); renderDv(c); }
+  else {
+    const why = state.runInfo && state.runInfo.status && state.runInfo.status !== 'completed' ? `END-016 ${state.runInfo.status}: no result to show.` : 'No space_safety_summary.json loaded.';
+    ['plotPairs', 'plotHistory', 'plotDecay', 'plotDv'].forEach(id => empty(id, why));
+  }
+}
+
+/* ---------- data loading ---------- */
+function setLoaded(ok, label){ $('status-dot').classList.toggle('loaded', ok); $('load-status').textContent = label; }
+async function loadFiles(files, labels){
+  const data = { summary:null, runInfo:null };
+  for (const f of Array.from(files || [])) {
+    try {
+      if (/^space_safety_summary\.json$/i.test(f.name)) data.summary = JSON.parse(await f.text());
+      else if (/^collision_run_info\.json$/i.test(f.name)) data.runInfo = JSON.parse(await f.text());
+    } catch (e) { console.warn(`END-016: could not read ${f.name}`, e); }
+  }
+  state.summary = data.summary; state.runInfo = data.runInfo; state.labels = labels || {};
+  if (!data.summary && !data.runInfo) { setLoaded(false, 'No END-016 files in the selected folder'); renderAll(); return false; }
+  const n = data.summary ? asArray(data.summary.satellites).length : 0;
+  setLoaded(Boolean(data.summary), `${data.runInfo && data.runInfo.status ? data.runInfo.status + ' · ' : ''}${n} satellite(s)`);
+  if (labels && (labels.product || labels.all)) $('source-label').textContent = `${labels.product || labels.all} · END-016 Collision Avoidance`;
+  renderAll();
+  return true;
+}
+async function collect(handle, prefix = ''){
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === 'file') { const f = await entry.getFile(); f.relativeDisplayPath = `${prefix}${name}`; files.push(f); }
+    else if (entry.kind === 'directory') files.push(...await collect(entry, `${prefix}${name}/`));
+  }
+  return files;
+}
+async function requestFolder(){
+  if (window.parent && window.parent !== window && typeof window.parent.STAR_PICK_DIRECTORY === 'function') {
+    const picked = await window.parent.STAR_PICK_DIRECTORY('collision', 'all');
+    if (picked && picked.files) { await loadFiles(picked.files, { all:picked.label }); return; }
+  }
+  if ('showDirectoryPicker' in window) {
+    try { const h = await window.showDirectoryPicker({ mode:'read', id:'star-collision' }); await loadFiles(await collect(h, `${h.name}/`), { all:h.name }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; console.warn(e); }
+  }
+  $('collisionFolderInput').click();
+}
+
+window.receiveCollisionFilesFromParent = async function(payload = {}, labels = {}){
+  await loadFiles([...(payload.productFiles || []), ...(payload.resultFiles || [])], labels);
+};
+window.loadCollisionFiles = loadFiles;          // direct feed (tests / scripting)
+window.refreshCollisionDashboard = function(){ renderAll(); };
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('manual-load').onclick = requestFolder;
+  $('collisionFolderInput').addEventListener('change', async e => { await loadFiles(e.target.files, { all:'Selected END-016 folder' }); e.target.value = ''; });
+  new MutationObserver(() => renderAll()).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  let t = null;
+  window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(renderAll, 120); });
+  ['plotPairs', 'plotHistory', 'plotDecay', 'plotDv'].forEach(id => empty(id, 'Select a RUN folder to load the END-016 space-safety results.'));
+});
+})();
+</script>
+</body>
+</html>

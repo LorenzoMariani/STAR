@@ -600,60 +600,42 @@
 </script>
 
 <style id="star-v3-run-mode-style">
-.star-run-mode{display:inline-flex;align-items:center;gap:8px;margin-right:6px;font-size:12px;color:var(--muted)}
-.star-run-mode select{height:34px;min-width:160px;padding:0 10px}
-.star-run-mode-hint{flex-basis:100%;width:100%;font-size:11px;color:var(--muted);margin-top:4px}
+.star-run-mode{display:inline-flex;align-items:center;gap:6px;margin-right:6px;padding:0 12px;height:34px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
+.star-run-mode b{color:var(--text)}
 </style>
 <script id="star-v3-run-mode-script">
 (function(){
   'use strict';
-  const LABELS = {demo:'Demo (fast)', test:'Test (smoke test)', full:'Full'};
-  let modes = {demo:'fast settings with meaningful results, for presentations (default)',
-               test:'smoke test: every module runs with its fastest settings, results not meaningful',
-               full:'complete settings of every module'};
+  const LABELS = {test:'Test', full:'Full'};
   function api(){ return window.pywebview && window.pywebview.api; }
-  function showHint(){
-    const sel = document.getElementById('star-run-mode'), hint = document.getElementById('star-run-mode-hint');
-    if (sel && hint) hint.textContent = LABELS[sel.value] + ' - ' + (modes[sel.value] || '') + '. END-007 (Unreal) always runs in full.';
-  }
-  async function sync(){
-    const a = api(); if (!a || !a.get_run_mode) return;
-    try {
-      const r = await a.get_run_mode();
-      if (r && r.ok) { modes = r.modes || modes; const sel = document.getElementById('star-run-mode'); if (sel) sel.value = r.run_mode; showHint(); }
-    } catch (_) {}
-  }
   function ensure(){
     const exec = document.getElementById('execute-workflow-button');
-    if (!exec || document.getElementById('star-run-mode')) return;
-    const wrap = document.createElement('label');
-    wrap.className = 'star-run-mode';
-    wrap.title = 'Settings of the modules for the next workflow execution';
-    wrap.innerHTML = '<span>Run mode</span><select id="star-run-mode" aria-label="STAR run mode"></select>';
-    exec.parentElement.insertBefore(wrap, exec);
-    const hint = document.createElement('div');
-    hint.id = 'star-run-mode-hint'; hint.className = 'star-run-mode-hint';
-    exec.parentElement.appendChild(hint);
-    const sel = wrap.querySelector('select');
-    for (const k of ['demo', 'test', 'full']) { const o = document.createElement('option'); o.value = k; o.textContent = LABELS[k]; sel.appendChild(o); }
-    sel.value = 'demo'; showHint();
-    sel.addEventListener('change', async () => {
-      const a = api(); if (!a || !a.set_run_mode) return;
-      const r = await a.set_run_mode(sel.value);
-      if (!r || !r.ok) { sel.value = (r && r.run_mode) || 'demo'; if (r && r.error) alert(r.error); }
-      showHint();
-    });
-    const stop = document.getElementById('stop-execution-button');   // enabled while a workflow runs
-    if (stop) {
-      const lock = () => { sel.disabled = !stop.disabled; };
-      new MutationObserver(lock).observe(stop, {attributes: true, attributeFilter: ['disabled']});
-      lock();
-    }
-    sync();
+    if (!exec || document.getElementById('star-run-mode-label')) return;
+    const chip = document.createElement('span');
+    chip.id = 'star-run-mode-label'; chip.className = 'star-run-mode';
+    chip.title = 'Run mode of the next execution: change it with the Test / Full buttons and the accuracy bar at the top of the window';
+    chip.innerHTML = 'Run mode <b>Test</b>';
+    exec.parentElement.insertBefore(chip, exec);
+  }
+  async function sync(){
+    ensure();
+    const a = api(), chip = document.getElementById('star-run-mode-label');
+    if (!a || !a.get_run_mode || !chip) return;
+    try {
+      const r = await a.get_run_mode();
+      if (r && r.ok) {
+        const lv = r.run_mode === 'full' && r.levels ? r.levels[String(r.run_level)] : null;
+        const est = r.run_mode === 'full' ? r.estimates.full[String(r.run_level)] : r.estimates.test;
+        const min = Math.max(1, Math.round(est.total_s / 60));
+        chip.innerHTML = 'Run mode <b>' + (LABELS[r.run_mode] || r.run_mode) + (lv ? ' &middot; ' + lv.name : '') + '</b> &middot; &asymp; ' + min + ' min';
+        chip.title = 'Estimated time (' + r.estimate_scope + '), measured on the STAR workstation; change the mode with the Test / Full buttons and the accuracy bar at the top of the window';
+      }
+    } catch (_) {}
   }
   document.addEventListener('DOMContentLoaded', ensure);
   window.addEventListener('load', ensure);
-  window.addEventListener('pywebviewready', () => { ensure(); sync(); });
+  window.addEventListener('pywebviewready', sync);
+  setInterval(sync, 2000);
   ensure();
 })();
 </script>

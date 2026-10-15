@@ -112,13 +112,51 @@ CANONICAL_MODULE_CATALOG = [
 
 
 # STAR run modes (2026-10-15; BackEnd/runners/star_runner_io.star_run_mode).
-# Every module input file carries "run_mode" and the runners map it onto their
-# module; END-007 (Unreal) always runs in full.
+# Every module input file carries "run_mode" (and "run_level" in full) and the
+# runners map them onto their module; END-007 (Unreal) always runs in full.
+# Full has an accuracy level 1-5 (header slider): it sets the END-001 search
+# (the other modules already run their complete settings), 3 = the template.
 STAR_RUN_MODES: dict[str, str] = {
-    "demo": "fast settings with meaningful results, for presentations (default)",
-    "test": "smoke test: every module runs with its fastest settings, results not meaningful",
-    "full": "complete settings of every module",
+    "test": "fastest settings of every module (default)",
+    "full": "complete settings of every module; the accuracy level sets how long END-001 searches",
 }
+from runners.star_runner_io import DEFAULT_FULL_LEVEL, FULL_LEVELS  # noqa: E402
+from runners.end001_star_inputs import END001_FULL_LEVELS  # noqa: E402
+
+
+def star_full_level_text(level: int) -> str:
+    """One line on what a full accuracy level runs (header tooltip, log)."""
+    g = END001_FULL_LEVELS[level]
+    return (f"END-001 surrogate GA {g['Surrogate_Population']} x {g['Surrogate_Iterations']} x {g['Surrogate_Restarts']} restart(s), "
+            f"best {g['Surrogate_VerifyTopK']} re-simulated (simulation GA {g['Population']} x {g['Iterations']} outside the surrogate domain)"
+            + ("; = the module template" if level == 3 else ""))
+
+
+# Wall time of each module measured on the STAR workstation (2026-10-15, 8 MATLAB
+# workers; v6 proposal, END-001 also on a larger search space, + ~20 s of the STAR
+# runner: full 1 measured 114 s in STAR vs 94 s alone) [s]. The header estimate
+# sums them over the planned workflow (only END-001 before planning).
+STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
+    "END-001": {"test": 58, "1": 114, "2": 188, "3": 345, "4": 492, "5": 671},
+    "END-003": {"test": 32},
+    "END-004": {"test": 26},
+    "END-007": {"test": 150},
+    "END-010": {"test": 49},
+    "END-016": {"test": 6, "full": 9},
+    "END-018": {"test": 7},
+    "END-019": {"test": 1},
+}
+STAR_MODULE_TIME_DEFAULT_S = 5     # modules without a runner (placeholders)
+
+
+def star_estimate_seconds(mode: str, level: int, module_ids: list[str]) -> dict[str, Any]:
+    """Estimated wall time of a run: per module and total [s]."""
+    keys = [str(level), "full", "test"] if mode == "full" else ["test"]
+    per_module = {}
+    for module_id in module_ids:
+        table = STAR_MODULE_TIME_S.get(module_id, {})
+        per_module[module_id] = next((table[k] for k in keys if k in table), STAR_MODULE_TIME_DEFAULT_S)
+    return {"total_s": round(sum(per_module.values())), "per_module": per_module}
 
 
 class StarApi:
@@ -185,9 +223,11 @@ class StarApi:
         self.execution_stop_requested: bool = False
         self.active_module_name: str | None = None
         self.active_module_id: str | None = None
-        # STAR run mode (2026-10-15): demo by default; test = smoke test; full = complete settings
+        # STAR run mode (2026-10-15): test by default; full = complete settings with an accuracy level 1-5
         mode = os.environ.get("STAR_RUN_MODE", "").strip().lower()
-        self.run_mode: str = mode if mode in STAR_RUN_MODES else "demo"
+        self.run_mode: str = mode if mode in STAR_RUN_MODES else "test"
+        level = os.environ.get("STAR_RUN_LEVEL", "").strip()
+        self.run_level: int = int(level) if level.isdigit() and int(level) in FULL_LEVELS else DEFAULT_FULL_LEVEL
 
         self.report_manifest: list[dict[str, Any]] = []
         self.report_status: str = "not_available"
@@ -415,6 +455,7 @@ class StarApi:
                 "END-004": ("runners.end004_runner", "run_end004"),
                 "END-007": ("runners.end007_runner", "run_end007"),
                 "END-010": ("runners.end010_runner", "run_end010"),
+                "END-016": ("runners.end016_runner", "run_end016"),
                 "END-018": ("runners.end018_runner", "run_end018"),
                 "END-019": ("runners.end019_runner", "run_end019"),
             }
@@ -911,6 +952,15 @@ class StarApi:
         normalized = unicodedata.normalize("NFKD", text)
         normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
         return normalized.lower().strip()
+
+    def end016_safety_requested(self, normalized_text: str) -> bool:
+        """END-016 (inside STAR: space-safety checks of the END-001 constellation): the request
+        talks about collisions between satellites, space debris, disposal or end of life."""
+        return any(token in normalized_text for token in [
+            "collision", "conjunction", "close approach", "space debris", "debris mitigation", "space safety",
+            "space sustainability", "deorbit", "de-orbit", "disposal", "end of life", "end-of-life", "post-mission",
+            "re-enter", "reenter", "re-entry", "reentry", "orbital lifetime", "safe separation",
+        ])
 
     def end018_thermal_requested(self, normalized_text: str) -> bool:
         """END-018 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose thermal
@@ -3831,6 +3881,42 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
                             "reviewed_by_user": False,
                         })
 
+        # END-016 Collision Avoidance: space-safety checks of the END-001 constellation.
+        if self.end016_safety_requested(combined_text) and not workflow_has("END-016"):
+            module = self.get_module_by_id("END-016")
+            if module:
+                append_requested_output(
+                    "Check the close approaches between the satellites of the constellation and the orbital lifetime, disposal rules and disposal delta-v of every orbit.",
+                    "engineering_feasibility", "medium",
+                    "The approved requirements mention collisions, space debris, safe separation, disposal or end of life.",
+                    ["collision", "debris", "separation", "disposal", "re-enter", "end of life", "deorbit"],
+                )
+                workflow.append({
+                    "step": len(workflow) + 1,
+                    "module": module.get("module_name", "Collision Avoidance"),
+                    "module_id": "END-016",
+                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
+                    "output_artifacts": self.build_workflow_output_summary(module),
+                    "rationale": "Added by planning consistency check because the approved requirements ask for the space safety of the constellation.",
+                    "status": "proposed",
+                    "reviewed_by_user": False,
+                })
+                self.add_log("AI", "Planning consistency check added END-016 Collision Avoidance for the space safety of the constellation.")
+        if workflow_has("END-016") and not workflow_has("END-001"):
+            upstream = self.get_module_by_id("END-001")
+            if upstream:
+                workflow.append({
+                    "step": len(workflow) + 1,
+                    "module": upstream.get("module_name", "END-001"),
+                    "module_id": "END-001",
+                    "input_data_artifacts": self.build_workflow_input_summary(upstream, []),
+                    "output_artifacts": self.build_workflow_output_summary(upstream),
+                    "rationale": "Added because END-016 checks the orbits and ephemerides of the END-001 constellation.",
+                    "status": "proposed",
+                    "reviewed_by_user": False,
+                })
+                self.add_log("AI", "Planning consistency check added END-001 upstream of END-016.")
+
         # END-018 Components Thermal Analysis (CubeSats only): add it when the
         # request asks for the thermal behaviour of a CubeSat, and give it its
         # upstream END-001 (orbits) and END-003 (imaging passes, attitude).
@@ -4002,6 +4088,20 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
 
             if "END-010" not in module_ids:
                 module_ids.append("END-010")
+
+        # END-016 Collision Avoidance: space-safety checks of the END-001
+        # constellation (close approaches between its satellites, lifetime and disposal).
+        if self.end016_safety_requested(combined_text):
+            add_output(
+                "Check the close approaches between the satellites of the constellation and the orbital lifetime, disposal rules and disposal delta-v of every orbit.",
+                "engineering_feasibility",
+                "medium",
+                "The approved requirements mention collisions, space debris, safe separation, disposal or end of life.",
+                ["collision", "debris", "separation", "disposal", "re-enter", "end of life", "deorbit"],
+            )
+            if "END-001" not in module_ids:
+                module_ids.append("END-001")
+            module_ids.append("END-016")
 
         # END-018 Components Thermal Analysis: CubeSats (1U-12U) only, needs the
         # END-001 orbits and the END-003 imaging passes / attitude upstream.
@@ -4620,21 +4720,51 @@ Return only valid JSON:
             return {"ok": False, "error": "No approved workflow steps are available.", "logs": self.logs}
         return None
 
-    def get_run_mode(self) -> dict[str, Any]:
-        """Run mode of the next workflow execution, with the description of every mode (execution toolbar)."""
-        return {"ok": True, "run_mode": self.run_mode, "modes": STAR_RUN_MODES}
+    def planned_module_ids(self) -> list[str]:
+        """Module ids of the planned workflow, in order."""
+        return [str(step.get("module_id")) for step in self.workflow_steps if step.get("module_id")]
 
-    def set_run_mode(self, mode: str) -> dict[str, Any]:
-        """Choose demo / test / full for the next workflow execution (not while a workflow is running)."""
+    def run_mode_label(self) -> str:
+        """'test' or 'full, accuracy level N (Name)' for logs."""
+        if self.run_mode != "full":
+            return self.run_mode
+        return f"full, accuracy level {self.run_level} ({FULL_LEVELS[self.run_level]})"
+
+    def get_run_mode(self) -> dict[str, Any]:
+        """Run mode and accuracy level of the next workflow execution, with the levels and the time
+        estimates of the planned workflow (header buttons and slider, execution toolbar)."""
+        planned = self.planned_module_ids()
+        ids = planned or ["END-001"]
+        return {
+            "ok": True, "run_mode": self.run_mode, "run_level": self.run_level, "modes": STAR_RUN_MODES,
+            "levels": {str(k): {"name": v, "description": star_full_level_text(k)} for k, v in FULL_LEVELS.items()},
+            "estimates": {"test": star_estimate_seconds("test", 0, ids),
+                          "full": {str(k): star_estimate_seconds("full", k, ids) for k in FULL_LEVELS}},
+            "estimate_scope": f"planned workflow, {len(planned)} modules" if planned else "END-001 alone, until the workflow is planned",
+            "execution_running": self.execution_running,
+        }
+
+    def set_run_mode(self, mode: str, level: Any = None) -> dict[str, Any]:
+        """Choose test / full (and the accuracy level 1-5 of full) for the next workflow execution
+        (not while a workflow is running)."""
         mode = str(mode or "").strip().lower()
         if mode not in STAR_RUN_MODES:
             return {"ok": False, "error": f"Unknown run mode '{mode}': use one of {', '.join(STAR_RUN_MODES)}.", "run_mode": self.run_mode}
+        new_level = self.run_level
+        if level is not None and str(level).strip() != "":
+            try:
+                new_level = int(float(level))
+            except (TypeError, ValueError):
+                new_level = -1
+            if new_level not in FULL_LEVELS:
+                return {"ok": False, "error": f"Unknown accuracy level '{level}': use 1 to {len(FULL_LEVELS)}.", "run_mode": self.run_mode}
         if self.execution_running:
             return {"ok": False, "error": "The run mode cannot change while a workflow is running.", "run_mode": self.run_mode}
-        if mode != self.run_mode:
-            self.run_mode = mode
-            self.add_log("USER", f"Run mode set to {mode}: {STAR_RUN_MODES[mode]}")
-        return {"ok": True, "run_mode": self.run_mode, "modes": STAR_RUN_MODES}
+        if mode != self.run_mode or new_level != self.run_level:
+            self.run_mode, self.run_level = mode, new_level
+            detail = star_full_level_text(new_level) if mode == "full" else STAR_RUN_MODES[mode]
+            self.add_log("USER", f"Run mode set to {self.run_mode_label()}: {detail}")
+        return self.get_run_mode()
 
     def execute_workflow_async(self) -> dict[str, Any]:
         validation_error = self.validate_execution_preconditions()
@@ -4800,8 +4930,13 @@ Return only valid JSON:
 
         workflow_started_perf = time.perf_counter()
         self.add_log("EXECUTION", "Starting workflow execution from approved planning package.")
-        os.environ["STAR_RUN_MODE"] = self.run_mode      # MATLAB / subprocess runners inherit it
-        self.add_log("EXECUTION", f"Run mode: {self.run_mode} - {STAR_RUN_MODES[self.run_mode]}")
+        os.environ["STAR_RUN_MODE"] = self.run_mode      # MATLAB / subprocess runners inherit them
+        os.environ["STAR_RUN_LEVEL"] = str(self.run_level)
+        estimate = star_estimate_seconds(self.run_mode, self.run_level, self.planned_module_ids())
+        detail = star_full_level_text(self.run_level) if self.run_mode == "full" else STAR_RUN_MODES[self.run_mode]
+        self.add_log("EXECUTION", f"Run mode: {self.run_mode_label()} - {detail}")
+        self.add_log("EXECUTION", f"Estimated time: about {max(1, round(estimate['total_s'] / 60))} min "
+                                  f"(measured module times on the STAR workstation; the scenario changes them)")
         execution_results = []
         selected_modules = {step.get("module") for step in self.workflow_steps}
 
@@ -5019,6 +5154,7 @@ Return only valid JSON:
             "END-004": ("output_power_budget", "results_power_budget"),
             "END-007": ("output_synthetic_data_generation", "results_synthetic_data_generation"),
             "END-010": ("output_reflectance_determination", "results_reflectance_determination"),
+            "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
             "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
             "END-019": ("output_component_selector", "results_component_selector"),
         }
@@ -5083,6 +5219,7 @@ Return only valid JSON:
             "requested_outputs": self.requested_outputs,
             "requirements": self.requirements,
             "run_mode": self.run_mode,
+            "run_level": self.run_level,
         }
         input_path.write_text(json.dumps(payload, indent=4), encoding="utf-8")
         self.add_log("EXECUTION", f"Resolved {len(module_inputs)} input item(s) and {len(upstream_artifacts)} upstream artifact(s) for {module.get('module_name', module_id)}.")
@@ -5212,6 +5349,8 @@ Return only valid JSON:
                         runner_kwargs["module_input_dir"] = str(self.current_run_path / "module_inputs")
                     if "run_mode" in runner_parameters:
                         runner_kwargs["run_mode"] = self.run_mode
+                    if "run_level" in runner_parameters:
+                        runner_kwargs["run_level"] = self.run_level
                 except (TypeError, ValueError):
                     pass
 
@@ -5571,6 +5710,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_POWERVIZ__": "end004_power_insights.html",
         "__SRCDOC_PLACEHOLDER_FRAME_SYNTHETIC__": "end007_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__": "end010_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_COLLISION__": "end016_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_THERMAL__": "end018_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__": "end019_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__": "end001_results.html",
@@ -5598,60 +5738,42 @@ STAR_EXECUTION_FRONTEND_PATCH_JS = '\n<script id="star-v1-execution-ui-patch-scr
 # Run-mode selector of the execution toolbar (v3 only, injected next to Execute Workflow).
 STAR_V3_RUN_MODE_PATCH = """
 <style id="star-v3-run-mode-style">
-.star-run-mode{display:inline-flex;align-items:center;gap:8px;margin-right:6px;font-size:12px;color:var(--muted)}
-.star-run-mode select{height:34px;min-width:160px;padding:0 10px}
-.star-run-mode-hint{flex-basis:100%;width:100%;font-size:11px;color:var(--muted);margin-top:4px}
+.star-run-mode{display:inline-flex;align-items:center;gap:6px;margin-right:6px;padding:0 12px;height:34px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
+.star-run-mode b{color:var(--text)}
 </style>
 <script id="star-v3-run-mode-script">
 (function(){
   'use strict';
-  const LABELS = {demo:'Demo (fast)', test:'Test (smoke test)', full:'Full'};
-  let modes = {demo:'fast settings with meaningful results, for presentations (default)',
-               test:'smoke test: every module runs with its fastest settings, results not meaningful',
-               full:'complete settings of every module'};
+  const LABELS = {test:'Test', full:'Full'};
   function api(){ return window.pywebview && window.pywebview.api; }
-  function showHint(){
-    const sel = document.getElementById('star-run-mode'), hint = document.getElementById('star-run-mode-hint');
-    if (sel && hint) hint.textContent = LABELS[sel.value] + ' - ' + (modes[sel.value] || '') + '. END-007 (Unreal) always runs in full.';
-  }
-  async function sync(){
-    const a = api(); if (!a || !a.get_run_mode) return;
-    try {
-      const r = await a.get_run_mode();
-      if (r && r.ok) { modes = r.modes || modes; const sel = document.getElementById('star-run-mode'); if (sel) sel.value = r.run_mode; showHint(); }
-    } catch (_) {}
-  }
   function ensure(){
     const exec = document.getElementById('execute-workflow-button');
-    if (!exec || document.getElementById('star-run-mode')) return;
-    const wrap = document.createElement('label');
-    wrap.className = 'star-run-mode';
-    wrap.title = 'Settings of the modules for the next workflow execution';
-    wrap.innerHTML = '<span>Run mode</span><select id="star-run-mode" aria-label="STAR run mode"></select>';
-    exec.parentElement.insertBefore(wrap, exec);
-    const hint = document.createElement('div');
-    hint.id = 'star-run-mode-hint'; hint.className = 'star-run-mode-hint';
-    exec.parentElement.appendChild(hint);
-    const sel = wrap.querySelector('select');
-    for (const k of ['demo', 'test', 'full']) { const o = document.createElement('option'); o.value = k; o.textContent = LABELS[k]; sel.appendChild(o); }
-    sel.value = 'demo'; showHint();
-    sel.addEventListener('change', async () => {
-      const a = api(); if (!a || !a.set_run_mode) return;
-      const r = await a.set_run_mode(sel.value);
-      if (!r || !r.ok) { sel.value = (r && r.run_mode) || 'demo'; if (r && r.error) alert(r.error); }
-      showHint();
-    });
-    const stop = document.getElementById('stop-execution-button');   // enabled while a workflow runs
-    if (stop) {
-      const lock = () => { sel.disabled = !stop.disabled; };
-      new MutationObserver(lock).observe(stop, {attributes: true, attributeFilter: ['disabled']});
-      lock();
-    }
-    sync();
+    if (!exec || document.getElementById('star-run-mode-label')) return;
+    const chip = document.createElement('span');
+    chip.id = 'star-run-mode-label'; chip.className = 'star-run-mode';
+    chip.title = 'Run mode of the next execution: change it with the Test / Full buttons and the accuracy bar at the top of the window';
+    chip.innerHTML = 'Run mode <b>Test</b>';
+    exec.parentElement.insertBefore(chip, exec);
+  }
+  async function sync(){
+    ensure();
+    const a = api(), chip = document.getElementById('star-run-mode-label');
+    if (!a || !a.get_run_mode || !chip) return;
+    try {
+      const r = await a.get_run_mode();
+      if (r && r.ok) {
+        const lv = r.run_mode === 'full' && r.levels ? r.levels[String(r.run_level)] : null;
+        const est = r.run_mode === 'full' ? r.estimates.full[String(r.run_level)] : r.estimates.test;
+        const min = Math.max(1, Math.round(est.total_s / 60));
+        chip.innerHTML = 'Run mode <b>' + (LABELS[r.run_mode] || r.run_mode) + (lv ? ' &middot; ' + lv.name : '') + '</b> &middot; &asymp; ' + min + ' min';
+        chip.title = 'Estimated time (' + r.estimate_scope + '), measured on the STAR workstation; change the mode with the Test / Full buttons and the accuracy bar at the top of the window';
+      }
+    } catch (_) {}
   }
   document.addEventListener('DOMContentLoaded', ensure);
   window.addEventListener('load', ensure);
-  window.addEventListener('pywebviewready', () => { ensure(); sync(); });
+  window.addEventListener('pywebviewready', sync);
+  setInterval(sync, 2000);
   ensure();
 })();
 </script>
@@ -5688,6 +5810,112 @@ def write_execution_frontend_v3(web_dir: Path) -> Path | None:
     return target_path
 
 
+# Run-mode buttons in the window header (v3; injected into STAR_UNIFIED_SHELL_HTML).
+STAR_V3_SHELL_MODE_HTML = """      <div class="run-mode-switch" role="group" aria-label="STAR run mode" title="Run mode of the next workflow execution">
+        <button type="button" class="run-mode-btn active" data-mode="test">Test</button>
+        <button type="button" class="run-mode-btn" data-mode="full">Full</button>
+        <div class="run-level" title="Accuracy of the Full run">
+          <span class="run-level-name">High</span>
+          <span class="run-level-track"><span class="run-level-ticks"><i></i><i></i><i></i><i></i><i></i></span>
+            <input type="range" class="run-level-range" min="1" max="5" step="1" value="3" aria-label="Accuracy level of the Full run" /></span>
+          <span class="run-level-eta">&asymp; 5 min</span>
+        </div>
+      </div>
+"""
+STAR_V3_SHELL_MODE_CSS = """
+.run-mode-switch{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--border);border-radius:999px;background:var(--panel-muted)}
+.run-mode-btn{padding:5px 14px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--muted-2);font-size:12px;line-height:1.2}
+.run-mode-btn.active{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:800}
+.run-mode-switch.locked{opacity:.55}
+.run-mode-switch.locked .run-mode-btn,.run-mode-switch.locked .run-level-range{cursor:not-allowed;transform:none}
+.run-level{display:none;align-items:center;gap:9px;padding:0 10px 0 8px;font-size:12px;color:var(--muted-2);white-space:nowrap}
+.run-mode-switch.full .run-level{display:inline-flex}
+.run-level-name{min-width:64px;text-align:right;color:var(--text-strong);font-weight:700}
+.run-level-eta{min-width:58px;font-variant-numeric:tabular-nums}
+.run-level-track{position:relative;display:inline-flex;align-items:center;width:112px;height:20px}
+.run-level-ticks{position:absolute;left:6px;right:6px;top:50%;height:6px;transform:translateY(-50%);display:flex;justify-content:space-between;pointer-events:none;z-index:1}
+.run-level-ticks i{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.run-level-ticks i.on{background:#07100d}
+.run-level-range{-webkit-appearance:none;appearance:none;position:relative;width:100%;height:6px;margin:0;border-radius:999px;outline:none;cursor:pointer;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2)) 0 0/var(--pct,50%) 100% no-repeat,var(--border)}
+.run-level-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;position:relative;z-index:2;width:16px;height:16px;border-radius:50%;background:var(--text-strong);border:3px solid var(--accent-2);box-shadow:0 0 0 3px var(--panel-muted)}
+.run-level-range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--accent)}
+@media(min-width:1200px){.header-actions{flex:0 0 auto;flex-wrap:nowrap}}
+"""
+STAR_V3_SHELL_MODE_JS = """<script id="star-v3-run-mode-buttons">
+(() => {
+  'use strict';
+  const group = document.querySelector('.run-mode-switch');
+  if (!group) return;
+  const range = group.querySelector('.run-level-range');
+  const nameEl = group.querySelector('.run-level-name');
+  const etaEl = group.querySelector('.run-level-eta');
+  const ticks = Array.from(group.querySelectorAll('.run-level-ticks i'));
+  const api = () => window.pywebview && window.pywebview.api;
+  let state = null, dragging = false;
+  const fmt = s => s < 90 ? Math.round(s) + ' s' : (s < 5400 ? Math.round(s / 60) + ' min' : (s / 3600).toFixed(1) + ' h');
+  function breakdown(est) {
+    return Object.entries(est.per_module).map(([m, s]) => m + ' ' + fmt(s)).join(', ');
+  }
+  function paintLevel(level) {
+    const pct = (level - 1) / 4 * 100;
+    range.style.setProperty('--pct', pct + '%');
+    ticks.forEach((t, i) => t.classList.toggle('on', i + 1 <= level));
+    if (!state) return;
+    const lv = state.levels[String(level)], est = state.estimates.full[String(level)];
+    nameEl.textContent = lv.name;
+    etaEl.textContent = '\\u2248 ' + fmt(est.total_s);
+    range.title = lv.name + ': ' + lv.description;
+    group.querySelector('.run-level').title = 'Accuracy of the Full run: ' + lv.name + ' (' + lv.description + ').\\n'
+      + 'Estimated time \\u2248 ' + fmt(est.total_s) + ' (' + state.estimate_scope + '): ' + breakdown(est)
+      + '.\\nMeasured on the STAR workstation; the scenario changes it.';
+  }
+  function show(r) {
+    state = r;
+    const running = !!r.execution_running;
+    group.querySelectorAll('.run-mode-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === r.run_mode);
+      b.disabled = running;
+      const est = b.dataset.mode === 'full' ? r.estimates.full[String(r.run_level)] : r.estimates.test;
+      b.title = (r.modes[b.dataset.mode] || '') + ' (\\u2248 ' + fmt(est.total_s) + ')' + (running ? ' (locked while a workflow runs)' : '');
+    });
+    group.classList.toggle('full', r.run_mode === 'full');
+    group.classList.toggle('locked', running);
+    range.disabled = running;
+    if (!dragging) { range.value = r.run_level; paintLevel(r.run_level); }
+  }
+  async function sync() {
+    const a = api(); if (!a || !a.get_run_mode) return;
+    try { const r = await a.get_run_mode(); if (r && r.ok) show(r); } catch (_) {}
+  }
+  async function choose(mode, level) {
+    const a = api(); if (!a || !a.set_run_mode) return;
+    const r = await a.set_run_mode(mode, level);
+    if (r && r.ok) show(r); else if (r && r.error) { alert(r.error); sync(); }
+  }
+  group.addEventListener('click', event => {
+    const b = event.target.closest('.run-mode-btn');
+    if (!b || b.disabled) return;
+    choose(b.dataset.mode, null);
+  });
+  range.addEventListener('input', () => { dragging = true; paintLevel(Number(range.value)); });
+  range.addEventListener('change', () => { dragging = false; choose('full', Number(range.value)); });
+  window.addEventListener('pywebviewready', sync);
+  setInterval(sync, 2000);     // in step with the backend (plan changes the estimate); locked while a workflow runs
+  paintLevel(Number(range.value));
+})();
+</script>
+"""
+
+
+def star_v3_shell_html() -> str:
+    """STAR_UNIFIED_SHELL_HTML with the Test / Full buttons and the Full accuracy bar next to the theme switch."""
+    html = STAR_UNIFIED_SHELL_HTML
+    html = html.replace('<div class="header-actions">\n', '<div class="header-actions">\n' + STAR_V3_SHELL_MODE_HTML, 1)
+    html = html.replace("</style>", STAR_V3_SHELL_MODE_CSS + "</style>", 1)
+    return html.replace("</body>", STAR_V3_SHELL_MODE_JS + "</body>", 1)
+
+
 def write_unified_frontend_files() -> Path:
     """Create the integrated STAR HTML shell used by the pywebview window.
 
@@ -5704,7 +5932,7 @@ def write_unified_frontend_files() -> Path:
     results_path.write_text(build_results_frontend_html(web_dir), encoding="utf-8")
 
     shell_path = web_dir / "star_frontend_unified_v3.html"
-    shell_path.write_text(STAR_UNIFIED_SHELL_HTML, encoding="utf-8")
+    shell_path.write_text(star_v3_shell_html(), encoding="utf-8")
 
     return shell_path
 

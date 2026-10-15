@@ -243,6 +243,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Insights</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
+        <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
         <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END019</span><span class="tab-title">Component Selector</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
@@ -3980,6 +3981,370 @@ window.addEventListener(&#x27;load&#x27;, () =&gt; {
 &lt;div id=&quot;image-modal&quot; class=&quot;image-modal hidden&quot; aria-hidden=&quot;true&quot;&gt;&lt;button id=&quot;image-modal-close&quot; class=&quot;image-modal-close&quot; type=&quot;button&quot; aria-label=&quot;Close image preview&quot;&gt;×&lt;/button&gt;&lt;img id=&quot;image-modal-img&quot; alt=&quot;MATLAB figure preview&quot;&gt;&lt;div id=&quot;image-modal-caption&quot; class=&quot;image-modal-caption&quot;&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;" title="Attitude Propagator"></iframe>
+      <iframe id="frame-collision" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+&lt;title&gt;STAR — Collision Avoidance&lt;/title&gt;
+&lt;style&gt;
+@import url(&#x27;https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap&#x27;);
+:root{
+  --bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;
+  --danger:#ff5c7a;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);
+  /* categorical slots 1-8 of the validated data-viz palette (dark steps) */
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --st-good:#0ca30c;--st-critical:#d03b3b;--st-warning:#fab219;
+  --thr:rgba(208,59,59,.85);
+  color-scheme:dark;
+}
+:root[data-theme=&quot;light&quot;]{
+  --bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;
+  --danger:#bd2450;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  --thr:rgba(208,59,59,.85);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:&#x27;Space Mono&#x27;,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.hidden-file-input{display:none}
+.page{padding:0 0 28px;display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--panel) 95%,transparent);box-shadow:var(--shadow)}
+.topbar h2{margin:0;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:14px;color:var(--text-strong)}
+.topbar .sub{color:var(--muted);font-size:11px;margin-top:2px}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ctl-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:6px 12px;border-radius:10px;font-size:12px}
+.seg button.active{border-color:var(--text-strong);background:var(--panel-muted);color:var(--text-strong);font-weight:700}
+.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.status-dot{width:10px;height:10px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.banner{border:1px solid var(--border);border-left-width:6px;border-radius:14px;padding:12px 16px;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.banner .icon{font-size:18px;line-height:1.2}
+.banner.good{border-left-color:var(--st-good)}.banner.critical{border-left-color:var(--st-critical)}.banner.warning{border-left-color:var(--st-warning)}
+.banner b{color:var(--text-strong)}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:12px;padding:8px 12px;background:var(--panel);min-width:150px}
+.chip .c-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.chip .c-value{color:var(--text-strong);font-weight:700;font-size:14px}
+.chip .c-src{color:var(--muted-2);font-size:10px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:16px;padding:12px 14px;background:var(--panel);min-width:0}
+.kpi .k-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .k-value{font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text-strong);line-height:1.15;margin-top:4px}
+.kpi .k-unit{font-size:12px;color:var(--muted-2);font-weight:400;margin-left:4px}
+.kpi .k-note{color:var(--muted-2);font-size:11px;margin-top:4px}
+.kpi .k-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:6px}
+.kpi .k-flag.good{color:var(--st-good)}.kpi .k-flag.critical{color:var(--st-critical)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-header h3{margin:0;color:var(--text-strong);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.card-header .hint{color:var(--muted);font-size:11px}
+.card-body{padding:10px 12px 12px}
+.plot{width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:6px 8px 0;color:var(--text);font-size:11px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--muted)}
+.legend i.tint-ecl{background:var(--ecl-tint)}.legend i.tint-sar{background:var(--sar-tint)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+details.tables{border:1px solid var(--border);border-radius:18px;background:var(--panel);overflow:hidden}
+details.tables&gt;summary{cursor:pointer;padding:12px 16px;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--text-strong);background:var(--panel-strong)}
+.table-wrap{overflow:auto;max-height:420px;border-top:1px solid var(--border-soft)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border-bottom:1px solid var(--border-soft);padding:6px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td.flag{color:var(--st-critical);font-weight:700}
+.table-title{padding:10px 14px 4px;color:var(--muted-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+pre.json{margin:0;padding:12px 14px;max-height:420px;overflow:auto;font-size:11px;color:var(--text);border-top:1px solid var(--border-soft)}
+&lt;/style&gt;
+&lt;script src=&quot;https://cdn.plot.ly/plotly-2.24.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;page&quot;&gt;
+  &lt;input id=&quot;collisionFolderInput&quot; class=&quot;hidden-file-input&quot; type=&quot;file&quot; webkitdirectory directory multiple /&gt;
+  &lt;div class=&quot;topbar&quot;&gt;
+    &lt;div&gt;
+      &lt;h2&gt;Collision Avoidance · Space Safety&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot; id=&quot;source-label&quot;&gt;END-016 · close approaches between the satellites of the END-001 constellation · orbital lifetime and post-mission disposal&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;controls&quot;&gt;
+      &lt;span class=&quot;status-pill&quot;&gt;&lt;span id=&quot;status-dot&quot; class=&quot;status-dot&quot;&gt;&lt;/span&gt;&lt;span id=&quot;load-status&quot;&gt;No data loaded&lt;/span&gt;&lt;/span&gt;
+      &lt;button id=&quot;manual-load&quot; class=&quot;primary-action&quot; type=&quot;button&quot;&gt;Select END-016 Folder&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div id=&quot;banner&quot; class=&quot;banner&quot; hidden&gt;&lt;/div&gt;
+  &lt;div id=&quot;config&quot; class=&quot;chips&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;kpis&quot; class=&quot;kpis&quot;&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;grid&quot;&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Closest approach between satellites&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Minimum distance of every pair over the window [km] · red = below the screening distance&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotPairs&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Distance over time&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;hist-hint&quot;&gt;Closest pair · dashed = screening distance&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotHistory&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Orbital decay after the mission&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Mean altitude under drag (NRLMSISE-00) · dashed = disposal deadlines&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotDecay&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Disposal delta-v&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Perigee-lowering burn that brings the lifetime within each rule [m/s]&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotDv&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+  &lt;/div&gt;
+
+  &lt;details class=&quot;tables&quot; id=&quot;tables-details&quot;&gt;
+    &lt;summary&gt;Table view · close approaches, lifetime and disposal, model summary&lt;/summary&gt;
+    &lt;div id=&quot;tables&quot;&gt;&lt;/div&gt;
+  &lt;/details&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(() =&gt; {
+&#x27;use strict&#x27;;
+const $ = id =&gt; document.getElementById(id);
+const SLOTS = [&#x27;--s1&#x27;,&#x27;--s2&#x27;,&#x27;--s3&#x27;,&#x27;--s4&#x27;,&#x27;--s5&#x27;,&#x27;--s6&#x27;,&#x27;--s7&#x27;,&#x27;--s8&#x27;];
+const state = { summary:null, runInfo:null, labels:{} };
+
+/* ---------- helpers ---------- */
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function esc(v){ return String(v ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;); }
+function num(v){ if (v === null || v === undefined || v === &#x27;&#x27;) return NaN; if (v === &#x27;Inf&#x27; || v === Infinity) return Infinity; const x = Number(v); return Number.isFinite(x) ? x : NaN; }
+function fmt(v, d = 1){ const x = num(v); return x === Infinity ? &#x27;&gt; 200&#x27; : (Number.isFinite(x) ? x.toFixed(d) : &#x27;—&#x27;); }
+function fmtE(v){ const x = num(v); return Number.isFinite(x) ? (x === 0 ? &#x27;0&#x27; : x.toExponential(1)) : &#x27;—&#x27;; }
+function colors(){
+  return { text:css(&#x27;--text&#x27;), strong:css(&#x27;--text-strong&#x27;), muted:css(&#x27;--muted&#x27;), muted2:css(&#x27;--muted-2&#x27;), panelStrong:css(&#x27;--panel-strong&#x27;),
+    border:css(&#x27;--border&#x27;), grid:css(&#x27;--border-soft&#x27;), thr:css(&#x27;--thr&#x27;), good:css(&#x27;--st-good&#x27;), critical:css(&#x27;--st-critical&#x27;), slots:SLOTS.map(css) };
+}
+function baseLayout(c, extra){
+  return Object.assign({ paper_bgcolor:&#x27;rgba(0,0,0,0)&#x27;, plot_bgcolor:&#x27;rgba(0,0,0,0)&#x27;,
+    font:{ family:&quot;&#x27;Space Mono&#x27;, ui-monospace, monospace&quot;, size:11, color:c.text }, margin:{ l:64, r:18, t:10, b:46 },
+    hoverlabel:{ bgcolor:c.panelStrong, bordercolor:c.border, font:{ color:c.text, family:&quot;&#x27;Space Mono&#x27;, monospace&quot;, size:11 } },
+    legend:{ orientation:&#x27;h&#x27;, x:0, y:1.16, font:{ size:11, color:c.text } } }, extra || {});
+}
+function axis(c, extra){ return Object.assign({ gridcolor:c.grid, zerolinecolor:c.grid, linecolor:c.border, tickcolor:c.border, tickfont:{ color:c.muted2, size:11 }, titlefont:{ color:c.muted2, size:11 } }, extra || {}); }
+const PLOT_CFG = { responsive:true, displaylogo:false, displayModeBar:false };
+function draw(id, traces, layout){ const el = $(id); if (!el || !window.Plotly) return; el.querySelectorAll(&#x27;.empty&#x27;).forEach(n =&gt; n.remove()); Plotly.react(el, traces, layout, PLOT_CFG); }
+function empty(id, message){ const el = $(id); if (!el) return; if (window.Plotly) { try { Plotly.purge(el); } catch (_) {} } el.innerHTML = `&lt;div class=&quot;empty&quot;&gt;${esc(message)}&lt;/div&gt;`; }
+function asArray(x){ return Array.isArray(x) ? x : (x == null ? [] : [x]); }
+function solarName(f){ const v = num(f); if (v &lt;= 90) return `low activity (F10.7 ${v})`; if (v &gt;= 180) return `high activity (F10.7 ${v})`; return `mean activity (F10.7 ${v})`; }
+function kpi(label, value, unit, note, flag){
+  return `&lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;k-label&quot;&gt;${esc(label)}&lt;/div&gt;&lt;div class=&quot;k-value&quot;&gt;${value}&lt;span class=&quot;k-unit&quot;&gt;${esc(unit)}&lt;/span&gt;&lt;/div&gt;${note ? `&lt;div class=&quot;k-note&quot;&gt;${esc(note)}&lt;/div&gt;` : &#x27;&#x27;}${flag ? `&lt;div class=&quot;k-flag ${flag.cls}&quot;&gt;${flag.icon} ${esc(flag.text)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+}
+
+/* ---------- rendering ---------- */
+function renderBanner(){
+  const b = $(&#x27;banner&#x27;), s = state.summary, info = state.runInfo;
+  if (!s &amp;&amp; !info) { b.hidden = true; return; }
+  let cls = &#x27;good&#x27;, icon = &#x27;✓&#x27;, head = &#x27;&lt;b&gt;No safety issue found&lt;/b&gt;&#x27;;
+  const items = [];
+  if (info &amp;&amp; info.status &amp;&amp; info.status !== &#x27;completed&#x27;) {
+    cls = info.status === &#x27;failed&#x27; ? &#x27;critical&#x27; : &#x27;warning&#x27;; icon = info.status === &#x27;failed&#x27; ? &#x27;✕&#x27; : &#x27;!&#x27;;
+    head = `&lt;b&gt;END-016 ${esc(info.status)}&lt;/b&gt; — ${esc(info.evidence_text || &#x27;&#x27;)}`;
+  } else if (s) {
+    const k = s.kpis || {}, cfg = s.config || {};
+    const rules = asArray(cfg.disposal_rules_years);
+    if (num(k.n_events_below_screening) &gt; 0) items.push(`${k.n_events_below_screening} close approach(es) below ${fmt(cfg.screening_km, 0)} km between satellites of the constellation`);
+    if (num(k.n_events_above_pc_threshold) &gt; 0) items.push(`${k.n_events_above_pc_threshold} with Pc above ${fmtE(cfg.pc_threshold)}`);
+    for (const r of rules) {
+      const ok = k[`complies_${r}y_rule_mean_activity`];
+      if (ok === false) items.push(`${r}-year disposal rule not met at mean solar activity: disposal delta-v ${fmt(k[`disposal_dv_m_s_${r}y_rule_mean_activity`])} m/s`);
+    }
+    if (k.orbit_maintenance_needed) items.push(&#x27;the orbit decays before the end of the mission: orbit maintenance needed&#x27;);
+    if (items.length) { cls = &#x27;warning&#x27;; icon = &#x27;!&#x27;; head = &#x27;&lt;b&gt;Space-safety findings&lt;/b&gt;&#x27;; }
+    if (info &amp;&amp; info.evidence_text) head += ` — ${esc(info.evidence_text)}`;
+  }
+  const notes = (info &amp;&amp; info.notes) || [];
+  b.className = `banner ${cls}`; b.hidden = false;
+  b.innerHTML = `&lt;span class=&quot;icon&quot; aria-hidden=&quot;true&quot;&gt;${icon}&lt;/span&gt;&lt;div&gt;${head}${items.length ? `&lt;ul&gt;${items.map(i =&gt; `&lt;li&gt;${esc(i)}&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;` : &#x27;&#x27;}${notes.length ? `&lt;div style=&quot;margin-top:6px;color:var(--muted-2);font-size:11px&quot;&gt;${notes.map(esc).join(&#x27; · &#x27;)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+}
+function renderConfig(){
+  const info = state.runInfo, s = state.summary, el = $(&#x27;config&#x27;);
+  const cfg = (s &amp;&amp; s.config) || (info &amp;&amp; info.config) || null;
+  if (!cfg) { el.innerHTML = &#x27;&#x27;; return; }
+  const prov = (info &amp;&amp; info.provenance) || {};
+  const chips = [
+    [&#x27;Mass&#x27;, `${fmt(cfg.mass_kg, 1)} kg`, prov[&#x27;spacecraft.mass_kg&#x27;]],
+    [&#x27;Drag area · Cd&#x27;, `${fmt(cfg.drag_area_m2, 3)} m² · ${fmt(cfg.cd, 2)}`, prov[&#x27;spacecraft.drag_area_m2&#x27;]],
+    [&#x27;Hard-body radius&#x27;, `${fmt(cfg.hard_body_radius_m, 2)} m`, prov.hard_body_radius_m],
+    [&#x27;Position 1σ (R, T, N)&#x27;, `${asArray(cfg.position_sigma_rtn_m).map(x =&gt; fmt(x, 0)).join(&#x27; · &#x27;)} m`, prov.position_sigma_rtn_m],
+    [&#x27;Screening distance&#x27;, `${fmt(cfg.screening_km, 0)} km`, prov.screening_km],
+    [&#x27;Pc threshold&#x27;, fmtE(cfg.pc_threshold), prov.pc_threshold],
+    [&#x27;Mission lifetime&#x27;, Number.isFinite(num(cfg.mission_lifetime_years)) ? `${fmt(cfg.mission_lifetime_years, 0)} y` : &#x27;not stated&#x27;, prov.mission_lifetime_years],
+    [&#x27;Disposal rules&#x27;, asArray(cfg.disposal_rules_years).map(r =&gt; `${r} y`).join(&#x27; · &#x27;), prov.disposal_rules_years],
+    [&#x27;Solar activity F10.7&#x27;, asArray(cfg.solar_f107).join(&#x27; · &#x27;), prov.solar_f107],
+  ];
+  el.innerHTML = chips.map(([l, v, p]) =&gt; `&lt;div class=&quot;chip&quot;&gt;&lt;div class=&quot;c-label&quot;&gt;${esc(l)}&lt;/div&gt;&lt;div class=&quot;c-value&quot;&gt;${esc(v)}&lt;/div&gt;&lt;div class=&quot;c-src&quot;&gt;${esc(p || &#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
+}
+function renderKpis(){
+  const s = state.summary; if (!s) { $(&#x27;kpis&#x27;).innerHTML = &#x27;&#x27;; return; }
+  const k = s.kpis || {}, cfg = s.config || {}, win = s.window || {};
+  const rules = asArray(cfg.disposal_rules_years);
+  const cards = [];
+  if (num(k.n_pairs) &gt; 0) {
+    const sep = num(k.min_separation_km), scr = num(cfg.screening_km);
+    cards.push(kpi(&#x27;Minimum separation&#x27;, fmt(sep, sep &lt; 10 ? 3 : 0), &#x27;km&#x27;, `${k.min_separation_pair} · ${String(k.min_separation_tca_utc || &#x27;&#x27;).replace(&#x27;T&#x27;, &#x27; &#x27;).slice(0, 19)} UTC`,
+      sep &lt; scr ? { cls:&#x27;critical&#x27;, icon:&#x27;✕&#x27;, text:`below the ${fmt(scr, 0)} km screening distance` } : { cls:&#x27;good&#x27;, icon:&#x27;✓&#x27;, text:`above the ${fmt(scr, 0)} km screening distance` }));
+    cards.push(kpi(&#x27;Close approaches&#x27;, String(k.n_events_below_screening ?? 0), &#x27;&#x27;, `below ${fmt(scr, 0)} km in ${fmt(win.hours, 0)} h · ${fmt(k.events_per_day, 1)} per day · ${k.n_events_below_1km ?? 0} below 1 km`));
+    cards.push(kpi(&#x27;Highest Pc&#x27;, fmtE(k.max_pc), &#x27;&#x27;, `declared uncertainty · worst case over any uncertainty ${fmtE(k.max_pc_max)}`,
+      num(k.max_pc) &gt; num(cfg.pc_threshold) ? { cls:&#x27;critical&#x27;, icon:&#x27;✕&#x27;, text:`above ${fmtE(cfg.pc_threshold)}` } : { cls:&#x27;good&#x27;, icon:&#x27;✓&#x27;, text:`below ${fmtE(cfg.pc_threshold)}` }));
+  } else {
+    cards.push(kpi(&#x27;Minimum separation&#x27;, &#x27;—&#x27;, &#x27;&#x27;, &#x27;one satellite: no pair to check&#x27;));
+  }
+  cards.push(kpi(&#x27;Passive lifetime&#x27;, fmt(k.passive_lifetime_years_mean_activity), &#x27;years&#x27;, `mean solar activity · range ${fmt(k.passive_lifetime_years_min)} – ${fmt(k.passive_lifetime_years_max)} y`));
+  for (const r of rules) {
+    const ok = k[`complies_${r}y_rule_mean_activity`];
+    cards.push(kpi(`${r}-year disposal rule`, ok ? &#x27;0&#x27; : fmt(k[`disposal_dv_m_s_${r}y_rule_mean_activity`]), &#x27;m/s&#x27;, &#x27;disposal delta-v at mean solar activity&#x27;,
+      ok ? { cls:&#x27;good&#x27;, icon:&#x27;✓&#x27;, text:&#x27;met by natural decay&#x27; } : { cls:&#x27;critical&#x27;, icon:&#x27;✕&#x27;, text:&#x27;not met by natural decay&#x27; }));
+  }
+  cards.push(kpi(&#x27;Drag make-up&#x27;, fmt(k.drag_makeup_dv_m_s_per_year_mean_activity, 2), &#x27;m/s per year&#x27;, &#x27;to hold the operational altitude (mean activity)&#x27;,
+    k.orbit_maintenance_needed === true ? { cls:&#x27;critical&#x27;, icon:&#x27;✕&#x27;, text:&#x27;needed within the mission lifetime&#x27; } : (k.orbit_maintenance_needed === false ? { cls:&#x27;good&#x27;, icon:&#x27;✓&#x27;, text:&#x27;orbit lasts beyond the mission&#x27; } : null)));
+  $(&#x27;kpis&#x27;).innerHTML = cards.join(&#x27;&#x27;);
+}
+function renderPairs(c){
+  const s = state.summary; const sats = asArray(s &amp;&amp; s.satellites).map(x =&gt; x.label);
+  const M = s &amp;&amp; Array.isArray(s.pair_min_distance_km) ? s.pair_min_distance_km : null;
+  if (!M || sats.length &lt; 2) { empty(&#x27;plotPairs&#x27;, &#x27;One satellite: no pair to check.&#x27;); return; }
+  const z = M.map((row, i) =&gt; asArray(row).map((v, j) =&gt; i === j ? null : num(v)));
+  const text = z.map(row =&gt; row.map(v =&gt; v == null ? &#x27;&#x27; : (v &lt; 10 ? v.toFixed(3) : v.toFixed(0))));
+  const scr = num(s.config.screening_km);
+  const zmax = Math.max(scr * 2, ...z.flat().filter(v =&gt; v != null));
+  const f = Math.min(0.98, scr / zmax);          // red only below the screening distance
+  draw(&#x27;plotPairs&#x27;, [{ type:&#x27;heatmap&#x27;, x:sats, y:sats, z, text, texttemplate:&#x27;%{text}&#x27;, textfont:{ size:10 }, hovertemplate:&#x27;%{y} – %{x}: %{z:.3f} km&lt;extra&gt;&lt;/extra&gt;&#x27;,
+    colorscale:[[0, c.critical], [f, c.critical], [Math.min(1, f + 0.001), c.slots[3]], [1, c.slots[0]]],
+    zmin:0, zmax, showscale:true, colorbar:{ title:{ text:&#x27;km&#x27;, font:{ color:c.muted2 } }, tickfont:{ color:c.muted2 } } }],
+    baseLayout(c, { height: Math.max(280, 34*sats.length + 90), margin:{ l:70, r:20, t:10, b:60 }, xaxis:axis(c), yaxis:axis(c, { autorange:&#x27;reversed&#x27; }) }));
+}
+function renderHistory(c){
+  const s = state.summary, h = s &amp;&amp; s.closest_pair;
+  if (!h || !asArray(h.history_t_hours).length) { empty(&#x27;plotHistory&#x27;, &#x27;One satellite: no pair to check.&#x27;); return; }
+  $(&#x27;hist-hint&#x27;).textContent = `Closest pair ${h.pair} · dashed = screening distance`;
+  const t0 = new Date(String(s.window.start_utc));
+  const x = asArray(h.history_t_hours).map(th =&gt; new Date(t0.getTime() + th*3600e3).toISOString());
+  const scr = num(s.config.screening_km);
+  draw(&#x27;plotHistory&#x27;, [{ x, y:asArray(h.history_distance_km), type:&#x27;scattergl&#x27;, mode:&#x27;lines&#x27;, name:h.pair, line:{ color:c.slots[0], width:1.6 }, hovertemplate:&#x27;%{y:.1f} km&lt;extra&gt;&lt;/extra&gt;&#x27; }],
+    baseLayout(c, { height:320, showlegend:false, shapes:[{ type:&#x27;line&#x27;, xref:&#x27;paper&#x27;, x0:0, x1:1, y0:scr, y1:scr, line:{ color:c.thr, width:1.4, dash:&#x27;dash&#x27; } }],
+      xaxis:axis(c, { title:&#x27;UTC&#x27; }), yaxis:axis(c, { title:&#x27;Distance [km]&#x27;, rangemode:&#x27;tozero&#x27; }) }));
+}
+function renderDecay(c){
+  const s = state.summary, life = asArray(s &amp;&amp; s.lifetime);
+  if (!life.length) { empty(&#x27;plotDecay&#x27;, &#x27;No lifetime result.&#x27;); return; }
+  const shells = [...new Set(life.map(L =&gt; `${fmt(L.alt_km, 0)} km`))];
+  const traces = life.map((L, i) =&gt; ({ x:asArray(L.curve_t_years), y:asArray(L.curve_alt_km), type:&#x27;scatter&#x27;, mode:&#x27;lines&#x27;,
+    name:`${shells.length &gt; 1 ? fmt(L.alt_km, 0) + &#x27; km · &#x27; : &#x27;&#x27;}${solarName(L.f107)}`, line:{ color:c.slots[i % c.slots.length], width:1.8 },
+    hovertemplate:&#x27;%{x:.1f} y: %{y:.0f} km&lt;extra&gt;&lt;/extra&gt;&#x27; }));
+  const rules = asArray(s.config.disposal_rules_years);
+  const shapes = rules.map(r =&gt; ({ type:&#x27;line&#x27;, x0:r, x1:r, yref:&#x27;paper&#x27;, y0:0, y1:1, line:{ color:c.thr, width:1.2, dash:&#x27;dash&#x27; } }));
+  const ann = rules.map(r =&gt; ({ x:r, yref:&#x27;paper&#x27;, y:1, yanchor:&#x27;bottom&#x27;, text:`${r} y`, showarrow:false, font:{ size:10, color:c.thr } }));
+  const maxT = Math.max(...life.map(L =&gt; Math.max(...asArray(L.curve_t_years))), ...rules) * 1.05;
+  draw(&#x27;plotDecay&#x27;, traces, baseLayout(c, { height:330, margin:{ l:64, r:18, t:26, b:46 }, shapes, annotations:ann, xaxis:axis(c, { title:&#x27;Years after the end of the mission&#x27;, range:[0, maxT] }),
+    yaxis:axis(c, { title:&#x27;Mean altitude [km]&#x27; }) }));
+}
+function renderDv(c){
+  const s = state.summary, life = asArray(s &amp;&amp; s.lifetime);
+  if (!life.length) { empty(&#x27;plotDv&#x27;, &#x27;No lifetime result.&#x27;); return; }
+  const rules = asArray(s.config.disposal_rules_years).map(r =&gt; `${r}-year rule`);
+  const traces = life.map((L, i) =&gt; ({ type:&#x27;bar&#x27;, name:solarName(L.f107) + (life.length &gt; asArray(s.config.solar_f107).length ? ` · ${fmt(L.alt_km, 0)} km` : &#x27;&#x27;),
+    x:rules, y:asArray(L.disposal_dv_m_s).map(num), marker:{ color:c.slots[i % c.slots.length] }, hovertemplate:&#x27;%{x}: %{y:.1f} m/s&lt;extra&gt;&lt;/extra&gt;&#x27; }));
+  draw(&#x27;plotDv&#x27;, traces, baseLayout(c, { height:320, barmode:&#x27;group&#x27;, xaxis:axis(c), yaxis:axis(c, { title:&#x27;Delta-v [m/s]&#x27;, rangemode:&#x27;tozero&#x27; }) }));
+}
+function renderTables(){
+  const s = state.summary; let html = &#x27;&#x27;;
+  if (s) {
+    const ev = asArray(s.events);
+    html += `&lt;div class=&quot;table-title&quot;&gt;Close approaches below ${fmt(s.config.screening_km, 0)} km (${ev.length})&lt;/div&gt;`;
+    html += ev.length ? `&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Pair&lt;/th&gt;&lt;th&gt;TCA (UTC)&lt;/th&gt;&lt;th&gt;Miss km&lt;/th&gt;&lt;th&gt;Radial km&lt;/th&gt;&lt;th&gt;In-track km&lt;/th&gt;&lt;th&gt;Cross-track km&lt;/th&gt;&lt;th&gt;Rel. speed km/s&lt;/th&gt;&lt;th&gt;Lat&lt;/th&gt;&lt;th&gt;Lon&lt;/th&gt;&lt;th&gt;Pc&lt;/th&gt;&lt;th&gt;Pc bound&lt;/th&gt;&lt;th&gt;Pc max&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;${
+      ev.map(e =&gt; `&lt;tr&gt;&lt;td&gt;${esc(e.pair)}&lt;/td&gt;&lt;td&gt;${esc(String(e.tca_utc).replace(&#x27;T&#x27;, &#x27; &#x27;).slice(0, 23))}&lt;/td&gt;&lt;td&gt;${fmt(e.miss_km, 3)}&lt;/td&gt;&lt;td&gt;${fmt(e.radial_km, 3)}&lt;/td&gt;&lt;td&gt;${fmt(e.intrack_km, 3)}&lt;/td&gt;&lt;td&gt;${fmt(e.crosstrack_km, 3)}&lt;/td&gt;&lt;td&gt;${fmt(e.rel_speed_km_s, 2)}&lt;/td&gt;&lt;td&gt;${fmt(e.lat_deg, 1)}&lt;/td&gt;&lt;td&gt;${fmt(e.lon_deg, 1)}&lt;/td&gt;&lt;td class=&quot;${num(e.pc) &gt; num(s.config.pc_threshold) ? &#x27;flag&#x27; : &#x27;&#x27;}&quot;&gt;${fmtE(e.pc)}&lt;/td&gt;&lt;td&gt;${fmtE(e.pc_upper_bound)}&lt;/td&gt;&lt;td&gt;${fmtE(e.pc_max)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)}&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;` : &#x27;&lt;div class=&quot;empty&quot; style=&quot;padding:14px&quot;&gt;None: every pair stays farther than the screening distance.&lt;/div&gt;&#x27;;
+    const rules = asArray(s.config.disposal_rules_years);
+    html += `&lt;div class=&quot;table-title&quot;&gt;Lifetime and disposal&lt;/div&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Shell&lt;/th&gt;&lt;th&gt;Solar activity&lt;/th&gt;&lt;th&gt;Passive lifetime y&lt;/th&gt;&lt;th&gt;Drag make-up m/s/y&lt;/th&gt;${rules.map(r =&gt; `&lt;th&gt;${r}-y rule&lt;/th&gt;&lt;th&gt;dv ${r}-y m/s&lt;/th&gt;&lt;th&gt;Perigee ${r}-y km&lt;/th&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;${
+      asArray(s.lifetime).map(L =&gt; `&lt;tr&gt;&lt;td&gt;${fmt(L.alt_km, 1)} km · ${fmt(L.incl_deg, 2)}°&lt;/td&gt;&lt;td&gt;${esc(solarName(L.f107))}&lt;/td&gt;&lt;td&gt;${fmt(L.passive_years)}&lt;/td&gt;&lt;td&gt;${fmt(L.drag_dv_m_s_per_year, 2)}&lt;/td&gt;${
+        rules.map((r, i) =&gt; { const ok = num(L.passive_years) &lt;= r; return `&lt;td class=&quot;${ok ? &#x27;&#x27; : &#x27;flag&#x27;}&quot;&gt;${ok ? &#x27;met&#x27; : &#x27;not met&#x27;}&lt;/td&gt;&lt;td&gt;${fmt(asArray(L.disposal_dv_m_s)[i])}&lt;/td&gt;&lt;td&gt;${fmt(asArray(L.disposal_perigee_km)[i], 0)}&lt;/td&gt;`; }).join(&#x27;&#x27;)}&lt;/tr&gt;`).join(&#x27;&#x27;)}&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;`;
+    html += `&lt;div class=&quot;table-title&quot;&gt;space_safety_summary.json (without histories)&lt;/div&gt;&lt;pre class=&quot;json&quot;&gt;${esc(JSON.stringify(Object.assign({}, s, { closest_pair: s.closest_pair ? { pair: s.closest_pair.pair } : null, lifetime: asArray(s.lifetime).map(L =&gt; Object.assign({}, L, { curve_t_years: &#x27;…&#x27;, curve_alt_km: &#x27;…&#x27; })) }), null, 1))}&lt;/pre&gt;`;
+  }
+  if (state.runInfo) html += `&lt;div class=&quot;table-title&quot;&gt;collision_run_info.json&lt;/div&gt;&lt;pre class=&quot;json&quot;&gt;${esc(JSON.stringify(state.runInfo, null, 1))}&lt;/pre&gt;`;
+  $(&#x27;tables&#x27;).innerHTML = html || &#x27;&lt;div class=&quot;empty&quot;&gt;Nothing loaded.&lt;/div&gt;&#x27;;
+}
+function renderAll(){
+  const c = colors();
+  renderBanner(); renderConfig(); renderKpis(); renderTables();
+  if (state.summary) { renderPairs(c); renderHistory(c); renderDecay(c); renderDv(c); }
+  else {
+    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; state.runInfo.status !== &#x27;completed&#x27; ? `END-016 ${state.runInfo.status}: no result to show.` : &#x27;No space_safety_summary.json loaded.&#x27;;
+    [&#x27;plotPairs&#x27;, &#x27;plotHistory&#x27;, &#x27;plotDecay&#x27;, &#x27;plotDv&#x27;].forEach(id =&gt; empty(id, why));
+  }
+}
+
+/* ---------- data loading ---------- */
+function setLoaded(ok, label){ $(&#x27;status-dot&#x27;).classList.toggle(&#x27;loaded&#x27;, ok); $(&#x27;load-status&#x27;).textContent = label; }
+async function loadFiles(files, labels){
+  const data = { summary:null, runInfo:null };
+  for (const f of Array.from(files || [])) {
+    try {
+      if (/^space_safety_summary\.json$/i.test(f.name)) data.summary = JSON.parse(await f.text());
+      else if (/^collision_run_info\.json$/i.test(f.name)) data.runInfo = JSON.parse(await f.text());
+    } catch (e) { console.warn(`END-016: could not read ${f.name}`, e); }
+  }
+  state.summary = data.summary; state.runInfo = data.runInfo; state.labels = labels || {};
+  if (!data.summary &amp;&amp; !data.runInfo) { setLoaded(false, &#x27;No END-016 files in the selected folder&#x27;); renderAll(); return false; }
+  const n = data.summary ? asArray(data.summary.satellites).length : 0;
+  setLoaded(Boolean(data.summary), `${data.runInfo &amp;&amp; data.runInfo.status ? data.runInfo.status + &#x27; · &#x27; : &#x27;&#x27;}${n} satellite(s)`);
+  if (labels &amp;&amp; (labels.product || labels.all)) $(&#x27;source-label&#x27;).textContent = `${labels.product || labels.all} · END-016 Collision Avoidance`;
+  renderAll();
+  return true;
+}
+async function collect(handle, prefix = &#x27;&#x27;){
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === &#x27;file&#x27;) { const f = await entry.getFile(); f.relativeDisplayPath = `${prefix}${name}`; files.push(f); }
+    else if (entry.kind === &#x27;directory&#x27;) files.push(...await collect(entry, `${prefix}${name}/`));
+  }
+  return files;
+}
+async function requestFolder(){
+  if (window.parent &amp;&amp; window.parent !== window &amp;&amp; typeof window.parent.STAR_PICK_DIRECTORY === &#x27;function&#x27;) {
+    const picked = await window.parent.STAR_PICK_DIRECTORY(&#x27;collision&#x27;, &#x27;all&#x27;);
+    if (picked &amp;&amp; picked.files) { await loadFiles(picked.files, { all:picked.label }); return; }
+  }
+  if (&#x27;showDirectoryPicker&#x27; in window) {
+    try { const h = await window.showDirectoryPicker({ mode:&#x27;read&#x27;, id:&#x27;star-collision&#x27; }); await loadFiles(await collect(h, `${h.name}/`), { all:h.name }); return; }
+    catch (e) { if (e &amp;&amp; e.name === &#x27;AbortError&#x27;) return; console.warn(e); }
+  }
+  $(&#x27;collisionFolderInput&#x27;).click();
+}
+
+window.receiveCollisionFilesFromParent = async function(payload = {}, labels = {}){
+  await loadFiles([...(payload.productFiles || []), ...(payload.resultFiles || [])], labels);
+};
+window.loadCollisionFiles = loadFiles;          // direct feed (tests / scripting)
+window.refreshCollisionDashboard = function(){ renderAll(); };
+
+document.addEventListener(&#x27;DOMContentLoaded&#x27;, () =&gt; {
+  $(&#x27;manual-load&#x27;).onclick = requestFolder;
+  $(&#x27;collisionFolderInput&#x27;).addEventListener(&#x27;change&#x27;, async e =&gt; { await loadFiles(e.target.files, { all:&#x27;Selected END-016 folder&#x27; }); e.target.value = &#x27;&#x27;; });
+  new MutationObserver(() =&gt; renderAll()).observe(document.documentElement, { attributes:true, attributeFilter:[&#x27;data-theme&#x27;] });
+  let t = null;
+  window.addEventListener(&#x27;resize&#x27;, () =&gt; { clearTimeout(t); t = setTimeout(renderAll, 120); });
+  [&#x27;plotPairs&#x27;, &#x27;plotHistory&#x27;, &#x27;plotDecay&#x27;, &#x27;plotDv&#x27;].forEach(id =&gt; empty(id, &#x27;Select a RUN folder to load the END-016 space-safety results.&#x27;));
+});
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" title="Collision Avoidance"></iframe>
       <iframe id="frame-thermal" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -4543,7 +4908,7 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 const $ = id =&gt; document.getElementById(id);
 const NA = &#x27;Not publicly available&#x27;;
 const NAD = &#x27;Not available in the database&#x27;;
-const HUE = {structure:[220,12],obc:[165,60],eps:[34,85],battery:[8,75],solar_panel:[215,70],comms:[195,75],antenna:[150,55],adcs:[280,55],magnetorquer:[300,50],reaction_wheel:[255,55],star_tracker:[330,60],gps:[95,52],propulsion:[18,82],payload_imager:[52,85],payload_optical:[75,70]};
+const HUE = {structure:[220,12],obc:[165,60],eps:[34,85],battery:[8,75],solar_panel:[215,70],comms:[195,75],antenna:[150,55],adcs:[280,55],magnetorquer:[300,50],reaction_wheel:[255,55],star_tracker:[330,60],sun_sensor:[45,30],gps:[95,52],gnss_antenna:[120,40],propulsion:[18,82],payload_imager:[52,85],payload_optical:[75,70]};
 const catColor = (c, l = 55) =&gt; `hsl(${(HUE[c]||[0,0])[0]} ${(HUE[c]||[0,0])[1]}% ${l}%)`;
 const esc = v =&gt; String(v ?? &#x27;&#x27;).replace(/[&amp;&lt;&gt;&quot;&#x27;]/g, c =&gt; ({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;,&quot;&#x27;&quot;:&#x27;&amp;#39;&#x27;}[c]));
 const sci = (v, d = 3) =&gt; { if (v == null) return NA; if (v === 0) return &#x27;0&#x27;; const e = Math.floor(Math.log10(Math.abs(v))); const m = v / Math.pow(10, e); const sup = String(e).replace(/-/g, &#x27;⁻&#x27;).replace(/\d/g, x =&gt; &#x27;⁰¹²³⁴⁵⁶⁷⁸⁹&#x27;[x]); return `${m.toFixed(d)}×10${sup}`; };
@@ -4633,6 +4998,8 @@ function iconPrims(id) {
     case &#x27;magnetorquer&#x27;: return [B_([0, 0, -0.5], [1.5, 1.5, 0.05], -8), B_([0, 0.2, -0.3], [1.3, 0.14, 0.14], 8), B_([0.2, -0.3, -0.3], [0.14, 1.0, 0.14], 8), Cz([0, 0, -0.45], 0.55, 0.06, 12)];
     case &#x27;reaction_wheel&#x27;: return [B_([0, 0, -0.45], [1.2, 1.2, 0.08], -8), Cz([0, 0, -0.1], 0.58, 0.5, 0), Cz([0, 0, 0.17], 0.42, 0.06, 10), Cz([0, 0, 0.22], 0.1, 0.06, 18)];
     case &#x27;star_tracker&#x27;: return [B_([0, 0, -0.35], [0.7, 0.7, 0.45], 4), Cz([0, 0, 0.18], 0.17, 0.62, -14, 0.34), B_([0.25, 0.25, -0.62], [0.2, 0.2, 0.1], 10)];
+    case &#x27;sun_sensor&#x27;: return [B_([0, 0, -0.3], [1.0, 1.0, 0.3], 4), Cz([0, 0, -0.08], 0.36, 0.14, 12), B_([0, 0, 0.0], [0.24, 0.24, 0.05], -16), B_([0.62, 0, -0.3], [0.2, 0.5, 0.16], 10)];
+    case &#x27;gnss_antenna&#x27;: return [B_([0, 0, -0.3], [1.2, 1.2, 0.06], -6), B_([0, 0, -0.2], [0.7, 0.7, 0.16], 16), B_([0.45, 0.45, -0.25], [0.2, 0.2, 0.1], 10), Rod([0.55, 0.55, -0.22], [1, 1, 0.6], 0.45, 0.02, 8)];
     case &#x27;gps&#x27;: return [board(-0.35, 1.1, 0.8), B_([0, 0, -0.27], [0.4, 0.3, 0.08], 10), Cz([0.3, 0, -0.1], 0.04, 0.35, 8), B_([0.3, 0, 0.12], [0.55, 0.55, 0.07], 16), B_([-0.4, 0.2, -0.3], [0.25, 0.2, 0.05], 6)];
     case &#x27;propulsion&#x27;: return [Cz([0, 0, 0.1], 0.4, 1.0), Cz([0, 0, 0.64], 0.12, 0.1, 10), Cz([0, 0, -0.62], 0.22, 0.4, -14, 0.07), B_([0.52, 0, -0.1], [0.28, 0.2, 0.2], 10), Rod([0.45, 0, -0.05], [0, 0, -1], 0.45, 0.03, 4)];
     case &#x27;payload_optical&#x27;: { const o = [B_([0, 0, -0.45], [1.15, 1.15, 0.3], 4)]; for (let i = 0; i &lt; 4; i++) o.push(Cz([0, 0, -0.27 + i * 0.12], 0.45 * Math.cos((i + 1) * 0.4), 0.12, -6 * i, 0.45 * Math.cos(i * 0.4))); return o; }
@@ -4695,7 +5062,7 @@ function renderIndicators(r) {
   const massOk = t.mass_kg &lt;= t.mass_limit_kg, volOk = t.volume_m3 &lt;= t.volume_limit_m3;
   $(&#x27;kpis&#x27;).innerHTML = [
     kpi(&#x27;Mass&#x27;, f(t.mass_kg, 3), `of ${f(t.mass_limit_kg)} kg`, massOk ? &#x27;ok&#x27; : &#x27;bad&#x27;, t.mass_unknown.length ? &#x27;Without published mass: &#x27; + t.mass_unknown.join(&#x27;, &#x27;) : &#x27;Sum of the published masses of the selected components&#x27;),
-    kpi(&#x27;Internal volume&#x27;, sci(t.volume_m3), `of ${sci(t.volume_limit_m3)} m³`, volOk ? &#x27;ok&#x27; : &#x27;bad&#x27;, t.volume_unknown.length ? `${t.volume_unknown.length} component(s) without published size are not counted` : &#x27;Sum of length × width × height of the selected internal components (solar panels and antennas are mounted on the faces and not counted)&#x27;),
+    kpi(&#x27;Internal volume&#x27;, sci(t.volume_m3), `of ${sci(t.volume_limit_m3)} m³`, volOk ? &#x27;ok&#x27; : &#x27;bad&#x27;, t.volume_unknown.length ? `${t.volume_unknown.length} component(s) without published size are not counted` : &#x27;Sum of length × width × height of the selected internal components (solar panels, antennas and sun sensors are mounted on the faces and not counted)&#x27;),
     r.fit ? kpi(&#x27;Envelope fit&#x27;, esc(r.fit.label), &#x27;&#x27;, {fits: &#x27;ok&#x27;, does_not_fit: &#x27;bad&#x27;, not_shown: &#x27;warn&#x27;, undetermined: &#x27;warn&#x27;}[r.fit.state], r.fit.message) : &#x27;&#x27;,
     kpi(&#x27;Power (declared peak)&#x27;, f(t.power_w_declared_peak, 2), &#x27;W&#x27;, t.power_unknown.length ? &#x27;warn&#x27; : &#x27;ok&#x27;, t.power_unknown.length ? `Not publicly available for ${t.power_unknown.length} subsystem(s): ` + t.power_unknown.join(&#x27;, &#x27;) : &#x27;Sum of the maximum powers declared by the vendors&#x27;),
     kpi(&#x27;Subsystems covered&#x27;, t.n_covered, `of ${t.n_subsystems}`, t.n_covered === t.n_subsystems ? &#x27;ok&#x27; : &#x27;warn&#x27;, &#x27;Subsystems with at least one component that fits&#x27;),
@@ -4818,10 +5185,12 @@ function renderPlacement(r) {
     return `&lt;g class=&quot;pb&quot; data-id=&quot;${esc(p.id)}&quot;&gt;&lt;title&gt;${esc(p.name)}&lt;/title&gt;${polys.map(fc =&gt; `&lt;polygon points=&quot;${pts(fc.pts)}&quot; fill=&quot;${catColor(p.subsystem, clamp(fc.l, 12, 86))}&quot; ${fc.op &lt; 1 ? `fill-opacity=&quot;${fc.op}&quot;` : &#x27;&#x27;} stroke=&quot;${sel === p.id ? &#x27;var(--accent)&#x27; : &#x27;rgba(0,0,0,.4)&#x27;}&quot; stroke-width=&quot;${sel === p.id ? 1.8 : .7}&quot; stroke-linejoin=&quot;round&quot;/&gt;`).join(&#x27;&#x27;)}&lt;/g&gt;`;
   }).join(&#x27;&#x27;);
   const L = {}; for (const c of (r.library &amp;&amp; r.library.classes) || []) L[c.id] = c;
-  const sizeTxt = p =&gt; p.ext &amp;&amp; !p.size_published ? `Size: ${NA}` : p.size.map(v =&gt; f(v, 1)).sort((a, b) =&gt; b - a).join(&#x27; × &#x27;) + &#x27; mm&#x27;;
+  const sizeTxt = p =&gt; p.ext &amp;&amp; !p.size_published
+    ? (p.published_mm &amp;&amp; p.published_mm.length ? `${p.published_mm.map(v =&gt; f(v, 1)).join(&#x27; × &#x27;)} mm · thickness: ${NA}` : `Size: ${NA}`)
+    : p.size.map(v =&gt; f(v, 1)).sort((a, b) =&gt; b - a).join(&#x27; × &#x27;) + &#x27; mm&#x27;;
   const leg = parts.map(p =&gt; `&lt;div class=&quot;it ${sel === p.id ? &#x27;sel&#x27; : &#x27;&#x27;}&quot; data-id=&quot;${esc(p.id)}&quot; title=&quot;${esc(p.name)}&quot;&gt;&lt;b class=&quot;sw&quot; style=&quot;background:${catColor(p.subsystem)}&quot;&gt;&lt;/b&gt;&lt;span class=&quot;ac&quot;&gt;${esc((L[p.subsystem] || {}).acronym || p.subsystem)}${p.shape &amp;&amp; p.shape.basis === &#x27;subsystem&#x27; ? &#x27;&lt;sup title=&quot;Shape chosen from the subsystem: no usable product image&quot;&gt;*&lt;/sup&gt;&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;span class=&quot;nm&quot;&gt;${esc(p.name)}&lt;/span&gt;&lt;span class=&quot;sz&quot;&gt;${esc(sizeTxt(p))}${p.ext ? &#x27; · external&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
   $(&#x27;pl&#x27;).innerHTML = `&lt;div class=&quot;plwrap&quot;&gt;&lt;div class=&quot;plview&quot;&gt;&lt;svg viewBox=&quot;0 0 ${W} ${H}&quot; role=&quot;img&quot; aria-label=&quot;Isometric view of the chosen components inside the ${r.cubesat.class_u}U CubeSat&quot;&gt;&lt;title&gt;${r.cubesat.class_u}U CubeSat, components placed inside&lt;/title&gt;${back}${behind}${body}${front}&lt;/svg&gt;&lt;/div&gt;&lt;div class=&quot;pleg&quot;&gt;${leg}&lt;/div&gt;&lt;/div&gt;
-    &lt;div class=&quot;plnote&quot;&gt;${esc(F.message)} Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; &lt;sup&gt;*&lt;/sup&gt; marks a shape chosen from the subsystem because there is no usable product image.&lt;/div&gt;`;
+    &lt;div class=&quot;plnote&quot;&gt;${esc(F.message)} Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna, sun sensor, GNSS antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; &lt;sup&gt;*&lt;/sup&gt; marks a shape chosen from the subsystem because there is no usable product image.&lt;/div&gt;`;
 }
 $(&#x27;pl&#x27;).onclick = e =&gt; { const el = e.target.closest(&#x27;[data-id]&#x27;); if (el &amp;&amp; el.dataset.id) select(el.dataset.id); };
 
@@ -5053,6 +5422,11 @@ const STAR_KIND_PATHS = {
   synthetic: {
     png: ['modules_output', 'END-007', 'results_synthetic_data_generation']
   },
+  collision: {
+    all: ['modules_output', 'END-016'],
+    product: ['modules_output', 'END-016', 'output_collision_avoidance'],
+    results: ['modules_output', 'END-016', 'results_collision_avoidance']
+  },
   thermal: {
     all: ['modules_output', 'END-018'],
     product: ['modules_output', 'END-018', 'output_components_thermal_analysis'],
@@ -5082,7 +5456,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -5525,6 +5899,25 @@ async function loadReflectanceFromStarRoot() {
 }
 
 
+async function loadCollisionAvoidanceFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-collision');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveCollisionFilesFromParent !== 'function') return false;
+  try {
+    const productPath = ['modules_output','END-016','output_collision_avoidance'];
+    const resultsPath = ['modules_output','END-016','results_collision_avoidance'];
+    const payload = {
+      productFiles: await collectFilesFromSelectedPath(productPath),
+      resultFiles: await collectFilesFromSelectedPath(resultsPath)
+    };
+    await frame.contentWindow.receiveCollisionFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load END-016 collision-avoidance data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function loadThermalAnalysisFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-thermal');
@@ -5603,6 +5996,7 @@ function moduleDisplayName(moduleId) {
     'END-006': 'Scenario Generation',
     'END-007': 'Synthetic Data Generation',
     'END-010': 'Reflectance Determination',
+    'END-016': 'Collision Avoidance',
     'END-018': 'Components Thermal Analysis',
     'END-019': 'Satellite Design Component Selector'
   };
@@ -5629,6 +6023,8 @@ async function buildRunDiagnostics() {
     { module:'END-010', artifact:'Reflectance flux CSV', path:['modules_output','END-010','output_reflectance_determination'], matcher:name=>/^flux\.csv$/i.test(name) },
     { module:'END-010', artifact:'Reflectance frames', path:['modules_output','END-010','results_reflectance_determination','Frames'], matcher:name=>/\.(png|jpg|jpeg|webp)$/i.test(name) },
     { module:'END-010', artifact:'Reflectance plots', path:['modules_output','END-010','results_reflectance_determination'], matcher:name=>/\.(png|jpg|jpeg|html)$/i.test(name) },
+    { module:'END-016', artifact:'Space-safety summary and close approaches', path:['modules_output','END-016','output_collision_avoidance'], matcher:name=>/^(space_safety_summary\.json|intra_close_approaches\.csv|intra_pair_min_distance\.csv|disposal_lifetime\.csv)$/i },
+    { module:'END-016', artifact:'Collision-avoidance run information', path:['modules_output','END-016','results_collision_avoidance'], matcher:name=>/^collision_run_info\.json$/i },
     { module:'END-018', artifact:'Thermal time series and summaries', path:['modules_output','END-018','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
     { module:'END-018', artifact:'Thermal run information', path:['modules_output','END-018','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
     { module:'END-019', artifact:'Component-selector results', path:['modules_output','END-019','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
@@ -5673,7 +6069,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-018','END-019']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-016','END-018','END-019']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {
@@ -5740,6 +6136,7 @@ function switchTab(tabName) {
     powerviz: $('frame-powerviz'),
     synthetic: $('frame-synthetic'),
     reflectance: $('frame-reflectance'),
+    collision: $('frame-collision'),
     thermal: $('frame-thermal'),
     compsel: $('frame-compsel'),
     diagnostics: $('frame-diagnostics')
@@ -5772,6 +6169,9 @@ function switchTab(tabName) {
         if (tabName === 'reflectance' && hasRunFolderSelection()) {
           await loadReflectanceFromStarRoot();
         }
+        if (tabName === 'collision' && hasRunFolderSelection()) {
+          await loadCollisionAvoidanceFromStarRoot();
+        }
         if (tabName === 'thermal' && hasRunFolderSelection()) {
           await loadThermalAnalysisFromStarRoot();
         }
@@ -5782,6 +6182,7 @@ function switchTab(tabName) {
           await updateRunDiagnostics();
         }
         activeFrame.contentWindow.dispatchEvent(new Event('resize'));
+        if (typeof activeFrame.contentWindow.refreshCollisionDashboard === 'function') activeFrame.contentWindow.refreshCollisionDashboard();
         if (typeof activeFrame.contentWindow.refreshThermalDashboard === 'function') activeFrame.contentWindow.refreshThermalDashboard();
         if (typeof activeFrame.contentWindow.refreshComponentSelectorDashboard === 'function') activeFrame.contentWindow.refreshComponentSelectorDashboard();
         if (typeof activeFrame.contentWindow.refreshConstellationDashboard === 'function') activeFrame.contentWindow.refreshConstellationDashboard();
@@ -5812,6 +6213,7 @@ function bindEvents() {
       await loadPowerInsightsFromStarRoot();
       await loadSyntheticImagesFromStarRoot();
       await loadReflectanceFromStarRoot();
+      await loadCollisionAvoidanceFromStarRoot();
       await loadThermalAnalysisFromStarRoot();
       await loadComponentSelectorFromStarRoot();
       await updateRunDiagnostics();
@@ -5826,8 +6228,11 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
+      if (frame.id === 'frame-collision' && hasRunFolderSelection()) {
+        loadCollisionAvoidanceFromStarRoot();
+      }
       if (frame.id === 'frame-thermal' && hasRunFolderSelection()) {
         loadThermalAnalysisFromStarRoot();
       }

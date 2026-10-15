@@ -8,7 +8,7 @@ settings, results not meaningful), then a table with the status and the time
 of every module. END-007 (Unreal, always in full) is left out unless asked.
 
     python FrontEnd/star_smoke_test.py                      # test mode, v6 proposal, no END-007
-    python FrontEnd/star_smoke_test.py --mode demo --with-end007
+    python FrontEnd/star_smoke_test.py --mode full --level 1 --with-end007
     python FrontEnd/star_smoke_test.py --proposal Input/.../Mission_Proposal_v5.txt --requirements none
 
 The run is written under Output/ (RUN_SMOKETEST_<timestamp>) and can be opened
@@ -34,7 +34,8 @@ sys.path.insert(0, str(STAR_ROOT / "BackEnd"))
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--mode", default="test", choices=["test", "demo", "full"], help="STAR run mode (default test)")
+    ap.add_argument("--mode", default="test", choices=["test", "full"], help="STAR run mode (default test)")
+    ap.add_argument("--level", type=int, default=3, choices=[1, 2, 3, 4, 5], help="accuracy level of a full run (default 3)")
     ap.add_argument("--proposal", default=str(SAMPLES / "Mission_Proposal_v6.txt"), help="mission request document (.txt or .docx)")
     ap.add_argument("--requirements", default=str(SAMPLES / "Mission_Proposal_v6_requirements.json"),
                     help="JSON with the reviewed requirements, or 'none' for the rule-based extraction of the document")
@@ -79,12 +80,14 @@ def main() -> int:
     check(api.approve_missing_information(), "approve module inputs")
 
     # 5. execution
-    check(api.set_run_mode(args.mode), "run mode")
+    modes = api.set_run_mode(args.mode, args.level)
+    check(modes, "run mode")
     plan = [s.get("module_id") for s in api.workflow_steps]
-    print(f"Run {api.current_run_id}: mode {args.mode}, workflow {plan}", flush=True)
+    est = modes["estimates"]["full"][str(args.level)] if args.mode == "full" else modes["estimates"]["test"]
+    print(f"Run {api.current_run_id}: mode {api.run_mode_label()}, workflow {plan}, estimated {est['total_s']} s", flush=True)
     result = api.execute_workflow()
     rows = result.get("execution_results") or api.execution_results or []
-    print(f"\n{'module':8s} {'status':10s} {'time':>8s}  evidence")
+    print(f"\n{'module':8s} {'status':10s} {'time':>8s} {'est.':>7s}  evidence")
     bad = 0
     for r in rows:
         mid = r.get("module_id", "?")
@@ -95,7 +98,8 @@ def main() -> int:
             secs = None
         ok = status in ("completed", "skipped")
         bad += not ok
-        print(f"{mid:8s} {status:10s} {(f'{float(secs):.0f} s' if secs is not None else '-'):>8s}  {str(r.get('evidence', ''))[:150]}")
+        print(f"{mid:8s} {status:10s} {(f'{float(secs):.0f} s' if secs is not None else '-'):>8s} "
+              f"{str(round(est['per_module'].get(mid, 0))) + ' s':>7s}  {str(r.get('evidence', ''))[:150]}")
     print(f"\n{'PASS' if not bad and rows else 'FAIL'}: {len(rows)} module(s), {bad} not completed, total {time.time() - t_start:.0f} s; run folder {api.current_run_path}")
     return 0 if not bad and rows else 1
 

@@ -50,23 +50,38 @@ MONTHS = {m: i for i, m in enumerate(["january", "february", "march", "april", "
                                       "september", "october", "november", "december"], start=1)}
 NUM = r"(\d+(?:\.\d+)?)"
 
-# GA sizes per STAR run mode (star_runner_io.star_run_mode). 'full' keeps the
-# template's (Input/input_constellation_optimizer.json: surrogate GA 100 x 100
-# x 3 restarts, top-30 re-simulated; simulation GA 50 x 3). Surrogate_* apply
-# when the surrogate fitness engine is used, Population / Iterations when
-# END-001 falls back to the simulation (scenario outside the surrogate domain).
-END001_RUN_PROFILES: dict[str, dict[str, Any]] = {
-    "full": {},
-    "demo": {"Surrogate_Population": 60, "Surrogate_Iterations": 40, "Surrogate_Restarts": 1, "Surrogate_VerifyTopK": 10,
-             "Population": 24, "Iterations": 2, "Parallelize": True},
-    "test": {"Surrogate_Population": 20, "Surrogate_Iterations": 5, "Surrogate_Restarts": 1, "Surrogate_VerifyTopK": 1,
-             "Population": 8, "Iterations": 1, "Parallelize": False},
+# GA sizes per STAR run mode (star_runner_io.star_run_mode / star_run_level).
+# Surrogate_* apply when the surrogate fitness engine is used (population x
+# generations x restarts, then the best VerifyTopK designs re-simulated);
+# Population / Iterations when END-001 falls back to the simulation (scenario
+# outside the surrogate domain). Full level 3 = the template
+# (Input/input_constellation_optimizer.json); more search lowers the chance of
+# missing the best design the simulation would confirm.
+END001_TEST_PROFILE: dict[str, Any] = {"Surrogate_Population": 20, "Surrogate_Iterations": 5, "Surrogate_Restarts": 1,
+                                       "Surrogate_VerifyTopK": 1, "Population": 8, "Iterations": 1, "Parallelize": False}
+END001_FULL_LEVELS: dict[int, dict[str, Any]] = {
+    1: {"Surrogate_Population": 60, "Surrogate_Iterations": 40, "Surrogate_Restarts": 1, "Surrogate_VerifyTopK": 10,
+        "Population": 24, "Iterations": 2, "Parallelize": True},
+    2: {"Surrogate_Population": 80, "Surrogate_Iterations": 60, "Surrogate_Restarts": 2, "Surrogate_VerifyTopK": 20,
+        "Population": 36, "Iterations": 3, "Parallelize": True},
+    3: {"Surrogate_Population": 100, "Surrogate_Iterations": 100, "Surrogate_Restarts": 3, "Surrogate_VerifyTopK": 30,
+        "Population": 50, "Iterations": 3, "Parallelize": True},
+    4: {"Surrogate_Population": 150, "Surrogate_Iterations": 120, "Surrogate_Restarts": 4, "Surrogate_VerifyTopK": 50,
+        "Population": 64, "Iterations": 4, "Parallelize": True},
+    5: {"Surrogate_Population": 200, "Surrogate_Iterations": 150, "Surrogate_Restarts": 6, "Surrogate_VerifyTopK": 80,
+        "Population": 80, "Iterations": 6, "Parallelize": True},
 }
-# Measured 2026-10-15 (8 workers; selected design re-simulated, weighted score, lower = better):
-#   up to 60 satellites, 400-1200 km: full 325 s -> 0.4319; demo 94 s -> 0.4316 (same design);
-#     test 52 s -> 0.4616; 50 x 30 x 1 would give 86 s -> 0.4616
-#   v6 proposal (6U, <= 12 satellites, 500-650 km): full 309 s, demo ~90 s, test ~50 s, all the same design
-#   simulation fallback (v5 proposal, swath 12 km outside the surrogate domain): full 96 s, demo 72 s, test 50 s
+# Measured 2026-10-15 (8 workers; wall time of END-001 -> selected design re-simulated, weighted score, lower = better):
+#   up to 60 satellites, 400-1200 km: test 52 s -> 0.4616; full 1 94 s -> 0.4316; 2 168 s -> 0.4316; 3 325 s -> 0.4319;
+#     4 472 s -> 0.4317; 5 651 s -> 0.4316 (all levels: 3 x 2 at 1200 km); the GA time is ~0.65-0.85 s per generation
+#     (generations x restarts), almost independent of the population, plus ~65 s fixed
+#   v6 proposal (6U, <= 12 satellites, 500-650 km): full 3 309 s, full 1 ~90 s, test ~50 s, all the same design
+#   simulation fallback (v5 proposal, swath 12 km outside the surrogate domain): full 3 96 s, full 1 72 s, test 50 s
+
+
+def end001_run_profile(mode: str, level: int) -> dict[str, Any]:
+    """GA sizes of END-001 for a STAR run mode and full accuracy level."""
+    return dict(END001_TEST_PROFILE) if mode != "full" else dict(END001_FULL_LEVELS[level])
 
 
 def _parse(value: Any) -> Any:
@@ -363,22 +378,23 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     if pert and any(str(p).lower() not in ("j2", "none") for p in (pert[0] if isinstance(pert[0], list) else [pert[0]])):
         note("perturbations", pert[0], "END-001 propagates with J2 only: other perturbations are not modelled")
 
-    # ---- run mode (demo by default inside STAR) ---------------------------------
+    # ---- run mode (test by default inside STAR) ---------------------------------
     try:
-        from .star_runner_io import star_run_mode
+        from .star_runner_io import FULL_LEVELS, star_run_level, star_run_mode
     except ImportError:
-        from star_runner_io import star_run_mode
+        from star_runner_io import FULL_LEVELS, star_run_level, star_run_mode
     mode = star_run_mode(payload)
+    level = star_run_level(payload)
     cfg["StarRunMode"] = mode
-    profile = END001_RUN_PROFILES[mode]
+    if mode == "full":
+        cfg["StarRunLevel"] = level
+    origin = f"STAR run mode '{mode}'" + (f", accuracy level {level} ({FULL_LEVELS[level]})" if mode == "full" else "")
     explicit = {r["field"] for r in report if str(r["origin"]).startswith("STAR input")}
-    for field, value in profile.items():
+    for field, value in end001_run_profile(mode, level).items():
         if "OptimizerSettings." + field in explicit:     # a value the user or the mission gave wins
             continue
         opt[field] = value
-        note("OptimizerSettings." + field, value, f"STAR run mode '{mode}'")
-    if not profile:
-        note("StarRunMode", mode, "STAR run mode 'full': GA sizes of the template")
+        note("OptimizerSettings." + field, value, origin)
 
     # ---- fixed settings (STAR mode) ---------------------------------------------
     opt["Fitness_Engine"] = "Surrogate"

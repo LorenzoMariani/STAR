@@ -26,6 +26,9 @@ cultural heritage monuments, including the Colosseum in Rome, the Cathedral
 the archaeological site of Pompeii, spanning latitude 40 deg N to 46 deg N.
 The constellation shall have at most 12 satellites, in sun-synchronous orbits
 between 500 km and 650 km of altitude, for a mission lifetime of three years.
+The satellites shall keep a safe separation from each other, and each
+satellite shall re-enter the atmosphere within 5 years of the end of its
+mission, in compliance with the space-debris mitigation rules.
 The number of satellites and of orbital planes shall be optimised to minimise
 the revisit time and to maximise the coverage of these monuments, propagating
 the orbits for at least 7 days with the Earth oblateness (J2) and the
@@ -97,7 +100,7 @@ Proposals shall provide the optimised constellation architecture with its
 revisit time and coverage; the satellites, dates and start and end times of
 the two reference passes; the power budget tables and figures; the bill of
 materials of the 6U platform; the temperatures of faces, solar panels and
-battery; the simulated images of the daylight pass over the Colosseum; and
+battery; the separation between the satellites and their disposal delta-v; the simulated images of the daylight pass over the Colosseum; and
 the light curve, apparent magnitude and light-pollution assessment from
 Matera. Proposals will be evaluated on compliance with the requirements
 above, on the technical quality of the design and on the lowest impact on
