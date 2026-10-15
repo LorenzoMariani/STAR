@@ -196,9 +196,17 @@ orbit: Sub-structure grouping the physical Keplerian parameters:
 
 - alt\_perigee\_m / alt\_apogee\_m: Orbit altitudes in meters, assuming circular configurations derived from the optimized kilometer parameter. 
 - inclination\_deg: Orbital inclination expressed in degrees, calculated via analytical perturbation models for SSO or set to a fallback standard value (98 deg). 
-- raan\_deg: Right Ascension of the Ascending Node for the specific orbital plane, ranging within [-180 deg, 180 deg]. 
+- raan\_deg: Right Ascension of the Ascending Node for the specific orbital plane, ranging within (-180 deg, 180 deg], in the ECI frame of the downstream modules: ECEF = R3(GMST) ECI, with the IAU-82 GMST of the epoch (as END-003 and END-007). The simulator measures RAAN from an axis where Greenwich is at the lla2eci angle, 0.34 deg below GMST in 2026; the exported value includes that shift (until 2026-10-15 it did not, and downstream ground tracks were 0.34 deg of longitude west of the optimized ones). 
 - omega\_deg: Argument of perigee in degrees (fixed to 0 for circular assumptions). 
 - nu\_deg: True anomaly of the spacecraft at the starting epoch, derived via Walker Delta positioning laws.
+
+For END-007, one `satellite_NN_ephemeris.csv` per satellite (same window as the JSON: sim\_start\_date, sim\_hours; step `DownstreamEphemerisStep_s` of the input JSON, default 10 s, 0 = not written), columns:
+
+time\_utc, x\_eci\_km, y\_eci\_km, z\_eci\_km, vx\_eci\_km\_s, vy\_eci\_km\_s, vz\_eci\_km\_s, qw\_body2eci, qx\_body2eci, qy\_body2eci, qz\_body2eci
+
+- time\_utc: ISO 8601 UTC (`2026-05-21T13:41:10Z`; milliseconds only when the epoch has a fraction of a second).
+- x/y/z\_eci\_km, vx/vy/vz\_eci\_km\_s: position and velocity in the ECI frame above (ECEF = R3(GMST(time\_utc)) ECI), from END-001's propagator (J2 secular, circular orbits); the velocity is the time derivative of the tabulated positions. Through GMST the Earth-fixed positions are the simulator's (within 1 mm).
+- q\*\_body2eci: scalar-first Hamilton quaternion of the nadir-pointing attitude, rotating body vectors into ECI (v\_eci = q v\_body q\*; its matrix has the body axes in ECI as columns): +Z body = geocentric nadir (sensor boresight), +X body = velocity component normal to +Z (forward, the framing sensor's along-track axis), +Y body = +Z x +X (right of the track, the cross-track axis). The same axes as END-003's 'nadir' mode; the sign is kept continuous from row to row. Note: END-003's Unreal CSV (output\_attitude\_propagation.csv) carries the conjugate quaternion (ECI to body) with other column names.
 
 1. ## <a name="_toc230170083"></a>**Special Remarks**
 

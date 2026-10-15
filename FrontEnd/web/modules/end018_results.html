@@ -121,7 +121,7 @@ pre.json{margin:0;padding:12px 14px;max-height:420px;overflow:auto;font-size:11p
         <div class="legend"><span><i class="tint-ecl"></i>Eclipse</span></div></div>
     </article>
     <article class="card wide">
-      <div class="card-header"><h3>Internal nodes over time</h3><span class="hint">Central body, battery and SAR payload [°C] · shaded = SAR on · dashed = battery limit 25 °C</span></div>
+      <div class="card-header"><h3>Internal nodes over time</h3><span class="hint">Central body, battery and SAR payload [°C] · shaded = SAR on · dashed = node limits (model summary; battery 25 °C)</span></div>
       <div class="card-body"><div id="plotInternal" class="plot"></div>
         <div class="legend"><span><i class="tint-sar"></i>SAR on</span><span><i class="tint-ecl"></i>Eclipse</span></div></div>
     </article>
@@ -182,8 +182,20 @@ function nodeGroup(name){ return /ctr|central|bat|sar|payload|internal/i.test(na
 function nodeLabel(name){
   const n = name.replace(/^t_/i, '');
   const map = { CTR:'Central body', BAT:'Battery', SAR:'SAR payload' };
+  let m;
+  if ((m = n.match(/^(?:_+|x_)([XYZ])$/i))) return `Face ${m[1].toUpperCase()}`;     // T__X in the CSV, x_X in the summary
+  if ((m = n.match(/^PANdep(\d+)$/i))) return `Deployable panel ${m[1]}`;
   return map[n.toUpperCase()] || n;
 }
+/* node -> limit [°C] from the summary ("limits": {"BAT":25,...}); the battery falls back to 25 °C */
+function nodeLimits(summary){
+  const out = {};
+  const lim = summary && summary.limits;
+  if (lim && typeof lim === 'object') for (const [k, v] of Object.entries(lim)) if (Number.isFinite(Number(v))) out[k.toUpperCase()] = Number(v);
+  if (out.BAT === undefined) out.BAT = BATTERY_LIMIT_C;
+  return out;
+}
+function limitOf(node, limits){ const k = node.key.replace(/^t_/i, '').toUpperCase(); return limits[k]; }
 function buildSeries(csvText){
   const { header, rows } = parseCsv(csvText);
   const ti = header.findIndex(h => /time|utc|epoch/i.test(h));
@@ -235,10 +247,20 @@ function renderBanner(){
     head = `<b>END-018 ${esc(info.status)}</b> — ${esc(info.evidence_text || '')}`;
   } else {
     const viol = [];
-    for (const [id, s] of Object.entries(state.sats)) {
-      for (const v of s.violations || []) if (v.active) viol.push(`${id}: ${v.path.replace(/^violations\./, '')}`);
-      const bat = s.series && s.series.nodes.find(n => /bat/i.test(n.key));
-      if (bat && bat.max > BATTERY_LIMIT_C && !(s.violations || []).length) viol.push(`${id}: battery up to ${fmt(bat.max)} °C (> ${BATTERY_LIMIT_C} °C)`);
+    for (const id of Object.keys(state.sats).sort()) {
+      const s = state.sats[id];
+      const limits = nodeLimits(s.summary), parts = [];
+      for (const n of (s.series && s.series.nodes) || []) {
+        const lim = limitOf(n, limits);
+        if (Number.isFinite(lim) && n.max > lim) parts.push(`${n.label} ${fmt(n.max)} > ${fmt(lim, 0)} °C`);
+      }
+      // flags the model sets without a time series loaded, or for a node the series does not carry
+      for (const v of s.violations || []) {
+        const node = (v.path.match(/^violations\.([A-Za-z]+)_/) || [])[1];
+        if (v.active && !(node && s.series && s.series.nodes.some(n => n.key.replace(/^t_/i, '').toUpperCase() === node.toUpperCase())))
+          parts.push(v.path.replace(/^violations\./, ''));
+      }
+      if (parts.length) viol.push(`${id}: ${parts.join(', ')}`);
     }
     if (viol.length) { cls = 'critical'; icon = '!'; head = `<b>Operational limits exceeded</b>`; items.push(...viol); }
     else head = '<b>No limit exceeded</b>';
@@ -276,13 +298,18 @@ function renderKpis(){
   const by = re => s.nodes.find(n => re.test(n.key));
   const ctr = by(/ctr|central/i), bat = by(/bat/i), sar = by(/sar/i);
   const frac = f => f ? 100 * f.reduce((a, b) => a + b, 0) / f.length : NaN;
+  const limits = nodeLimits(sat.summary);
+  const flag = n => { const lim = limitOf(n, limits); return Number.isFinite(lim)
+    ? (n.max > lim ? { cls:'critical', icon:'✕', text:`above the ${fmt(lim, 0)} °C limit` } : { cls:'good', icon:'✓', text:`within the ${fmt(lim, 0)} °C limit` }) : null; };
+  const sm = sat.summary || {};
+  const cells = sm.solar_panels, sarPass = sm.peaks && sm.peaks.SAR_max_C_pass_realattitude;
   const cards = [];
   if (Number.isFinite(extMax.max)) cards.push(kpi('Hottest surface', fmt(extMax.max), '°C', extMax.label));
   if (Number.isFinite(extMin.min)) cards.push(kpi('Coldest surface', fmt(extMin.min), '°C', extMin.label));
-  if (ctr) cards.push(kpi('Central body max', fmt(ctr.max), '°C', `mean ${fmt(ctr.mean)} °C`));
-  if (bat) cards.push(kpi('Battery max', fmt(bat.max), '°C', `min ${fmt(bat.min)} · mean ${fmt(bat.mean)} °C`,
-    bat.max > BATTERY_LIMIT_C ? { cls:'critical', icon:'✕', text:`above the ${BATTERY_LIMIT_C} °C limit` } : { cls:'good', icon:'✓', text:`within the ${BATTERY_LIMIT_C} °C limit` }));
-  if (sar) cards.push(kpi('SAR payload max', fmt(sar.max), '°C', `mean ${fmt(sar.mean)} °C`));
+  if (cells && Number.isFinite(Number(cells.max_C))) cards.push(kpi('Solar cells max', fmt(cells.max_C), '°C', `min ${fmt(cells.min_C)} · mean ${fmt(cells.mean_C)} °C (cell optics)`));
+  if (ctr) cards.push(kpi('Central body max', fmt(ctr.max), '°C', `mean ${fmt(ctr.mean)} °C`, flag(ctr)));
+  if (bat) cards.push(kpi('Battery max', fmt(bat.max), '°C', `min ${fmt(bat.min)} · mean ${fmt(bat.mean)} °C`, flag(bat)));
+  if (sar) cards.push(kpi('SAR payload max', fmt(sar.max), '°C', Number.isFinite(Number(sarPass)) ? `${fmt(sarPass)} °C in the imaging pass (real attitude)` : `mean ${fmt(sar.mean)} °C`, flag(sar)));
   if (s.eclipse) cards.push(kpi('Time in eclipse', fmt(frac(s.eclipse)), '%', 'of the analysis span'));
   if (s.sarOn && s.sarOn.some(Boolean)) cards.push(kpi('SAR on', fmt(frac(s.sarOn)), '%', 'of the analysis span'));
   if (!int.length) cards.push(kpi('Internal nodes', '—', '', 'none in this output'));
@@ -296,11 +323,18 @@ function renderSeries(id, group, c, s){
   const traces = nodes.map((n, i) => ({ x, y: thin(n.values, k), type:'scattergl', mode:'lines', name:n.label, line:{ width:1.6, color:c.slots[(group === 'internal' ? i + 4 : i) % c.slots.length] },
     hovertemplate:`${esc(n.label)}: %{y:.1f} °C<extra></extra>` }));
   let sh = shapes(runs(s.eclipse, s.time), c.ecl);
+  const ann = [];
   if (group === 'internal') {
     sh = sh.concat(shapes(runs(s.sarOn, s.time), c.sar));
-    if (nodes.some(n => /bat/i.test(n.key))) sh.push({ type:'line', xref:'paper', x0:0, x1:1, y0:BATTERY_LIMIT_C, y1:BATTERY_LIMIT_C, line:{ color:c.critical, width:1.4, dash:'dash' } });
+    const limits = nodeLimits(state.current && state.sats[state.current] && state.sats[state.current].summary);
+    nodes.forEach((n, i) => {
+      const lim = limitOf(n, limits); if (!Number.isFinite(lim)) return;
+      const col = c.slots[(i + 4) % c.slots.length];
+      sh.push({ type:'line', xref:'paper', x0:0, x1:1, y0:lim, y1:lim, line:{ color:col, width:1.2, dash:'dash' } });
+      ann.push({ xref:'paper', x:1, xanchor:'right', y:lim, yanchor:'bottom', text:`${n.label} limit ${fmt(lim, 0)} °C`, showarrow:false, bgcolor:c.panelStrong, font:{ size:10, color:col } });
+    });
   }
-  draw(id, traces, baseLayout(c, { height:330, shapes:sh, xaxis:axis(c, { title:'UTC' }), yaxis:axis(c, { title:'Temperature [°C]' }) }));
+  draw(id, traces, baseLayout(c, { height:330, shapes:sh, annotations:ann, xaxis:axis(c, { title:'UTC' }), yaxis:axis(c, { title:'Temperature [°C]' }) }));
 }
 function renderRange(c, s){
   const nodes = s.nodes.slice().sort((a, b) => a.max - b.max);

@@ -44,6 +44,7 @@ RESULTS_DIRNAME = "results_components_thermal_analysis"
 MODULE_DIRNAME = "END018-ComponentsThermalAnalysis"
 CUBESAT_MAX_MASS_KG = 24.0          # 12U, CubeSat Design Specification Rev. 14.1
 CLASSES = ("1U", "3U", "6U", "12U")
+RUNTIME_RELEASE = "R2026a"          # MATLAB release star_thermal.exe was compiled with
 RUNTIME_HINT = ("star_thermal needs the MATLAB Runtime R2026a (version 26.1), which is not installed on this machine: install it "
                 "(free, administrator rights: https://www.mathworks.com/products/compiler/mcr/index.html), or rebuild star_thermal "
                 "with the MATLAB release installed here, or set STAR_END018_MATLAB_SOURCE to the folder of star_thermal_main.m.")
@@ -146,9 +147,24 @@ def _stage_upstream(modules_output: Path, staging: Path) -> tuple[list[str], lis
     return [f.name for f in sats], []
 
 
+def _process_env() -> dict[str, str]:
+    """Environment with the MATLAB Runtime R2026a first on PATH: its installer edits the system PATH, which a STAR
+    started before the install does not see (STAR_END018_RUNTIME_DIR overrides the install folder)."""
+    env = dict(os.environ)
+    roots = [os.environ.get("STAR_END018_RUNTIME_DIR", "").strip()]
+    roots += [str(Path(os.environ[v]) / "MATLAB" / "MATLAB Runtime" / RUNTIME_RELEASE)
+              for v in ("ProgramW6432", "ProgramFiles") if os.environ.get(v)]
+    for r in filter(None, roots):
+        bin_dir = Path(r) / "runtime" / "win64"
+        if bin_dir.is_dir():
+            env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
+            break
+    return env
+
+
 def _run_process(cmd: list[str], cwd: Path, log_path: Path, stop_event: Any, log: Callable[[str, str], None]) -> tuple[int | None, str]:
     with log_path.open("w", encoding="utf-8", errors="replace") as fh:
-        proc = subprocess.Popen(cmd, cwd=str(cwd), stdout=fh, stderr=subprocess.STDOUT,
+        proc = subprocess.Popen(cmd, cwd=str(cwd), stdout=fh, stderr=subprocess.STDOUT, env=_process_env(),
                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         while proc.poll() is None:
             if stop_event is not None and stop_event.is_set():
@@ -170,11 +186,12 @@ def _constellation_evidence(path: Path) -> str:
     if not rows:
         return ""
     cols = list(rows[0].keys())
+    label_col = next((c for c in cols if re.search(r"label|name", c, re.I)), cols[0])
     flag_cols = [c for c in cols if re.search(r"flag|limit|viol|exceed", c, re.I)]
-    flagged = sorted({r.get(cols[0], "") for r in rows for c in flag_cols if str(r.get(c, "")).strip().lower() in ("1", "true", "yes", "si")})
     text = f"{len(rows)} satellite(s) analysed"
-    if flag_cols:
-        text += "; limit exceeded on " + (", ".join(flagged) if flagged else "none")
+    for c in flag_cols:            # e.g. BAT_over_limit -> "BAT_over_limit on SAT-01, SAT-02"
+        flagged = [r.get(label_col, "") for r in rows if str(r.get(c, "")).strip().lower() in ("1", "true", "yes", "si")]
+        text += f"; {c} on " + (", ".join(flagged) if flagged else "none")
     return text
 
 

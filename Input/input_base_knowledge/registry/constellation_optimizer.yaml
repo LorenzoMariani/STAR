@@ -422,9 +422,13 @@ outputs:
     '
 - name: constellation_trajectories
   kind: artifact
-  artifact_name: constellation_trajectories.csv
+  artifact_name: satellite_NN_ephemeris.csv
   data_type: csv
-  description: 'Propagated constellation trajectories.
+  description: 'One file per satellite for END-007, over the window of satellite_NN.json (sim_start_date,
+    sim_hours) every DownstreamEphemerisStep_s seconds (default 10): time_utc, x/y/z_eci_km, vx/vy/vz_eci_km_s
+    (ECI with ECEF = R3(GMST) ECI, as END-003 and END-007; J2-secular propagation of END-001), qw/qx/qy/qz_body2eci
+    (scalar-first quaternion body to ECI of the nadir-pointing attitude: +Z nadir, +X forward, +Y right of the
+    track).
 
     '
 execution:

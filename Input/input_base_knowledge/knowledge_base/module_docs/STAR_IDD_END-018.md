@@ -26,7 +26,7 @@ Upstream files, copied by the runner into one folder for the model: `modules_out
 ## Output interface
 
 - `modules_output/END-018/output_components_thermal_analysis/output_thermal_SAT-XX.csv` — per satellite: `timestamp_utc`, one `T_<node>` column per face, panel and internal node [degC], `sar_on` (0/1), `eclipse` (0/1);
-- `thermal_summary_SAT-XX.json` — per satellite: configuration used, orbit, minimum / maximum / mean of every node, solar panels block, peaks (SAR, battery, central body) and `violations` (limit flags);
+- `thermal_summary_SAT-XX.json` — per satellite: configuration used, orbit, minimum / maximum / mean of every node, solar panels block, peaks (SAR over the orbit and in the imaging pass with the real attitude, battery, central body), `limits` (battery 25, central body 60, SAR 85 degC) and `violations` (limit flags);
 - `thermal_constellation_output.csv` — one row per satellite (form factor, beta angle, number of passes, maximum SAR / battery / central / panel temperatures, battery limit flag);
 - `modules_output/END-018/results_components_thermal_analysis/thermal_run_info.json` — configuration passed to the model, provenance of every value, domain notes and status, read by the STAR FrontEnd results tab (END018 Thermal Analysis).
 
@@ -42,4 +42,4 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 
 - CubeSats only (1U-12U); calibrated on a 3U; preliminary fidelity.
 - The internal payload node is a SAR payload; other payloads are not modelled as a separate node.
-- Integration test case (author's report): SAT-01 of the STAR example, 3U, deployable panels, 3 nodes, SAR 200 W with 30% duty: maximum SAR about 217 degC, central body 172 degC, battery 103 degC, solar panels 192 degC (+-3 degC), battery limit flag active.
+- Integration test case (author's report): SAT-01 of the STAR example, 3U, deployable panels, 3 nodes, SAR 200 W with 30% duty: maximum SAR about 217 degC, central body 172 degC, battery 103 degC, solar panels 192 degC (+-3 degC), battery limit flag active. Reproduced by star_thermal.exe on 2026-10-15 (MATLAB Runtime R2026a Update 5): 216.5 / 172.3 / 103.2 / 192.2 degC.
