@@ -599,5 +599,64 @@
 })();
 </script>
 
+<style id="star-v3-run-mode-style">
+.star-run-mode{display:inline-flex;align-items:center;gap:8px;margin-right:6px;font-size:12px;color:var(--muted)}
+.star-run-mode select{height:34px;min-width:160px;padding:0 10px}
+.star-run-mode-hint{flex-basis:100%;width:100%;font-size:11px;color:var(--muted);margin-top:4px}
+</style>
+<script id="star-v3-run-mode-script">
+(function(){
+  'use strict';
+  const LABELS = {demo:'Demo (fast)', test:'Test (smoke test)', full:'Full'};
+  let modes = {demo:'fast settings with meaningful results, for presentations (default)',
+               test:'smoke test: every module runs with its fastest settings, results not meaningful',
+               full:'complete settings of every module'};
+  function api(){ return window.pywebview && window.pywebview.api; }
+  function showHint(){
+    const sel = document.getElementById('star-run-mode'), hint = document.getElementById('star-run-mode-hint');
+    if (sel && hint) hint.textContent = LABELS[sel.value] + ' - ' + (modes[sel.value] || '') + '. END-007 (Unreal) always runs in full.';
+  }
+  async function sync(){
+    const a = api(); if (!a || !a.get_run_mode) return;
+    try {
+      const r = await a.get_run_mode();
+      if (r && r.ok) { modes = r.modes || modes; const sel = document.getElementById('star-run-mode'); if (sel) sel.value = r.run_mode; showHint(); }
+    } catch (_) {}
+  }
+  function ensure(){
+    const exec = document.getElementById('execute-workflow-button');
+    if (!exec || document.getElementById('star-run-mode')) return;
+    const wrap = document.createElement('label');
+    wrap.className = 'star-run-mode';
+    wrap.title = 'Settings of the modules for the next workflow execution';
+    wrap.innerHTML = '<span>Run mode</span><select id="star-run-mode" aria-label="STAR run mode"></select>';
+    exec.parentElement.insertBefore(wrap, exec);
+    const hint = document.createElement('div');
+    hint.id = 'star-run-mode-hint'; hint.className = 'star-run-mode-hint';
+    exec.parentElement.appendChild(hint);
+    const sel = wrap.querySelector('select');
+    for (const k of ['demo', 'test', 'full']) { const o = document.createElement('option'); o.value = k; o.textContent = LABELS[k]; sel.appendChild(o); }
+    sel.value = 'demo'; showHint();
+    sel.addEventListener('change', async () => {
+      const a = api(); if (!a || !a.set_run_mode) return;
+      const r = await a.set_run_mode(sel.value);
+      if (!r || !r.ok) { sel.value = (r && r.run_mode) || 'demo'; if (r && r.error) alert(r.error); }
+      showHint();
+    });
+    const stop = document.getElementById('stop-execution-button');   // enabled while a workflow runs
+    if (stop) {
+      const lock = () => { sel.disabled = !stop.disabled; };
+      new MutationObserver(lock).observe(stop, {attributes: true, attributeFilter: ['disabled']});
+      lock();
+    }
+    sync();
+  }
+  document.addEventListener('DOMContentLoaded', ensure);
+  window.addEventListener('load', ensure);
+  window.addEventListener('pywebviewready', () => { ensure(); sync(); });
+  ensure();
+})();
+</script>
+
 </body>
 </html>

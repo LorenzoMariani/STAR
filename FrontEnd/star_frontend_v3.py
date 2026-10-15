@@ -111,6 +111,16 @@ CANONICAL_MODULE_CATALOG = [
 ]
 
 
+# STAR run modes (2026-10-15; BackEnd/runners/star_runner_io.star_run_mode).
+# Every module input file carries "run_mode" and the runners map it onto their
+# module; END-007 (Unreal) always runs in full.
+STAR_RUN_MODES: dict[str, str] = {
+    "demo": "fast settings with meaningful results, for presentations (default)",
+    "test": "smoke test: every module runs with its fastest settings, results not meaningful",
+    "full": "complete settings of every module",
+}
+
+
 class StarApi:
     """
     STAR desktop backend exposed to the HTML frontend through pywebview.
@@ -175,6 +185,9 @@ class StarApi:
         self.execution_stop_requested: bool = False
         self.active_module_name: str | None = None
         self.active_module_id: str | None = None
+        # STAR run mode (2026-10-15): demo by default; test = smoke test; full = complete settings
+        mode = os.environ.get("STAR_RUN_MODE", "").strip().lower()
+        self.run_mode: str = mode if mode in STAR_RUN_MODES else "demo"
 
         self.report_manifest: list[dict[str, Any]] = []
         self.report_status: str = "not_available"
@@ -4607,6 +4620,22 @@ Return only valid JSON:
             return {"ok": False, "error": "No approved workflow steps are available.", "logs": self.logs}
         return None
 
+    def get_run_mode(self) -> dict[str, Any]:
+        """Run mode of the next workflow execution, with the description of every mode (execution toolbar)."""
+        return {"ok": True, "run_mode": self.run_mode, "modes": STAR_RUN_MODES}
+
+    def set_run_mode(self, mode: str) -> dict[str, Any]:
+        """Choose demo / test / full for the next workflow execution (not while a workflow is running)."""
+        mode = str(mode or "").strip().lower()
+        if mode not in STAR_RUN_MODES:
+            return {"ok": False, "error": f"Unknown run mode '{mode}': use one of {', '.join(STAR_RUN_MODES)}.", "run_mode": self.run_mode}
+        if self.execution_running:
+            return {"ok": False, "error": "The run mode cannot change while a workflow is running.", "run_mode": self.run_mode}
+        if mode != self.run_mode:
+            self.run_mode = mode
+            self.add_log("USER", f"Run mode set to {mode}: {STAR_RUN_MODES[mode]}")
+        return {"ok": True, "run_mode": self.run_mode, "modes": STAR_RUN_MODES}
+
     def execute_workflow_async(self) -> dict[str, Any]:
         validation_error = self.validate_execution_preconditions()
         if validation_error:
@@ -4771,6 +4800,8 @@ Return only valid JSON:
 
         workflow_started_perf = time.perf_counter()
         self.add_log("EXECUTION", "Starting workflow execution from approved planning package.")
+        os.environ["STAR_RUN_MODE"] = self.run_mode      # MATLAB / subprocess runners inherit it
+        self.add_log("EXECUTION", f"Run mode: {self.run_mode} - {STAR_RUN_MODES[self.run_mode]}")
         execution_results = []
         selected_modules = {step.get("module") for step in self.workflow_steps}
 
@@ -5051,6 +5082,7 @@ Return only valid JSON:
             "module_results_dir": str(output_layout["module_results_dir"]),
             "requested_outputs": self.requested_outputs,
             "requirements": self.requirements,
+            "run_mode": self.run_mode,
         }
         input_path.write_text(json.dumps(payload, indent=4), encoding="utf-8")
         self.add_log("EXECUTION", f"Resolved {len(module_inputs)} input item(s) and {len(upstream_artifacts)} upstream artifact(s) for {module.get('module_name', module_id)}.")
@@ -5178,6 +5210,8 @@ Return only valid JSON:
                         runner_kwargs["modules_output_root"] = str(self.get_modules_output_root())
                     if "module_input_dir" in runner_parameters:
                         runner_kwargs["module_input_dir"] = str(self.current_run_path / "module_inputs")
+                    if "run_mode" in runner_parameters:
+                        runner_kwargs["run_mode"] = self.run_mode
                 except (TypeError, ValueError):
                     pass
 
@@ -5561,6 +5595,69 @@ STAR_EXECUTION_FRONTEND_PATCH_JS = '\n<script id="star-v1-execution-ui-patch-scr
 
 
 
+# Run-mode selector of the execution toolbar (v3 only, injected next to Execute Workflow).
+STAR_V3_RUN_MODE_PATCH = """
+<style id="star-v3-run-mode-style">
+.star-run-mode{display:inline-flex;align-items:center;gap:8px;margin-right:6px;font-size:12px;color:var(--muted)}
+.star-run-mode select{height:34px;min-width:160px;padding:0 10px}
+.star-run-mode-hint{flex-basis:100%;width:100%;font-size:11px;color:var(--muted);margin-top:4px}
+</style>
+<script id="star-v3-run-mode-script">
+(function(){
+  'use strict';
+  const LABELS = {demo:'Demo (fast)', test:'Test (smoke test)', full:'Full'};
+  let modes = {demo:'fast settings with meaningful results, for presentations (default)',
+               test:'smoke test: every module runs with its fastest settings, results not meaningful',
+               full:'complete settings of every module'};
+  function api(){ return window.pywebview && window.pywebview.api; }
+  function showHint(){
+    const sel = document.getElementById('star-run-mode'), hint = document.getElementById('star-run-mode-hint');
+    if (sel && hint) hint.textContent = LABELS[sel.value] + ' - ' + (modes[sel.value] || '') + '. END-007 (Unreal) always runs in full.';
+  }
+  async function sync(){
+    const a = api(); if (!a || !a.get_run_mode) return;
+    try {
+      const r = await a.get_run_mode();
+      if (r && r.ok) { modes = r.modes || modes; const sel = document.getElementById('star-run-mode'); if (sel) sel.value = r.run_mode; showHint(); }
+    } catch (_) {}
+  }
+  function ensure(){
+    const exec = document.getElementById('execute-workflow-button');
+    if (!exec || document.getElementById('star-run-mode')) return;
+    const wrap = document.createElement('label');
+    wrap.className = 'star-run-mode';
+    wrap.title = 'Settings of the modules for the next workflow execution';
+    wrap.innerHTML = '<span>Run mode</span><select id="star-run-mode" aria-label="STAR run mode"></select>';
+    exec.parentElement.insertBefore(wrap, exec);
+    const hint = document.createElement('div');
+    hint.id = 'star-run-mode-hint'; hint.className = 'star-run-mode-hint';
+    exec.parentElement.appendChild(hint);
+    const sel = wrap.querySelector('select');
+    for (const k of ['demo', 'test', 'full']) { const o = document.createElement('option'); o.value = k; o.textContent = LABELS[k]; sel.appendChild(o); }
+    sel.value = 'demo'; showHint();
+    sel.addEventListener('change', async () => {
+      const a = api(); if (!a || !a.set_run_mode) return;
+      const r = await a.set_run_mode(sel.value);
+      if (!r || !r.ok) { sel.value = (r && r.run_mode) || 'demo'; if (r && r.error) alert(r.error); }
+      showHint();
+    });
+    const stop = document.getElementById('stop-execution-button');   // enabled while a workflow runs
+    if (stop) {
+      const lock = () => { sel.disabled = !stop.disabled; };
+      new MutationObserver(lock).observe(stop, {attributes: true, attributeFilter: ['disabled']});
+      lock();
+    }
+    sync();
+  }
+  document.addEventListener('DOMContentLoaded', ensure);
+  window.addEventListener('load', ensure);
+  window.addEventListener('pywebviewready', () => { ensure(); sync(); });
+  ensure();
+})();
+</script>
+"""
+
+
 def write_execution_frontend_v3(web_dir: Path) -> Path | None:
     """Create a non-destructive patched copy of web/index.html for the execution tab."""
     source_path = web_dir / "index.html"
@@ -5575,6 +5672,7 @@ def write_execution_frontend_v3(web_dir: Path) -> Path | None:
     # previous generated files cannot keep the old interface alive.
     html = html.replace(STAR_EXECUTION_FRONTEND_PATCH_CSS, "")
     html = html.replace(STAR_EXECUTION_FRONTEND_PATCH_JS, "")
+    html = html.replace(STAR_V3_RUN_MODE_PATCH, "")
 
     if "</head>" in html:
         html = html.replace("</head>", STAR_EXECUTION_FRONTEND_PATCH_CSS + "\n</head>", 1)
@@ -5582,9 +5680,9 @@ def write_execution_frontend_v3(web_dir: Path) -> Path | None:
         html = STAR_EXECUTION_FRONTEND_PATCH_CSS + "\n" + html
 
     if "</body>" in html:
-        html = html.replace("</body>", STAR_EXECUTION_FRONTEND_PATCH_JS + "\n</body>", 1)
+        html = html.replace("</body>", STAR_EXECUTION_FRONTEND_PATCH_JS + STAR_V3_RUN_MODE_PATCH + "\n</body>", 1)
     else:
-        html = html + "\n" + STAR_EXECUTION_FRONTEND_PATCH_JS
+        html = html + "\n" + STAR_EXECUTION_FRONTEND_PATCH_JS + STAR_V3_RUN_MODE_PATCH
 
     target_path.write_text(html, encoding="utf-8")
     return target_path

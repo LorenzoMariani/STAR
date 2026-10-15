@@ -8,6 +8,24 @@ from typing import Any, Callable, Iterable
 
 LogCallback = Callable[[str, str], Any]
 
+# STAR run modes (2026-10-15): 'demo' (default inside STAR: fast settings with
+# meaningful results, for presentations), 'test' (smoke test: the fastest
+# settings that still run every step of each module, results not meaningful),
+# 'full' (the modules' complete settings). The frontend writes the mode into
+# every module input file ("run_mode") and into STAR_RUN_MODE; each runner maps
+# it onto its module (END-007 / Unreal always runs in full).
+RUN_MODES = ("demo", "test", "full")
+
+
+def star_run_mode(star_payload: dict[str, Any] | None = None) -> str:
+    """Run mode of this STAR run: the module input file's run_mode, else STAR_RUN_MODE, else 'demo'."""
+    import os
+    for value in ((star_payload or {}).get("run_mode"), os.environ.get("STAR_RUN_MODE")):
+        mode = str(value or "").strip().lower()
+        if mode in RUN_MODES:
+            return mode
+    return "demo"
+
 MODULE_OUTPUT_LAYOUT: dict[str, tuple[str, str]] = {
     "END-001": ("output_constellation_optimizer", "results_constellation_optimizer"),
     "END-003": ("output_attitude_propagation", "results_attitude_propagator"),

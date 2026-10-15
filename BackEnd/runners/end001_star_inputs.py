@@ -50,6 +50,24 @@ MONTHS = {m: i for i, m in enumerate(["january", "february", "march", "april", "
                                       "september", "october", "november", "december"], start=1)}
 NUM = r"(\d+(?:\.\d+)?)"
 
+# GA sizes per STAR run mode (star_runner_io.star_run_mode). 'full' keeps the
+# template's (Input/input_constellation_optimizer.json: surrogate GA 100 x 100
+# x 3 restarts, top-30 re-simulated; simulation GA 50 x 3). Surrogate_* apply
+# when the surrogate fitness engine is used, Population / Iterations when
+# END-001 falls back to the simulation (scenario outside the surrogate domain).
+END001_RUN_PROFILES: dict[str, dict[str, Any]] = {
+    "full": {},
+    "demo": {"Surrogate_Population": 60, "Surrogate_Iterations": 40, "Surrogate_Restarts": 1, "Surrogate_VerifyTopK": 10,
+             "Population": 24, "Iterations": 2, "Parallelize": True},
+    "test": {"Surrogate_Population": 20, "Surrogate_Iterations": 5, "Surrogate_Restarts": 1, "Surrogate_VerifyTopK": 1,
+             "Population": 8, "Iterations": 1, "Parallelize": False},
+}
+# Measured 2026-10-15 (8 workers; selected design re-simulated, weighted score, lower = better):
+#   up to 60 satellites, 400-1200 km: full 325 s -> 0.4319; demo 94 s -> 0.4316 (same design);
+#     test 52 s -> 0.4616; 50 x 30 x 1 would give 86 s -> 0.4616
+#   v6 proposal (6U, <= 12 satellites, 500-650 km): full 309 s, demo ~90 s, test ~50 s, all the same design
+#   simulation fallback (v5 proposal, swath 12 km outside the surrogate domain): full 96 s, demo 72 s, test 50 s
+
 
 def _parse(value: Any) -> Any:
     """Parsed STAR value; None for empty / placeholder text."""
@@ -344,6 +362,23 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     pert = inp.get("perturbations")
     if pert and any(str(p).lower() not in ("j2", "none") for p in (pert[0] if isinstance(pert[0], list) else [pert[0]])):
         note("perturbations", pert[0], "END-001 propagates with J2 only: other perturbations are not modelled")
+
+    # ---- run mode (demo by default inside STAR) ---------------------------------
+    try:
+        from .star_runner_io import star_run_mode
+    except ImportError:
+        from star_runner_io import star_run_mode
+    mode = star_run_mode(payload)
+    cfg["StarRunMode"] = mode
+    profile = END001_RUN_PROFILES[mode]
+    explicit = {r["field"] for r in report if str(r["origin"]).startswith("STAR input")}
+    for field, value in profile.items():
+        if "OptimizerSettings." + field in explicit:     # a value the user or the mission gave wins
+            continue
+        opt[field] = value
+        note("OptimizerSettings." + field, value, f"STAR run mode '{mode}'")
+    if not profile:
+        note("StarRunMode", mode, "STAR run mode 'full': GA sizes of the template")
 
     # ---- fixed settings (STAR mode) ---------------------------------------------
     opt["Fitness_Engine"] = "Surrogate"

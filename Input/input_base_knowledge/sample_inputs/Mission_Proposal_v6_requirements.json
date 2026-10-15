@@ -1,0 +1,21 @@
+{
+ "source": "Mission_Proposal_v6.txt, requirements extracted by the local LLM (Ollama qwen2.5:7b) on 2026-10-15; used by FrontEnd/star_smoke_test.py",
+ "requirements": [
+  {"id": "REQ-001", "text": "The constellation shall have at most 12 satellites.", "category": "mission"},
+  {"id": "REQ-002", "text": "Each satellite shall be a 6U CubeSat with a mass not exceeding 12 kg.", "category": "design"},
+  {"id": "REQ-003", "text": "The constellation shall have sun-synchronous orbits between 500 km and 650 km of altitude.", "category": "mission"},
+  {"id": "REQ-004", "text": "The mission lifetime shall be three years.", "category": "mission"},
+  {"id": "REQ-005", "text": "Each satellite shall be three-axis stabilised with a pointing accuracy better than 0.1 deg and point nominally at nadir.", "category": "design"},
+  {"id": "REQ-006", "text": "Each satellite shall carry a visible-spectrum push-broom camera with a panchromatic Ground Sample Distance of 4.0 m and a swath of 30 km at nadir.", "category": "design"},
+  {"id": "REQ-007", "text": "The satellites shall acquire images in daylight only.", "category": "functional"},
+  {"id": "REQ-008", "text": "The revisit time and coverage of the constellation shall be optimised to minimise the revisit time and to maximise the coverage of the monuments.", "category": "functional"},
+  {"id": "REQ-009", "text": "Each satellite shall have a drag cross-section of 0.06 m2 and a drag coefficient of 2.2.", "category": "design"},
+  {"id": "REQ-010", "text": "The satellites shall be checked on two reference cases over 48 hours starting on 21 May 2026 at 13:41 UTC.", "category": "verification"},
+  {"id": "REQ-011", "text": "The satellites shall be above 10 deg of elevation and with the Sun above the horizon at the target, preferably higher than 20 deg, for the first reference case.", "category": "functional"},
+  {"id": "REQ-012", "text": "The satellites shall be above 10 deg of elevation and illuminated by the Sun, while the Sun is more than 12 deg below the horizon at the site, for the second reference case.", "category": "functional"},
+  {"id": "REQ-013", "text": "The satellites shall have a duty cycle of each subsystem and a design margin of 10 percent.", "category": "design"},
+  {"id": "REQ-014", "text": "The daily energy balance shall not be negative and the battery depth of discharge shall not exceed 30 percent in any orbit.", "category": "functional"},
+  {"id": "REQ-015", "text": "The temperatures of the CubeSat faces, solar panels, central body and battery shall be assessed along the orbit and during the daylight reference imaging pass.", "category": "verification"},
+  {"id": "REQ-016", "text": "The battery temperature of the CubeSat shall stay within its operational limit.", "category": "functional"}
+ ]
+}

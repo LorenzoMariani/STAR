@@ -33,6 +33,29 @@ git clone --recursive https://github.com/LorenzoMariani/STAR.git
 
 (or `git submodule update --init` in an existing clone).
 
+## Run modes and smoke test
+
+The execution toolbar of FrontEnd v3 has a **Run mode** selector (default
+`demo`; `STAR_RUN_MODE` sets the default at start-up). The mode goes into every
+module input file (`run_mode`) and each runner maps it onto its module:
+
+| module | demo (default) | test | full |
+|---|---|---|---|
+| END-001 | surrogate GA 60 x 40, top 10 re-simulated (~1.5 min; same design as full on the cases tried) | 20 x 5, top 1, no parallel pool (~50 s) | template sizes (5-8 min) |
+| END-003, END-004, END-010, END-018, END-019 | complete settings (each takes 1-60 s, mostly MATLAB / Unity start-up) | same | same |
+| END-007 (Unreal) | always complete | always complete | always complete |
+
+`FrontEnd/star_smoke_test.py` runs the whole pipeline headless through the
+same StarApi as the window (new run, reviewed requirements, rule-based
+planning, approvals, execution) and prints the status and time of each
+module; by default the v6 sample proposal with its stored requirements, mode
+`test`, without END-007 (about 3 minutes):
+
+```
+python FrontEnd/star_smoke_test.py
+python FrontEnd/star_smoke_test.py --mode demo --with-end007
+```
+
 ## Not in this repository
 
 | What | Why | To run |
