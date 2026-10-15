@@ -1,5 +1,5 @@
-# STAR repository (2026-10-15): code, configuration and documentation.
-# What is left out and how to restore it: README.md.
+# STAR repository: only what running STAR needs (code, configuration, module
+# data). What is left out and how to restore it: README.md.
 
 # Run outputs
 /Output/
@@ -13,8 +13,6 @@ _old*/
 /STAR-ORCHESTRATOR/OllamaModels/
 
 # Files over 50 MB and builds: copied by hand
-/Documentation/Articles and presentations/STAR_Presentazione_Spoke2.pptx
-/Documentation/Articles and presentations/video_ terra.mp4
 /END010-ReflectanceDetermination/lib/data/DE440.mat
 /END010-ReflectanceDetermination/lib/BuildAqua/
 /END019-ComponentSelector.zip
@@ -22,11 +20,29 @@ _old*/
 # Credentials (space-track.org login): stay on this machine only
 /END016-CollisionAvoidance/lib/loginSpaceTrack.m
 
-# Python, MATLAB, editor and OS leftovers
+# Not needed to run STAR: documentation, presentations, documents, root
+# utilities, editor settings, example results of the vendored CARA tools
+/Documentation/
+/DEMO_WorkshopASI.pptx
+/folder_tree.py
+/struttura_cartelle.txt
+/.claude/
+/.vscode/
+*.pptx
+*.ppt
+*.pdf
+*.doc
+*.docx
+*.drawio
+*.mp4
+!/Input/input_base_knowledge/sample_inputs/*.docx
+/END016-CollisionAvoidance/CARA_Analysis_Tools/**/Documentation/
+/END016-CollisionAvoidance/CARA_Analysis_Tools/DistributedMatlab/EvaluateLightPollution/output_with_distribution/
+/END016-CollisionAvoidance/lib/*.png
+
+# Python, MATLAB and OS leftovers
 __pycache__/
 *.pyc
 *.asv
 *.log
 desktop.ini
-/.claude/settings.local.json
-/.claude/*.lock

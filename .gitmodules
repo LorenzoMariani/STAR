@@ -1,3 +1,4 @@
 [submodule "END001-ConstellationOptimizer"]
 	path = END001-ConstellationOptimizer
 	url = https://github.com/LorenzoMariani/matlabConstellationOptimizer.git
+	ignore = untracked
