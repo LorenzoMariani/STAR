@@ -2,9 +2,9 @@
 
 ## Functional role
 
-END-018 computes the thermal behaviour of a CubeSat (1U, 3U, 6U or 12U) along the orbit and the imaging passes produced by the upstream STAR modules: the temperature over time of the six faces (+X/-X, +Y/-Y, +Z/-Z), of the deployable solar panels and of the internal nodes (central body, battery and, when the payload is a SAR, the SAR payload), and the operational limits that are exceeded (for example the battery above 25 degC). It is a lumped-parameter model: a few thermal nodes exchange heat with each other, with the orbital environment (solar flux, albedo, Earth infrared, eclipses) and with deep space. Its parameters were calibrated on temperatures measured in orbit by a 3U CubeSat (WildtrackCube / SIMBA); calibration and parameters are confidential. The analysis lasts as long as the propagation it receives.
+END-018 computes the thermal behaviour of a CubeSat (1U, 3U, 6U or 12U) along the orbit and the imaging passes produced by the upstream STAR modules: the temperature over time of the six faces (+X/-X, +Y/-Y, +Z/-Z), of the deployable solar panels and of the internal nodes (central body, battery and, when the payload is a SAR, the SAR payload), and the operational limits that are exceeded (for example the battery above 25 degC). It is a lumped-parameter model: a few thermal nodes exchange heat with each other, with the orbital environment (solar flux, albedo, Earth infrared, eclipses) and with deep space. Its parameters were calibrated on temperatures measured in orbit by a 3U CubeSat (WildtrackCube / SIMBA). The analysis lasts as long as the propagation it receives and starts from the periodic thermal regime of the orbit.
 
-The module is a black box: `END018-ComponentsThermalAnalysis/blackbox_build/star_thermal.exe` (MATLAB Compiler, needs the free MATLAB Runtime R2026a) reads a configuration file and the STAR products, and writes its results files.
+MATLAB sources in `END018-ComponentsThermalAnalysis/src` (MATLAB base only; entry `star_thermal_main`, run by the STAR runner with `matlab -batch`): it reads a configuration file and the STAR products, and writes its results files. The satellite follows its real orbit phase (RAAN, inclination, true anomaly, Sun at the epoch; radius and J2 rates as END-001), so eclipses are aligned with the END-003 passes. `blackbox_build/star_thermal.exe` is the compiled version as delivered (before the 2026-10-15 fixes, see the module README).
 
 ## When the planner should select this module
 
@@ -21,7 +21,7 @@ The Python runner `runners.end018_runner.run_end018` reads the module input JSON
 
 Values the mission does not state are not invented: the model's own defaults are used and listed in the notes. Every value records where it came from (`thermal_run_info.json`).
 
-Upstream files, copied by the runner into one folder for the model: `modules_output/END-001/output_constellation_optimizer/satellite_XX.json` (every satellite is analysed) and `modules_output/END-003/output_attitude_propagation/selected_pass_summary.csv` and `output_attitude_propagation.csv`.
+Upstream files, copied by the runner into one folder for the model: `modules_output/END-001/output_constellation_optimizer/satellite_XX.json` (every satellite is analysed) and `modules_output/END-003/output_attitude_propagation/selected_pass_summary.csv` and the pass attitude `modules_output/END-003/results_attitude_propagator/output_attitude_propagation_ECI.csv` (quaternion body to ECI; if it is missing, `output_attitude_propagation.csv`, the Unreal file with the conjugate quaternion, is read conjugated).
 
 ## Output interface
 
@@ -30,7 +30,7 @@ Upstream files, copied by the runner into one folder for the model: `modules_out
 - `thermal_constellation_output.csv` — one row per satellite (form factor, beta angle, number of passes, maximum SAR / battery / central / panel temperatures, battery limit flag);
 - `modules_output/END-018/results_components_thermal_analysis/thermal_run_info.json` — configuration passed to the model, provenance of every value, domain notes and status, read by the STAR FrontEnd results tab (END018 Thermal Analysis).
 
-Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or a satellite above 24 kg); `failed` when END-001 / END-003 products are missing or the model cannot run (for example the MATLAB Runtime R2026a is not installed: the message says so).
+Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or a satellite above 24 kg); `failed` when END-001 / END-003 products are missing or the model cannot run (MATLAB not found; with the black box, a missing MATLAB Runtime R2026a: the message says so).
 
 ## Relationship with other modules
 
@@ -42,4 +42,4 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 
 - CubeSats only (1U-12U); calibrated on a 3U; preliminary fidelity.
 - The internal payload node is a SAR payload; other payloads are not modelled as a separate node.
-- Integration test case (author's report): SAT-01 of the STAR example, 3U, deployable panels, 3 nodes, SAR 200 W with 30% duty: maximum SAR about 217 degC, central body 172 degC, battery 103 degC, solar panels 192 degC (+-3 degC), battery limit flag active. Reproduced by star_thermal.exe on 2026-10-15 (MATLAB Runtime R2026a Update 5): 216.5 / 172.3 / 103.2 / 192.2 degC.
+- Integration test case (author's report): SAT-01 of the STAR example, 3U, deployable panels, 3 nodes, SAR 200 W with 30% duty: maximum SAR about 217 degC, central body 172 degC, battery 103 degC, solar panels 192 degC (+-3 degC), battery limit flag active. Reproduced exactly by star_thermal.exe (the delivered version): 216.5 / 172.3 / 103.2 / 192.2 degC; the corrected sources (periodic start, real orbit phase) give 217.8 / 173.1 / 103.3 / 193.3 degC, within the +-3 degC of the report.

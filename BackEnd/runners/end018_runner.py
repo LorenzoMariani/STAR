@@ -1,12 +1,13 @@
 """STAR runner for END-018 Components Thermal Analysis (2026-10-15).
 
 END-018 is a lumped-parameter thermal model of a CubeSat (1U, 3U, 6U, 12U;
-calibrated on in-orbit temperatures of a 3U, WildtrackCube / SIMBA) delivered as
-a black box: star_thermal.exe (MATLAB Compiler; needs the MATLAB Runtime R2026a)
-reads input_termico.json and the STAR products of END-001 (satellite_XX.json)
-and END-003 (selected_pass_summary.csv, output_attitude_propagation.csv) and
-writes, per satellite, output_thermal_SAT-XX.csv (temperature of every face,
-panel and internal node, SAR on, eclipse), thermal_summary_SAT-XX.json and
+calibrated on in-orbit temperatures of a 3U, WildtrackCube / SIMBA), MATLAB
+sources in END018-ComponentsThermalAnalysis/src (entry star_thermal_main):
+it reads input_termico.json and the STAR products of END-001
+(satellite_XX.json) and END-003 (selected_pass_summary.csv and the pass
+attitude, output_attitude_propagation_ECI.csv) and writes, per satellite,
+output_thermal_SAT-XX.csv (temperature of every face, panel and internal node,
+SAR on, eclipse), thermal_summary_SAT-XX.json and
 thermal_constellation_output.csv.
 
 Called by the orchestrator (FrontEnd/star_frontend_v3.py ->
@@ -19,9 +20,11 @@ The runner
    does not state is left to the model's own defaults, and every value records
    where it came from;
 3. copies the END-001 and END-003 products of this run into one star_input_dir;
-4. runs star_thermal (STAR_END018_EXECUTABLE overrides its path; with
-   STAR_END018_MATLAB_SOURCE = folder of star_thermal_main.m it runs in MATLAB
-   instead) and reports a missing MATLAB Runtime explicitly;
+4. runs the sources in MATLAB (matlab -batch; MATLAB_EXECUTABLE overrides the
+   command, STAR_END018_MATLAB_SOURCE the source folder). With
+   STAR_END018_EXECUTABLE = blackbox_build/star_thermal.exe it runs the compiled
+   black box instead (the model as delivered, before the 2026-10-15 fixes;
+   needs the MATLAB Runtime R2026a, a missing Runtime is reported explicitly);
 5. writes thermal_run_info.json (configuration, provenance, domain notes,
    status) for the results tab.
 """
@@ -33,6 +36,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -47,7 +51,7 @@ CLASSES = ("1U", "3U", "6U", "12U")
 RUNTIME_RELEASE = "R2026a"          # MATLAB release star_thermal.exe was compiled with
 RUNTIME_HINT = ("star_thermal needs the MATLAB Runtime R2026a (version 26.1), which is not installed on this machine: install it "
                 "(free, administrator rights: https://www.mathworks.com/products/compiler/mcr/index.html), or rebuild star_thermal "
-                "with the MATLAB release installed here, or set STAR_END018_MATLAB_SOURCE to the folder of star_thermal_main.m.")
+                "with the MATLAB release installed here, or unset STAR_END018_EXECUTABLE to run the MATLAB sources (src/).")
 
 
 def _star_root(star_root: str | None) -> Path:
@@ -132,17 +136,24 @@ def _stage_upstream(modules_output: Path, staging: Path) -> tuple[list[str], lis
     if not sats:
         missing.append(f"END-001 orbits (satellite_XX.json) not found in {orbits_src}")
     att_src = modules_output / "END-003" / "output_attitude_propagation"
-    att_files = [att_src / "selected_pass_summary.csv", att_src / "output_attitude_propagation.csv"]
-    for f in att_files:
-        if not f.is_file():
-            missing.append(f"END-003 {f.name} not found in {att_src}")
+    passes = att_src / "selected_pass_summary.csv"
+    if not passes.is_file():
+        missing.append(f"END-003 {passes.name} not found in {att_src}")
+    # pass attitude: END-003 writes the body->ECI quaternion in its results folder
+    # (output_attitude_propagation_ECI.csv) and the conjugate, for Unreal / END-007,
+    # in output_attitude_propagation.csv; the model reads the first, or the second
+    # conjugated when the first is missing.
+    att_files = [f for f in (modules_output / "END-003" / "results_attitude_propagator" / "output_attitude_propagation_ECI.csv",
+                             att_src / "output_attitude_propagation.csv") if f.is_file()]
+    if not att_files:
+        missing.append(f"END-003 pass attitude (output_attitude_propagation[_ECI].csv) not found under {modules_output / 'END-003'}")
     if missing:
         return [], missing
     (staging / "output_constellation_optimizer").mkdir(parents=True, exist_ok=True)
     (staging / "output_attitude_propagation").mkdir(parents=True, exist_ok=True)
     for f in sats:
         shutil.copy2(f, staging / "output_constellation_optimizer" / f.name)
-    for f in att_files:
+    for f in [passes, *att_files]:
         shutil.copy2(f, staging / "output_attitude_propagation" / f.name)
     return [f.name for f in sats], []
 
@@ -168,8 +179,11 @@ def _run_process(cmd: list[str], cwd: Path, log_path: Path, stop_event: Any, log
                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         while proc.poll() is None:
             if stop_event is not None and stop_event.is_set():
-                proc.terminate()
                 log("WARNING", "END-018 stopped by the user.")
+                if sys.platform.startswith("win"):     # matlab -batch starts MATLAB.exe as a child
+                    subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL, check=False, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                proc.terminate()
                 break
             time.sleep(0.5)
         rc = proc.wait()
@@ -289,16 +303,23 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
     cfg_path = module_root / "input_termico.json"
     cfg_path.write_text(json.dumps(cfg, indent=1), encoding="utf-8")
     log("EXECUTION", f"END-018 configuration: {json.dumps(config)}")
-    source_dir = os.environ.get("STAR_END018_MATLAB_SOURCE", "").strip()
-    if source_dir:
-        matlab = os.environ.get("MATLAB_EXECUTABLE", "matlab")
-        src, cfg_m = source_dir.replace("'", "''"), str(cfg_path).replace("'", "''")
-        cmd = [matlab, "-batch", f"addpath('{src}'); star_thermal_main('{cfg_m}')"]
-    else:
-        exe = Path(os.environ.get("STAR_END018_EXECUTABLE", "").strip() or root / MODULE_DIRNAME / "blackbox_build" / "star_thermal.exe")
+    exe_env = os.environ.get("STAR_END018_EXECUTABLE", "").strip()
+    if exe_env:
+        exe = Path(exe_env)
         if not exe.is_file():
-            return finish("failed", f"star_thermal not found at {exe} (set STAR_END018_EXECUTABLE).")
+            return finish("failed", f"STAR_END018_EXECUTABLE {exe} not found.")
         cmd = [str(exe), str(cfg_path)]
+        info["engine"] = "executable (model as delivered, before the 2026-10-15 fixes)"
+    else:
+        src_dir = Path(os.environ.get("STAR_END018_MATLAB_SOURCE", "").strip() or root / MODULE_DIRNAME / "src")
+        if not (src_dir / "star_thermal_main.m").is_file():
+            return finish("failed", f"END-018 MATLAB sources not found: {src_dir / 'star_thermal_main.m'} (set STAR_END018_MATLAB_SOURCE).")
+        matlab = os.environ.get("MATLAB_EXECUTABLE", "matlab")
+        if not (Path(matlab).is_file() or shutil.which(matlab)):
+            return finish("failed", f"MATLAB not found ('{matlab}'): END-018 runs its MATLAB sources (set MATLAB_EXECUTABLE).")
+        src, cfg_m = str(src_dir).replace("'", "''"), str(cfg_path).replace("'", "''")
+        cmd = [matlab, "-batch", f"addpath('{src}'); star_thermal_main('{cfg_m}')"]
+        info["engine"] = f"MATLAB sources {src_dir}"
     log("EXECUTION", f"END-018 running {' '.join(cmd)}")
     rc, out = _run_process(cmd, module_root, module_root / "end018_process_log.txt", stop_event, log)
     info["command"] = cmd
@@ -306,15 +327,15 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
     if stop_event is not None and stop_event.is_set():
         return finish("stopped", "END-018 stopped by the user.")
     if rc != 0:
-        if "MATLAB Runtime" in out or "mclmcrrt" in out:
+        if exe_env and ("MATLAB Runtime" in out or "mclmcrrt" in out):
             return finish("failed", RUNTIME_HINT, process_output=out[-1500:])
-        return finish("failed", f"star_thermal exited with code {rc}: {out.strip()[-600:]}", process_output=out[-1500:])
+        return finish("failed", f"END-018 model exited with code {rc}: {out.strip()[-600:]}", process_output=out[-1500:])
 
     # 5. products
     products = sorted(p.name for p in product_dir.iterdir() if p.is_file())
     generated.extend(str(product_dir / p) for p in products)
     constellation = product_dir / "thermal_constellation_output.csv"
     if not constellation.is_file():
-        return finish("failed", "star_thermal ended without thermal_constellation_output.csv.", products=products)
+        return finish("failed", "The END-018 model ended without thermal_constellation_output.csv.", products=products)
     evidence_text = _constellation_evidence(constellation) or f"{len(satellites)} satellite(s) analysed"
     return finish("completed", f"{evidence_text} ({', '.join(f'{k}={v}' for k, v in config.items())}).", products=products)

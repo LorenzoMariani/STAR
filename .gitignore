@@ -46,6 +46,8 @@ _old*/
 /END019-ComponentSelector/star_integration/
 /END019-ComponentSelector/CONTINUARE_LA_CONVERSAZIONE.md
 /END019-ComponentSelector/LEGGIMI_INSTALLAZIONE.md
+# END-018: outputs of the example configurations (examples/input_*.json)
+/END018-ComponentsThermalAnalysis/examples/output_*/
 
 # Python, MATLAB and OS leftovers
 __pycache__/

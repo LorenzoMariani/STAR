@@ -16,6 +16,7 @@ function cfg = star_config(opts)
 % ------------------------------------------------------------------------------
 if nargin<1 || isempty(opts), opts = struct(); end
 here = fileparts(mfilename('fullpath'));
+examples = fullfile(fileparts(here), 'examples');    % END018-ComponentsThermalAnalysis/examples
 
 %% ============ SCELTE DI INPUT (default; sovrascrivibili da 'opts') ============
 cfg.sat.form     = getf(opts,'form_factor','3U');        % '1U'|'3U'|'6U'|'12U'
@@ -26,12 +27,18 @@ cfg.sar.source   = getf(opts,'sar_source','passes');     % 'passes'|'duty'
 cfg.sar.duty     = getf(opts,'sar_duty',0.10);           % 0..1
 
 %% ============ I/O (percorsi STAR) ============
-cfg.io.root     = getf(opts,'star_input_dir', fullfile(here,'esempi_io_star'));
+cfg.io.root     = getf(opts,'star_input_dir', fullfile(examples,'esempi_io_star'));
 cfg.io.sat_dir  = fullfile(cfg.io.root, 'output_constellation_optimizer');
 cfg.io.att_dir  = fullfile(cfg.io.root, 'output_attitude_propagation');
 cfg.io.pass_csv = fullfile(cfg.io.att_dir, 'selected_pass_summary.csv');
-cfg.io.att_csv  = fullfile(cfg.io.att_dir, 'output_attitude_propagation.csv');
-cfg.io.out_dir  = getf(opts,'output_dir', fullfile(here,'output_thermal'));
+% assetto del pass: END-003 scrive il quaternione body->ECI in
+% output_attitude_propagation_ECI.csv (cartella risultati) e il coniugato
+% (ECI->body, per Unreal/END-007) in output_attitude_propagation.csv: si usa
+% il primo se c'e', altrimenti il secondo coniugato (star_process). Fino al
+% 2026-10-15 il secondo era letto come body->ECI: +Z a ~58 deg dal nadir nel pass.
+cfg.io.att_csv  = fullfile(cfg.io.att_dir, 'output_attitude_propagation_ECI.csv');   % body->ECI
+cfg.io.att_csv_eci2body = fullfile(cfg.io.att_dir, 'output_attitude_propagation.csv'); % ECI->body
+cfg.io.out_dir  = getf(opts,'output_dir', fullfile(examples,'output_thermal'));
 cfg.io.sat_glob = 'satellite_*.json';
 cfg.io.imaging_purpose = 'imaging';
 
@@ -39,6 +46,8 @@ cfg.io.imaging_purpose = 'imaging';
 cfg.sim.dt     = 10;      % [s] passo integrazione
 cfg.sim.out_dt = 60;      % [s] passo campionamento CSV
 cfg.sim.use_attitude_detail = true;
+cfg.sim.spinup_orbits = 100;  % orbite max prima di t = 0 per il regime periodico (0 = partenza a cfg.T0)
+cfg.sim.spinup_tol    = 0.01; % [K] convergenza: variazione massima su un'orbita
 
 %% ============ geometria dal form factor ============
 switch upper(cfg.sat.form)
@@ -92,8 +101,10 @@ cfg.cond.G_sarrad= 3.0*kA;
 cfg.cond.radFace = 1;
 
 %% ============ ambiente e limiti ============
-cfg.env = struct('Gs',1361,'albedo',0.30,'qIR',237,'Re',6371e3,'mu',3.986e14, ...
+cfg.env = struct('Gs',1361,'albedo',0.30,'qIR',237,'Re',6371e3,'mu',3.986004415e14, ...
                  'sigma',5.670374419e-8,'Tspace',3);
+% orbita come END-001 (propagate_orbit_j2): quota sopra il raggio equatoriale, J2 secolare
+cfg.env.Req = 6378137; cfg.env.J2 = 0.0010826261738522227;
 cfg.limits.BAT = 25; cfg.limits.SAR = 85; cfg.limits.CTR = 60;
 cfg.T0 = 0;
 end

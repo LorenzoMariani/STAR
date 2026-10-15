@@ -14,9 +14,9 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
   base, sample mission requests) and the modules' native input templates.
 - `END001-ConstellationOptimizer/` - git submodule
   (github.com/LorenzoMariani/matlabConstellationOptimizer), see its `USAGE.md`.
-- `END018-ComponentsThermalAnalysis/` - CubeSat thermal model (black box
-  `blackbox_build/star_thermal.exe`, needs the MATLAB Runtime R2026a; runner
-  `BackEnd/runners/end018_runner.py`, results tab in frontend v3).
+- `END018-ComponentsThermalAnalysis/` - CubeSat thermal model, MATLAB sources
+  in `src/` (see its `README.md`; runner `BackEnd/runners/end018_runner.py`,
+  results tab in frontend v3).
 - `END003`, `END004`, `END010`, `END016` - the other modules.
 - `END019-ComponentSelector/star_component_selector/` - CubeSat component
   selector (Python standard library only; runner `BackEnd/runners/end019_runner.py`,

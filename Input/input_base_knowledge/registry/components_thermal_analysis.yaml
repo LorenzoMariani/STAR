@@ -12,9 +12,9 @@ description: >
   internal nodes (central body, battery and, when the payload is a SAR, the SAR payload), and flags the operational limits
   that are exceeded (for example the battery above 25 degC). It is a lumped-parameter model exchanging heat with the orbital
   environment (solar flux, albedo, Earth infrared, eclipses) and deep space, calibrated on temperatures measured in orbit by a
-  3U CubeSat (WildtrackCube / SIMBA); calibration and parameters are confidential. The module is a black box (star_thermal,
-  MATLAB Compiler executable that needs the MATLAB Runtime R2026a): it reads the END-001 orbits (satellite_XX.json) and the
-  END-003 imaging passes and attitude, and the analysis lasts as long as the propagation it receives.
+  3U CubeSat (WildtrackCube / SIMBA). MATLAB sources in END018-ComponentsThermalAnalysis/src (MATLAB base only): it reads
+  the END-001 orbits (satellite_XX.json) and the END-003 imaging passes and attitude, starts from the periodic thermal regime
+  of the orbit, and the analysis lasts as long as the propagation it receives.
 aliases:
   - thermal analysis
   - components thermal analysis
@@ -128,7 +128,7 @@ outputs:
     data_type: json
     description: Configuration passed to the model and where each value came from, domain checks and status, for the STAR FrontEnd results tab.
 execution:
-  execution_mode: python_runner_executable
+  execution_mode: python_runner_matlab_batch
   runner_module: runners.end018_runner
   runner_function: run_end018
   upstream_dependencies:
@@ -139,7 +139,8 @@ execution:
 interface_notes: >
   The Python runner checks that the mission is a CubeSat, builds input_termico.json from the requirements and the approved
   inputs (what the mission does not state is left to the model's defaults), copies the END-001 and END-003 products of the run
-  into one folder, runs END018-ComponentsThermalAnalysis/blackbox_build/star_thermal.exe (STAR_END018_EXECUTABLE overrides the
-  path; STAR_END018_MATLAB_SOURCE runs star_thermal_main.m in MATLAB instead) and writes the products under
-  modules_output/END-018/output_components_thermal_analysis and thermal_run_info.json under
-  modules_output/END-018/results_components_thermal_analysis. star_thermal needs the MATLAB Runtime R2026a.
+  into one folder (the pass attitude as END-003's output_attitude_propagation_ECI.csv, quaternion body to ECI), runs
+  star_thermal_main of END018-ComponentsThermalAnalysis/src with matlab -batch (MATLAB_EXECUTABLE, STAR_END018_MATLAB_SOURCE;
+  STAR_END018_EXECUTABLE runs the compiled black box of the delivered version instead, which needs the MATLAB Runtime R2026a)
+  and writes the products under modules_output/END-018/output_components_thermal_analysis and thermal_run_info.json under
+  modules_output/END-018/results_components_thermal_analysis.

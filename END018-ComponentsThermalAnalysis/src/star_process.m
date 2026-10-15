@@ -5,7 +5,12 @@ function rows = star_process(cfg)
 %   per satellite e scrive output_thermal/ (CSV + JSON + CSV di costellazione).
 
 if ~exist(cfg.io.out_dir,'dir'), mkdir(cfg.io.out_dir); end
-att_ok = cfg.sim.use_attitude_detail && isfile(cfg.io.att_csv);
+% assetto reale del pass: file body->ECI, altrimenti quello per Unreal (coniugato)
+att_csv = cfg.io.att_csv; att_conv = 'body2eci';
+if ~isfile(att_csv) && isfield(cfg.io,'att_csv_eci2body') && isfile(cfg.io.att_csv_eci2body)
+    att_csv = cfg.io.att_csv_eci2body; att_conv = 'eci2body';
+end
+att_ok = cfg.sim.use_attitude_detail && isfile(att_csv);
 
 sats = dir(fullfile(cfg.io.sat_dir, cfg.io.sat_glob));
 if isempty(sats)
@@ -18,7 +23,7 @@ for k = 1:numel(sats)
     R = star_thermal_run(cfg, orb, passes);
     Rp = [];
     if att_ok && ~isempty(passes)
-        att = star_read_attitude(cfg.io.att_csv, orb.start);
+        att = star_read_attitude(att_csv, orb.start, att_conv);
         if any(att.tsec(1) >= passes(:,1) & att.tsec(1) < passes(:,2))
             Rp = star_pass_detail(cfg, orb, att, R);
         end
