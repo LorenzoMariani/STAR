@@ -19,6 +19,7 @@ _old*/
 
 # Credentials (space-track.org login): stay on this machine only
 /END016-CollisionAvoidance/lib/loginSpaceTrack.m
+/END016-CollisionAvoidance/lib/cookie.txt
 
 # Not needed to run STAR: documentation, presentations, documents, root
 # utilities, editor settings, example results of the vendored CARA tools
