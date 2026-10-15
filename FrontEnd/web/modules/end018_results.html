@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR — Components Thermal Analysis</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;
+  --danger:#ff5c7a;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);
+  /* categorical slots 1-8 of the validated data-viz palette (dark steps) */
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --st-good:#0ca30c;--st-critical:#d03b3b;--st-warning:#fab219;
+  --ecl-tint:rgba(80,96,150,.30);--sar-tint:rgba(213,81,129,.20);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;
+  --danger:#bd2450;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  --ecl-tint:rgba(74,90,160,.20);--sar-tint:rgba(232,123,164,.22);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.hidden-file-input{display:none}
+.page{padding:0 0 28px;display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--panel) 95%,transparent);box-shadow:var(--shadow)}
+.topbar h2{margin:0;font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:14px;color:var(--text-strong)}
+.topbar .sub{color:var(--muted);font-size:11px;margin-top:2px}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ctl-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:6px 12px;border-radius:10px;font-size:12px}
+.seg button.active{border-color:var(--text-strong);background:var(--panel-muted);color:var(--text-strong);font-weight:700}
+.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.status-dot{width:10px;height:10px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.banner{border:1px solid var(--border);border-left-width:6px;border-radius:14px;padding:12px 16px;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.banner .icon{font-size:18px;line-height:1.2}
+.banner.good{border-left-color:var(--st-good)}.banner.critical{border-left-color:var(--st-critical)}.banner.warning{border-left-color:var(--st-warning)}
+.banner b{color:var(--text-strong)}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:12px;padding:8px 12px;background:var(--panel);min-width:150px}
+.chip .c-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.chip .c-value{color:var(--text-strong);font-weight:700;font-size:14px}
+.chip .c-src{color:var(--muted-2);font-size:10px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:16px;padding:12px 14px;background:var(--panel);min-width:0}
+.kpi .k-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .k-value{font-family:'Syne',Inter,system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text-strong);line-height:1.15;margin-top:4px}
+.kpi .k-unit{font-size:12px;color:var(--muted-2);font-weight:400;margin-left:4px}
+.kpi .k-note{color:var(--muted-2);font-size:11px;margin-top:4px}
+.kpi .k-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:6px}
+.kpi .k-flag.good{color:var(--st-good)}.kpi .k-flag.critical{color:var(--st-critical)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-header h3{margin:0;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.card-header .hint{color:var(--muted);font-size:11px}
+.card-body{padding:10px 12px 12px}
+.plot{width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:6px 8px 0;color:var(--text);font-size:11px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--muted)}
+.legend i.tint-ecl{background:var(--ecl-tint)}.legend i.tint-sar{background:var(--sar-tint)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+details.tables{border:1px solid var(--border);border-radius:18px;background:var(--panel);overflow:hidden}
+details.tables>summary{cursor:pointer;padding:12px 16px;font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--text-strong);background:var(--panel-strong)}
+.table-wrap{overflow:auto;max-height:420px;border-top:1px solid var(--border-soft)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border-bottom:1px solid var(--border-soft);padding:6px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td.flag{color:var(--st-critical);font-weight:700}
+.table-title{padding:10px 14px 4px;color:var(--muted-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+pre.json{margin:0;padding:12px 14px;max-height:420px;overflow:auto;font-size:11px;color:var(--text);border-top:1px solid var(--border-soft)}
+</style>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body>
+<div class="page">
+  <input id="thermalFolderInput" class="hidden-file-input" type="file" webkitdirectory directory multiple />
+  <div class="topbar">
+    <div>
+      <h2>Components Thermal Analysis</h2>
+      <div class="sub" id="source-label">END-018 · CubeSat lumped-parameter thermal model (1U-12U) · temperatures along the END-001 orbit and the END-003 imaging passes</div>
+    </div>
+    <div class="controls">
+      <span class="status-pill"><span id="status-dot" class="status-dot"></span><span id="load-status">No data loaded</span></span>
+      <button id="manual-load" class="primary-action" type="button">Select END-018 Folder</button>
+    </div>
+  </div>
+
+  <div id="banner" class="banner" hidden></div>
+  <div id="config" class="chips"></div>
+
+  <div class="topbar" id="sat-bar" hidden>
+    <div class="controls">
+      <span class="ctl-label">Satellite</span>
+      <div class="seg" id="sat-seg" role="tablist" aria-label="Satellite"></div>
+    </div>
+    <div class="controls"><span class="ctl-label" id="span-label"></span></div>
+  </div>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid">
+    <article class="card wide">
+      <div class="card-header"><h3>External surfaces over time</h3><span class="hint">Faces and solar panels [°C] · shaded = eclipse</span></div>
+      <div class="card-body"><div id="plotExternal" class="plot"></div>
+        <div class="legend"><span><i class="tint-ecl"></i>Eclipse</span></div></div>
+    </article>
+    <article class="card wide">
+      <div class="card-header"><h3>Internal nodes over time</h3><span class="hint">Central body, battery and SAR payload [°C] · shaded = SAR on · dashed = battery limit 25 °C</span></div>
+      <div class="card-body"><div id="plotInternal" class="plot"></div>
+        <div class="legend"><span><i class="tint-sar"></i>SAR on</span><span><i class="tint-ecl"></i>Eclipse</span></div></div>
+    </article>
+    <article class="card">
+      <div class="card-header"><h3>Temperature range per node</h3><span class="hint">Minimum to maximum over the analysis · dot = mean</span></div>
+      <div class="card-body"><div id="plotRange" class="plot"></div></div>
+    </article>
+    <article class="card">
+      <div class="card-header"><h3>Constellation</h3><span class="hint">thermal_constellation_output.csv · one row per satellite</span></div>
+      <div class="card-body" id="constellation"><div class="empty">No constellation file loaded.</div></div>
+    </article>
+  </div>
+
+  <details class="tables" id="tables-details">
+    <summary>Table view · node statistics and model summary</summary>
+    <div id="tables"></div>
+  </details>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const BATTERY_LIMIT_C = 25;    // battery limit of the model (module report, integration test case)
+const SLOTS = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'];
+const state = { runInfo:null, sats:{}, constellation:null, current:null, labels:{} };
+
+/* ---------- helpers ---------- */
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function esc(v){ return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function fmt(v, d = 1){ return Number.isFinite(Number(v)) ? Number(v).toFixed(d) : '—'; }
+function colors(){
+  return { text:css('--text'), strong:css('--text-strong'), muted:css('--muted'), muted2:css('--muted-2'), panelStrong:css('--panel-strong'),
+    border:css('--border'), grid:css('--border-soft'), ecl:css('--ecl-tint'), sar:css('--sar-tint'), critical:css('--st-critical'), slots:SLOTS.map(css) };
+}
+function baseLayout(c, extra){
+  return Object.assign({ paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:"'Space Mono', ui-monospace, monospace", size:11, color:c.text }, margin:{ l:60, r:18, t:10, b:44 },
+    hoverlabel:{ bgcolor:c.panelStrong, bordercolor:c.border, font:{ color:c.text, family:"'Space Mono', monospace", size:11 } },
+    legend:{ orientation:'h', x:0, y:1.14, font:{ size:11, color:c.text } } }, extra || {});
+}
+function axis(c, extra){
+  return Object.assign({ gridcolor:c.grid, zerolinecolor:c.grid, linecolor:c.border, tickcolor:c.border, tickfont:{ color:c.muted2, size:11 }, titlefont:{ color:c.muted2, size:11 } }, extra || {});
+}
+const PLOT_CFG = { responsive:true, displaylogo:false, displayModeBar:false };
+function draw(id, traces, layout){ const el = $(id); if (!el || !window.Plotly) return; el.querySelectorAll('.empty').forEach(n => n.remove()); Plotly.react(el, traces, layout, PLOT_CFG); }
+function empty(id, message){ const el = $(id); if (!el) return; if (window.Plotly) { try { Plotly.purge(el); } catch (_) {} } el.innerHTML = `<div class="empty">${esc(message)}</div>`; }
+
+/* ---------- parsing ---------- */
+function parseCsv(text){
+  const lines = String(text || '').replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim().length);
+  if (!lines.length) return { header:[], rows:[] };
+  const split = l => { const out = []; let cur = '', q = false; for (const ch of l) { if (ch === '"') q = !q; else if (ch === ',' && !q) { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out.map(s => s.trim()); };
+  const header = split(lines[0]);
+  return { header, rows: lines.slice(1).map(split) };
+}
+function nodeGroup(name){ return /ctr|central|bat|sar|payload|internal/i.test(name) ? 'internal' : 'external'; }
+function nodeLabel(name){
+  const n = name.replace(/^t_/i, '');
+  const map = { CTR:'Central body', BAT:'Battery', SAR:'SAR payload' };
+  return map[n.toUpperCase()] || n;
+}
+function buildSeries(csvText){
+  const { header, rows } = parseCsv(csvText);
+  const ti = header.findIndex(h => /time|utc|epoch/i.test(h));
+  const ei = header.findIndex(h => /^eclipse$/i.test(h));
+  const si = header.findIndex(h => /^sar_on$/i.test(h));
+  const nodes = header.map((h, i) => ({ h, i })).filter(o => /^t_/i.test(o.h));
+  if (!nodes.length) return null;
+  const t = rows.map(r => ti >= 0 ? r[ti] : null);
+  const s = { header, time:t, eclipse: ei >= 0 ? rows.map(r => Number(r[ei]) > 0 ? 1 : 0) : null, sarOn: si >= 0 ? rows.map(r => Number(r[si]) > 0 ? 1 : 0) : null, nodes:[] };
+  for (const { h, i } of nodes) {
+    const v = rows.map(r => Number(r[i]));
+    const ok = v.filter(Number.isFinite);
+    s.nodes.push({ key:h, label:nodeLabel(h), group:nodeGroup(h), values:v,
+      min: ok.length ? Math.min(...ok) : NaN, max: ok.length ? Math.max(...ok) : NaN, mean: ok.length ? ok.reduce((a, b) => a + b, 0) / ok.length : NaN });
+  }
+  return s;
+}
+function runs(flags, time){
+  const out = []; if (!flags || !time) return out;
+  let start = null;
+  for (let k = 0; k < flags.length; k++) {
+    if (flags[k] && start === null) start = k;
+    if ((!flags[k] || k === flags.length - 1) && start !== null) { out.push([time[start], time[flags[k] ? k : k - 1]]); start = null; }
+  }
+  return out;
+}
+function stride(n){ return Math.max(1, Math.ceil(n / 3000)); }
+function thin(arr, k){ if (!arr) return arr; if (k === 1) return arr; const out = []; for (let i = 0; i < arr.length; i += k) out.push(arr[i]); return out; }
+function findViolations(summary){
+  const out = [];
+  const walk = (obj, path) => {
+    if (obj === null || obj === undefined) return;
+    if (typeof obj === 'object') { for (const [k, v] of Object.entries(obj)) walk(v, path ? `${path}.${k}` : k); return; }
+    if (/viol|exceed|limit|flag/i.test(path)) out.push({ path, value: obj, active: obj === true || obj === 1 || /^(true|yes|1)$/i.test(String(obj)) });
+  };
+  if (summary && summary.violations !== undefined) walk(summary.violations, 'violations');
+  else walk(summary, '');
+  return out;
+}
+
+/* ---------- rendering ---------- */
+function renderBanner(){
+  const b = $('banner'); const info = state.runInfo;
+  const sat = state.current && state.sats[state.current];
+  const items = [];
+  let cls = 'good', icon = '✓', head = '';
+  if (info && info.status && info.status !== 'completed') {
+    cls = info.status === 'failed' ? 'critical' : 'warning'; icon = info.status === 'failed' ? '✕' : '!';
+    head = `<b>END-018 ${esc(info.status)}</b> — ${esc(info.evidence_text || '')}`;
+  } else {
+    const viol = [];
+    for (const [id, s] of Object.entries(state.sats)) {
+      for (const v of s.violations || []) if (v.active) viol.push(`${id}: ${v.path.replace(/^violations\./, '')}`);
+      const bat = s.series && s.series.nodes.find(n => /bat/i.test(n.key));
+      if (bat && bat.max > BATTERY_LIMIT_C && !(s.violations || []).length) viol.push(`${id}: battery up to ${fmt(bat.max)} °C (> ${BATTERY_LIMIT_C} °C)`);
+    }
+    if (viol.length) { cls = 'critical'; icon = '!'; head = `<b>Operational limits exceeded</b>`; items.push(...viol); }
+    else head = '<b>No limit exceeded</b>';
+    if (info && info.evidence_text) head += ` — ${esc(info.evidence_text)}`;
+  }
+  const notes = (info && info.notes) || [];
+  b.className = `banner ${cls}`; b.hidden = false;
+  b.innerHTML = `<span class="icon" aria-hidden="true">${icon}</span><div>${head}${items.length ? `<ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}${notes.length ? `<div style="margin-top:6px;color:var(--muted-2);font-size:11px">${notes.map(esc).join(' · ')}</div>` : ''}</div>`;
+}
+function renderConfig(){
+  const info = state.runInfo; const el = $('config');
+  const cfg = (info && info.config) || (state.current && state.sats[state.current] && state.sats[state.current].summary && (state.sats[state.current].summary.config || state.sats[state.current].summary.configuration)) || null;
+  if (!cfg) { el.innerHTML = ''; return; }
+  const prov = (info && info.provenance) || {};
+  const labels = { form_factor:'CubeSat class', panels:'Solar panels', n_internal_nodes:'Internal nodes', sar_power_W:'SAR power [W]', sar_source:'SAR switched on', sar_duty:'SAR duty' };
+  el.innerHTML = Object.entries(cfg).filter(([k]) => !/dir$/.test(k)).map(([k, v]) =>
+    `<div class="chip"><div class="c-label">${esc(labels[k] || k)}</div><div class="c-value">${esc(v)}</div><div class="c-src">${esc(prov[k] || '')}</div></div>`).join('');
+}
+function renderSatBar(){
+  const ids = Object.keys(state.sats).sort();
+  $('sat-bar').hidden = !ids.length;
+  $('sat-seg').innerHTML = ids.map(id => `<button type="button" class="${id === state.current ? 'active' : ''}" data-sat="${esc(id)}">${esc(id)}</button>`).join('');
+  $('sat-seg').querySelectorAll('button').forEach(btn => btn.onclick = () => { state.current = btn.dataset.sat; renderAll(); });
+  const s = state.current && state.sats[state.current] && state.sats[state.current].series;
+  $('span-label').textContent = s && s.time.length ? `${s.time[0]} → ${s.time[s.time.length - 1]} · ${s.time.length} samples` : '';
+}
+function kpi(label, value, unit, note, flag){
+  return `<div class="kpi"><div class="k-label">${esc(label)}</div><div class="k-value">${value}<span class="k-unit">${esc(unit)}</span></div>${note ? `<div class="k-note">${esc(note)}</div>` : ''}${flag ? `<div class="k-flag ${flag.cls}">${flag.icon} ${esc(flag.text)}</div>` : ''}</div>`;
+}
+function renderKpis(){
+  const sat = state.current && state.sats[state.current]; const s = sat && sat.series;
+  if (!s) { $('kpis').innerHTML = ''; return; }
+  const ext = s.nodes.filter(n => n.group === 'external'), int = s.nodes.filter(n => n.group === 'internal');
+  const extMax = ext.reduce((a, n) => n.max > a.max ? n : a, { max:-Infinity }), extMin = ext.reduce((a, n) => n.min < a.min ? n : a, { min:Infinity });
+  const by = re => s.nodes.find(n => re.test(n.key));
+  const ctr = by(/ctr|central/i), bat = by(/bat/i), sar = by(/sar/i);
+  const frac = f => f ? 100 * f.reduce((a, b) => a + b, 0) / f.length : NaN;
+  const cards = [];
+  if (Number.isFinite(extMax.max)) cards.push(kpi('Hottest surface', fmt(extMax.max), '°C', extMax.label));
+  if (Number.isFinite(extMin.min)) cards.push(kpi('Coldest surface', fmt(extMin.min), '°C', extMin.label));
+  if (ctr) cards.push(kpi('Central body max', fmt(ctr.max), '°C', `mean ${fmt(ctr.mean)} °C`));
+  if (bat) cards.push(kpi('Battery max', fmt(bat.max), '°C', `min ${fmt(bat.min)} · mean ${fmt(bat.mean)} °C`,
+    bat.max > BATTERY_LIMIT_C ? { cls:'critical', icon:'✕', text:`above the ${BATTERY_LIMIT_C} °C limit` } : { cls:'good', icon:'✓', text:`within the ${BATTERY_LIMIT_C} °C limit` }));
+  if (sar) cards.push(kpi('SAR payload max', fmt(sar.max), '°C', `mean ${fmt(sar.mean)} °C`));
+  if (s.eclipse) cards.push(kpi('Time in eclipse', fmt(frac(s.eclipse)), '%', 'of the analysis span'));
+  if (s.sarOn && s.sarOn.some(Boolean)) cards.push(kpi('SAR on', fmt(frac(s.sarOn)), '%', 'of the analysis span'));
+  if (!int.length) cards.push(kpi('Internal nodes', '—', '', 'none in this output'));
+  $('kpis').innerHTML = cards.join('');
+}
+function shapes(intervals, fill){ return intervals.map(([a, b]) => ({ type:'rect', xref:'x', yref:'paper', x0:a, x1:b, y0:0, y1:1, fillcolor:fill, line:{ width:0 }, layer:'below' })); }
+function renderSeries(id, group, c, s){
+  const nodes = s.nodes.filter(n => n.group === group);
+  if (!nodes.length) { empty(id, group === 'internal' ? 'No internal node in this output.' : 'No external surface in this output.'); return; }
+  const k = stride(s.time.length); const x = thin(s.time, k);
+  const traces = nodes.map((n, i) => ({ x, y: thin(n.values, k), type:'scattergl', mode:'lines', name:n.label, line:{ width:1.6, color:c.slots[(group === 'internal' ? i + 4 : i) % c.slots.length] },
+    hovertemplate:`${esc(n.label)}: %{y:.1f} °C<extra></extra>` }));
+  let sh = shapes(runs(s.eclipse, s.time), c.ecl);
+  if (group === 'internal') {
+    sh = sh.concat(shapes(runs(s.sarOn, s.time), c.sar));
+    if (nodes.some(n => /bat/i.test(n.key))) sh.push({ type:'line', xref:'paper', x0:0, x1:1, y0:BATTERY_LIMIT_C, y1:BATTERY_LIMIT_C, line:{ color:c.critical, width:1.4, dash:'dash' } });
+  }
+  draw(id, traces, baseLayout(c, { height:330, shapes:sh, xaxis:axis(c, { title:'UTC' }), yaxis:axis(c, { title:'Temperature [°C]' }) }));
+}
+function renderRange(c, s){
+  const nodes = s.nodes.slice().sort((a, b) => a.max - b.max);
+  const y = nodes.map(n => n.label);
+  const bars = { type:'bar', orientation:'h', y, x: nodes.map(n => n.max - n.min), base: nodes.map(n => n.min), name:'min → max',
+    marker:{ color: nodes.map(n => n.group === 'internal' ? c.slots[4] : c.slots[0]) }, hovertemplate:'%{y}: %{base:.1f} → %{customdata:.1f} °C<extra></extra>', customdata: nodes.map(n => n.max) };
+  const mean = { type:'scatter', mode:'markers', y, x: nodes.map(n => n.mean), name:'mean', marker:{ color:c.strong, size:7 }, hovertemplate:'%{y} mean %{x:.1f} °C<extra></extra>' };
+  draw('plotRange', [bars, mean], baseLayout(c, { height: Math.max(260, 34 * nodes.length + 80), margin:{ l:120, r:18, t:10, b:44 },
+    xaxis:axis(c, { title:'Temperature [°C]' }), yaxis:axis(c, { automargin:true }), showlegend:false }));
+}
+function renderConstellation(){
+  const el = $('constellation'); const t = state.constellation;
+  if (!t || !t.header.length) { el.innerHTML = '<div class="empty">No constellation file loaded.</div>'; return; }
+  const flagCols = t.header.map((h, i) => /flag|limit|viol|exceed/i.test(h) ? i : -1).filter(i => i >= 0);
+  el.innerHTML = `<div class="table-wrap"><table><thead><tr>${t.header.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${
+    t.rows.map(r => `<tr>${r.map((v, i) => `<td class="${flagCols.includes(i) && /^(1|true|yes)$/i.test(v) ? 'flag' : ''}">${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function renderTables(){
+  const sat = state.current && state.sats[state.current];
+  let html = '';
+  if (sat && sat.series) {
+    html += `<div class="table-title">Node statistics · ${esc(state.current)} (from the time series)</div><div class="table-wrap"><table><thead><tr><th>Node</th><th>Column</th><th>Group</th><th>Min °C</th><th>Mean °C</th><th>Max °C</th></tr></thead><tbody>${
+      sat.series.nodes.map(n => `<tr><td>${esc(n.label)}</td><td>${esc(n.key)}</td><td>${esc(n.group)}</td><td>${fmt(n.min)}</td><td>${fmt(n.mean)}</td><td>${fmt(n.max)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  if (sat && sat.summary) html += `<div class="table-title">thermal_summary_${esc(state.current)}.json</div><pre class="json">${esc(JSON.stringify(sat.summary, null, 1))}</pre>`;
+  if (state.runInfo) html += `<div class="table-title">thermal_run_info.json</div><pre class="json">${esc(JSON.stringify(state.runInfo, null, 1))}</pre>`;
+  $('tables').innerHTML = html || '<div class="empty">Nothing loaded.</div>';
+}
+function renderAll(){
+  const c = colors();
+  renderBanner(); renderConfig(); renderSatBar(); renderKpis(); renderConstellation(); renderTables();
+  const sat = state.current && state.sats[state.current];
+  if (sat && sat.series) { renderSeries('plotExternal', 'external', c, sat.series); renderSeries('plotInternal', 'internal', c, sat.series); renderRange(c, sat.series); }
+  else {
+    const why = state.runInfo && state.runInfo.status && state.runInfo.status !== 'completed' ? `END-018 ${state.runInfo.status}: no temperatures to show.` : 'No temperature time series (output_thermal_SAT-XX.csv) loaded.';
+    empty('plotExternal', why); empty('plotInternal', why); empty('plotRange', why);
+  }
+}
+
+/* ---------- data loading ---------- */
+function setLoaded(ok, label){ $('status-dot').classList.toggle('loaded', ok); $('load-status').textContent = label; }
+function applyData(data, labels){
+  state.runInfo = data.runInfo || null; state.sats = data.sats || {}; state.constellation = data.constellation || null; state.labels = labels || {};
+  const ids = Object.keys(state.sats).sort();
+  state.current = ids.includes(state.current) ? state.current : (ids[0] || null);
+  if (!ids.length && !state.runInfo) { setLoaded(false, 'No END-018 files in the selected folder'); renderAll(); return false; }
+  const status = state.runInfo && state.runInfo.status ? `${state.runInfo.status} · ` : '';
+  setLoaded(ids.length > 0, `${status}${ids.length} satellite(s)`);
+  if (labels && (labels.product || labels.all)) $('source-label').textContent = `${labels.product || labels.all} · END-018 Components Thermal Analysis`;
+  renderAll();
+  return true;
+}
+async function loadFiles(files, labels){
+  const arr = Array.from(files || []);
+  const data = { sats:{}, runInfo:null, constellation:null };
+  for (const f of arr) {
+    const name = f.name;
+    try {
+      let m;
+      if (/^thermal_run_info\.json$/i.test(name)) data.runInfo = JSON.parse(await f.text());
+      else if (/^thermal_constellation_output\.csv$/i.test(name)) data.constellation = parseCsv(await f.text());
+      else if ((m = name.match(/^output_thermal_(.+)\.csv$/i))) (data.sats[m[1]] = data.sats[m[1]] || {}).series = buildSeries(await f.text());
+      else if ((m = name.match(/^thermal_summary_(.+)\.json$/i))) { const s = (data.sats[m[1]] = data.sats[m[1]] || {}); s.summary = JSON.parse(await f.text()); s.violations = findViolations(s.summary); }
+    } catch (e) { console.warn(`END-018: could not read ${name}`, e); }
+  }
+  return applyData(data, labels);
+}
+async function collect(handle, prefix = ''){
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === 'file') { const f = await entry.getFile(); f.relativeDisplayPath = `${prefix}${name}`; files.push(f); }
+    else if (entry.kind === 'directory') files.push(...await collect(entry, `${prefix}${name}/`));
+  }
+  return files;
+}
+async function requestFolder(){
+  if (window.parent && window.parent !== window && typeof window.parent.STAR_PICK_DIRECTORY === 'function') {
+    const picked = await window.parent.STAR_PICK_DIRECTORY('thermal', 'all');
+    if (picked && picked.files) { await loadFiles(picked.files, { all:picked.label }); return; }
+  }
+  if ('showDirectoryPicker' in window) {
+    try { const h = await window.showDirectoryPicker({ mode:'read', id:'star-thermal' }); await loadFiles(await collect(h, `${h.name}/`), { all:h.name }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; console.warn(e); }
+  }
+  $('thermalFolderInput').click();
+}
+
+window.receiveThermalFilesFromParent = async function(payload = {}, labels = {}){
+  await loadFiles([...(payload.productFiles || []), ...(payload.resultFiles || [])], labels);
+};
+window.loadThermalFiles = loadFiles;          // direct feed (tests / scripting)
+window.refreshThermalDashboard = function(){ renderAll(); };
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('manual-load').onclick = requestFolder;
+  $('thermalFolderInput').addEventListener('change', async e => { await loadFiles(e.target.files, { all:'Selected END-018 folder' }); e.target.value = ''; });
+  new MutationObserver(() => renderAll()).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  let t = null;
+  window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(renderAll, 120); });
+  empty('plotExternal', 'Select a RUN folder to load the END-018 thermal analysis.');
+  empty('plotInternal', 'Select a RUN folder to load the END-018 thermal analysis.');
+  empty('plotRange', 'Select a RUN folder to load the END-018 thermal analysis.');
+});
+})();
+</script>
+</body>
+</html>

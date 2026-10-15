@@ -106,7 +106,7 @@ CANONICAL_MODULE_CATALOG = [
     {"module_id": "END-015", "module_name": "Flexible Components Health Monitorying", "owner": "UNIRM1"},
     {"module_id": "END-016", "module_name": "Collision Avoidance", "owner": "UNIRM1"},
     {"module_id": "END-017", "module_name": "Clock Anomalies Detection", "owner": "INRIM"},
-    {"module_id": "END-018", "module_name": "ABEP", "owner": "SITAEL"},
+    {"module_id": "END-018", "module_name": "Components Thermal Analysis", "owner": "TBD"},   # was "ABEP" (SITAEL) until 2026-10-15
     {"module_id": "END-019", "module_name": "Satellite Design Component Selector", "owner": "UNIRM1"},
 ]
 
@@ -402,6 +402,7 @@ class StarApi:
                 "END-004": ("runners.end004_runner", "run_end004"),
                 "END-007": ("runners.end007_runner", "run_end007"),
                 "END-010": ("runners.end010_runner", "run_end010"),
+                "END-018": ("runners.end018_runner", "run_end018"),
                 "END-019": ("runners.end019_runner", "run_end019"),
             }
             if module_id in default_runner_by_id:
@@ -897,6 +898,16 @@ class StarApi:
         normalized = unicodedata.normalize("NFKD", text)
         normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
         return normalized.lower().strip()
+
+    def end018_thermal_requested(self, normalized_text: str) -> bool:
+        """END-018 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose thermal
+        behaviour is asked for. Outside it (larger satellites) the module would only
+        report that the mission is out of scope, so it is not planned."""
+        cubesat = "cubesat" in normalized_text or re.search(r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)", normalized_text) is not None
+        thermal = any(token in normalized_text for token in [
+            "thermal", "temperature", "overheat", "heat dissipation", "heat load", "termic", "temperatur",
+        ])
+        return cubesat and thermal
 
     def rule_based_requirement_extraction(self, text: str) -> list[dict[str, Any]]:
         normalized_text = self.normalize_text(text)
@@ -3797,6 +3808,48 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
                             "reviewed_by_user": False,
                         })
 
+        # END-018 Components Thermal Analysis (CubeSats only): add it when the
+        # request asks for the thermal behaviour of a CubeSat, and give it its
+        # upstream END-001 (orbits) and END-003 (imaging passes, attitude).
+        if self.end018_thermal_requested(combined_text) and not workflow_has("END-018"):
+            module = self.get_module_by_id("END-018")
+            if module:
+                append_requested_output(
+                    "Compute the temperatures of the CubeSat faces, solar panels and internal nodes along the orbit and the imaging passes, and flag the limits that are exceeded.",
+                    "engineering_feasibility", "medium",
+                    "The approved requirements describe a CubeSat and mention its thermal behaviour, temperatures or thermal limits.",
+                    ["thermal", "temperature", "overheat", "heat", "battery", "cubesat"],
+                )
+                workflow.append({
+                    "step": len(workflow) + 1,
+                    "module": module.get("module_name", "Components Thermal Analysis"),
+                    "module_id": "END-018",
+                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
+                    "output_artifacts": self.build_workflow_output_summary(module),
+                    "rationale": "Added by planning consistency check because the approved requirements ask for the thermal behaviour of a CubeSat.",
+                    "status": "proposed",
+                    "reviewed_by_user": False,
+                })
+                self.add_log("AI", "Planning consistency check added END-018 Components Thermal Analysis for the CubeSat thermal assessment.")
+        if workflow_has("END-018"):
+            for upstream_id, reason in (("END-001", "END-018 analyses the orbits of the END-001 satellites."),
+                                        ("END-003", "END-018 switches the SAR on during the END-003 imaging passes and refines them with the propagated attitude.")):
+                if workflow_has(upstream_id):
+                    continue
+                upstream = self.get_module_by_id(upstream_id)
+                if upstream:
+                    workflow.append({
+                        "step": len(workflow) + 1,
+                        "module": upstream.get("module_name", upstream_id),
+                        "module_id": upstream_id,
+                        "input_data_artifacts": self.build_workflow_input_summary(upstream, []),
+                        "output_artifacts": self.build_workflow_output_summary(upstream),
+                        "rationale": f"Added because {reason}",
+                        "status": "proposed",
+                        "reviewed_by_user": False,
+                    })
+                    self.add_log("AI", f"Planning consistency check added {upstream_id} upstream of END-018.")
+
         workflow = self.sort_and_renumber_workflow(workflow)
         for index, output in enumerate(requested_outputs, start=1):
             output["id"] = f"OUT-{index:03d}"
@@ -3903,6 +3956,21 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
 
             if "END-010" not in module_ids:
                 module_ids.append("END-010")
+
+        # END-018 Components Thermal Analysis: CubeSats (1U-12U) only, needs the
+        # END-001 orbits and the END-003 imaging passes / attitude upstream.
+        if self.end018_thermal_requested(combined_text):
+            add_output(
+                "Compute the temperatures of the CubeSat faces, solar panels and internal nodes (central body, battery, SAR payload) along the orbit and the imaging passes, and flag the limits that are exceeded.",
+                "engineering_feasibility",
+                "medium",
+                "The approved requirements describe a CubeSat and mention its thermal behaviour, temperatures or thermal limits.",
+                ["thermal", "temperature", "overheat", "heat", "battery", "cubesat"],
+            )
+            for upstream_id in ("END-001", "END-003"):
+                if upstream_id not in module_ids:
+                    module_ids.append(upstream_id)
+            module_ids.append("END-018")
 
         if any(word in combined_text for word in [
             "cubesat", "satellite design", "component selection", "select the components", "bill of materials", "form factor",
@@ -4887,6 +4955,7 @@ Return only valid JSON:
             "END-004": ("output_power_budget", "results_power_budget"),
             "END-007": ("output_synthetic_data_generation", "results_synthetic_data_generation"),
             "END-010": ("output_reflectance_determination", "results_reflectance_determination"),
+            "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
             "END-019": ("output_component_selector", "results_component_selector"),
         }
         clean_id = str(module_id or "UNKNOWN").upper()
@@ -5435,6 +5504,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_POWERVIZ__": "end004_power_insights.html",
         "__SRCDOC_PLACEHOLDER_FRAME_SYNTHETIC__": "end007_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__": "end010_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_THERMAL__": "end018_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__": "end019_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__": "end001_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__": "end003_results.html",

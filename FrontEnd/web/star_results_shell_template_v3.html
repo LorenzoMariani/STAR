@@ -243,6 +243,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Insights</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
+        <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END019</span><span class="tab-title">Component Selector</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
@@ -259,6 +260,7 @@ code{color:var(--accent-2)}
       <iframe id="frame-reflectance" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__" title="Reflectance Determination"></iframe>
       <iframe id="frame-constellation" class="tab-frame active" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__" title="Constellation Optimizer"></iframe>
       <iframe id="frame-attitude" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__" title="Attitude Propagator"></iframe>
+      <iframe id="frame-thermal" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_THERMAL__" title="Components Thermal Analysis"></iframe>
       <iframe id="frame-compsel" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__" title="Component Selector"></iframe>
       <iframe id="frame-diagnostics" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_DIAGNOSTICS__" title="Run Diagnostics"></iframe>
     </div>
@@ -312,6 +314,11 @@ const STAR_KIND_PATHS = {
   synthetic: {
     png: ['modules_output', 'END-007', 'results_synthetic_data_generation']
   },
+  thermal: {
+    all: ['modules_output', 'END-018'],
+    product: ['modules_output', 'END-018', 'output_components_thermal_analysis'],
+    results: ['modules_output', 'END-018', 'results_components_thermal_analysis']
+  },
   compsel: {
     all: ['modules_output', 'END-019'],
     product: ['modules_output', 'END-019', 'output_component_selector'],
@@ -336,7 +343,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -779,6 +786,25 @@ async function loadReflectanceFromStarRoot() {
 }
 
 
+async function loadThermalAnalysisFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-thermal');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveThermalFilesFromParent !== 'function') return false;
+  try {
+    const productPath = ['modules_output','END-018','output_components_thermal_analysis'];
+    const resultsPath = ['modules_output','END-018','results_components_thermal_analysis'];
+    const payload = {
+      productFiles: await collectFilesFromSelectedPath(productPath),
+      resultFiles: await collectFilesFromSelectedPath(resultsPath)
+    };
+    await frame.contentWindow.receiveThermalFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load END-018 thermal-analysis data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function loadComponentSelectorFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-compsel');
@@ -838,6 +864,7 @@ function moduleDisplayName(moduleId) {
     'END-006': 'Scenario Generation',
     'END-007': 'Synthetic Data Generation',
     'END-010': 'Reflectance Determination',
+    'END-018': 'Components Thermal Analysis',
     'END-019': 'Satellite Design Component Selector'
   };
   return names[moduleId] || moduleId;
@@ -863,6 +890,8 @@ async function buildRunDiagnostics() {
     { module:'END-010', artifact:'Reflectance flux CSV', path:['modules_output','END-010','output_reflectance_determination'], matcher:name=>/^flux\.csv$/i.test(name) },
     { module:'END-010', artifact:'Reflectance frames', path:['modules_output','END-010','results_reflectance_determination','Frames'], matcher:name=>/\.(png|jpg|jpeg|webp)$/i.test(name) },
     { module:'END-010', artifact:'Reflectance plots', path:['modules_output','END-010','results_reflectance_determination'], matcher:name=>/\.(png|jpg|jpeg|html)$/i.test(name) },
+    { module:'END-018', artifact:'Thermal time series and summaries', path:['modules_output','END-018','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
+    { module:'END-018', artifact:'Thermal run information', path:['modules_output','END-018','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
     { module:'END-019', artifact:'Component-selector results', path:['modules_output','END-019','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
     { module:'END-019', artifact:'Component-selector frontend data and report', path:['modules_output','END-019','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
   ];
@@ -905,7 +934,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-019']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-018','END-019']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {
@@ -972,6 +1001,7 @@ function switchTab(tabName) {
     powerviz: $('frame-powerviz'),
     synthetic: $('frame-synthetic'),
     reflectance: $('frame-reflectance'),
+    thermal: $('frame-thermal'),
     compsel: $('frame-compsel'),
     diagnostics: $('frame-diagnostics')
   };
@@ -1003,6 +1033,9 @@ function switchTab(tabName) {
         if (tabName === 'reflectance' && hasRunFolderSelection()) {
           await loadReflectanceFromStarRoot();
         }
+        if (tabName === 'thermal' && hasRunFolderSelection()) {
+          await loadThermalAnalysisFromStarRoot();
+        }
         if (tabName === 'compsel' && hasRunFolderSelection()) {
           await loadComponentSelectorFromStarRoot();
         }
@@ -1010,6 +1043,7 @@ function switchTab(tabName) {
           await updateRunDiagnostics();
         }
         activeFrame.contentWindow.dispatchEvent(new Event('resize'));
+        if (typeof activeFrame.contentWindow.refreshThermalDashboard === 'function') activeFrame.contentWindow.refreshThermalDashboard();
         if (typeof activeFrame.contentWindow.refreshComponentSelectorDashboard === 'function') activeFrame.contentWindow.refreshComponentSelectorDashboard();
         if (typeof activeFrame.contentWindow.refreshConstellationDashboard === 'function') activeFrame.contentWindow.refreshConstellationDashboard();
         if (typeof activeFrame.contentWindow.refreshAttitudeDashboard === 'function') activeFrame.contentWindow.refreshAttitudeDashboard();
@@ -1039,6 +1073,7 @@ function bindEvents() {
       await loadPowerInsightsFromStarRoot();
       await loadSyntheticImagesFromStarRoot();
       await loadReflectanceFromStarRoot();
+      await loadThermalAnalysisFromStarRoot();
       await loadComponentSelectorFromStarRoot();
       await updateRunDiagnostics();
       deliverAttitudeDataToFrame();
@@ -1052,8 +1087,11 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
+      if (frame.id === 'frame-thermal' && hasRunFolderSelection()) {
+        loadThermalAnalysisFromStarRoot();
+      }
       if (frame.id === 'frame-compsel' && hasRunFolderSelection()) {
         loadComponentSelectorFromStarRoot();
       }

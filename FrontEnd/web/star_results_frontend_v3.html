@@ -243,6 +243,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Insights</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
+        <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END019</span><span class="tab-title">Component Selector</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
@@ -3979,6 +3980,417 @@ window.addEventListener(&#x27;load&#x27;, () =&gt; {
 &lt;div id=&quot;image-modal&quot; class=&quot;image-modal hidden&quot; aria-hidden=&quot;true&quot;&gt;&lt;button id=&quot;image-modal-close&quot; class=&quot;image-modal-close&quot; type=&quot;button&quot; aria-label=&quot;Close image preview&quot;&gt;×&lt;/button&gt;&lt;img id=&quot;image-modal-img&quot; alt=&quot;MATLAB figure preview&quot;&gt;&lt;div id=&quot;image-modal-caption&quot; class=&quot;image-modal-caption&quot;&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;" title="Attitude Propagator"></iframe>
+      <iframe id="frame-thermal" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+&lt;title&gt;STAR — Components Thermal Analysis&lt;/title&gt;
+&lt;style&gt;
+@import url(&#x27;https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap&#x27;);
+:root{
+  --bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;
+  --danger:#ff5c7a;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);
+  /* categorical slots 1-8 of the validated data-viz palette (dark steps) */
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --st-good:#0ca30c;--st-critical:#d03b3b;--st-warning:#fab219;
+  --ecl-tint:rgba(80,96,150,.30);--sar-tint:rgba(213,81,129,.20);
+  color-scheme:dark;
+}
+:root[data-theme=&quot;light&quot;]{
+  --bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;
+  --danger:#bd2450;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  --ecl-tint:rgba(74,90,160,.20);--sar-tint:rgba(232,123,164,.22);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:&#x27;Space Mono&#x27;,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.hidden-file-input{display:none}
+.page{padding:0 0 28px;display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--panel) 95%,transparent);box-shadow:var(--shadow)}
+.topbar h2{margin:0;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:14px;color:var(--text-strong)}
+.topbar .sub{color:var(--muted);font-size:11px;margin-top:2px}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ctl-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:6px 12px;border-radius:10px;font-size:12px}
+.seg button.active{border-color:var(--text-strong);background:var(--panel-muted);color:var(--text-strong);font-weight:700}
+.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.status-dot{width:10px;height:10px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.banner{border:1px solid var(--border);border-left-width:6px;border-radius:14px;padding:12px 16px;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.banner .icon{font-size:18px;line-height:1.2}
+.banner.good{border-left-color:var(--st-good)}.banner.critical{border-left-color:var(--st-critical)}.banner.warning{border-left-color:var(--st-warning)}
+.banner b{color:var(--text-strong)}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:12px;padding:8px 12px;background:var(--panel);min-width:150px}
+.chip .c-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.chip .c-value{color:var(--text-strong);font-weight:700;font-size:14px}
+.chip .c-src{color:var(--muted-2);font-size:10px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:16px;padding:12px 14px;background:var(--panel);min-width:0}
+.kpi .k-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .k-value{font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text-strong);line-height:1.15;margin-top:4px}
+.kpi .k-unit{font-size:12px;color:var(--muted-2);font-weight:400;margin-left:4px}
+.kpi .k-note{color:var(--muted-2);font-size:11px;margin-top:4px}
+.kpi .k-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:6px}
+.kpi .k-flag.good{color:var(--st-good)}.kpi .k-flag.critical{color:var(--st-critical)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-header h3{margin:0;color:var(--text-strong);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.card-header .hint{color:var(--muted);font-size:11px}
+.card-body{padding:10px 12px 12px}
+.plot{width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:6px 8px 0;color:var(--text);font-size:11px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--muted)}
+.legend i.tint-ecl{background:var(--ecl-tint)}.legend i.tint-sar{background:var(--sar-tint)}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+details.tables{border:1px solid var(--border);border-radius:18px;background:var(--panel);overflow:hidden}
+details.tables&gt;summary{cursor:pointer;padding:12px 16px;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--text-strong);background:var(--panel-strong)}
+.table-wrap{overflow:auto;max-height:420px;border-top:1px solid var(--border-soft)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border-bottom:1px solid var(--border-soft);padding:6px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td.flag{color:var(--st-critical);font-weight:700}
+.table-title{padding:10px 14px 4px;color:var(--muted-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+pre.json{margin:0;padding:12px 14px;max-height:420px;overflow:auto;font-size:11px;color:var(--text);border-top:1px solid var(--border-soft)}
+&lt;/style&gt;
+&lt;script src=&quot;https://cdn.plot.ly/plotly-2.24.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;page&quot;&gt;
+  &lt;input id=&quot;thermalFolderInput&quot; class=&quot;hidden-file-input&quot; type=&quot;file&quot; webkitdirectory directory multiple /&gt;
+  &lt;div class=&quot;topbar&quot;&gt;
+    &lt;div&gt;
+      &lt;h2&gt;Components Thermal Analysis&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot; id=&quot;source-label&quot;&gt;END-018 · CubeSat lumped-parameter thermal model (1U-12U) · temperatures along the END-001 orbit and the END-003 imaging passes&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;controls&quot;&gt;
+      &lt;span class=&quot;status-pill&quot;&gt;&lt;span id=&quot;status-dot&quot; class=&quot;status-dot&quot;&gt;&lt;/span&gt;&lt;span id=&quot;load-status&quot;&gt;No data loaded&lt;/span&gt;&lt;/span&gt;
+      &lt;button id=&quot;manual-load&quot; class=&quot;primary-action&quot; type=&quot;button&quot;&gt;Select END-018 Folder&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div id=&quot;banner&quot; class=&quot;banner&quot; hidden&gt;&lt;/div&gt;
+  &lt;div id=&quot;config&quot; class=&quot;chips&quot;&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;topbar&quot; id=&quot;sat-bar&quot; hidden&gt;
+    &lt;div class=&quot;controls&quot;&gt;
+      &lt;span class=&quot;ctl-label&quot;&gt;Satellite&lt;/span&gt;
+      &lt;div class=&quot;seg&quot; id=&quot;sat-seg&quot; role=&quot;tablist&quot; aria-label=&quot;Satellite&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;controls&quot;&gt;&lt;span class=&quot;ctl-label&quot; id=&quot;span-label&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div id=&quot;kpis&quot; class=&quot;kpis&quot;&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;grid&quot;&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;External surfaces over time&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Faces and solar panels [°C] · shaded = eclipse&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotExternal&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;legend&quot;&gt;&lt;span&gt;&lt;i class=&quot;tint-ecl&quot;&gt;&lt;/i&gt;Eclipse&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Internal nodes over time&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Central body, battery and SAR payload [°C] · shaded = SAR on · dashed = battery limit 25 °C&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotInternal&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;legend&quot;&gt;&lt;span&gt;&lt;i class=&quot;tint-sar&quot;&gt;&lt;/i&gt;SAR on&lt;/span&gt;&lt;span&gt;&lt;i class=&quot;tint-ecl&quot;&gt;&lt;/i&gt;Eclipse&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Temperature range per node&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Minimum to maximum over the analysis · dot = mean&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotRange&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Constellation&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;thermal_constellation_output.csv · one row per satellite&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot; id=&quot;constellation&quot;&gt;&lt;div class=&quot;empty&quot;&gt;No constellation file loaded.&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+  &lt;/div&gt;
+
+  &lt;details class=&quot;tables&quot; id=&quot;tables-details&quot;&gt;
+    &lt;summary&gt;Table view · node statistics and model summary&lt;/summary&gt;
+    &lt;div id=&quot;tables&quot;&gt;&lt;/div&gt;
+  &lt;/details&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(() =&gt; {
+&#x27;use strict&#x27;;
+const $ = id =&gt; document.getElementById(id);
+const BATTERY_LIMIT_C = 25;    // battery limit of the model (module report, integration test case)
+const SLOTS = [&#x27;--s1&#x27;,&#x27;--s2&#x27;,&#x27;--s3&#x27;,&#x27;--s4&#x27;,&#x27;--s5&#x27;,&#x27;--s6&#x27;,&#x27;--s7&#x27;,&#x27;--s8&#x27;];
+const state = { runInfo:null, sats:{}, constellation:null, current:null, labels:{} };
+
+/* ---------- helpers ---------- */
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function esc(v){ return String(v ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;); }
+function fmt(v, d = 1){ return Number.isFinite(Number(v)) ? Number(v).toFixed(d) : &#x27;—&#x27;; }
+function colors(){
+  return { text:css(&#x27;--text&#x27;), strong:css(&#x27;--text-strong&#x27;), muted:css(&#x27;--muted&#x27;), muted2:css(&#x27;--muted-2&#x27;), panelStrong:css(&#x27;--panel-strong&#x27;),
+    border:css(&#x27;--border&#x27;), grid:css(&#x27;--border-soft&#x27;), ecl:css(&#x27;--ecl-tint&#x27;), sar:css(&#x27;--sar-tint&#x27;), critical:css(&#x27;--st-critical&#x27;), slots:SLOTS.map(css) };
+}
+function baseLayout(c, extra){
+  return Object.assign({ paper_bgcolor:&#x27;rgba(0,0,0,0)&#x27;, plot_bgcolor:&#x27;rgba(0,0,0,0)&#x27;,
+    font:{ family:&quot;&#x27;Space Mono&#x27;, ui-monospace, monospace&quot;, size:11, color:c.text }, margin:{ l:60, r:18, t:10, b:44 },
+    hoverlabel:{ bgcolor:c.panelStrong, bordercolor:c.border, font:{ color:c.text, family:&quot;&#x27;Space Mono&#x27;, monospace&quot;, size:11 } },
+    legend:{ orientation:&#x27;h&#x27;, x:0, y:1.14, font:{ size:11, color:c.text } } }, extra || {});
+}
+function axis(c, extra){
+  return Object.assign({ gridcolor:c.grid, zerolinecolor:c.grid, linecolor:c.border, tickcolor:c.border, tickfont:{ color:c.muted2, size:11 }, titlefont:{ color:c.muted2, size:11 } }, extra || {});
+}
+const PLOT_CFG = { responsive:true, displaylogo:false, displayModeBar:false };
+function draw(id, traces, layout){ const el = $(id); if (!el || !window.Plotly) return; el.querySelectorAll(&#x27;.empty&#x27;).forEach(n =&gt; n.remove()); Plotly.react(el, traces, layout, PLOT_CFG); }
+function empty(id, message){ const el = $(id); if (!el) return; if (window.Plotly) { try { Plotly.purge(el); } catch (_) {} } el.innerHTML = `&lt;div class=&quot;empty&quot;&gt;${esc(message)}&lt;/div&gt;`; }
+
+/* ---------- parsing ---------- */
+function parseCsv(text){
+  const lines = String(text || &#x27;&#x27;).replace(/^﻿/, &#x27;&#x27;).split(/\r?\n/).filter(l =&gt; l.trim().length);
+  if (!lines.length) return { header:[], rows:[] };
+  const split = l =&gt; { const out = []; let cur = &#x27;&#x27;, q = false; for (const ch of l) { if (ch === &#x27;&quot;&#x27;) q = !q; else if (ch === &#x27;,&#x27; &amp;&amp; !q) { out.push(cur); cur = &#x27;&#x27;; } else cur += ch; } out.push(cur); return out.map(s =&gt; s.trim()); };
+  const header = split(lines[0]);
+  return { header, rows: lines.slice(1).map(split) };
+}
+function nodeGroup(name){ return /ctr|central|bat|sar|payload|internal/i.test(name) ? &#x27;internal&#x27; : &#x27;external&#x27;; }
+function nodeLabel(name){
+  const n = name.replace(/^t_/i, &#x27;&#x27;);
+  const map = { CTR:&#x27;Central body&#x27;, BAT:&#x27;Battery&#x27;, SAR:&#x27;SAR payload&#x27; };
+  return map[n.toUpperCase()] || n;
+}
+function buildSeries(csvText){
+  const { header, rows } = parseCsv(csvText);
+  const ti = header.findIndex(h =&gt; /time|utc|epoch/i.test(h));
+  const ei = header.findIndex(h =&gt; /^eclipse$/i.test(h));
+  const si = header.findIndex(h =&gt; /^sar_on$/i.test(h));
+  const nodes = header.map((h, i) =&gt; ({ h, i })).filter(o =&gt; /^t_/i.test(o.h));
+  if (!nodes.length) return null;
+  const t = rows.map(r =&gt; ti &gt;= 0 ? r[ti] : null);
+  const s = { header, time:t, eclipse: ei &gt;= 0 ? rows.map(r =&gt; Number(r[ei]) &gt; 0 ? 1 : 0) : null, sarOn: si &gt;= 0 ? rows.map(r =&gt; Number(r[si]) &gt; 0 ? 1 : 0) : null, nodes:[] };
+  for (const { h, i } of nodes) {
+    const v = rows.map(r =&gt; Number(r[i]));
+    const ok = v.filter(Number.isFinite);
+    s.nodes.push({ key:h, label:nodeLabel(h), group:nodeGroup(h), values:v,
+      min: ok.length ? Math.min(...ok) : NaN, max: ok.length ? Math.max(...ok) : NaN, mean: ok.length ? ok.reduce((a, b) =&gt; a + b, 0) / ok.length : NaN });
+  }
+  return s;
+}
+function runs(flags, time){
+  const out = []; if (!flags || !time) return out;
+  let start = null;
+  for (let k = 0; k &lt; flags.length; k++) {
+    if (flags[k] &amp;&amp; start === null) start = k;
+    if ((!flags[k] || k === flags.length - 1) &amp;&amp; start !== null) { out.push([time[start], time[flags[k] ? k : k - 1]]); start = null; }
+  }
+  return out;
+}
+function stride(n){ return Math.max(1, Math.ceil(n / 3000)); }
+function thin(arr, k){ if (!arr) return arr; if (k === 1) return arr; const out = []; for (let i = 0; i &lt; arr.length; i += k) out.push(arr[i]); return out; }
+function findViolations(summary){
+  const out = [];
+  const walk = (obj, path) =&gt; {
+    if (obj === null || obj === undefined) return;
+    if (typeof obj === &#x27;object&#x27;) { for (const [k, v] of Object.entries(obj)) walk(v, path ? `${path}.${k}` : k); return; }
+    if (/viol|exceed|limit|flag/i.test(path)) out.push({ path, value: obj, active: obj === true || obj === 1 || /^(true|yes|1)$/i.test(String(obj)) });
+  };
+  if (summary &amp;&amp; summary.violations !== undefined) walk(summary.violations, &#x27;violations&#x27;);
+  else walk(summary, &#x27;&#x27;);
+  return out;
+}
+
+/* ---------- rendering ---------- */
+function renderBanner(){
+  const b = $(&#x27;banner&#x27;); const info = state.runInfo;
+  const sat = state.current &amp;&amp; state.sats[state.current];
+  const items = [];
+  let cls = &#x27;good&#x27;, icon = &#x27;✓&#x27;, head = &#x27;&#x27;;
+  if (info &amp;&amp; info.status &amp;&amp; info.status !== &#x27;completed&#x27;) {
+    cls = info.status === &#x27;failed&#x27; ? &#x27;critical&#x27; : &#x27;warning&#x27;; icon = info.status === &#x27;failed&#x27; ? &#x27;✕&#x27; : &#x27;!&#x27;;
+    head = `&lt;b&gt;END-018 ${esc(info.status)}&lt;/b&gt; — ${esc(info.evidence_text || &#x27;&#x27;)}`;
+  } else {
+    const viol = [];
+    for (const [id, s] of Object.entries(state.sats)) {
+      for (const v of s.violations || []) if (v.active) viol.push(`${id}: ${v.path.replace(/^violations\./, &#x27;&#x27;)}`);
+      const bat = s.series &amp;&amp; s.series.nodes.find(n =&gt; /bat/i.test(n.key));
+      if (bat &amp;&amp; bat.max &gt; BATTERY_LIMIT_C &amp;&amp; !(s.violations || []).length) viol.push(`${id}: battery up to ${fmt(bat.max)} °C (&gt; ${BATTERY_LIMIT_C} °C)`);
+    }
+    if (viol.length) { cls = &#x27;critical&#x27;; icon = &#x27;!&#x27;; head = `&lt;b&gt;Operational limits exceeded&lt;/b&gt;`; items.push(...viol); }
+    else head = &#x27;&lt;b&gt;No limit exceeded&lt;/b&gt;&#x27;;
+    if (info &amp;&amp; info.evidence_text) head += ` — ${esc(info.evidence_text)}`;
+  }
+  const notes = (info &amp;&amp; info.notes) || [];
+  b.className = `banner ${cls}`; b.hidden = false;
+  b.innerHTML = `&lt;span class=&quot;icon&quot; aria-hidden=&quot;true&quot;&gt;${icon}&lt;/span&gt;&lt;div&gt;${head}${items.length ? `&lt;ul&gt;${items.map(i =&gt; `&lt;li&gt;${esc(i)}&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;` : &#x27;&#x27;}${notes.length ? `&lt;div style=&quot;margin-top:6px;color:var(--muted-2);font-size:11px&quot;&gt;${notes.map(esc).join(&#x27; · &#x27;)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+}
+function renderConfig(){
+  const info = state.runInfo; const el = $(&#x27;config&#x27;);
+  const cfg = (info &amp;&amp; info.config) || (state.current &amp;&amp; state.sats[state.current] &amp;&amp; state.sats[state.current].summary &amp;&amp; (state.sats[state.current].summary.config || state.sats[state.current].summary.configuration)) || null;
+  if (!cfg) { el.innerHTML = &#x27;&#x27;; return; }
+  const prov = (info &amp;&amp; info.provenance) || {};
+  const labels = { form_factor:&#x27;CubeSat class&#x27;, panels:&#x27;Solar panels&#x27;, n_internal_nodes:&#x27;Internal nodes&#x27;, sar_power_W:&#x27;SAR power [W]&#x27;, sar_source:&#x27;SAR switched on&#x27;, sar_duty:&#x27;SAR duty&#x27; };
+  el.innerHTML = Object.entries(cfg).filter(([k]) =&gt; !/dir$/.test(k)).map(([k, v]) =&gt;
+    `&lt;div class=&quot;chip&quot;&gt;&lt;div class=&quot;c-label&quot;&gt;${esc(labels[k] || k)}&lt;/div&gt;&lt;div class=&quot;c-value&quot;&gt;${esc(v)}&lt;/div&gt;&lt;div class=&quot;c-src&quot;&gt;${esc(prov[k] || &#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
+}
+function renderSatBar(){
+  const ids = Object.keys(state.sats).sort();
+  $(&#x27;sat-bar&#x27;).hidden = !ids.length;
+  $(&#x27;sat-seg&#x27;).innerHTML = ids.map(id =&gt; `&lt;button type=&quot;button&quot; class=&quot;${id === state.current ? &#x27;active&#x27; : &#x27;&#x27;}&quot; data-sat=&quot;${esc(id)}&quot;&gt;${esc(id)}&lt;/button&gt;`).join(&#x27;&#x27;);
+  $(&#x27;sat-seg&#x27;).querySelectorAll(&#x27;button&#x27;).forEach(btn =&gt; btn.onclick = () =&gt; { state.current = btn.dataset.sat; renderAll(); });
+  const s = state.current &amp;&amp; state.sats[state.current] &amp;&amp; state.sats[state.current].series;
+  $(&#x27;span-label&#x27;).textContent = s &amp;&amp; s.time.length ? `${s.time[0]} → ${s.time[s.time.length - 1]} · ${s.time.length} samples` : &#x27;&#x27;;
+}
+function kpi(label, value, unit, note, flag){
+  return `&lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;k-label&quot;&gt;${esc(label)}&lt;/div&gt;&lt;div class=&quot;k-value&quot;&gt;${value}&lt;span class=&quot;k-unit&quot;&gt;${esc(unit)}&lt;/span&gt;&lt;/div&gt;${note ? `&lt;div class=&quot;k-note&quot;&gt;${esc(note)}&lt;/div&gt;` : &#x27;&#x27;}${flag ? `&lt;div class=&quot;k-flag ${flag.cls}&quot;&gt;${flag.icon} ${esc(flag.text)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+}
+function renderKpis(){
+  const sat = state.current &amp;&amp; state.sats[state.current]; const s = sat &amp;&amp; sat.series;
+  if (!s) { $(&#x27;kpis&#x27;).innerHTML = &#x27;&#x27;; return; }
+  const ext = s.nodes.filter(n =&gt; n.group === &#x27;external&#x27;), int = s.nodes.filter(n =&gt; n.group === &#x27;internal&#x27;);
+  const extMax = ext.reduce((a, n) =&gt; n.max &gt; a.max ? n : a, { max:-Infinity }), extMin = ext.reduce((a, n) =&gt; n.min &lt; a.min ? n : a, { min:Infinity });
+  const by = re =&gt; s.nodes.find(n =&gt; re.test(n.key));
+  const ctr = by(/ctr|central/i), bat = by(/bat/i), sar = by(/sar/i);
+  const frac = f =&gt; f ? 100 * f.reduce((a, b) =&gt; a + b, 0) / f.length : NaN;
+  const cards = [];
+  if (Number.isFinite(extMax.max)) cards.push(kpi(&#x27;Hottest surface&#x27;, fmt(extMax.max), &#x27;°C&#x27;, extMax.label));
+  if (Number.isFinite(extMin.min)) cards.push(kpi(&#x27;Coldest surface&#x27;, fmt(extMin.min), &#x27;°C&#x27;, extMin.label));
+  if (ctr) cards.push(kpi(&#x27;Central body max&#x27;, fmt(ctr.max), &#x27;°C&#x27;, `mean ${fmt(ctr.mean)} °C`));
+  if (bat) cards.push(kpi(&#x27;Battery max&#x27;, fmt(bat.max), &#x27;°C&#x27;, `min ${fmt(bat.min)} · mean ${fmt(bat.mean)} °C`,
+    bat.max &gt; BATTERY_LIMIT_C ? { cls:&#x27;critical&#x27;, icon:&#x27;✕&#x27;, text:`above the ${BATTERY_LIMIT_C} °C limit` } : { cls:&#x27;good&#x27;, icon:&#x27;✓&#x27;, text:`within the ${BATTERY_LIMIT_C} °C limit` }));
+  if (sar) cards.push(kpi(&#x27;SAR payload max&#x27;, fmt(sar.max), &#x27;°C&#x27;, `mean ${fmt(sar.mean)} °C`));
+  if (s.eclipse) cards.push(kpi(&#x27;Time in eclipse&#x27;, fmt(frac(s.eclipse)), &#x27;%&#x27;, &#x27;of the analysis span&#x27;));
+  if (s.sarOn &amp;&amp; s.sarOn.some(Boolean)) cards.push(kpi(&#x27;SAR on&#x27;, fmt(frac(s.sarOn)), &#x27;%&#x27;, &#x27;of the analysis span&#x27;));
+  if (!int.length) cards.push(kpi(&#x27;Internal nodes&#x27;, &#x27;—&#x27;, &#x27;&#x27;, &#x27;none in this output&#x27;));
+  $(&#x27;kpis&#x27;).innerHTML = cards.join(&#x27;&#x27;);
+}
+function shapes(intervals, fill){ return intervals.map(([a, b]) =&gt; ({ type:&#x27;rect&#x27;, xref:&#x27;x&#x27;, yref:&#x27;paper&#x27;, x0:a, x1:b, y0:0, y1:1, fillcolor:fill, line:{ width:0 }, layer:&#x27;below&#x27; })); }
+function renderSeries(id, group, c, s){
+  const nodes = s.nodes.filter(n =&gt; n.group === group);
+  if (!nodes.length) { empty(id, group === &#x27;internal&#x27; ? &#x27;No internal node in this output.&#x27; : &#x27;No external surface in this output.&#x27;); return; }
+  const k = stride(s.time.length); const x = thin(s.time, k);
+  const traces = nodes.map((n, i) =&gt; ({ x, y: thin(n.values, k), type:&#x27;scattergl&#x27;, mode:&#x27;lines&#x27;, name:n.label, line:{ width:1.6, color:c.slots[(group === &#x27;internal&#x27; ? i + 4 : i) % c.slots.length] },
+    hovertemplate:`${esc(n.label)}: %{y:.1f} °C&lt;extra&gt;&lt;/extra&gt;` }));
+  let sh = shapes(runs(s.eclipse, s.time), c.ecl);
+  if (group === &#x27;internal&#x27;) {
+    sh = sh.concat(shapes(runs(s.sarOn, s.time), c.sar));
+    if (nodes.some(n =&gt; /bat/i.test(n.key))) sh.push({ type:&#x27;line&#x27;, xref:&#x27;paper&#x27;, x0:0, x1:1, y0:BATTERY_LIMIT_C, y1:BATTERY_LIMIT_C, line:{ color:c.critical, width:1.4, dash:&#x27;dash&#x27; } });
+  }
+  draw(id, traces, baseLayout(c, { height:330, shapes:sh, xaxis:axis(c, { title:&#x27;UTC&#x27; }), yaxis:axis(c, { title:&#x27;Temperature [°C]&#x27; }) }));
+}
+function renderRange(c, s){
+  const nodes = s.nodes.slice().sort((a, b) =&gt; a.max - b.max);
+  const y = nodes.map(n =&gt; n.label);
+  const bars = { type:&#x27;bar&#x27;, orientation:&#x27;h&#x27;, y, x: nodes.map(n =&gt; n.max - n.min), base: nodes.map(n =&gt; n.min), name:&#x27;min → max&#x27;,
+    marker:{ color: nodes.map(n =&gt; n.group === &#x27;internal&#x27; ? c.slots[4] : c.slots[0]) }, hovertemplate:&#x27;%{y}: %{base:.1f} → %{customdata:.1f} °C&lt;extra&gt;&lt;/extra&gt;&#x27;, customdata: nodes.map(n =&gt; n.max) };
+  const mean = { type:&#x27;scatter&#x27;, mode:&#x27;markers&#x27;, y, x: nodes.map(n =&gt; n.mean), name:&#x27;mean&#x27;, marker:{ color:c.strong, size:7 }, hovertemplate:&#x27;%{y} mean %{x:.1f} °C&lt;extra&gt;&lt;/extra&gt;&#x27; };
+  draw(&#x27;plotRange&#x27;, [bars, mean], baseLayout(c, { height: Math.max(260, 34 * nodes.length + 80), margin:{ l:120, r:18, t:10, b:44 },
+    xaxis:axis(c, { title:&#x27;Temperature [°C]&#x27; }), yaxis:axis(c, { automargin:true }), showlegend:false }));
+}
+function renderConstellation(){
+  const el = $(&#x27;constellation&#x27;); const t = state.constellation;
+  if (!t || !t.header.length) { el.innerHTML = &#x27;&lt;div class=&quot;empty&quot;&gt;No constellation file loaded.&lt;/div&gt;&#x27;; return; }
+  const flagCols = t.header.map((h, i) =&gt; /flag|limit|viol|exceed/i.test(h) ? i : -1).filter(i =&gt; i &gt;= 0);
+  el.innerHTML = `&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;${t.header.map(h =&gt; `&lt;th&gt;${esc(h)}&lt;/th&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;${
+    t.rows.map(r =&gt; `&lt;tr&gt;${r.map((v, i) =&gt; `&lt;td class=&quot;${flagCols.includes(i) &amp;&amp; /^(1|true|yes)$/i.test(v) ? &#x27;flag&#x27; : &#x27;&#x27;}&quot;&gt;${esc(v)}&lt;/td&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;`).join(&#x27;&#x27;)}&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;`;
+}
+function renderTables(){
+  const sat = state.current &amp;&amp; state.sats[state.current];
+  let html = &#x27;&#x27;;
+  if (sat &amp;&amp; sat.series) {
+    html += `&lt;div class=&quot;table-title&quot;&gt;Node statistics · ${esc(state.current)} (from the time series)&lt;/div&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Node&lt;/th&gt;&lt;th&gt;Column&lt;/th&gt;&lt;th&gt;Group&lt;/th&gt;&lt;th&gt;Min °C&lt;/th&gt;&lt;th&gt;Mean °C&lt;/th&gt;&lt;th&gt;Max °C&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;${
+      sat.series.nodes.map(n =&gt; `&lt;tr&gt;&lt;td&gt;${esc(n.label)}&lt;/td&gt;&lt;td&gt;${esc(n.key)}&lt;/td&gt;&lt;td&gt;${esc(n.group)}&lt;/td&gt;&lt;td&gt;${fmt(n.min)}&lt;/td&gt;&lt;td&gt;${fmt(n.mean)}&lt;/td&gt;&lt;td&gt;${fmt(n.max)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)}&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;`;
+  }
+  if (sat &amp;&amp; sat.summary) html += `&lt;div class=&quot;table-title&quot;&gt;thermal_summary_${esc(state.current)}.json&lt;/div&gt;&lt;pre class=&quot;json&quot;&gt;${esc(JSON.stringify(sat.summary, null, 1))}&lt;/pre&gt;`;
+  if (state.runInfo) html += `&lt;div class=&quot;table-title&quot;&gt;thermal_run_info.json&lt;/div&gt;&lt;pre class=&quot;json&quot;&gt;${esc(JSON.stringify(state.runInfo, null, 1))}&lt;/pre&gt;`;
+  $(&#x27;tables&#x27;).innerHTML = html || &#x27;&lt;div class=&quot;empty&quot;&gt;Nothing loaded.&lt;/div&gt;&#x27;;
+}
+function renderAll(){
+  const c = colors();
+  renderBanner(); renderConfig(); renderSatBar(); renderKpis(); renderConstellation(); renderTables();
+  const sat = state.current &amp;&amp; state.sats[state.current];
+  if (sat &amp;&amp; sat.series) { renderSeries(&#x27;plotExternal&#x27;, &#x27;external&#x27;, c, sat.series); renderSeries(&#x27;plotInternal&#x27;, &#x27;internal&#x27;, c, sat.series); renderRange(c, sat.series); }
+  else {
+    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; state.runInfo.status !== &#x27;completed&#x27; ? `END-018 ${state.runInfo.status}: no temperatures to show.` : &#x27;No temperature time series (output_thermal_SAT-XX.csv) loaded.&#x27;;
+    empty(&#x27;plotExternal&#x27;, why); empty(&#x27;plotInternal&#x27;, why); empty(&#x27;plotRange&#x27;, why);
+  }
+}
+
+/* ---------- data loading ---------- */
+function setLoaded(ok, label){ $(&#x27;status-dot&#x27;).classList.toggle(&#x27;loaded&#x27;, ok); $(&#x27;load-status&#x27;).textContent = label; }
+function applyData(data, labels){
+  state.runInfo = data.runInfo || null; state.sats = data.sats || {}; state.constellation = data.constellation || null; state.labels = labels || {};
+  const ids = Object.keys(state.sats).sort();
+  state.current = ids.includes(state.current) ? state.current : (ids[0] || null);
+  if (!ids.length &amp;&amp; !state.runInfo) { setLoaded(false, &#x27;No END-018 files in the selected folder&#x27;); renderAll(); return false; }
+  const status = state.runInfo &amp;&amp; state.runInfo.status ? `${state.runInfo.status} · ` : &#x27;&#x27;;
+  setLoaded(ids.length &gt; 0, `${status}${ids.length} satellite(s)`);
+  if (labels &amp;&amp; (labels.product || labels.all)) $(&#x27;source-label&#x27;).textContent = `${labels.product || labels.all} · END-018 Components Thermal Analysis`;
+  renderAll();
+  return true;
+}
+async function loadFiles(files, labels){
+  const arr = Array.from(files || []);
+  const data = { sats:{}, runInfo:null, constellation:null };
+  for (const f of arr) {
+    const name = f.name;
+    try {
+      let m;
+      if (/^thermal_run_info\.json$/i.test(name)) data.runInfo = JSON.parse(await f.text());
+      else if (/^thermal_constellation_output\.csv$/i.test(name)) data.constellation = parseCsv(await f.text());
+      else if ((m = name.match(/^output_thermal_(.+)\.csv$/i))) (data.sats[m[1]] = data.sats[m[1]] || {}).series = buildSeries(await f.text());
+      else if ((m = name.match(/^thermal_summary_(.+)\.json$/i))) { const s = (data.sats[m[1]] = data.sats[m[1]] || {}); s.summary = JSON.parse(await f.text()); s.violations = findViolations(s.summary); }
+    } catch (e) { console.warn(`END-018: could not read ${name}`, e); }
+  }
+  return applyData(data, labels);
+}
+async function collect(handle, prefix = &#x27;&#x27;){
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === &#x27;file&#x27;) { const f = await entry.getFile(); f.relativeDisplayPath = `${prefix}${name}`; files.push(f); }
+    else if (entry.kind === &#x27;directory&#x27;) files.push(...await collect(entry, `${prefix}${name}/`));
+  }
+  return files;
+}
+async function requestFolder(){
+  if (window.parent &amp;&amp; window.parent !== window &amp;&amp; typeof window.parent.STAR_PICK_DIRECTORY === &#x27;function&#x27;) {
+    const picked = await window.parent.STAR_PICK_DIRECTORY(&#x27;thermal&#x27;, &#x27;all&#x27;);
+    if (picked &amp;&amp; picked.files) { await loadFiles(picked.files, { all:picked.label }); return; }
+  }
+  if (&#x27;showDirectoryPicker&#x27; in window) {
+    try { const h = await window.showDirectoryPicker({ mode:&#x27;read&#x27;, id:&#x27;star-thermal&#x27; }); await loadFiles(await collect(h, `${h.name}/`), { all:h.name }); return; }
+    catch (e) { if (e &amp;&amp; e.name === &#x27;AbortError&#x27;) return; console.warn(e); }
+  }
+  $(&#x27;thermalFolderInput&#x27;).click();
+}
+
+window.receiveThermalFilesFromParent = async function(payload = {}, labels = {}){
+  await loadFiles([...(payload.productFiles || []), ...(payload.resultFiles || [])], labels);
+};
+window.loadThermalFiles = loadFiles;          // direct feed (tests / scripting)
+window.refreshThermalDashboard = function(){ renderAll(); };
+
+document.addEventListener(&#x27;DOMContentLoaded&#x27;, () =&gt; {
+  $(&#x27;manual-load&#x27;).onclick = requestFolder;
+  $(&#x27;thermalFolderInput&#x27;).addEventListener(&#x27;change&#x27;, async e =&gt; { await loadFiles(e.target.files, { all:&#x27;Selected END-018 folder&#x27; }); e.target.value = &#x27;&#x27;; });
+  new MutationObserver(() =&gt; renderAll()).observe(document.documentElement, { attributes:true, attributeFilter:[&#x27;data-theme&#x27;] });
+  let t = null;
+  window.addEventListener(&#x27;resize&#x27;, () =&gt; { clearTimeout(t); t = setTimeout(renderAll, 120); });
+  empty(&#x27;plotExternal&#x27;, &#x27;Select a RUN folder to load the END-018 thermal analysis.&#x27;);
+  empty(&#x27;plotInternal&#x27;, &#x27;Select a RUN folder to load the END-018 thermal analysis.&#x27;);
+  empty(&#x27;plotRange&#x27;, &#x27;Select a RUN folder to load the END-018 thermal analysis.&#x27;);
+});
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" title="Components Thermal Analysis"></iframe>
       <iframe id="frame-compsel" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -4503,6 +4915,11 @@ const STAR_KIND_PATHS = {
   synthetic: {
     png: ['modules_output', 'END-007', 'results_synthetic_data_generation']
   },
+  thermal: {
+    all: ['modules_output', 'END-018'],
+    product: ['modules_output', 'END-018', 'output_components_thermal_analysis'],
+    results: ['modules_output', 'END-018', 'results_components_thermal_analysis']
+  },
   compsel: {
     all: ['modules_output', 'END-019'],
     product: ['modules_output', 'END-019', 'output_component_selector'],
@@ -4527,7 +4944,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -4970,6 +5387,25 @@ async function loadReflectanceFromStarRoot() {
 }
 
 
+async function loadThermalAnalysisFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-thermal');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveThermalFilesFromParent !== 'function') return false;
+  try {
+    const productPath = ['modules_output','END-018','output_components_thermal_analysis'];
+    const resultsPath = ['modules_output','END-018','results_components_thermal_analysis'];
+    const payload = {
+      productFiles: await collectFilesFromSelectedPath(productPath),
+      resultFiles: await collectFilesFromSelectedPath(resultsPath)
+    };
+    await frame.contentWindow.receiveThermalFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load END-018 thermal-analysis data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function loadComponentSelectorFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-compsel');
@@ -5029,6 +5465,7 @@ function moduleDisplayName(moduleId) {
     'END-006': 'Scenario Generation',
     'END-007': 'Synthetic Data Generation',
     'END-010': 'Reflectance Determination',
+    'END-018': 'Components Thermal Analysis',
     'END-019': 'Satellite Design Component Selector'
   };
   return names[moduleId] || moduleId;
@@ -5054,6 +5491,8 @@ async function buildRunDiagnostics() {
     { module:'END-010', artifact:'Reflectance flux CSV', path:['modules_output','END-010','output_reflectance_determination'], matcher:name=>/^flux\.csv$/i.test(name) },
     { module:'END-010', artifact:'Reflectance frames', path:['modules_output','END-010','results_reflectance_determination','Frames'], matcher:name=>/\.(png|jpg|jpeg|webp)$/i.test(name) },
     { module:'END-010', artifact:'Reflectance plots', path:['modules_output','END-010','results_reflectance_determination'], matcher:name=>/\.(png|jpg|jpeg|html)$/i.test(name) },
+    { module:'END-018', artifact:'Thermal time series and summaries', path:['modules_output','END-018','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
+    { module:'END-018', artifact:'Thermal run information', path:['modules_output','END-018','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
     { module:'END-019', artifact:'Component-selector results', path:['modules_output','END-019','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
     { module:'END-019', artifact:'Component-selector frontend data and report', path:['modules_output','END-019','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
   ];
@@ -5096,7 +5535,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-019']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-018','END-019']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {
@@ -5163,6 +5602,7 @@ function switchTab(tabName) {
     powerviz: $('frame-powerviz'),
     synthetic: $('frame-synthetic'),
     reflectance: $('frame-reflectance'),
+    thermal: $('frame-thermal'),
     compsel: $('frame-compsel'),
     diagnostics: $('frame-diagnostics')
   };
@@ -5194,6 +5634,9 @@ function switchTab(tabName) {
         if (tabName === 'reflectance' && hasRunFolderSelection()) {
           await loadReflectanceFromStarRoot();
         }
+        if (tabName === 'thermal' && hasRunFolderSelection()) {
+          await loadThermalAnalysisFromStarRoot();
+        }
         if (tabName === 'compsel' && hasRunFolderSelection()) {
           await loadComponentSelectorFromStarRoot();
         }
@@ -5201,6 +5644,7 @@ function switchTab(tabName) {
           await updateRunDiagnostics();
         }
         activeFrame.contentWindow.dispatchEvent(new Event('resize'));
+        if (typeof activeFrame.contentWindow.refreshThermalDashboard === 'function') activeFrame.contentWindow.refreshThermalDashboard();
         if (typeof activeFrame.contentWindow.refreshComponentSelectorDashboard === 'function') activeFrame.contentWindow.refreshComponentSelectorDashboard();
         if (typeof activeFrame.contentWindow.refreshConstellationDashboard === 'function') activeFrame.contentWindow.refreshConstellationDashboard();
         if (typeof activeFrame.contentWindow.refreshAttitudeDashboard === 'function') activeFrame.contentWindow.refreshAttitudeDashboard();
@@ -5230,6 +5674,7 @@ function bindEvents() {
       await loadPowerInsightsFromStarRoot();
       await loadSyntheticImagesFromStarRoot();
       await loadReflectanceFromStarRoot();
+      await loadThermalAnalysisFromStarRoot();
       await loadComponentSelectorFromStarRoot();
       await updateRunDiagnostics();
       deliverAttitudeDataToFrame();
@@ -5243,8 +5688,11 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
+      if (frame.id === 'frame-thermal' && hasRunFolderSelection()) {
+        loadThermalAnalysisFromStarRoot();
+      }
       if (frame.id === 'frame-compsel' && hasRunFolderSelection()) {
         loadComponentSelectorFromStarRoot();
       }

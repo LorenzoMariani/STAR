@@ -5,8 +5,8 @@ a Python / pywebview orchestrator (`FrontEnd/`, `BackEnd/`) that plans a mission
 from its requirements and runs the simulation modules `END0XX-*` (MATLAB,
 Python, Unity / Unreal). This repository holds only what running STAR needs.
 
-- `FrontEnd/` - `star_frontend_v3.py` (entry point, with END-019) or
-  `star_frontend_v2.py` (without END-019), and the `web/` assets; each version
+- `FrontEnd/` - `star_frontend_v3.py` (entry point, with END-018 and END-019) or
+  `star_frontend_v2.py` (without them), and the `web/` assets; each version
   writes its own `web/star_*_v2.html` / `_v3.html` pages.
 - `BackEnd/` - `ai/` (LLM providers), `modules/`, `runners/` (one runner per
   module; they find STAR's root from their own location).
@@ -14,7 +14,10 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
   base, sample mission requests) and the modules' native input templates.
 - `END001-ConstellationOptimizer/` - git submodule
   (github.com/LorenzoMariani/matlabConstellationOptimizer), see its `USAGE.md`.
-- `END003`, `END004`, `END010`, `END016`, `END018` - the other modules.
+- `END018-ComponentsThermalAnalysis/` - CubeSat thermal model (black box
+  `blackbox_build/star_thermal.exe`, needs the MATLAB Runtime R2026a; runner
+  `BackEnd/runners/end018_runner.py`, results tab in frontend v3).
+- `END003`, `END004`, `END010`, `END016` - the other modules.
 - `END019-ComponentSelector/star_component_selector/` - CubeSat component
   selector (Python standard library only; runner `BackEnd/runners/end019_runner.py`,
   results tab in frontend v3). Its vendor datasheets (PDF) are not in the
