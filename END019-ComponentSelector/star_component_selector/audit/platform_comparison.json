@@ -1,0 +1,255 @@
+{
+ "note": "Confronto di plausibilita', non una validazione: i valori delle piattaforme sono massimi dichiarati dal fornitore.",
+ "platforms": {
+  "tyvak-triumph": {
+   "name": "Triumph (6U)",
+   "class_u": 6,
+   "cds_mass_limit_kg": 12.0,
+   "platform_launch_mass_max_kg": 14.0,
+   "platform_exceeds_cds_limit": true,
+   "platform_bus_mass_kg": 9.0,
+   "platform_payload_max_kg": 5.0,
+   "platform_array_power_w": 100.0,
+   "selector": {
+    "within_limits": true,
+    "total_mass_kg": 4.2415,
+    "bus_subsystems_mass_kg_one_each": 2.0515,
+    "bus_subsystems_mass_kg_platform_quantities": 2.4285,
+    "quantities_used": {
+     "structure": 1,
+     "obc": 1,
+     "eps": 1,
+     "battery": 2,
+     "solar_panel": 1,
+     "comms": 1,
+     "antenna": 1,
+     "adcs": 1,
+     "magnetorquer": 1,
+     "reaction_wheel": 3,
+     "star_tracker": 2,
+     "gps": 1
+    },
+    "payload_imager": {
+     "name": "HyperScape50 (xScape50, 32 bande VNIR)",
+     "mass_kg": 0.51
+    },
+    "declared_peak_power_w": 32.2,
+    "power_unknown": [
+     "pumpkin-linear-eps-11wh"
+    ],
+    "subsystems_covered": 15
+   },
+   "ratios": {
+    "one_each_over_platform_bus": 0.22794444444444442,
+    "platform_quantities_over_platform_bus": 0.26983333333333337,
+    "selector_total_over_platform_launch_max": 0.30296428571428574
+   },
+   "module_mapping": [
+    {
+     "module": "Flight computer",
+     "subsystem": "obc",
+     "quantity": 1
+    },
+    {
+     "module": "Backplane",
+     "subsystem": null,
+     "quantity": 1
+    },
+    {
+     "module": "Moduli batteria 12 V (2)",
+     "subsystem": "battery",
+     "quantity": 2
+    },
+    {
+     "module": "MPPT 12 V",
+     "subsystem": "eps",
+     "quantity": 1
+    },
+    {
+     "module": "Load controller 12 V",
+     "subsystem": "eps",
+     "quantity": 1
+    },
+    {
+     "module": "Sensori solari grossolani (2)",
+     "subsystem": null,
+     "quantity": 2
+    },
+    {
+     "module": "Star tracker (2)",
+     "subsystem": "star_tracker",
+     "quantity": 2
+    },
+    {
+     "module": "GPS",
+     "subsystem": "gps",
+     "quantity": 1
+    },
+    {
+     "module": "Magnetorquer (3)",
+     "subsystem": "magnetorquer",
+     "quantity": 3
+    },
+    {
+     "module": "Ruote di reazione (3)",
+     "subsystem": "reaction_wheel",
+     "quantity": 3
+    },
+    {
+     "module": "Radio LDRR",
+     "subsystem": "comms",
+     "quantity": 1
+    },
+    {
+     "module": "Radio MDR",
+     "subsystem": "comms",
+     "quantity": 1
+    },
+    {
+     "module": "IMU",
+     "subsystem": null,
+     "quantity": 1
+    }
+   ],
+   "platform_modules_without_a_catalogue_category": [
+    "Backplane",
+    "Sensori solari grossolani (2)",
+    "IMU"
+   ],
+   "selector_subsystems_not_listed_on_platform": [
+    "structure",
+    "solar_panel",
+    "antenna",
+    "adcs",
+    "propulsion",
+    "payload_imager",
+    "payload_optical"
+   ]
+  },
+  "tyvak-renegade": {
+   "name": "Renegade (12U)",
+   "class_u": 12,
+   "cds_mass_limit_kg": 24.0,
+   "platform_launch_mass_max_kg": 25.0,
+   "platform_exceeds_cds_limit": true,
+   "platform_bus_mass_kg": 15.0,
+   "platform_payload_max_kg": 10.0,
+   "platform_array_power_w": 100.0,
+   "selector": {
+    "within_limits": true,
+    "total_mass_kg": 4.9624999999999995,
+    "bus_subsystems_mass_kg_one_each": 2.7725,
+    "bus_subsystems_mass_kg_platform_quantities": 3.4375000000000004,
+    "quantities_used": {
+     "structure": 1,
+     "obc": 1,
+     "eps": 1,
+     "battery": 3,
+     "solar_panel": 1,
+     "comms": 1,
+     "antenna": 1,
+     "adcs": 1,
+     "magnetorquer": 1,
+     "reaction_wheel": 3,
+     "star_tracker": 2,
+     "gps": 1
+    },
+    "payload_imager": {
+     "name": "HyperScape50 (xScape50, 32 bande VNIR)",
+     "mass_kg": 0.51
+    },
+    "declared_peak_power_w": 32.2,
+    "power_unknown": [
+     "pumpkin-linear-eps-11wh"
+    ],
+    "subsystems_covered": 15
+   },
+   "ratios": {
+    "one_each_over_platform_bus": 0.18483333333333332,
+    "platform_quantities_over_platform_bus": 0.22916666666666669,
+    "selector_total_over_platform_launch_max": 0.19849999999999998
+   },
+   "module_mapping": [
+    {
+     "module": "Flight computer",
+     "subsystem": "obc",
+     "quantity": 1
+    },
+    {
+     "module": "Backplane",
+     "subsystem": null,
+     "quantity": 1
+    },
+    {
+     "module": "Moduli batteria 12 V (3)",
+     "subsystem": "battery",
+     "quantity": 3
+    },
+    {
+     "module": "MPPT 12 V (2)",
+     "subsystem": "eps",
+     "quantity": 2
+    },
+    {
+     "module": "Load controller 12 V (1)",
+     "subsystem": "eps",
+     "quantity": 1
+    },
+    {
+     "module": "Sensori solari grossolani (2)",
+     "subsystem": null,
+     "quantity": 2
+    },
+    {
+     "module": "Star tracker (2)",
+     "subsystem": "star_tracker",
+     "quantity": 2
+    },
+    {
+     "module": "GPS",
+     "subsystem": "gps",
+     "quantity": 1
+    },
+    {
+     "module": "Magnetorquer (3)",
+     "subsystem": "magnetorquer",
+     "quantity": 3
+    },
+    {
+     "module": "Ruote di reazione (3)",
+     "subsystem": "reaction_wheel",
+     "quantity": 3
+    },
+    {
+     "module": "Radio LDRR",
+     "subsystem": "comms",
+     "quantity": 1
+    },
+    {
+     "module": "Radio MDR",
+     "subsystem": "comms",
+     "quantity": 1
+    },
+    {
+     "module": "IMU (1)",
+     "subsystem": null,
+     "quantity": 1
+    }
+   ],
+   "platform_modules_without_a_catalogue_category": [
+    "Backplane",
+    "Sensori solari grossolani (2)",
+    "IMU (1)"
+   ],
+   "selector_subsystems_not_listed_on_platform": [
+    "structure",
+    "solar_panel",
+    "antenna",
+    "adcs",
+    "propulsion",
+    "payload_imager",
+    "payload_optical"
+   ]
+  }
+ }
+}

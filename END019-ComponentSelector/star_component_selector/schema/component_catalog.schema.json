@@ -1,0 +1,1840 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "STAR satellite component catalog",
+  "type": "object",
+  "properties": {
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificativo univoco"
+          },
+          "category": {
+            "enum": [
+              "structure",
+              "obc",
+              "eps",
+              "battery",
+              "solar_panel",
+              "comms",
+              "antenna",
+              "adcs",
+              "magnetorquer",
+              "reaction_wheel",
+              "star_tracker",
+              "gps",
+              "propulsion",
+              "payload"
+            ]
+          },
+          "vendor": {
+            "type": "string",
+            "description": "Produttore"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome commerciale"
+          },
+          "family": {
+            "type": "string",
+            "description": "Famiglia di prodotto, usata per le compatibilita' dichiarate"
+          },
+          "mass_kg": {
+            "type": "number",
+            "description": "Massa del singolo pezzo; null se il fornitore non la dichiara (il componente non e' selezionabile senza --mass-override)"
+          },
+          "power_w": {
+            "type": "number",
+            "description": "Potenza media assorbita (consumatori); per comms vedi specs"
+          },
+          "volume_u": {
+            "type": "number",
+            "description": "Volume occupato in U (0 se montato sul corpo)"
+          },
+          "price": {
+            "type": "object",
+            "description": "Prezzo di listino pubblicato: {amount, currency, as_of}; null se non pubblicato o 'su richiesta'"
+          },
+          "status": {
+            "type": "string",
+            "description": "Disponibilita' dichiarata dal fornitore: 'nla' = non piu' disponibile; null = non indicato"
+          },
+          "trl": {
+            "type": "integer",
+            "description": "Technology Readiness Level 1-9"
+          },
+          "flight_heritage": {
+            "type": "integer",
+            "description": "Numero di missioni in orbita (solo se dichiarato)"
+          },
+          "tid_krad": {
+            "type": "number",
+            "description": "Tolleranza alla dose totale, krad(Si)"
+          },
+          "temp_op_c": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "Temperatura operativa [min, max] in gradi C"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Valori non modellati, discrepanze tra fonti, campi derivati"
+          },
+          "dimensions": {
+            "type": "object",
+            "description": "Ingombro esterno {mm: [a, b, c], basis, note}: mm nell'ordine della fonte (per le schede: ingombro in pianta poi altezza), un valore null se non dichiarato; basis = declared (numeri del fornitore), standard (formato normato, es. PC/104, con altezza dichiarata o passo del modulo) o derived (da taglia nominale, es. 1U); assente se non pubblicato"
+          },
+          "image": {
+            "type": "object",
+            "description": "Immagine del prodotto: {file, image_url, page_url, type, retrieved, note}; assente se non trovata"
+          },
+          "datasheet": {
+            "type": "object",
+            "description": "Copia locale del documento della fonte (datasheet o brochure PDF): {file, document, source_url, retrieved, bytes}; assente se la fonte non e' un PDF scaricabile"
+          },
+          "source": {
+            "type": "object",
+            "description": "Provenienza dei dati: url, document, retrieved, verified"
+          },
+          "specs": {
+            "type": "object",
+            "description": "Specifiche dipendenti dalla categoria"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "vendor",
+          "name",
+          "source",
+          "specs"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "structure"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "form_factor_u": {
+                      "type": "number",
+                      "description": "Taglia in U (1, 3, 6...)"
+                    },
+                    "max_total_mass_kg": {
+                      "type": "number",
+                      "description": "Massa massima del satellite (CubeSat Design Spec. o dispenser)"
+                    },
+                    "internal_volume_u": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Volume interno utilizzabile (U)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "panel_faces": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "description": "Facce per pannelli body-mounted, es. {'3U': 4}"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "form_factor_u",
+                    "max_total_mass_kg",
+                    "internal_volume_u",
+                    "panel_faces"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "obc"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce dati, es. ['I2C','SPI','CAN']"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "eps"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "compatible_form_factors_u": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "Taglie di struttura supportate"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pv_channels": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "description": "Ingressi per pannelli solari"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pv_voltage_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "description": "Tensione ammessa in ingresso dal PV [min, max]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pv_power_w_max": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza PV massima totale in ingresso"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "battery_voltage_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "description": "Tensione batteria esterna ammessa [min, max]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "battery_families": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Famiglie di batterie dichiarate compatibili (campo 'family')"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "integrated_battery_wh": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Energia della batteria integrata (null = nessuna)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "integrated_battery_voltage_v": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Tensione della batteria integrata"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "output_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Uscite regolate [[min,max],...]; [v,v] per tensione fissa"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "output_power_w_max": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza massima in uscita"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce di telemetria/comando"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "efficiency": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Rendimento di conversione 0-1"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "compatible_form_factors_u",
+                    "pv_channels",
+                    "pv_voltage_v",
+                    "pv_power_w_max",
+                    "battery_voltage_v",
+                    "battery_families",
+                    "integrated_battery_wh",
+                    "integrated_battery_voltage_v",
+                    "output_voltage_ranges_v",
+                    "output_power_w_max",
+                    "data_interfaces",
+                    "efficiency"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "battery"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "voltage_range_v": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "description": "Tensione [scarica minima, carica massima]"
+                    },
+                    "capacity_wh": {
+                      "type": "number",
+                      "description": "Energia nominale"
+                    },
+                    "max_discharge_a": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Corrente massima di scarica"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "max_dod": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "DoD massimo raccomandato 0-1"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "cycle_life": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "description": "Cicli garantiti al DoD massimo"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "voltage_range_v",
+                    "capacity_wh",
+                    "max_discharge_a",
+                    "max_dod",
+                    "cycle_life"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "solar_panel"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "face": {
+                      "type": "string",
+                      "description": "Faccia su cui si monta, es. '3U'"
+                    },
+                    "peak_power_w": {
+                      "type": "number",
+                      "description": "Potenza massima in LEO dichiarata dal fornitore"
+                    },
+                    "voltage_options_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "Tensioni di uscita disponibili (al punto di massima potenza)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "open_circuit_voltage_v": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Tensione a vuoto massima: non deve superare il massimo ingresso PV dell'EPS"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "degradation_per_year": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Degrado annuo, es. 0.02"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "face",
+                    "peak_power_w",
+                    "voltage_options_v",
+                    "open_circuit_voltage_v",
+                    "degradation_per_year"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "comms"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "band": {
+                      "type": "string",
+                      "description": "Banda, es. 'UHF', 'S', 'X'"
+                    },
+                    "has_receiver": {
+                      "anyOf": [
+                        {
+                          "type": "boolean",
+                          "description": "True se riceve (uplink di comando), False se e' solo trasmettitore"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_rate_kbps_max": {
+                      "type": "number",
+                      "description": "Velocita' massima in downlink"
+                    },
+                    "power_w_idle": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza DC in ricezione/idle"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "power_w_tx": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza DC in trasmissione"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce dati verso OBC"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "band",
+                    "has_receiver",
+                    "data_rate_kbps_max",
+                    "power_w_idle",
+                    "power_w_tx",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "adcs"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "pointing_accuracy_deg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Accuratezza di puntamento"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce dati verso OBC"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pointing_accuracy_deg",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "star_tracker"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "accuracy_cross_arcsec": {
+                      "type": "number",
+                      "description": "Accuratezza attorno agli assi trasversali alla boresight (pitch/yaw) [arcsec]"
+                    },
+                    "accuracy_roll_arcsec": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Accuratezza attorno alla boresight (roll) [arcsec]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "accuracy_basis": {
+                      "type": "string",
+                      "description": "Base statistica dei valori di accuratezza: '1-sigma', '3-sigma' o 'RMS'"
+                    },
+                    "update_rate_hz": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Frequenza di aggiornamento dell'assetto [Hz]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fov_deg": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "Campo di vista pieno [gradi] (una o due dimensioni)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce dati verso l'OBC"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "accuracy_cross_arcsec",
+                    "accuracy_roll_arcsec",
+                    "accuracy_basis",
+                    "update_rate_hz",
+                    "fov_deg",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "magnetorquer"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "magnetorquer_type": {
+                      "type": "string",
+                      "description": "rod (barra), board (scheda a tre assi) o coil (bobina)"
+                    },
+                    "axes": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "description": "Assi coperti dall'unita'"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "magnetic_moment_am2": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Momento di dipolo per asse [A m2]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "power_w_max": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza elettrica massima dichiarata [W]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce di comando"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "magnetorquer_type",
+                    "axes",
+                    "magnetic_moment_am2",
+                    "power_w_max",
+                    "supply_voltage_ranges_v",
+                    "data_interfaces"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "reaction_wheel"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "momentum_mnms": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Momento angolare immagazzinato [mN m s]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "max_torque_mnm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Coppia massima [mN m]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "max_speed_rpm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Velocita' massima [giri/min]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "power_w_nominal": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza in regime nominale dichiarata [W]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "power_w_peak": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza di picco dichiarata [W]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce di comando e dati"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "momentum_mnms",
+                    "max_torque_mnm",
+                    "max_speed_rpm",
+                    "power_w_nominal",
+                    "power_w_peak",
+                    "supply_voltage_ranges_v",
+                    "data_interfaces"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "propulsion"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "propulsion_type": {
+                      "type": "string",
+                      "description": "cold_gas, warm_gas, green_monoprop, hydrazine_monoprop, bipropellant, feep, gridded_ion, electrospray"
+                    },
+                    "propellant": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "Propellente"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "thrust_mn_min": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Spinta minima dichiarata [mN]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "thrust_mn_max": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Spinta massima o nominale dichiarata [mN]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "isp_s": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Impulso specifico [s]; se e' dichiarato un intervallo, il minimo"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "total_impulse_ns": {
+                      "type": "number",
+                      "description": "Impulso totale del sistema [N s]"
+                    },
+                    "propellant_mass_kg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Massa del propellente [kg]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dry_mass_kg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Massa a secco (senza propellente) [kg]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "power_w_firing": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza elettrica durante la spinta [W]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "power_w_standby": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza elettrica in attesa [W]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "min_form_factor_u": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Taglia minima di satellite indicata dal fornitore"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce di comando e telemetria"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "propulsion_type",
+                    "propellant",
+                    "thrust_mn_min",
+                    "thrust_mn_max",
+                    "isp_s",
+                    "total_impulse_ns",
+                    "propellant_mass_kg",
+                    "dry_mass_kg",
+                    "power_w_firing",
+                    "power_w_standby",
+                    "min_form_factor_u",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "antenna"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "bands": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Bande coperte, es. ['UHF'], ['VHF','UHF'], ['S'], ['X']"
+                    },
+                    "frequency_ranges_mhz": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Intervalli di frequenza [[min,max],...] in MHz"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "antenna_type": {
+                      "type": "string",
+                      "description": "wire (monopolo, dipolo o turnstile), patch o patch_array"
+                    },
+                    "gain_dbi": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Guadagno dichiarato [dBi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "beamwidth_deg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Larghezza di fascio a meta' potenza [gradi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "polarization": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "RHCP, LHCP, RHCP/LHCP, linear"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rf_power_w_max": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza RF massima ammessa [W]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "deployable": {
+                      "anyOf": [
+                        {
+                          "type": "boolean",
+                          "description": "True se si dispiega in orbita"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce di comando/telemetria del dispiegamento"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "bands",
+                    "frequency_ranges_mhz",
+                    "antenna_type",
+                    "gain_dbi",
+                    "beamwidth_deg",
+                    "polarization",
+                    "rf_power_w_max",
+                    "deployable",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "gps"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "constellations": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Costellazioni: GPS, Galileo, GLONASS, BeiDou"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "accuracy_position_m": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Accuratezza di posizione [m]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "accuracy_basis": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "Base statistica dell'accuratezza: '1-sigma', '2-sigma', '3-sigma' o 'RMS'"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "accuracy_velocity_m_s": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Accuratezza di velocita' [m/s]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "ttff_cold_s": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Tempo al primo fix a freddo [s]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "update_rate_hz": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Frequenza di aggiornamento [Hz]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "channels": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "description": "Canali del ricevitore"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "antenna_included": {
+                      "anyOf": [
+                        {
+                          "type": "boolean",
+                          "description": "True se l'antenna GNSS e' fornita con il ricevitore"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce dati verso l'OBC"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "constellations",
+                    "accuracy_position_m",
+                    "accuracy_basis",
+                    "accuracy_velocity_m_s",
+                    "ttff_cold_s",
+                    "update_rate_hz",
+                    "channels",
+                    "antenna_included",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "payload"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "payload_type": {
+                      "type": "string",
+                      "description": "'imager' (camera/telescopio) oppure 'optical_terminal' (terminale di comunicazione ottica)"
+                    },
+                    "link_type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "Terminali ottici: 'space_to_ground', 'inter_satellite' o 'both'"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "link_data_rate_mbps": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Terminali ottici: velocita' massima del collegamento [Mbps]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "uplink_data_rate_kbps": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Terminali ottici: canale di comando verso il satellite [kbps]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "max_range_km": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Terminali ottici: distanza massima del collegamento [km]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "wavelength_nm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Terminali ottici: lunghezza d'onda [nm]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "host_pointing_deg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Terminali ottici: puntamento richiesto alla piattaforma (3-sigma) [gradi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "spectral_bands": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Bande disponibili: PAN, RGB, MONO, VNIR, MS, HS, SWIR, TIR, VIDEO (solo imager)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "reference_altitude_km": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Quota a cui sono dichiarati GSD e swath"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "gsd_m_at_ref": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "GSD al nadir alla quota di riferimento [m]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "swath_km_at_ref": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Swath alla quota di riferimento [km]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "focal_length_mm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Lunghezza focale"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "aperture_mm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Apertura (diametro)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "pixel_pitch_um": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Passo pixel"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "across_track_pixels": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "description": "Pixel across-track"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "min_form_factor_u": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Taglia minima di satellite indicata dal fornitore"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce di comando e dati verso l'OBC"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "storage_gb": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Memoria di massa integrata"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "payload_type",
+                    "link_type",
+                    "link_data_rate_mbps",
+                    "uplink_data_rate_kbps",
+                    "max_range_km",
+                    "wavelength_nm",
+                    "host_pointing_deg",
+                    "spectral_bands",
+                    "reference_altitude_km",
+                    "gsd_m_at_ref",
+                    "swath_km_at_ref",
+                    "focal_length_mm",
+                    "aperture_mm",
+                    "pixel_pitch_um",
+                    "across_track_pixels",
+                    "min_form_factor_u",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v",
+                    "storage_gb"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "components"
+  ]
+}

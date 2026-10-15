@@ -1,0 +1,495 @@
+{
+ "_comment": "Piattaforme complete (non componenti): riferimento, non usate dal selettore. verified=false. null = non dichiarato.",
+ "platforms": [
+  {
+   "id": "tyvak-triumph",
+   "name": "Triumph (6U)",
+   "form_factor_u": 6,
+   "orbit": "LEO",
+   "native_orbits_km": [
+    400,
+    1200
+   ],
+   "launch_mass_kg_max": 14.0,
+   "payload_mass_kg_max": 5.0,
+   "solar_array_power_w_max": 100.0,
+   "redundancy": "single-string",
+   "power_buses": "12 V non regolati, 3.3 V, 5 V",
+   "comms": {
+    "UHF": "9.6 kbps (uplink e downlink)",
+    "S-band": "125 kbps uplink, 2 Mbps downlink",
+    "X-band": "50 Mbps downlink"
+   },
+   "propulsion": "nessuna di serie, opzioni disponibili",
+   "pointing_arcsec": [
+    30,
+    75
+   ],
+   "dimensions": null,
+   "modules": [
+    "Flight computer",
+    "Backplane",
+    "Moduli batteria 12 V (2)",
+    "MPPT 12 V",
+    "Load controller 12 V",
+    "Sensori solari grossolani (2)",
+    "Star tracker (2)",
+    "GPS",
+    "Magnetorquer (3)",
+    "Ruote di reazione (3)",
+    "Radio LDRR",
+    "Radio MDR",
+    "IMU"
+   ],
+   "notes": "Piattaforma 6U piu' volata della linea, in precedenza chiamata Trestles; array solare compatto a tre sezioni; compatibile con dispenser a rotaie (anche quelli venduti da Terran Orbital). Hardware con eredita' di volo (NASA Pathfinder Technology Demonstrator, GeoStare SV2).",
+   "vendor": "Tyvak",
+   "kind": "platform",
+   "source": {
+    "url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_TRIUMPH_PLATFORM_DATA_SHEET.pdf",
+    "document": "Scheda tecnica NASA RSDO Rapid IV catalog: Terran Orbital/Tyvak Triumph (6U) (luglio 2024)",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/Tyvak-Triumph.png",
+    "image_url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_TRIUMPH_PLATFORM_DATA_SHEET.pdf#page=1",
+    "page_url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_TRIUMPH_PLATFORM_DATA_SHEET.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-13"
+   },
+   "configuration": "6U",
+   "applications": "LEO",
+   "brand_note": "Venduta anche con il marchio Terran Orbital (stessa societa')."
+  },
+  {
+   "id": "tyvak-renegade",
+   "name": "Renegade (12U)",
+   "form_factor_u": 12,
+   "orbit": "LEO",
+   "native_orbits_km": [
+    400,
+    1200
+   ],
+   "launch_mass_kg_max": 25.0,
+   "payload_mass_kg_max": 10.0,
+   "solar_array_power_w_max": 100.0,
+   "redundancy": "single-string",
+   "power_buses": "12 V non regolati, 3.3 V, 5 V",
+   "comms": {
+    "UHF": "9.6 kbps (uplink e downlink)",
+    "S-band": "125 kbps uplink, 2 Mbps downlink",
+    "X-band": "50 Mbps downlink"
+   },
+   "propulsion": "nessuna di serie, opzioni disponibili",
+   "pointing_arcsec": [
+    30,
+    75
+   ],
+   "dimensions": null,
+   "modules": [
+    "Flight computer",
+    "Backplane",
+    "Moduli batteria 12 V (3)",
+    "MPPT 12 V (2)",
+    "Load controller 12 V (1)",
+    "Sensori solari grossolani (2)",
+    "Star tracker (2)",
+    "GPS",
+    "Magnetorquer (3)",
+    "Ruote di reazione (3)",
+    "Radio LDRR",
+    "Radio MDR",
+    "IMU (1)"
+   ],
+   "notes": "Configurabile anche a 16U. Il miglior rapporto massa piattaforma/massa payload della linea, puo' ospitare un imager ottico da 19 cm di diametro. Derivata dalla piattaforma Trestles; array solare compatto a tre sezioni; dispenser a rotaie.",
+   "vendor": "Tyvak",
+   "kind": "platform",
+   "source": {
+    "url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_RENEGADE_PLATFORM_DATA_SHEET.pdf",
+    "document": "Scheda tecnica NASA RSDO Rapid IV catalog: Terran Orbital/Tyvak Renegade (12U) (luglio 2024)",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/Tyvak-Renegade.png",
+    "image_url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_RENEGADE_PLATFORM_DATA_SHEET.pdf#page=1",
+    "page_url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_RENEGADE_PLATFORM_DATA_SHEET.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-13"
+   },
+   "configuration": "12U (16U opzionale)",
+   "applications": "LEO",
+   "brand_note": "Venduta anche con il marchio Terran Orbital (stessa societa')."
+  },
+  {
+   "id": "tyvak-nebula",
+   "name": "Nebula (ESPA)",
+   "form_factor_u": null,
+   "orbit": "LEO",
+   "native_orbits_km": [
+    400,
+    1200
+   ],
+   "launch_mass_kg_max": 250.0,
+   "payload_mass_kg_max": 130.0,
+   "solar_array_power_w_max": 1000.0,
+   "redundancy": "dual-string",
+   "power_buses": "sistema a 66 V; 28 V, 12 V e 9 V disponibili per il payload",
+   "comms": {
+    "S-band": "125 kbps uplink, 2 Mbps downlink",
+    "X-band": "650 Mbps downlink"
+   },
+   "propulsion": "elettrica a effetto Hall di serie (impulso specifico 2150 s), spinta 1.1 mN",
+   "pointing_arcsec": [
+    10,
+    50
+   ],
+   "dimensions": "82 x 58 x 39 cm senza pannelli solari",
+   "modules": [
+    "Flight computer (2)",
+    "Watchdog",
+    "Backplane",
+    "Moduli batteria 66 V (8-12)",
+    "MPPT 66 V (2)",
+    "Load controller 66 V",
+    "Punti di carico 28 V alta potenza (variabili)",
+    "Punti di carico 28 V bassa potenza (variabili)",
+    "Sensori solari grossolani (4)",
+    "Gruppo giroscopi",
+    "Star tracker (3)",
+    "GPS (2)",
+    "Magnetorquer (3)",
+    "Ruote di reazione (4)",
+    "Radio LDRR (2)",
+    "Radio MDR (2)"
+   ],
+   "notes": "Microsatellite su porta ESPA da 15 pollici o ESPA Grande da 24 pollici; crittografia Type 1 opzionale (DoD/Intel). Non e' un CubeSat. La generazione precedente (Zuma) e' servita per la Tranche 0 Transport Layer della Space Development Agency.",
+   "vendor": "Tyvak",
+   "kind": "platform",
+   "source": {
+    "url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_NEBULA%20_PLATFORM_DATA_SHEET.pdf",
+    "document": "Scheda tecnica NASA RSDO Rapid IV catalog: Terran Orbital/Tyvak Nebula (ESPA) (luglio 2024)",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/Tyvak-Nebula.png",
+    "image_url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_NEBULA%20_PLATFORM_DATA_SHEET.pdf#page=2",
+    "page_url": "https://assets.science.nasa.gov/content/dam/science/cds/spacecraft-development/rsdo/rapid-iv-catalog/TYVAK_NEBULA%20_PLATFORM_DATA_SHEET.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-13"
+   },
+   "configuration": "ESPA 15 pollici o ESPA Grande 24 pollici",
+   "applications": "LEO",
+   "brand_note": "Venduta anche con il marchio Terran Orbital (stessa societa')."
+  },
+  {
+   "id": "terranorbital-voyager",
+   "name": "Voyager",
+   "configuration": "16U",
+   "form_factor_u": 16,
+   "applications": "GEO, MEO, cislunare",
+   "orbit": "GEO/MEO/cislunare",
+   "native_orbits_km": [
+    30000,
+    null
+   ],
+   "launch_mass_kg_max": 30.0,
+   "payload_mass_kg_max": 8.0,
+   "solar_array_power_w_max": 100.0,
+   "redundancy": "dual-string",
+   "power_buses": "12 V non regolati, 3.3 V, 5 V",
+   "comms": {
+    "X-band": "deep space, uplink e downlink (velocita' non dichiarata)"
+   },
+   "propulsion": "standard, impulso specifico 200 s",
+   "thrust_mn": null,
+   "pointing_arcsec": [
+    30,
+    75
+   ],
+   "dimensions": null,
+   "modules": [
+    "Flight computer (2)",
+    "Watchdog",
+    "Backplane",
+    "Moduli batteria 12 V (3)",
+    "MPPT 12 V (2)",
+    "Load controller 12 V (2)",
+    "Sensori solari grossolani (2)",
+    "Star tracker (2)",
+    "Magnetorquer (3, se necessari)",
+    "Ruote di reazione (4)",
+    "IMU (2)"
+   ],
+   "notes": "Piattaforma 16U per spazio profondo. Massa massima non supportata su tutti i lanciatori/dispenser. Array solare di terzi incluso.",
+   "vendor": "Terran Orbital",
+   "kind": "platform",
+   "source": {
+    "url": "https://terranorbital.com/wp-content/uploads/2024/10/0071_TO_VOYAGER_PLATFORM_101024.pdf",
+    "document": "Scheda tecnica Terran Orbital Voyager (2024), pagina https://terranorbital.com/spacecraft-platforms/voyager",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore, confrontata con la pagina web; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/TerranOrbital-Voyager.png",
+    "image_url": "https://terranorbital.com/wp-content/uploads/2023/09/voyager-1100px.png",
+    "page_url": "https://terranorbital.com/spacecraft-platforms/voyager",
+    "type": "immagine dal sito del produttore",
+    "retrieved": "2026-10-13"
+   }
+  },
+  {
+   "id": "terranorbital-excelsior",
+   "name": "Excelsior",
+   "configuration": "half-ESPA",
+   "form_factor_u": null,
+   "applications": "LEO",
+   "orbit": "LEO",
+   "native_orbits_km": [
+    400,
+    1200
+   ],
+   "launch_mass_kg_max": 125.0,
+   "payload_mass_kg_max": 50.0,
+   "solar_array_power_w_max": 500.0,
+   "redundancy": "single-string",
+   "power_buses": "sistema a 66 V; 28 V, 12 V e 9 V disponibili",
+   "comms": {
+    "S-band": "125 kbps uplink, 2 Mbps downlink",
+    "X-band": "650 Mbps downlink"
+   },
+   "propulsion": "standard, impulso specifico 400 s",
+   "thrust_mn": null,
+   "pointing_arcsec": [
+    10,
+    50
+   ],
+   "dimensions": null,
+   "modules": [
+    "Watchdog",
+    "Backplane",
+    "Flight computer (2)",
+    "Moduli batteria 66 V (2-4)",
+    "MPPT 66 V (1-2)",
+    "Load controller 66 V",
+    "Punti di carico 28 V bassa potenza (variabili)",
+    "Punti di carico 28 V alta potenza (variabili)",
+    "Sensori solari grossolani (2)",
+    "Gruppo giroscopi",
+    "Star tracker (3)",
+    "GPS (2)",
+    "Magnetorquer (3)",
+    "Ruote di reazione (3)",
+    "Radio LDRR (2)",
+    "Radio MDR (2)"
+   ],
+   "notes": "Microsatellite d'ingresso, pensato per lanciarne due da una porta ESPA da 15 pollici. Array solare di terzi incluso. Massa massima non supportata su tutti i lanciatori/dispenser.",
+   "vendor": "Terran Orbital",
+   "kind": "platform",
+   "source": {
+    "url": "https://terranorbital.com/wp-content/uploads/2024/10/0072_TO_EXCELSIOR_PLATFORM_031824_1150.pdf",
+    "document": "Scheda tecnica Terran Orbital Excelsior (2024), pagina https://terranorbital.com/spacecraft-platforms/excelsior",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore, confrontata con la pagina web; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/TerranOrbital-Excelsior.png",
+    "image_url": "https://terranorbital.com/wp-content/uploads/2023/09/Excelsior-update-1-1-1.png",
+    "page_url": "https://terranorbital.com/spacecraft-platforms/excelsior",
+    "type": "immagine dal sito del produttore",
+    "retrieved": "2026-10-13"
+   }
+  },
+  {
+   "id": "terranorbital-ambassador",
+   "name": "Ambassador",
+   "configuration": "ESPA Grande",
+   "form_factor_u": null,
+   "applications": "LEO",
+   "orbit": "LEO",
+   "native_orbits_km": [
+    400,
+    1200
+   ],
+   "launch_mass_kg_max": 500.0,
+   "payload_mass_kg_max": 200.0,
+   "solar_array_power_w_max": 1500.0,
+   "redundancy": "dual-string",
+   "power_buses": "sistema a 66 V; 12 V e 9 V disponibili",
+   "comms": {
+    "S-band": "125 kbps uplink, 2 Mbps downlink",
+    "X-band": "650 Mbps downlink"
+   },
+   "propulsion": "effetto Hall standard, impulso specifico 1150 s (altre opzioni)",
+   "thrust_mn": 17.0,
+   "pointing_arcsec": [
+    10,
+    50
+   ],
+   "dimensions": "piano payload 104 x 112 cm",
+   "modules": [
+    "Flight computer (2)",
+    "Watchdog",
+    "Backplane",
+    "Moduli batteria 66 V (8-12)",
+    "MPPT 66 V (2-3)",
+    "Load controller 66 V",
+    "Punti di carico 28 V bassa potenza (variabili)",
+    "Punti di carico 28 V alta potenza (variabili)",
+    "Sensori solari grossolani (4)",
+    "Gruppo giroscopi",
+    "Star tracker (3)",
+    "GPS (2)",
+    "Magnetorquer (3)",
+    "Ruote di reazione (4)",
+    "Radio LDRR (2)",
+    "Radio MDR (2)"
+   ],
+   "notes": "Piattaforma per rideshare su ESPA Grande. Array solare di terzi incluso.",
+   "vendor": "Terran Orbital",
+   "kind": "platform",
+   "source": {
+    "url": "https://terranorbital.com/wp-content/uploads/2024/10/0074_TO_AMBASSADOR_PLATFORM_101024.pdf",
+    "document": "Scheda tecnica Terran Orbital Ambassador (2024), pagina https://terranorbital.com/spacecraft-platforms/ambassador",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore, confrontata con la pagina web; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/TerranOrbital-Ambassador.png",
+    "image_url": "https://terranorbital.com/wp-content/uploads/2023/09/Ambassador-2-1-1.png",
+    "page_url": "https://terranorbital.com/spacecraft-platforms/ambassador",
+    "type": "immagine dal sito del produttore",
+    "retrieved": "2026-10-13"
+   }
+  },
+  {
+   "id": "terranorbital-enterprise",
+   "name": "Enterprise",
+   "configuration": "flat packing, tre configurazioni (A, B, C)",
+   "form_factor_u": null,
+   "applications": "LEO (A, B), MEO/GEO (C)",
+   "orbit": "LEO/MEO/GEO",
+   "native_orbits_km": [
+    400,
+    35000
+   ],
+   "launch_mass_kg_max": 1250.0,
+   "payload_mass_kg_max": 750.0,
+   "solar_array_power_w_max": null,
+   "payload_power_w_max": 3000.0,
+   "redundancy": "dual-string",
+   "power_buses": "rail a 66, 28, 12 e 9 V",
+   "comms": {
+    "S-band": "125 kbps uplink, 2 Mbps downlink",
+    "X-band": "650 Mbps downlink",
+    "configurazione C": "TT&C in S, X e Ka, velocita' alte e basse"
+   },
+   "propulsion": null,
+   "thrust_mn": null,
+   "pointing_arcsec": [
+    10,
+    50
+   ],
+   "dimensions": null,
+   "modules": null,
+   "configurations": [
+    {
+     "name": "A",
+     "orbit": "LEO 400-1200 km",
+     "launch_mass_kg": 500.0,
+     "payload_mass_kg": 200.0,
+     "payload_power_w": 2000.0,
+     "payload_deck_cm": "100 x 200",
+     "payload_electronics_cm": "40 x 20 x 20"
+    },
+    {
+     "name": "B",
+     "orbit": "LEO 400-1200 km",
+     "launch_mass_kg": 1000.0,
+     "payload_mass_kg": 650.0,
+     "payload_power_w": 3000.0,
+     "payload_deck_cm": "114.3 x 254",
+     "payload_electronics_cm": "76.2 x 30.5 x 30.5"
+    },
+    {
+     "name": "C",
+     "orbit": "MEO/GEO 1200-35000 km",
+     "launch_mass_kg": 1250.0,
+     "payload_mass_kg": 750.0,
+     "payload_power_w": 3000.0,
+     "payload_deck_cm": "114.3 x 254",
+     "payload_electronics_cm": "76.2 x 30.5 x 30.5"
+    }
+   ],
+   "notes": "Piattaforma piu' grande della linea. I valori in cima sono i massimi tra le tre configurazioni (la B dichiara 650 kg di payload, la C 750 kg). La potenza e' quella disponibile al payload, la potenza dell'array non e' dichiarata. Nessun elenco di moduli di base nella scheda.",
+   "vendor": "Terran Orbital",
+   "kind": "platform",
+   "source": {
+    "url": "https://terranorbital.com/wp-content/uploads/2024/03/0065_TO_ENTERPRISE-PLATFORM_031824_1147.pdf",
+    "document": "Scheda tecnica Terran Orbital Enterprise (2024), pagina https://terranorbital.com/spacecraft-platforms/enterprise",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore, confrontata con la pagina web; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/TerranOrbital-Enterprise.png",
+    "image_url": "https://terranorbital.com/wp-content/uploads/2023/09/Enterprise-rendering-4-1-1024x692-1.png",
+    "page_url": "https://terranorbital.com/spacecraft-platforms/enterprise",
+    "type": "immagine dal sito del produttore",
+    "retrieved": "2026-10-13"
+   }
+  },
+  {
+   "id": "terranorbital-smallsat-geo",
+   "name": "SmallSat GEO",
+   "configuration": "lancio rideshare, dedicato o multi-manifest su GTO super-sincrona",
+   "form_factor_u": null,
+   "applications": "GEO",
+   "orbit": "GEO",
+   "native_orbits_km": null,
+   "launch_mass_kg_max": 1250.0,
+   "payload_mass_kg_max": 300.0,
+   "solar_array_power_w_max": null,
+   "payload_power_w_max": 3000.0,
+   "redundancy": null,
+   "power_buses": null,
+   "comms": {
+    "frequenze supportate": "VHF, UHF, C, X, Ku, K, Ka, Q, V"
+   },
+   "propulsion": "nominale tutta elettrica; opzioni elettrica e chimica",
+   "thrust_mn": null,
+   "pointing_arcsec": null,
+   "dimensions": null,
+   "modules": null,
+   "dry_mass_kg": [
+    500.0,
+    750.0
+   ],
+   "lifetime_years": 7.0,
+   "notes": "Piattaforma per GEO: massa a secco 500-750 kg secondo la configurazione, vita nominale 7 anni (personalizzabile), elaborazione Versal/ARM/RFSoC/MPSoC, payload con riflettori multipli o phased array multi-fascio. Opzioni extra su richiesta commerciale.",
+   "vendor": "Terran Orbital",
+   "kind": "platform",
+   "source": {
+    "url": "https://terranorbital.com/wp-content/uploads/2024/09/0041_TO_SMALSAT-GEO_BROCHURE_091724_SPREAD.pdf",
+    "document": "Scheda tecnica Terran Orbital SmallSat GEO (2024), pagina https://terranorbital.com/smallsat-geo/",
+    "retrieved": "2026-10-13",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore, confrontata con la pagina web; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/TerranOrbital-SmallSatGEO.png",
+    "image_url": "https://terranorbital.com/wp-content/uploads/2024/09/smallsat-geo-front-1.png",
+    "page_url": "https://terranorbital.com/smallsat-geo/",
+    "type": "immagine dal sito del produttore",
+    "retrieved": "2026-10-13"
+   }
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+{
+    "_comment": "Default parameters of END-019 Satellite Design Component Selector. The only input is the CubeSat class (1, 3, 6 or 12 U); it is used only when neither the requirements nor the approved inputs provide it.",
+    "form_factor_u": 6
+}

@@ -5,7 +5,9 @@ a Python / pywebview orchestrator (`FrontEnd/`, `BackEnd/`) that plans a mission
 from its requirements and runs the simulation modules `END0XX-*` (MATLAB,
 Python, Unity / Unreal). This repository holds only what running STAR needs.
 
-- `FrontEnd/` - `star_frontend_v2.py` (entry point) and the `web/` assets.
+- `FrontEnd/` - `star_frontend_v3.py` (entry point, with END-019) or
+  `star_frontend_v2.py` (without END-019), and the `web/` assets; each version
+  writes its own `web/star_*_v2.html` / `_v3.html` pages.
 - `BackEnd/` - `ai/` (LLM providers), `modules/`, `runners/` (one runner per
   module; they find STAR's root from their own location).
 - `Input/` - `input_base_knowledge/` (module registry, AI config, knowledge
@@ -13,6 +15,11 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
 - `END001-ConstellationOptimizer/` - git submodule
   (github.com/LorenzoMariani/matlabConstellationOptimizer), see its `USAGE.md`.
 - `END003`, `END004`, `END010`, `END016`, `END018` - the other modules.
+- `END019-ComponentSelector/star_component_selector/` - CubeSat component
+  selector (Python standard library only; runner `BackEnd/runners/end019_runner.py`,
+  results tab in frontend v3). Its vendor datasheets (PDF) are not in the
+  repository: without them the selector works and its drawer shows
+  "Not available in the database".
 - `requirements.txt` - Python packages.
 
 Clone with the submodule:

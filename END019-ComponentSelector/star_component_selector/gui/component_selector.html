@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR — Component Selector</title>
+<style>
+:root{--bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);--text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;--danger:#ff5c7a;--warn:#ffb347;--success:#61f6a8;--shadow:0 18px 60px rgba(0,0,0,.32);color-scheme:dark}
+:root[data-theme="light"]{--bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);--text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;--danger:#bd2450;--warn:#b06a00;--success:#047857;--shadow:0 12px 40px rgba(31,41,55,.12);color-scheme:light}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;line-height:1.45;overflow:hidden}
+button{font:inherit;color:var(--text);border:1px solid var(--border);background:var(--panel-strong);border-radius:10px;padding:5px 10px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+a{color:var(--accent-2)}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 0;height:100vh;gap:10px;padding:10px;transition:grid-template-columns .2s}
+.app.drawer-open{grid-template-columns:minmax(0,1fr) min(64vw,940px)}
+.main{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0;overflow-y:auto}
+.main>*{flex:0 0 auto}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.drawer{display:none;overflow-y:auto;min-height:0}.drawer-open .drawer{display:block}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--panel-strong)}
+.hd h2,.hd h3{margin:0;color:var(--text-strong);text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.sec{padding:10px 12px;border-bottom:1px solid var(--border-soft)}
+.pill{border:1px solid var(--border);border-radius:999px;padding:1px 8px;font-size:10px;color:var(--muted-2)}
+.hint{color:var(--muted);font-size:10.5px}
+.inputs{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:10px 12px}
+.inputs .lab{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px}
+.seg{display:flex;gap:4px}.seg span{border:1px solid var(--border);border-radius:9px;padding:3px 12px;color:var(--muted);background:var(--panel-muted);cursor:default}
+.seg span.on{background:var(--accent-2);color:#07100d;border-color:transparent;font-weight:700}
+.inputs .kv b{color:var(--text-strong)}
+.inputs .ro{margin-left:auto;color:var(--muted);font-size:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:10px 12px 4px}
+.kpi{border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-muted);padding:7px 10px;position:relative}
+.kpi .l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+.kpi .v{color:var(--text-strong);font-size:17px;font-weight:700}.kpi .u{color:var(--muted);font-size:10.5px;margin-left:3px;font-weight:400}
+.kpi:before{content:"";position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.kpi.ok:before{background:var(--success)}.kpi.warn:before{background:var(--warn)}.kpi.bad:before{background:var(--danger)}
+.budgets{padding:6px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.budgets h4{margin:6px 0 2px;font-size:10px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.04em;font-weight:400}
+.bar{display:flex;height:16px;border-radius:8px;overflow:hidden;border:1px solid var(--border-soft);margin:3px 0}.bar i{display:block;height:100%}
+.bar.limit{background:repeating-linear-gradient(90deg,transparent 0 6px,var(--border-soft) 6px 7px)}
+.legend{display:flex;flex-wrap:wrap;gap:3px 10px;font-size:10px;color:var(--muted-2)}.legend b{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.na{color:var(--muted);font-style:italic}
+.msgs{padding:0 12px 10px;color:var(--warn);font-size:10.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;padding:10px 12px 12px;align-items:start}
+.sub{border:1px solid var(--border);background:var(--panel);border-radius:14px;overflow:hidden;cursor:pointer;min-width:0}
+.sub:hover{border-color:var(--accent-2)}.sub.sel{border-color:var(--accent-2);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-2) 30%,transparent)}
+.sub .top{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel-strong);border-bottom:1px solid var(--border)}
+.sub .top svg{width:38px;height:34px;flex:0 0 auto}
+.sub .top b{color:var(--text-strong);letter-spacing:.06em;font-size:12px;flex:1 1 auto}
+.sub .top .cnt{color:var(--muted);font-size:10px;text-align:right}
+.sub .body{padding:8px 10px 10px}
+.sub .nm{color:var(--text-strong);font-weight:700;font-size:13px;margin:0;line-height:1.3}
+.sub .vd{color:var(--muted);font-size:10.5px;margin:0 0 5px}
+.r{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-top:1px solid var(--border-soft);font-size:11px}
+.r span:first-child{color:var(--muted-2);flex:0 0 auto}.r span:last-child{text-align:right;color:var(--text);min-width:0;overflow-wrap:anywhere}
+sup{font-size:8px;color:var(--accent-2);margin-left:2px}
+.alt{color:var(--muted-2);font-size:10.5px;margin-top:6px;padding-top:5px;border-top:1px solid var(--border-soft)}
+.src{color:var(--muted);font-size:10px;margin-top:4px}
+.nodata{padding:12px 10px;color:var(--muted)}
+.drawer img.big{width:100%;max-height:230px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--border-soft)}
+.dual{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:12px;align-items:start}
+.dual h4{margin:0 0 4px;font-size:10px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.04em;font-weight:400}
+.box{display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:10px;min-height:120px;padding:10px;text-align:center;color:var(--muted)}
+.dsview{height:600px;border:1px solid var(--border-soft);border-radius:10px;background:var(--panel-muted);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center}
+.dsview iframe{width:100%;height:100%;border:0;background:#fff}
+.dbbar{padding:8px 12px 6px;border-top:1px solid var(--border-soft)}.dbbar:first-child{border-top:0}
+.dbbar .t{display:flex;justify-content:space-between;margin-bottom:3px;color:var(--text-strong);font-weight:700;font-size:12px}
+.dbrow{display:flex;gap:1px}
+.dbrow .lb{min-width:0;text-align:center;font-size:10px;color:var(--muted-2);line-height:1.25;overflow:hidden;white-space:nowrap}
+.dbrow .sg{min-width:0;position:relative;height:18px;border-radius:2px;overflow:hidden;margin:2px 0;background:repeating-linear-gradient(135deg,var(--border) 0 3px,transparent 3px 6px)}
+.dbrow .sg i{display:block;height:100%}
+.dbrow .sg span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#06080c}
+.dblegend{padding:8px 12px 10px;border-top:1px solid var(--border-soft)}
+.dblegend .items{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted-2);font-size:10.5px}
+.dblegend b.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.dblegend strong{color:var(--text-strong)}
+.kvg{display:grid;grid-template-columns:auto 1fr;gap:2px 10px}.kvg .k{color:var(--muted)}
+.badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 7px;margin:0 4px 4px 0;font-size:10px;color:var(--muted-2)}
+@media(max-width:900px){.dual{grid-template-columns:1fr}body{overflow:auto}.app,.app.drawer-open{grid-template-columns:1fr;height:auto}}
+@media print{body{overflow:visible;background:#fff;color:#000}.drawer{display:none!important}.app{display:block}.card{box-shadow:none;border:1px solid #999}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <section class="main">
+    <div class="card"><div class="hd"><h2>Component Selector</h2><span class="pill" id="mode-pill">—</span></div>
+      <div class="inputs" id="inputs"></div></div>
+    <div class="card" id="db-card"><div class="hd"><h3>Database</h3><span class="hint" id="db-sum"></span></div><div id="db"></div></div>
+    <div class="card"><div class="hd"><h3>Indicators</h3><span class="hint" id="std"></span></div>
+      <div class="kpis" id="kpis"></div><div class="msgs" id="msgs"></div><div class="budgets" id="budgets"></div></div>
+    <div class="card"><div class="hd"><h3>Components</h3><span class="hint" id="count"></span></div><div class="grid" id="grid"></div></div>
+  </section>
+  <aside class="card drawer" id="drawer"><div class="hd"><h3 id="d-title">—</h3><button id="d-close">✕</button></div><div id="d-body"></div></aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const NA = 'Not publicly available';
+const NAD = 'Not available in the database';
+const HUE = {structure:[220,12],obc:[165,60],eps:[34,85],battery:[8,75],solar_panel:[215,70],comms:[195,75],antenna:[150,55],adcs:[280,55],magnetorquer:[300,50],reaction_wheel:[255,55],star_tracker:[330,60],gps:[95,52],propulsion:[18,82],payload_imager:[52,85],payload_optical:[75,70]};
+const catColor = (c, l = 55) => `hsl(${(HUE[c]||[0,0])[0]} ${(HUE[c]||[0,0])[1]}% ${l}%)`;
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sci = (v, d = 3) => { if (v == null) return NA; if (v === 0) return '0'; const e = Math.floor(Math.log10(Math.abs(v))); const m = v / Math.pow(10, e); const sup = String(e).replace(/-/g, '⁻').replace(/\d/g, x => '⁰¹²³⁴⁵⁶⁷⁸⁹'[x]); return `${m.toFixed(d)}×10${sup}`; };
+const f = (v, d = 3) => v == null ? NA : (+v.toFixed(d)).toString();
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const store = {get(k){try{return localStorage.getItem(k)}catch(_){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
+const S = {mode:'viewer', base:'', result:null, sel:null, params:{form_factor_u: 6}, imgs:{}};
+
+/* ---------------- transport: HTTP server, pywebview (STAR) or view-only ---------------- */
+function findPywebview() {
+  for (const w of [window, window.parent, window.parent && window.parent.parent, window.top]) {
+    try { if (w && w.pywebview && w.pywebview.api && w.pywebview.api.component_selector_select) return w.pywebview.api; } catch (_) {}
+  }
+  return null;
+}
+const API = {
+  async detect() {
+    if (window.componentSelectorData && !location.protocol.startsWith('http')) { S.mode = 'viewer'; return; }
+    if (location.protocol.startsWith('http')) {
+      try { const r = await fetch('api/health', {cache:'no-store'}); if (r.ok) { S.mode = 'http'; S.base = ''; return; } } catch (_) {}
+    }
+    if (window.componentSelectorData) { S.mode = 'viewer'; return; }
+    for (let i = 0; i < 6; i++) { if (findPywebview()) { S.mode = 'star'; return; } await new Promise(r => setTimeout(r, 250)); }
+    S.mode = 'viewer';
+  },
+  async select(params) {
+    if (S.mode === 'http') { const r = await fetch('api/select', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(params)}); return r.json(); }
+    if (S.mode === 'star') return findPywebview().component_selector_select({...params, with_images:true});
+    throw new Error('Recomputing needs the server or STAR.');
+  },
+  async fromRequirements() {
+    if (S.mode === 'star') { try { return await findPywebview().component_selector_from_requirements(); } catch (_) {} }
+    return null;
+  }
+};
+
+/* ---------------- small drawings of each SUBSYSTEM (not of the chosen product) ---------------- */
+const rotate = (p, yaw, pitch) => {
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), x = p[0] * cy - p[1] * sy, y = p[0] * sy + p[1] * cy, z = p[2];
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  return [x, y * cp - z * sp, y * sp + z * cp];   // [screen x, depth (larger = farther), screen up]
+};
+const vnorm = v => { const n = Math.hypot(...v) || 1; return v.map(x => x / n); };
+const vcross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const vadd = (a, b, k = 1) => [a[0] + k * b[0], a[1] + k * b[1], a[2] + k * b[2]];
+function facesOf(pr) {   // convex polygons with a normal each; primitives: box {c,s} and cylinder/frustum {c,ax|dir,r,r2,L}
+  const [cx, cy, cz] = pr.c, out = [];
+  if (pr.k === 'box') {
+    const [sx, sy, sz] = pr.s, h = [sx / 2, sy / 2, sz / 2], V = (a, b, c) => [cx + a * h[0], cy + b * h[1], cz + c * h[2]], quad = (pts, n) => out.push({pts, n});
+    quad([V(-1,-1,-1), V(-1,-1,1), V(-1,1,1), V(-1,1,-1)], [-1,0,0]); quad([V(1,-1,-1), V(1,1,-1), V(1,1,1), V(1,-1,1)], [1,0,0]);
+    quad([V(-1,-1,-1), V(1,-1,-1), V(1,-1,1), V(-1,-1,1)], [0,-1,0]); quad([V(-1,1,-1), V(-1,1,1), V(1,1,1), V(1,1,-1)], [0,1,0]);
+    quad([V(-1,-1,-1), V(-1,1,-1), V(1,1,-1), V(1,-1,-1)], [0,0,-1]); quad([V(-1,-1,1), V(1,-1,1), V(1,1,1), V(-1,1,1)], [0,0,1]);
+    return out;
+  }
+  const n = pr.n || 16, L = pr.L, r1 = pr.r, r2 = pr.r2 ?? pr.r, ax = pr.ax || 'z';
+  let B = null;
+  if (pr.dir) { const w = vnorm(pr.dir), a = Math.abs(w[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0], u = vnorm(vcross(a, w)); B = {u, v: vcross(w, u), w}; }
+  const P = (th, t, r) => {
+    const u = r * Math.cos(th), v = r * Math.sin(th), a = t * L;
+    if (B) return [cx + B.u[0] * u + B.v[0] * v + B.w[0] * a, cy + B.u[1] * u + B.v[1] * v + B.w[1] * a, cz + B.u[2] * u + B.v[2] * v + B.w[2] * a];
+    return ax === 'z' ? [cx + u, cy + v, cz + a] : ax === 'x' ? [cx + a, cy + u, cz + v] : [cx + u, cy + a, cz + v];
+  };
+  const N = (th, along) => { const u = Math.cos(th), v = Math.sin(th); if (B) return [B.u[0]*u + B.v[0]*v + B.w[0]*along, B.u[1]*u + B.v[1]*v + B.w[1]*along, B.u[2]*u + B.v[2]*v + B.w[2]*along]; return ax === 'z' ? [u, v, along] : ax === 'x' ? [along, u, v] : [u, along, v]; };
+  const slope = (r1 - r2) / (L || 1);
+  for (let i = 0; i < n; i++) { const a0 = 2 * Math.PI * i / n, a1 = 2 * Math.PI * (i + 1) / n; out.push({pts: [P(a0, -0.5, r1), P(a1, -0.5, r1), P(a1, 0.5, r2), P(a0, 0.5, r2)], n: N((a0 + a1) / 2, slope)}); }
+  const cap = (t, r, sign) => { const pts = []; for (let i = 0; i < n; i++) pts.push(P(2 * Math.PI * i / n, t, r)); out.push({pts, n: B ? B.w.map(x => x * sign) : ax === 'z' ? [0, 0, sign] : ax === 'x' ? [sign, 0, 0] : [0, sign, 0]}); };
+  cap(-0.5, r1, -1); cap(0.5, r2, 1);
+  return out;
+}
+const B_ = (c, s, shade = 0) => ({k: 'box', c, s, shade});
+const Cz = (c, r, L, shade = 0, r2) => ({k: 'cyl', c, ax: 'z', r, r2, L, n: 14, shade});
+const Rod = (a, dir, L, r, shade = 14) => ({k: 'cyl', c: vadd(a, vnorm(dir), L / 2), dir: vnorm(dir), r, L, n: 6, shade});
+function iconPrims(id) {
+  const board = (z = -0.1, w = 1.3, d = 0.95) => B_([0, 0, z], [w, d, 0.06]);
+  switch (id) {
+    case 'structure': { const o = [B_([0, 0, -0.85], [1.25, 1.25, 0.07], -6), B_([0, 0, 0.85], [1.25, 1.25, 0.07], -6)];
+      for (const a of [-1, 1]) for (const b of [-1, 1]) o.push(B_([a * 0.58, b * 0.58, 0], [0.09, 0.09, 1.72], 10));
+      for (const e of [-0.6, 0.6]) for (const a of [-1, 1]) { o.push(B_([a * 0.58, 0, e], [0.06, 1.1, 0.05], -8)); o.push(B_([0, a * 0.58, e], [1.1, 0.06, 0.05], -8)); }
+      return o; }
+    case 'obc': return [board(), B_([0.2, 0.05, -0.02], [0.4, 0.4, 0.1], 10), B_([-0.35, 0.15, -0.05], [0.22, 0.22, 0.05], 6), B_([-0.3, -0.25, -0.05], [0.3, 0.12, 0.05], 6), B_([0, -0.42, 0], [1.0, 0.1, 0.14], 14)];
+    case 'eps': return [board(), Cz([-0.4, 0.12, 0], 0.14, 0.16, 8), Cz([-0.05, 0.12, 0], 0.14, 0.16, 8), B_([0.38, 0.1, -0.02], [0.32, 0.3, 0.09], 10), Cz([0.35, -0.2, 0], 0.09, 0.2, -6), B_([0, -0.42, 0], [1.0, 0.1, 0.14], 14)];
+    case 'battery': return [-0.42, 0, 0.42].flatMap(x => [Cz([x, 0, 0], 0.19, 1.0), Cz([x, 0, 0.53], 0.07, 0.07, 14)]).concat([B_([0, 0, -0.52], [1.3, 0.5, 0.04], -10)]);
+    case 'solar_panel': { const o = [B_([0, 0, 0], [1.5, 0.05, 1.15], -4)]; for (const side of [-0.035, 0.035]) for (const x of [-0.5, 0, 0.5]) for (const z of [-0.28, 0.28]) o.push(B_([x, side, z], [0.44, 0.02, 0.46], -18)); return o; }
+    case 'comms': return [board(-0.35), B_([0, 0.05, -0.28], [0.4, 0.3, 0.09], 10), B_([-0.4, 0.1, -0.3], [0.25, 0.2, 0.05], 6), Cz([0.5, 0.3, 0.2], 0.025, 1.0, 14), B_([0, -0.42, -0.25], [1.0, 0.1, 0.12], 14)];
+    case 'antenna': { const o = [B_([0, 0, -0.3], [0.95, 0.95, 0.06], 4), B_([0, 0, -0.26], [0.45, 0.45, 0.03], 16)]; for (const [a, b] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) o.push(Rod([a * 0.4, b * 0.4, -0.27], [a * 0.7, b * 0.7, 1], 1.0, 0.025)); return o; }
+    case 'adcs': return [B_([0, 0, -0.5], [1.5, 1.5, 0.05], -8), B_([0, 0, -0.15], [1.0, 1.0, 0.5], 4), Cz([0, 0, 0.18], 0.36, 0.1, 10), B_([0, 0, 0.3], [0.3, 0.3, 0.1], 14)];
+    case 'magnetorquer': return [B_([0, 0, -0.5], [1.5, 1.5, 0.05], -8), B_([0, 0.2, -0.3], [1.3, 0.14, 0.14], 8), B_([0.2, -0.3, -0.3], [0.14, 1.0, 0.14], 8), Cz([0, 0, -0.45], 0.55, 0.06, 12)];
+    case 'reaction_wheel': return [B_([0, 0, -0.45], [1.2, 1.2, 0.08], -8), Cz([0, 0, -0.1], 0.58, 0.5, 0), Cz([0, 0, 0.17], 0.42, 0.06, 10), Cz([0, 0, 0.22], 0.1, 0.06, 18)];
+    case 'star_tracker': return [B_([0, 0, -0.35], [0.7, 0.7, 0.45], 4), Cz([0, 0, 0.18], 0.17, 0.62, -14, 0.34), B_([0.25, 0.25, -0.62], [0.2, 0.2, 0.1], 10)];
+    case 'gps': return [board(-0.35, 1.1, 0.8), B_([0, 0, -0.27], [0.4, 0.3, 0.08], 10), Cz([0.3, 0, -0.1], 0.04, 0.35, 8), B_([0.3, 0, 0.12], [0.55, 0.55, 0.07], 16), B_([-0.4, 0.2, -0.3], [0.25, 0.2, 0.05], 6)];
+    case 'propulsion': return [Cz([0, 0, 0.1], 0.4, 1.0), Cz([0, 0, 0.64], 0.12, 0.1, 10), Cz([0, 0, -0.62], 0.22, 0.4, -14, 0.07), B_([0.52, 0, -0.1], [0.28, 0.2, 0.2], 10), Rod([0.45, 0, -0.05], [0, 0, -1], 0.45, 0.03, 4)];
+    case 'payload_optical': { const o = [B_([0, 0, -0.45], [1.15, 1.15, 0.3], 4)]; for (let i = 0; i < 4; i++) o.push(Cz([0, 0, -0.27 + i * 0.12], 0.45 * Math.cos((i + 1) * 0.4), 0.12, -6 * i, 0.45 * Math.cos(i * 0.4))); return o; }
+    case 'payload_imager': return [B_([0, 0, -0.62], [1.05, 1.05, 0.2], 4), Cz([0, 0, 0.0], 0.36, 1.0), Cz([0, 0, 0.7], 0.5, 0.35, -14, 0.36)];
+    default: return [B_([0, 0, 0], [0.9, 0.9, 0.3])];
+  }
+}
+function iconSvg(id) {
+  const yaw = 35 * Math.PI / 180, pitch = 24 * Math.PI / 180, L = [-0.4, -0.6, 0.7], ln = Math.hypot(...L), sc = 30, cx = 60, cy = 52;
+  const proj = v => { const r = rotate(v, yaw, pitch); return {x: cx + r[0] * sc, y: cy - r[2] * sc, d: r[1]}; };
+  const faces = [];
+  for (const pr of iconPrims(id)) for (const fc of facesOf(pr)) {
+    const rn = rotate(fc.n, yaw, pitch); if (rn[1] > 0.0001) continue;
+    const light = Math.max(0, -(rn[0] * L[0] + rn[1] * L[1] + rn[2] * L[2]) / ln) + 0.25, pts = fc.pts.map(proj);
+    faces.push({d: pts.reduce((a, q) => a + q.d, 0) / pts.length, l: 34 + 34 * Math.min(1, light) + (pr.shade || 0), pts});
+  }
+  faces.sort((a, b) => b.d - a.d);
+  return `<svg viewBox="0 0 120 104" aria-hidden="true">${faces.map(fc => `<polygon points="${fc.pts.map(q => q.x.toFixed(1) + ',' + q.y.toFixed(1)).join(' ')}" fill="${catColor(id, clamp(fc.l, 12, 86))}" stroke="rgba(0,0,0,.35)" stroke-width=".7" stroke-linejoin="round"/>`).join('')}</svg>`;
+}
+
+/* ---------------- rendering ---------------- */
+function render() {
+  const r = S.result;
+  $('mode-pill').textContent = S.mode === 'http' ? 'live (server)' : S.mode === 'star' ? 'live (STAR)' : 'view only (RUN results)';
+  $('app').classList.toggle('drawer-open', !!S.sel);
+  if (!r || r.ok === false) { $('inputs').innerHTML = ''; $('kpis').innerHTML = `<div class="hint" style="padding:6px 0">${esc(r && r.error ? r.error : 'Computing…')}</div>`; $('budgets').innerHTML = ''; $('grid').innerHTML = ''; $('msgs').innerHTML = ''; $('db').innerHTML = ''; $('db-sum').textContent = ''; return; }
+  renderInputs(r); renderDatabase(r); renderIndicators(r); renderGrid(r); renderDrawer();
+}
+function renderInputs(r) {
+  const c = r.cubesat, env = c.envelope_mm.map(v => f(v, 1)).join(' × ');
+  $('inputs').innerHTML = `<div><span class="lab">CubeSat class</span><div class="seg">${[1, 3, 6, 12].map(u => `<span class="${u === c.class_u ? 'on' : ''}">${u}U</span>`).join('')}</div></div>
+    <div class="kv"><span class="lab">Mass limit</span><b>${f(c.mass_limit_kg)} kg</b></div>
+    <div class="kv"><span class="lab">Volume limit</span><b>${sci(c.volume_limit_m3)} m³</b></div>
+    <div class="kv"><span class="lab">Envelope</span><b>${esc(env)} mm</b></div>
+    <div class="ro">${S.mode === 'viewer' ? 'Results of a STAR run' : 'Inputs come from STAR'}, read-only</div>`;
+  $('std').textContent = c.standard;
+}
+/* ---------------- Database panel: components, images and datasheets by class ---------------- */
+function dbBar(L, title, key, sum) {
+  const lab = top => L.classes.map((c, i) => `<div class="lb" style="flex:${c.n}${i === L.classes.length - 1 ? ';overflow:visible;direction:rtl' : ''}" title="${esc(c.name)}">${(i % 2 === 0) === top ? esc(c.acronym) : '&nbsp;'}</div>`).join('');
+  const seg = L.classes.map(c => {
+    const v = key === 'n' ? c.n : c[key], miss = c.n - v;
+    return `<div class="sg" style="flex:${c.n}" title="${esc(c.name)}: ${v} of ${c.n}${miss ? ' · ' + miss + ' Not available in the database' : ''}"><i style="width:${100 * v / c.n}%;background:${catColor(c.id)}"></i><span>${v}</span></div>`;
+  }).join('');
+  return `<div class="dbbar"><div class="t"><span>${esc(title)}</span><span>${sum} of ${L.total}</span></div>
+    <div class="dbrow">${lab(true)}</div><div class="dbrow">${seg}</div><div class="dbrow">${lab(false)}</div></div>`;
+}
+function renderDatabase(r) {
+  const L = r.library; $('db-card').style.display = L ? '' : 'none';
+  if (!L) return;
+  $('db-sum').textContent = `${L.total} components · ${L.images} images · ${L.datasheets} datasheets`;
+  $('db').innerHTML = dbBar(L, 'Components by class', 'n', L.total) + dbBar(L, 'Images', 'images', L.images) + dbBar(L, 'Datasheets', 'datasheets', L.datasheets) +
+    `<div class="dblegend"><div class="items">${L.classes.map(c => `<span><b class="sw" style="background:${catColor(c.id)}"></b><strong>${esc(c.acronym)}</strong> ${esc(c.name)}</span>`).join('')}</div>
+      <div class="hint" style="margin-top:6px">Segment width = components in the class · coloured = available · hatched = ${NAD}</div></div>`;
+}
+function kpi(label, value, unit, status, title) { return `<div class="kpi ${status}" title="${esc(title || '')}"><div class="l">${esc(label)}</div><div class="v">${value}<span class="u">${esc(unit)}</span></div></div>`; }
+function renderIndicators(r) {
+  const t = r.totals, subs = r.subsystems.filter(s => s.selected), vendors = new Set(subs.map(s => s.selected.vendor));
+  const comp = subs.length ? subs.reduce((a, s) => a + s.selected.completeness, 0) / subs.length : 0;
+  const massOk = t.mass_kg <= t.mass_limit_kg, volOk = t.volume_m3 <= t.volume_limit_m3;
+  $('kpis').innerHTML = [
+    kpi('Mass', f(t.mass_kg, 3), `of ${f(t.mass_limit_kg)} kg`, massOk ? 'ok' : 'bad', t.mass_unknown.length ? 'Without published mass: ' + t.mass_unknown.join(', ') : 'Sum of the published masses of the selected components'),
+    kpi('Volume (published sizes)', sci(t.volume_m3), `of ${sci(t.volume_limit_m3)} m³`, volOk ? 'ok' : 'bad', t.volume_unknown.length ? `${t.volume_unknown.length} component(s) without published size are not counted` : 'Sum of length × width × height of the selected components'),
+    kpi('Power (declared peak)', f(t.power_w_declared_peak, 2), 'W', t.power_unknown.length ? 'warn' : 'ok', t.power_unknown.length ? `Not publicly available for ${t.power_unknown.length} subsystem(s): ` + t.power_unknown.join(', ') : 'Sum of the maximum powers declared by the vendors'),
+    kpi('Subsystems covered', t.n_covered, `of ${t.n_subsystems}`, t.n_covered === t.n_subsystems ? 'ok' : 'warn', 'Subsystems with at least one component that fits'),
+    kpi('Published key data', Math.round(100 * comp), '%', comp >= 0.8 ? 'ok' : 'warn', 'Average fraction of the key data of the selected components that the vendors publish'),
+    kpi('Vendors', vendors.size, '', 'ok', [...vendors].join(', ')),
+  ].join('');
+  $('msgs').innerHTML = r.messages.map(m => '• ' + esc(m)).join('<br>');
+  const bar = (obj, unit, digits) => {
+    const total = Object.values(obj).reduce((a, b) => a + b, 0) || 1, items = Object.entries(obj);
+    return `<div class="bar">${items.map(([k, v]) => `<i style="width:${100 * v / total}%;background:${catColor(k)}" title="${esc(labelOf(k))}: ${f(v, digits)} ${unit}"></i>`).join('')}</div>
+      <div class="legend">${items.map(([k, v]) => `<span><b style="background:${catColor(k)}"></b>${esc(labelOf(k))} ${f(v, digits)}</span>`).join('')}</div>`;
+  };
+  const mb = r.breakdown.mass_kg, pb = r.breakdown.power_w;
+  const free = Math.max(0, t.mass_limit_kg - t.mass_kg);
+  $('budgets').innerHTML = `<div><h4>Mass budget (kg) · ${f(free, 2)} kg free of ${f(t.mass_limit_kg)}</h4>${bar(mb, 'kg', 3)}</div>
+    <div><h4>Power budget (W, declared peak, worst case)</h4>${bar(pb, 'W', 2)}
+      <div class="hint">${t.power_unknown.length ? 'Not publicly available: ' + esc(t.power_unknown.map(id => nameOf(r, id)).join(', ')) : 'All selected components publish their power'}</div></div>`;
+}
+const labelOf = id => { const s = (S.result && S.result.subsystems || []).find(x => x.id === id); return s ? s.label : id; };
+const nameOf = (r, cid) => { for (const s of r.subsystems) if (s.selected && s.selected.id === cid) return s.label; return cid; };
+function valueHtml(row) { return row.value == null ? `<span class="na">${NA}</span>` : esc(row.value) + (row.unit ? ' ' + esc(row.unit) : '') + '<sup>1</sup>'; }
+function renderGrid(r) {
+  $('count').textContent = `${r.totals.n_covered} of ${r.totals.n_subsystems} subsystems · one card per subsystem`;
+  $('grid').innerHTML = r.subsystems.map(s => {
+    const k = s.selected, cls = r.cubesat.class_u;
+    const top = `<div class="top">${iconSvg(s.id)}<b>${esc(s.label)}</b><span class="cnt">${s.n_database} in database<br>${s.n_fit} fit a ${cls}U</span></div>`;
+    if (!k) return `<div class="sub" data-id="">${top}<div class="nodata"><b>No component meets the CubeSat ${cls}U standard</b>${s.note ? `<div class="hint" style="margin-top:4px">${esc(s.note)}</div>` : ''}</div></div>`;
+    const alts = (s.alternatives || []).slice(0, 3).map(a => esc(a.name)).join(' · ') + (s.alternatives.length > 3 ? ` · +${s.alternatives.length - 3}` : '');
+    const doc = (k.source || {}).document || (k.source || {}).url || '';
+    return `<div class="sub ${S.sel && S.sel.id === k.id ? 'sel' : ''}" data-id="${esc(k.id)}">${top}<div class="body">
+      <p class="nm">${esc(k.name)}</p><p class="vd">${esc(k.vendor)}</p>
+      ${k.rows.map(row => `<div class="r"><span>${esc(row.label)}</span><span>${valueHtml(row)}</span></div>`).join('')}
+      ${alts ? `<div class="alt">Also fit: ${alts}</div>` : ''}
+      <div class="src"><sup>1</sup> ${esc(doc)}${(k.source || {}).retrieved ? ' · retrieved ' + esc(k.source.retrieved) : ''}</div></div></div>`;
+  }).join('');
+}
+$('grid').onclick = e => { const el = e.target.closest('[data-id]'); if (!el || !el.dataset.id) return; select(el.dataset.id); };
+function select(id) {
+  const s = S.result.subsystems.find(x => x.selected && x.selected.id === id);
+  S.sel = s && !(S.sel && S.sel.id === id) ? s.selected : null; render();
+}
+
+/* ---------------- component drawer (read only) ---------------- */
+function renderDrawer() {
+  const p = S.sel; if (!p) { dsRelease(); $('d-body').innerHTML = ''; return; }
+  $('d-title').textContent = `${p.vendor || ''} ${p.name}`;
+  const im = p.image, so = p.source || {}, ds = p.datasheet, src = im && (im.data_uri || (S.mode === 'http' ? im.file : null));
+  const specs = Object.entries(p.specs || {}).map(([k, v]) => `<div class="k">${esc(k)}</div><div class="${v == null ? 'na' : ''}">${v == null ? NA : esc(typeof v === 'object' ? JSON.stringify(v) : v)}</div>`).join('');
+  const imageBox = src ? `<img class="big" src="${src}" alt="">` : `<div class="box">${im ? 'Image not shown in this view' : 'Image: ' + NAD}</div>`;
+  $('d-body').innerHTML = `<div class="sec dual">
+      <div><h4>Image</h4>${imageBox}
+        <div style="margin-top:6px"><span class="badge">${esc(labelOf(S.result.subsystems.find(s => s.selected && s.selected.id === p.id).id))}</span><span class="badge">${so.verified ? 'verified' : 'not verified by a person'}</span></div>
+        <div class="kvg" style="margin-top:6px">${p.rows.map(row => `<div class="k">${esc(row.label)}</div><div class="${row.value == null ? 'na' : ''}">${row.value == null ? NA : esc(row.value) + (row.unit ? ' ' + esc(row.unit) : '')}</div>`).join('')}
+          ${p.dimensions ? `<div class="k">Size source</div><div title="${esc(p.dimensions.note)}">${esc(p.dimensions.basis)}</div>` : ''}</div></div>
+      <div><h4>Datasheet${ds ? ' · ' + esc(ds.document || ds.file) + (ds.page ? ' · p. ' + ds.page : '') : ''}</h4><div class="dsview" id="ds-view"></div></div></div>
+    <div class="sec"><h3 style="margin:0 0 6px;font-size:11px;text-transform:uppercase">Data source</h3>
+      <div>${esc(so.document || NAD)}${so.retrieved ? ' · retrieved ' + esc(so.retrieved) : ''}</div></div>
+    <div class="sec"><h3 style="margin:0 0 6px;font-size:11px;text-transform:uppercase">All published specifications</h3><div class="kvg">${specs}</div></div>
+    ${p.notes ? `<div class="sec"><h3 style="margin:0 0 6px;font-size:11px;text-transform:uppercase">Catalogue notes (in Italian, as transcribed)</h3><div class="hint">${esc(p.notes)}</div></div>` : ''}`;
+  loadDatasheet(p);
+}
+let dsToken = 0, dsUrl = null;
+function dsRelease() { dsToken++; if (dsUrl) { URL.revokeObjectURL(dsUrl); dsUrl = null; } }
+async function loadDatasheet(p) {
+  dsRelease(); const token = dsToken, box = $('ds-view'), ds = p.datasheet; if (!box) return;
+  const msg = t => { box.textContent = t; };
+  if (!ds) return msg('Datasheet: ' + NAD);
+  const page = ds.page ? '#page=' + ds.page : '';
+  try {
+    if (S.mode === 'http') { box.innerHTML = `<iframe title="Datasheet" src="${esc(ds.file)}${page}"></iframe>`; return; }
+    if (S.mode === 'star') {
+      msg('Loading datasheet…');
+      const d = await findPywebview().component_selector_datasheet(p.id);
+      if (token !== dsToken) return;
+      if (!d || !d.ok) return msg('Datasheet: ' + ((d && d.error) || NAD));
+      const bin = atob(d.base64), arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      dsUrl = URL.createObjectURL(new Blob([arr], {type: 'application/pdf'}));
+      box.innerHTML = `<iframe title="Datasheet" src="${dsUrl}${page}"></iframe>`; return;
+    }
+    msg('The datasheet is shown when the selector runs inside STAR or on the local server.');
+  } catch (err) { if (token === dsToken) msg('Datasheet could not be displayed: ' + err); }
+}
+$('d-close').onclick = () => { S.sel = null; render(); };
+
+/* ---------------- compute ---------------- */
+async function compute() {
+  if (S.mode === 'viewer') return;
+  try { S.result = await API.select({form_factor_u: S.params.form_factor_u}); } catch (err) { S.result = {ok: false, error: String(err)}; }
+  S.sel = null; render();
+}
+function loadResult(payload) {
+  const res = payload.result || payload;
+  S.result = res; S.sel = null;
+  if (payload.params) S.params = {...payload.params};
+  render();
+}
+
+/* ---------------- STAR results-shell hooks (same pattern as the other END modules) ---------------- */
+async function readRunFile(files, re) {
+  const fl = Array.from(files || []).find(x => re.test(x.name)); if (!fl) return null;
+  const txt = await fl.text();
+  const m = /componentSelectorData\s*=\s*([\s\S]*?)\s*;?\s*$/.exec(txt);
+  return JSON.parse(m && /\.js$/i.test(fl.name) ? m[1] : txt);
+}
+window.receiveComponentSelectorFilesFromParent = async function (payload = {}) {
+  try {
+    const files = [...(payload.productFiles || []), ...(payload.resultFiles || [])];
+    const data = await readRunFile(files, /component_selector_data\.js$/i) || await readRunFile(files, /component_selector_results\.json$/i);
+    if (data) loadResult(data);
+  } catch (e) { console.warn('component selector: unable to read run files', e); }
+};
+window.receiveComponentSelectorDataFromParent = data => loadResult(data);
+async function classFromStar() {
+  const req = await API.fromRequirements();
+  const u = req && req.params && req.params.form_factor_u;
+  if (u) S.params.form_factor_u = u;
+}
+async function upgradeIfLive() {
+  if (S.mode !== 'viewer' || !findPywebview()) return false;
+  S.mode = 'star';
+  await classFromStar();
+  render(); compute();
+  return true;
+}
+window.refreshComponentSelectorDashboard = () => { upgradeIfLive(); };
+function setTheme(th) { document.documentElement.dataset.theme = th === 'light' ? 'light' : 'dark'; store.set('star-cs-theme', th); }
+window.setTheme = setTheme; window.applyTheme = setTheme;
+for (const w of [window, window.parent, window.top]) { try { w.addEventListener('pywebviewready', upgradeIfLive); } catch (_) {} }
+(function retryLive() { let n = 0; const timer = setInterval(async () => { if (await upgradeIfLive() || S.mode !== 'viewer' || ++n > 60) clearInterval(timer); }, 1000); })();
+
+/* ---------------- boot ---------------- */
+(async function boot() {
+  setTheme(store.get('star-unified-theme') || store.get('star-cs-theme') || (document.documentElement.dataset.theme || 'dark'));
+  await API.detect();
+  if (S.mode === 'viewer' && window.componentSelectorData) { loadResult(window.componentSelectorData); return; }
+  const fromUrl = new URLSearchParams(location.search).get('form_factor_u');
+  if (fromUrl) S.params.form_factor_u = +fromUrl;
+  else if (S.mode === 'star') await classFromStar();
+  render();
+  if (S.mode !== 'viewer') compute();
+})();
+})();
+</script>
+</body>
+</html>

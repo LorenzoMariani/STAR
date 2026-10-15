@@ -1,0 +1,21 @@
+{
+ "components": 98,
+ "no_text": 0,
+ "mass": {
+  "found": 66,
+  "missing": 6,
+  "skipped": 0,
+  "number_only": 26
+ },
+ "dims": {
+  "all": 78,
+  "partial": 4,
+  "none": 4,
+  "skipped": 12
+ },
+ "specs": {
+  "found": 240,
+  "missing": 17,
+  "skipped": 554
+ }
+}

@@ -1,0 +1,116 @@
+module_type: digital_twin_module
+module_version: 0.2.0
+module_id: END-019
+module_name: Satellite Design Component Selector
+owner: UNIRM1
+responsible:
+  leader: TBD
+  co_leader: TBD
+short_description: For a CubeSat class (1U, 3U, 6U, 12U), selects at least one real component per subsystem that fits the CubeSat mass and volume limits, preferring components with the most complete public data.
+description: >
+  END-019 takes the CubeSat class (1U, 3U, 6U or 12U) and, for each subsystem (structure, on-board computer, EPS, battery,
+  solar cells, communication radio, antenna, ADCS, magnetorquer, reaction wheel, star tracker, GNSS receiver, propulsion,
+  imaging payload, optical terminal), selects at least one component from a catalogue of real products built from public
+  vendor datasheets (179 components, every value with its source). Constraints are only those of the CubeSat Design
+  Specification Rev. 14.1: total mass (1U 2 kg, 3U 6 kg, 6U 12 kg, 12U 24 kg) and the volume of the envelope. Among the
+  components that fit, the ones with the most complete public data are preferred. A value that the vendor does not publish is
+  reported as "Not publicly available" and is never estimated; the module makes no design assumption (no power balance, no
+  duty cycles, no margins).
+aliases:
+  - component selector
+  - satellite design
+  - CubeSat design
+  - subsystem selection
+  - bill of materials
+  - CubeSat components
+capabilities:
+  - Select, for every subsystem, a real component that fits a 1U, 3U, 6U or 12U CubeSat (mass and volume of the CubeSat Design Specification).
+  - Prefer components whose key data (mass, size and subsystem data) are publicly available.
+  - Report how many components of each subsystem are in the database and how many fit the class.
+  - Sum the published masses, volumes and declared peak powers of the selected components against the class limits.
+  - Produce a bill of materials, a power hand-off with declared values only, and a component gallery with datasheet links.
+domain_of_validity:
+  mission_phase:
+  - pre_phase_a
+  - phase_a
+  - design_trade_off
+  mission_type:
+  - cubesat
+  fidelity_level: preliminary
+  notes: >
+    CubeSat classes 1U, 3U, 6U and 12U (mass up to 24 kg). Only mass and volume are checked: there is no power balance, no
+    electrical or interface compatibility check, no pointing, link or thermal analysis. Component volume is the product of the
+    published length, width and height (bounding box). Larger satellites are out of scope: reference platforms (Tyvak, Terran Orbital).
+activation_rules:
+  include_when_any_requirement_contains:
+    - cubesat
+    - satellite design
+    - component selection
+    - select the components
+    - bill of materials
+    - form factor
+    - 1u
+    - 3u
+    - 6u
+    - 12u
+    - subsystem
+    - adcs
+    - magnetorquer
+    - reaction wheel
+    - star tracker
+    - propulsion
+    - payload accommodation
+  required_upstream_modules: []
+  optional_upstream_modules: []
+planning_guidance: >
+  Select END-019 when the mission request asks to design or size a small satellite or CubeSat, to choose its components or
+  subsystems, or to check which commercial components can be put inside a 1U, 3U, 6U or 12U CubeSat. END-019 needs no upstream
+  module. If the requirements state a satellite mass above 24 kg, do not select END-019: the reference platforms (Tyvak,
+  Terran Orbital) are proposed in the module output instead.
+required_inputs:
+  - name: form_factor_u
+    data_type: number
+    required: true
+    unit: U
+    allowed_values: [1, 3, 6, 12]
+    description: CubeSat class in units (1U, 3U, 6U or 12U). It fixes the mass limit and the volume limit of the selection.
+    missing_information_reason: The mass limit and the envelope of the CubeSat depend on the class.
+    assumption_allowed: true
+    default_value: 6
+outputs:
+  - name: component_selector_results
+    artifact_name: output_component_selector/component_selector_results.json
+    data_type: json
+    description: Selected component for every subsystem, with its published data, the counts in the database, the totals against the class limits and the parameters used.
+  - name: component_selector_bom
+    artifact_name: output_component_selector/component_selector_bom.csv
+    data_type: csv
+    description: Bill of materials of the selected components with masses, volumes, declared powers and datasheet links.
+  - name: component_selector_requirements_mapping
+    artifact_name: output_component_selector/component_selector_requirements_mapping.json
+    data_type: json
+    description: Parameters extracted from the requirements, with the sentence that supports each, and out-of-scope notes.
+  - name: component_selector_power_handoff
+    artifact_name: output_component_selector/component_selector_power_handoff.json
+    data_type: json
+    description: Maximum powers declared by the vendors for the selected components (no estimate), usable as a starting point by END-004 Power Budget.
+  - name: component_selector_frontend_data
+    artifact_name: results_component_selector/component_selector_data.js
+    data_type: javascript
+    description: JavaScript payload consumed by the STAR FrontEnd results tab.
+  - name: component_selector_report
+    artifact_name: results_component_selector/component_selector_report.html
+    data_type: html
+    description: Self-contained report with the component cards, the indicators and the mass and power budgets (opens in any browser).
+execution:
+  execution_mode: python_runner
+  runner_module: runners.end019_runner
+  runner_function: run_end019
+  upstream_dependencies: []
+  downstream_dependencies: []
+  estimated_runtime: 2
+interface_notes: >
+  The Python runner reads the module input JSON written by the orchestrator (requirements and resolved inputs), takes the CubeSat
+  class from them, runs the selection and writes the products under modules_output/END-019/output_component_selector and the
+  frontend files under modules_output/END-019/results_component_selector. The runner needs the star_component_selector package;
+  it is found automatically next to the STAR folder or through the STAR_COMPONENT_SELECTOR_ROOT variable.

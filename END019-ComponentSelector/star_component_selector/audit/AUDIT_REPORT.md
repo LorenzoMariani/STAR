@@ -1,0 +1,69 @@
+# Validazione del selettore e del catalogo (2026-10-15)
+
+Tre controlli: **A** dati del catalogo contro i datasheet locali, **B** correttezza del selettore contro una ricerca esaustiva indipendente (con un errore trovato e corretto), **C** plausibilita' rispetto alle piattaforme Tyvak Triumph 6U e Renegade 12U.
+
+## A. Dati del catalogo contro i datasheet locali
+
+Script: `python tools/audit_datasheets.py` (solo lettura; scrive `audit/audit_datasheets.csv` e `audit/audit_summary.json`). Per ognuno dei **98 componenti con datasheet locale** (68 PDF in `datasheets/`) cerca nel testo del PDF (nelle sole pagine che nominano il prodotto, se il documento ne contiene molti): la massa, le tre dimensioni e ogni specifica numerica del catalogo. Non tocca `verified`: quel campo resta `false` finche' una persona non ha controllato.
+
+## Risultati
+
+| Controllo | Esito |
+|---|---|
+| PDF senza testo estraibile | 0 |
+| Massa | 66 trovate con l'unita' (g o kg); 26 trovate come numero in una tabella (unita' nell'intestazione); 6 non trovate |
+| Dimensioni | 78 componenti con tutte e tre le quote trovate; 4 parziali e 4 non trovate; 12 non controllabili (quote derivate dalla taglia o assenti) |
+| Specifiche numeriche | 240 trovate su 257 controllate (554 voci non numeriche o booleane non cercate) |
+
+**Nessun valore del catalogo e' risultato in contraddizione con il suo datasheet, tranne un caso documentato.** Ho letto nel PDF ogni voce non trovata:
+
+- **Massa non trovata (6).**
+  - OPTIMUS-30/-40/-80: il catalogo usa la pagina prodotto attuale (288 / 360 / 720 g, scelta dichiarata nelle note come piu' prudente), il PDF del 2020 riporta 268 / 335 / 670 g. **E' l'unica vera discrepanza**: nel pannello il datasheet mostra i valori piu' bassi.
+  - XACT-100 (0.52 kg + 1 kg di ruote = 1.52 kg), BIT-3 (1.28 kg a secco + 1.50 kg di propellente = 2.78 kg) e PM200 (1100 g + 310 g = 1.41 kg): somme, dichiarate nelle note.
+- **Massa trovata solo come numero (26).** Confermate leggendo il contesto: tabelle con l'unita' nell'intestazione (L3Harris MPS, CU Aerospace CHIPS, VACCO, AAC RW210, CubeADCS "<500"), oppure somme dichiarate nelle note (Pumpkin PPM A2-D2, MAI-100 = 865 + 20 g, MAI-200, GomSpace P60 = 80 + 54 + 47 g).
+- **Dimensioni non trovate (8).** Spiegate: Blue Canyon batteries in pollici (1.8 x 4.2 x 3.5 in = 45.7 x 106.7 x 88.9 mm), Pumpkin PPM con ingombro PC/104 (`basis: standard`) e GomSpace P60 (quote dalla pagina del fornitore, indicato nella nota).
+- **Specifiche non trovate (17).** Cambi di unita' (precisione XACT 25 arcsec = 0.00694 deg; SRX-8 1.4 Gbit/s = 1,400,000 kbps), valori derivati e dichiarati come tali (swath NanoCam, impulso totale BIT-3, potenza GST-600 e GSW-600, TX AX100 = 0.8 A x 3.3 V, forma minima di SCOT30/80), Isp VACCO 40 s (scritto "40 sec" con puntini), 128 W del P60 (pagina del fornitore).
+
+## Limiti del controllo
+
+- Trovare un numero nel testo non prova che sia la stessa grandezza: e' un controllo di coerenza, non una rilettura. Le 26 masse "solo numero" le ho riguardate a mano; le specifiche trovate (240) e le dimensioni (78) no.
+- Copre solo i 98 componenti con PDF. Gli altri 81 hanno come fonte una pagina web (o un PDF non raggiungibile) e non sono stati controllati.
+- Valori dei cataloghi con piu' prodotti (EnduroSat, Blue Canyon) sono cercati nelle pagine che nominano il prodotto, quando si riescono a individuare.
+- Il campo `verified` resta `false` per tutti i componenti.
+
+## B. Correttezza del selettore (`tests/test_validation.py`, 7 test)
+
+- **Confronto con una ricerca esaustiva.** 240 cataloghi casuali (classi 1U, 3U e 6U, 6 sottosistemi, 2-4 candidati ciascuno, valori non pubblicati a caso): per ognuno una funzione indipendente prova tutte le combinazioni e il risultato di `select()` deve avere la stessa completezza totale e la stessa massa. Include i casi in cui i limiti non ammettono soluzione (il selettore deve dichiararlo).
+- **Errore trovato e corretto.** La ricerca esatta (usata solo quando la scelta migliore di ogni sottosistema supera i limiti) non controllava i limiti sull'ultima combinazione completa: poteva restituire `within_limits = True` con una massa oltre il limite (visto con un 1U sintetico: 2.52 kg contro 2 kg). Corretto in `star_selector/selector.py`. Sul catalogo reale il risultato non cambia (1U: non entra tutto, segnalato; 3U, 6U, 12U: entra tutto con la prima scelta), quindi nessun risultato mostrato finora era sbagliato.
+- **Invarianti sul catalogo reale, per 1U, 3U, 6U e 12U.** I componenti scelti rispettano massa e ingombro; massa, volume e potenza totali sono la somma dei valori del catalogo; la struttura e' della classe; due esecuzioni danno lo stesso risultato; le alternative entrano tutte e non contengono il componente scelto; cio' che entra in una classe entra in quella piu' grande; ogni sottosistema senza componente ha una scheda con il motivo; nessun numero e' inventato (massa e potenza coincidono con quelle del catalogo).
+- Totale test del progetto: **78**, tutti passano.
+
+## C. Confronto con le piattaforme di riferimento (`tools/validate_platforms.py`, `audit/platform_comparison.json`)
+
+Solo due piattaforme sono confrontabili: **Tyvak Triumph (6U)** e **Tyvak Renegade (12U)**. Terran Orbital Voyager e' un 16U (fuori dalle classi 1U/3U/6U/12U) e le altre cinque piattaforme sono molto piu' grandi.
+
+| | Triumph 6U | Renegade 12U |
+|---|---|---|
+| Massa di lancio massima dichiarata | 14 kg | 25 kg |
+| Limite CDS Rev. 14.1 della classe | 12 kg | 24 kg |
+| Massa di bus della piattaforma (lancio − payload massimo) | 9 kg | 15 kg |
+| Selettore: massa dei sottosistemi di bus, un componente ciascuno | 2.05 kg | 2.77 kg |
+| Selettore: stesso, con le quantita' della piattaforma (2 star tracker, 3 ruote, 2-3 batterie) | 2.43 kg | 3.44 kg |
+| Rapporto con la massa di bus | 23-27 % | 18-23 % |
+| Selettore: massa totale, 15 sottosistemi con payload | 4.24 kg (30 % della massa di lancio) | 4.96 kg (20 %) |
+| Potenza dichiarata dei componenti scelti | 32.2 W | 32.2 W |
+| Potenza dell'array solare della piattaforma | 100 W | 100 W |
+
+Letture e limiti:
+
+- **Le due piattaforme dichiarano masse di lancio sopra il limite CDS Rev. 14.1 della loro classe** (14 kg contro 12 kg, 25 kg contro 24 kg): sono valori del fornitore per i loro dispenser. Il selettore usa il limite CDS, come richiesto.
+- **La selezione e' molto piu' leggera del bus delle piattaforme (circa un quarto).** E' coerente con la direzione attesa (un componente per sottosistema e' un'approssimazione per difetto: mancano cablaggio, minuteria, redundanza, margini, struttura e array solare di una piattaforma di 100 W: il selettore sceglie un solo pannello), ma non lo dimostra: **non esiste una massa di riferimento misurata** con cui chiudere il conto e la differenza di circa 6-12 kg non e' spiegata da dati.
+- **Moduli della piattaforma senza categoria nel catalogo:** backplane, sensori solari grossolani, IMU. Sono lacune del catalogo da valutare (il selettore oggi non li cerca).
+- **Sottosistemi del selettore non elencati tra i moduli:** struttura, pannelli solari, antenna, ADCS integrato, propulsione e payload (la piattaforma li tratta come opzioni o parti a parte).
+- **Sovrapposizione funzionale non controllata:** la scelta dell'ADCS (es. un'unita' integrata con ruote e magnetorquer) insieme a ruote, magnetorquer e star tracker separati duplica funzioni. Il selettore non lo controlla perche' verifica solo massa e volume.
+- La potenza dichiarata (32.2 W) e' la somma dei massimi dichiarati dai fornitori dei componenti scelti, con un componente senza dato (Pumpkin Linear EPS 11 Wh): non e' confrontabile in modo stretto con i 100 W di un array, che e' una capacita' di generazione e non un consumo.
+- I valori delle piattaforme sono `verified: false`.
+
+## Cosa non e' stato possibile validare
+
+Non ci sono dati di volo o di collaudo con cui confrontare la scelta, ne' una massa misurata di un CubeSat completo costruito con questi componenti. I tre controlli dicono che i dati sono fedeli ai documenti (dove il documento e' stato scaricato), che le regole sono applicate correttamente e che il risultato e' plausibile in ordine di grandezza; non dicono che la scelta sia ottimale per una missione.

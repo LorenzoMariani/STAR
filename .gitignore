@@ -39,6 +39,13 @@ _old*/
 /END016-CollisionAvoidance/CARA_Analysis_Tools/**/Documentation/
 /END016-CollisionAvoidance/CARA_Analysis_Tools/DistributedMatlab/EvaluateLightPollution/output_with_distribution/
 /END016-CollisionAvoidance/lib/*.png
+# END-019: the vendor datasheets are PDFs (left out above; GomSpace's carry a
+# confidentiality notice); its STAR integration kit (now copied into STAR),
+# installation guide, conversation transcript and hand-over notes
+/END019-ComponentSelector/docs/
+/END019-ComponentSelector/star_integration/
+/END019-ComponentSelector/CONTINUARE_LA_CONVERSAZIONE.md
+/END019-ComponentSelector/LEGGIMI_INSTALLAZIONE.md
 
 # Python, MATLAB and OS leftovers
 __pycache__/
