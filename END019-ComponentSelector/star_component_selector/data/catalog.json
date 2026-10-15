@@ -4235,6 +4235,77 @@
    }
   },
   {
+   "id": "isis-iobc",
+   "category": "obc",
+   "vendor": "ISISpace",
+   "name": "On-Board Computer (iOBC)",
+   "mass_kg": 0.1,
+   "temp_op_c": [
+    -25,
+    65
+   ],
+   "power_w": 0.4,
+   "notes": "Brochure iOBC v1 (cubesatshop.com, con KubOS 'in arrivo nel 2017': documento datato, verificare la disponibilita' attuale): processore ARM9 a 32 bit 400 MHz, 64 MB SDRAM, 1 MB NOR flash, 256 kB FRAM per i dati critici, 2 schede SD da 2 GB (fino a 32 GB su richiesta) per i dati di massa; FreeRTOS, watchdog esterno, controllo di alimentazione e orologio in tempo reale; telemetria di tensioni, correnti e temperatura; architettura a scheda figlia (EM per lo sviluppo, FM compatta, personalizzabile). Interfacce: I2C (master o slave), SPI master (fino a 8 slave), 2 UART (RS232 + RS232/RS485/RS422), GPIO, ADC 10 bit a 8 canali, PWM, JTAG, USB host e device, interfaccia per sensore d'immagine. Alimentazione 3.3 V, consumo medio 400 mW. Massa: 76 g con la sola scheda principale e 100 g con la scheda figlia EM; la massa con la scheda figlia FM (la configurazione delle dimensioni) non e' dichiarata: si usa il valore dichiarato piu' alto (100 g). Dimensioni 96 x 90 x 12.4 mm 'incl. FM daughter board'. Eredita' di volo dichiarata dal 2014. Le pagine ISIS riportano 94 g per la scheda principale e 512 kB di FRAM: valori diversi dalla brochure scaricata, che e' l'unica usata qui.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/iOBC-Brochure-v1.pdf",
+    "document": "ISIS On Board Computer (iOBC) brochure v1",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "data_interfaces": [
+     "I2C",
+     "SPI",
+     "UART",
+     "RS-232",
+     "RS-485",
+     "RS-422",
+     "GPIO",
+     "ADC",
+     "PWM",
+     "JTAG",
+     "USB",
+     "image sensor interface"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      3.3,
+      3.3
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     96,
+     90,
+     12.4
+    ],
+    "basis": "declared",
+    "note": "Brochure iOBC: 96 x 90 x 12.4 mm incl. FM daughter board."
+   },
+   "image": {
+    "file": "images/ISISpace-iOBC.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/iOBC-Brochure-v1.pdf",
+    "page_url": "https://www.cubesatshop.com/product/isis-on-board-computer/",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__iOBC-Brochure-v1.pdf",
+    "document": "ISIS On Board Computer (iOBC) brochure v1",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/iOBC-Brochure-v1.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 541298
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
    "id": "aac-pulsar-utrx",
    "category": "comms",
    "vendor": "AAC Clyde Space",
@@ -4649,6 +4720,256 @@
    }
   },
   {
+   "id": "isis-iceps2-type-a",
+   "category": "eps",
+   "vendor": "ISISpace",
+   "name": "ICEPS2 Type A (PIU + PBP-2S1P, 28.8 Wh)",
+   "mass_kg": 0.184,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "power_w": 0.093,
+   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE A: scheda principale PIU con la batteria PBP-2S1P (2 celle in serie, 7.2 V, 28.8 Wh dichiarati nel testo) montata direttamente sopra; non combinabile con la DaughterBoard. 3 ingressi MPPT, tensione funzionale 3.5-7.5 V (massimo assoluto 15 V), 2 A per canale. Massa 184 g (179-189 g), 96 x 92 x 26.5 mm (PIU + batteria). Soglia software di spegnimento 6.0 V.",
+   "source": {
+    "url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "compatible_form_factors_u": [
+     1,
+     2,
+     3
+    ],
+    "pv_channels": 3,
+    "pv_voltage_v": [
+     3.5,
+     7.5
+    ],
+    "pv_power_w_max": null,
+    "battery_voltage_v": null,
+    "battery_families": null,
+    "integrated_battery_wh": 28.8,
+    "integrated_battery_voltage_v": 7.2,
+    "output_voltage_ranges_v": [
+     [
+      3.3,
+      3.3
+     ],
+     [
+      5,
+      5
+     ]
+    ],
+    "output_power_w_max": null,
+    "data_interfaces": [
+     "I2C"
+    ],
+    "efficiency": null
+   },
+   "dimensions": {
+    "mm": [
+     96,
+     92,
+     26.5
+    ],
+    "basis": "declared",
+    "note": "Datasheet ISIS ICEPS2 issue 1.2, 'Volume' Type A: 96 x 92 x 26.5 mm (PIU + batteria a 2 celle); esclusi i connettori del kit (CSKB)."
+   },
+   "image": {
+    "file": "images/ISISpace-ICEPS2-TypeA.png",
+    "image_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf#page=6",
+    "page_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Render della Tabella 1 (pag. 6) 'ICEPS Types': il tipo e' quello della cella della tabella."
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__ICEPS2-Datasheet-1_2.pdf",
+    "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
+    "source_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 863029
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "isis-iceps2-type-b",
+   "category": "eps",
+   "vendor": "ISISpace",
+   "name": "ICEPS2 Type B (PIU + PBP-4S1P, 57.6 Wh)",
+   "mass_kg": 0.31,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "power_w": 0.093,
+   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE B: scheda principale PIU + batteria PBP-4S1P (4 celle in serie, 14.4 V, 57.6 Wh dichiarati nel testo), la batteria si monta in un punto qualsiasi dello stack. 3 ingressi MPPT, tensione funzionale 3.5-13 V (massimo assoluto 15 V), 2 A per canale. Massa 310 g (305-315 g) nella tabella 'Physical characteristics', senza indicare esplicitamente se comprende la batteria. Dimensioni: il datasheet da' PIU 96 x 92 x 11.3 mm e batteria a 4 celle 94 x 89 x 21.0 mm come volumi separati: altezza 32.3 mm DERIVATA come somma 11.3 + 21.0 (impilati), non dichiarata. Soglia software di spegnimento 12.0 V.",
+   "source": {
+    "url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "compatible_form_factors_u": [
+     1,
+     2,
+     3
+    ],
+    "pv_channels": 3,
+    "pv_voltage_v": [
+     3.5,
+     13
+    ],
+    "pv_power_w_max": null,
+    "battery_voltage_v": null,
+    "battery_families": null,
+    "integrated_battery_wh": 57.6,
+    "integrated_battery_voltage_v": 14.4,
+    "output_voltage_ranges_v": [
+     [
+      3.3,
+      3.3
+     ],
+     [
+      5,
+      5
+     ]
+    ],
+    "output_power_w_max": null,
+    "data_interfaces": [
+     "I2C"
+    ],
+    "efficiency": null
+   },
+   "dimensions": {
+    "mm": [
+     96,
+     92,
+     32.3
+    ],
+    "basis": "derived",
+    "note": "Datasheet ISIS ICEPS2 issue 1.2: PIU 96 x 92 x 11.3 mm + batteria a 4 celle 94 x 89 x 21.0 mm; altezza derivata 11.3 + 21.0 = 32.3 mm."
+   },
+   "image": {
+    "file": "images/ISISpace-ICEPS2-TypeB.png",
+    "image_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf#page=6",
+    "page_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Render della Tabella 1 (pag. 6) 'ICEPS Types': il tipo e' quello della cella della tabella."
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__ICEPS2-Datasheet-1_2.pdf",
+    "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
+    "source_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 863029
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "isis-iceps2-type-c",
+   "category": "eps",
+   "vendor": "ISISpace",
+   "name": "ICEPS2 Type C (PIU + PBP-4S1P + DaughterBoard, 57.6 Wh)",
+   "mass_kg": 0.36,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "power_w": 0.093,
+   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE C: come il Type B piu' la DaughterBoard (PIU-DB): 2 ingressi MPPT in piu' (3+2 = 5), 3 domini di tensione in piu' (VD3 e VD4 buck, default 5 V e 3.3 V, personalizzabili 2.8-12.08 V a costo aggiuntivo; VD5 boost, default 28.2 V (27.4-29.0 V), 1.5 A) e 8 canali di uscita in piu'. Tensione funzionale MPPT 3.5-13 V, 2 A per canale. Massa 360 g (355-365 g), senza indicare esplicitamente se comprende la batteria. Dimensioni: PIU + DaughterBoard 96 x 92 x 16 mm e batteria a 4 celle 94 x 89 x 21.0 mm come volumi separati: altezza 37.0 mm DERIVATA come somma 16 + 21.0, non dichiarata. Soglia software di spegnimento 12.0 V.",
+   "source": {
+    "url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "compatible_form_factors_u": [
+     1,
+     2,
+     3
+    ],
+    "pv_channels": 5,
+    "pv_voltage_v": [
+     3.5,
+     13
+    ],
+    "pv_power_w_max": null,
+    "battery_voltage_v": null,
+    "battery_families": null,
+    "integrated_battery_wh": 57.6,
+    "integrated_battery_voltage_v": 14.4,
+    "output_voltage_ranges_v": [
+     [
+      3.3,
+      3.3
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      28.2,
+      28.2
+     ]
+    ],
+    "output_power_w_max": null,
+    "data_interfaces": [
+     "I2C"
+    ],
+    "efficiency": null
+   },
+   "dimensions": {
+    "mm": [
+     96,
+     92,
+     37.0
+    ],
+    "basis": "derived",
+    "note": "Datasheet ISIS ICEPS2 issue 1.2: PIU + DaughterBoard 96 x 92 x 16 mm + batteria a 4 celle 94 x 89 x 21.0 mm; altezza derivata 16 + 21.0 = 37.0 mm."
+   },
+   "image": {
+    "file": "images/ISISpace-ICEPS2-TypeC.png",
+    "image_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf#page=6",
+    "page_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Render della Tabella 1 (pag. 6) 'ICEPS Types': il tipo e' quello della cella della tabella."
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__ICEPS2-Datasheet-1_2.pdf",
+    "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
+    "source_url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 863029
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
    "id": "endurosat-sband-max",
    "category": "comms",
    "vendor": "EnduroSat",
@@ -4735,6 +5056,294 @@
     "page_url": "https://www.endurosat.com/products/x-band-sdr/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "isis-trxuv",
+   "category": "comms",
+   "vendor": "ISISpace",
+   "name": "VHF/UHF Transceiver (TRXUV)",
+   "mass_kg": 0.085,
+   "temp_op_c": [
+    -10,
+    45
+   ],
+   "power_w": null,
+   "notes": "Brochure TRXUV v.12.5 (cubesatshop.com; prodotto di generazione precedente, progetto basato sull'eredita' Delfi-C3 2008): trasmettitore VHF a frequenza singola (a cristallo) nell'intervallo 130-160 MHz, 22 dBm medi, modulazione BPSK a coseno rialzato, 1200/2400/4800/9600 bps; ricevitore UHF a frequenza singola 400-450 MHz, sensibilita' -104 dBm per BER 1e-5, AFSK o FSK Manchester; AX.25, decodifica dei comandi a bordo, beacon CW, modo loopback. Alimentazione 6.5-12.5 V DC (il connettore a 104 pin porta anche 6-30 V oppure 5 V/3.3 V); consumo <1.55 W in trasmissione e <0.2 W in sola ricezione (usati come limiti superiori). Massa 'circa 85 g a seconda della configurazione' e dimensioni 96 x 90 x 15 mm. Interfaccia I2C, RF SMA femmina 50 ohm. E' un prodotto diverso dal TRXVU gia' in catalogo (uplink VHF e downlink UHF). La tabella di qualifica riporta i test (inclusa la dose totale) senza valori di dose.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS_TRXUV_Transceiver_Brochure_v.12.5.pdf",
+    "document": "ISIS TRXUV VHF/UHF Transceiver brochure v.12.5",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "band": "VHF/UHF",
+    "has_receiver": true,
+    "data_rate_kbps_max": 9.6,
+    "power_w_idle": 0.2,
+    "power_w_tx": 1.55,
+    "data_interfaces": [
+     "I2C"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      6.5,
+      12.5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     96,
+     90,
+     15
+    ],
+    "basis": "declared",
+    "note": "Brochure TRXUV v.12.5: 96 x 90 x 15 mm."
+   },
+   "image": {
+    "file": "images/ISISpace-TRXUV.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS_TRXUV_Transceiver_Brochure_v.12.5.pdf",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS_TRXUV_Transceiver_Brochure_v.12.5.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__TRXUV-Brochure-v12.5.pdf",
+    "document": "ISIS TRXUV VHF/UHF Transceiver brochure v.12.5",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS_TRXUV_Transceiver_Brochure_v.12.5.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1299582
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "gomspace-nanocom-link-s",
+   "category": "comms",
+   "vendor": "GomSpace",
+   "name": "NanoCom Link S (SDR MK3 + ANT2150-DUP, S-band)",
+   "family": "gomspace-nanocom-link",
+   "mass_kg": 0.418,
+   "temp_op_c": [
+    -40,
+    53
+   ],
+   "power_w": null,
+   "notes": "Datasheet GomSpace DS 1076242 rev. 13.0 (22 maggio 2026). La NanoCom SDR MK3 (SoC Zynq con TR600) non ha un datasheet pubblico a se': qui si cataloga la variante Link che la contiene. Il prodotto e' fornito con SDR, front end d'antenna, cavi coassiali e cablaggi gia' configurati; controllo e telemetria via CSP su CAN, RS-422 (full duplex) e 3 interfacce SpaceWire LVDS per i dati, cifratura autenticata allineata a CCSDS 355.0-B-2, qualificato per piu' di 5 anni in orbita secondo il programma di qualifica GomSpace (hardware TRL9). Temperatura: il datasheet dichiara la qualifica per una temperatura operativa dell'interfaccia termica da -40 a +53 C (SDR; massimo assoluto -35..+53 C per l'SDR e -35..+57 C per i front end), usata in temp_op_c. Alimentazione: SDR 12-32 V (massimo assoluto 36 V), circa 1 A. Il front end d'antenna e' un'unita' esterna da montare su una faccia del satellite (nadir) con piastre di montaggio a scelta: la massa del prodotto e' la SOMMA DERIVATA di SDR + front end (configurazione di montaggio piu' pesante dichiarata) + kit cavi (Tabella 12.5, esclusi il kit filtri DSN opzionale da 221 g e i cavi di debug). Le dimensioni sono quelle dell'SDR MK3 (95 x 95 mm h7, spessore dal disegno della Figura 11.x); i front end d'antenna non sono inclusi nelle dimensioni. Le potenze in standby e in attivita' sono SOMME DERIVATE dei valori massimi (caso peggiore) dei moduli della Tabella 5.x; i valori tipici sono riportati sotto. LINK S: S-band CCSDS 131.0-B-3 in full duplex continuo (BPSK/QPSK, 0.5-7.5 MBd/s, convoluzionale 1/2 + Reed-Solomon (255,223)), trasmissione 2200-2290 MHz fino a 32 dBm, ricezione 2025-2110 MHz, fino a 7.5 Mbit/s. Massa: SDR 272 g + ANT2150-DUP 123 g (Type C; Type A 112 g) + cavi 23 g (6+6+6+4+1) = 418 g DERIVATA. Potenza: standby SDR 3.5/5.0/7.0 W (min/tip/max) + ANT2150 0.1/0.1/0.3 W; attiva SDR 5.0/6.3/9.0 W + ANT2150 da 2.0 a 15.0 W secondo il livello di potenza (Tabella 5.6): idle 7.3 W = 7.0 + 0.3 e trasmissione 24.0 W = 9.0 + 15.0 DERIVATE (massimi).",
+   "source": {
+    "url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "document": "GomSpace NanoCom Link S, X and SX Communication Products datasheet DS 1076242 rev. 13.0 (22 maggio 2026)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "band": "S",
+    "has_receiver": true,
+    "data_rate_kbps_max": 7500.0,
+    "power_w_idle": 7.3,
+    "power_w_tx": 24.0,
+    "data_interfaces": [
+     "CAN",
+     "RS-422",
+     "SpaceWire"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      12,
+      32
+     ],
+     [
+      8,
+      18
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     95,
+     95,
+     23.85
+    ],
+    "basis": "declared",
+    "note": "Datasheet GomSpace, Figura 11.3: SDR MK3 NanoCom Link S, 95 x 95 mm (h7) e spessore 23.85 mm; front end d'antenna esclusi."
+   },
+   "image": {
+    "file": "images/GomSpace-NanoCom-Link-S.png",
+    "image_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf#page=20",
+    "page_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Vista prospettiva della SDR MK3 (Figura 4.2 del datasheet); i front end d'antenna non sono rappresentati."
+   },
+   "datasheet": {
+    "file": "datasheets/GomSpace__NanoCom-Link-S-X-SX-Datasheet-13.pdf",
+    "document": "GomSpace NanoCom Link S, X and SX Communication Products datasheet DS 1076242 rev. 13.0 (22 maggio 2026)",
+    "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 17040489
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "gomspace-nanocom-link-x",
+   "category": "comms",
+   "vendor": "GomSpace",
+   "name": "NanoCom Link X (SDR MK3 + ANT8250, X-band, solo TX)",
+   "family": "gomspace-nanocom-link",
+   "mass_kg": 0.448,
+   "temp_op_c": [
+    -40,
+    53
+   ],
+   "power_w": null,
+   "notes": "Datasheet GomSpace DS 1076242 rev. 13.0 (22 maggio 2026). La NanoCom SDR MK3 (SoC Zynq con TR600) non ha un datasheet pubblico a se': qui si cataloga la variante Link che la contiene. Il prodotto e' fornito con SDR, front end d'antenna, cavi coassiali e cablaggi gia' configurati; controllo e telemetria via CSP su CAN, RS-422 (full duplex) e 3 interfacce SpaceWire LVDS per i dati, cifratura autenticata allineata a CCSDS 355.0-B-2, qualificato per piu' di 5 anni in orbita secondo il programma di qualifica GomSpace (hardware TRL9). Temperatura: il datasheet dichiara la qualifica per una temperatura operativa dell'interfaccia termica da -40 a +53 C (SDR; massimo assoluto -35..+53 C per l'SDR e -35..+57 C per i front end), usata in temp_op_c. Alimentazione: SDR 12-32 V (massimo assoluto 36 V), circa 1 A. Il front end d'antenna e' un'unita' esterna da montare su una faccia del satellite (nadir) con piastre di montaggio a scelta: la massa del prodotto e' la SOMMA DERIVATA di SDR + front end (configurazione di montaggio piu' pesante dichiarata) + kit cavi (Tabella 12.5, esclusi il kit filtri DSN opzionale da 221 g e i cavi di debug). Le dimensioni sono quelle dell'SDR MK3 (95 x 95 mm h7, spessore dal disegno della Figura 11.x); i front end d'antenna non sono inclusi nelle dimensioni. Le potenze in standby e in attivita' sono SOMME DERIVATE dei valori massimi (caso peggiore) dei moduli della Tabella 5.x; i valori tipici sono riportati sotto. LINK X: X-band DVB-S2 (MODCOD 1-28, roll-off 0.2, 2-50 MBd/s in configurazione standard, VCM e CCM), solo trasmissione 8000-8400 MHz (con il kit filtri DSN opzionale 8020-8280 MHz) fino a 33 dBm (31 dBm con il kit), velocita' di 50, 150 o 225 Mbit/s scelte all'ordine (usata la massima, 225); nessuna ricezione in X-band. Massa: SDR 272 g + ANT8250 150 g (lato Y; X 144 g, Z 131 g) + cavi 26 g (6+6+6+2+5+1) = 448 g DERIVATA. Potenza: standby SDR 3.5/5.4/7.0 W + VCOM 5 V 0.3/0.7/1.0 W; attiva SDR 4.5/5.9/8.0 W + ANT8250 da 5.0 a 20.0 W (Tabelle 5.8-5.10) + VCOM 2.0/2.4/3.0 W: idle 8.0 W = 7.0 + 1.0 e trasmissione 31.0 W = 8.0 + 20.0 + 3.0 DERIVATE (massimi). Progettato per almeno 20 minuti di trasmissione continua; l'ANT8250 richiede una buona interfaccia termica con la struttura.",
+   "source": {
+    "url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "document": "GomSpace NanoCom Link S, X and SX Communication Products datasheet DS 1076242 rev. 13.0 (22 maggio 2026)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "band": "X",
+    "has_receiver": false,
+    "data_rate_kbps_max": 225000.0,
+    "power_w_idle": 8.0,
+    "power_w_tx": 31.0,
+    "data_interfaces": [
+     "CAN",
+     "RS-422",
+     "SpaceWire"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      12,
+      32
+     ],
+     [
+      4.9,
+      5.1
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     95,
+     95,
+     31.65
+    ],
+    "basis": "declared",
+    "note": "Datasheet GomSpace, Figura 11.2: SDR MK3 NanoCom Link X, 95 x 95 mm (h7) e spessore 31.65 mm; front end d'antenna esclusi."
+   },
+   "image": {
+    "file": "images/GomSpace-NanoCom-Link-X.png",
+    "image_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf#page=20",
+    "page_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Vista prospettiva della SDR MK3 (Figura 4.2 del datasheet); i front end d'antenna non sono rappresentati."
+   },
+   "datasheet": {
+    "file": "datasheets/GomSpace__NanoCom-Link-S-X-SX-Datasheet-13.pdf",
+    "document": "GomSpace NanoCom Link S, X and SX Communication Products datasheet DS 1076242 rev. 13.0 (22 maggio 2026)",
+    "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 17040489
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "gomspace-nanocom-link-sx",
+   "category": "comms",
+   "vendor": "GomSpace",
+   "name": "NanoCom Link SX (SDR MK3 + ANT2150-DUP + ANT8250, S+X-band)",
+   "family": "gomspace-nanocom-link",
+   "mass_kg": 0.629,
+   "temp_op_c": [
+    -40,
+    53
+   ],
+   "power_w": null,
+   "notes": "Datasheet GomSpace DS 1076242 rev. 13.0 (22 maggio 2026). La NanoCom SDR MK3 (SoC Zynq con TR600) non ha un datasheet pubblico a se': qui si cataloga la variante Link che la contiene. Il prodotto e' fornito con SDR, front end d'antenna, cavi coassiali e cablaggi gia' configurati; controllo e telemetria via CSP su CAN, RS-422 (full duplex) e 3 interfacce SpaceWire LVDS per i dati, cifratura autenticata allineata a CCSDS 355.0-B-2, qualificato per piu' di 5 anni in orbita secondo il programma di qualifica GomSpace (hardware TRL9). Temperatura: il datasheet dichiara la qualifica per una temperatura operativa dell'interfaccia termica da -40 a +53 C (SDR; massimo assoluto -35..+53 C per l'SDR e -35..+57 C per i front end), usata in temp_op_c. Alimentazione: SDR 12-32 V (massimo assoluto 36 V), circa 1 A. Il front end d'antenna e' un'unita' esterna da montare su una faccia del satellite (nadir) con piastre di montaggio a scelta: la massa del prodotto e' la SOMMA DERIVATA di SDR + front end (configurazione di montaggio piu' pesante dichiarata) + kit cavi (Tabella 12.5, esclusi il kit filtri DSN opzionale da 221 g e i cavi di debug). Le dimensioni sono quelle dell'SDR MK3 (95 x 95 mm h7, spessore dal disegno della Figura 11.x); i front end d'antenna non sono inclusi nelle dimensioni. Le potenze in standby e in attivita' sono SOMME DERIVATE dei valori massimi (caso peggiore) dei moduli della Tabella 5.x; i valori tipici sono riportati sotto. LINK SX: due TR600 sulla stessa SDR, con le funzioni di S (full duplex, fino a 7.5 Mbit/s) e di X (solo TX, fino a 225 Mbit/s); supporta un solo downlink dati attivo alla volta, con passaggio rapido tra S e X. Massa: SDR 315 g + ANT2150-DUP 123 g + ANT8250 150 g + cavi 41 g (6+6+6+6+6+2+4+5) = 629 g DERIVATA. Potenza: standby SDR 4.5/6.1/7.5 W + ANT2150 0.1/0.1/0.3 W + ANT8250 0.0 W + VCOM 0.3/0.7/1.0 W; attiva SDR 5.0/8.1/10.2 W + ANT2150 2.0-16.0 W + ANT8250 5.0-20.0 W + VCOM 2.0/2.4/3.0 W: idle 8.8 W = 7.5 + 0.3 + 0.0 + 1.0 e trasmissione 49.2 W = 10.2 + 16.0 + 20.0 + 3.0 DERIVATE (somma dei massimi dei moduli; con un solo downlink attivo il caso reale e' inferiore, ma il datasheet non lo quantifica).",
+   "source": {
+    "url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "document": "GomSpace NanoCom Link S, X and SX Communication Products datasheet DS 1076242 rev. 13.0 (22 maggio 2026)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "band": "S/X",
+    "has_receiver": true,
+    "data_rate_kbps_max": 225000.0,
+    "power_w_idle": 8.8,
+    "power_w_tx": 49.2,
+    "data_interfaces": [
+     "CAN",
+     "RS-422",
+     "SpaceWire"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      12,
+      32
+     ],
+     [
+      8,
+      18
+     ],
+     [
+      4.9,
+      5.1
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     95,
+     95,
+     31.65
+    ],
+    "basis": "declared",
+    "note": "Datasheet GomSpace, Figura 11.4: SDR MK3 NanoCom Link SX, 95 x 95 mm (h7) e spessore 31.65 mm; front end d'antenna esclusi."
+   },
+   "image": {
+    "file": "images/GomSpace-NanoCom-Link-SX.png",
+    "image_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf#page=20",
+    "page_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Vista prospettiva della SDR MK3 (Figura 4.2 del datasheet); i front end d'antenna non sono rappresentati."
+   },
+   "datasheet": {
+    "file": "datasheets/GomSpace__NanoCom-Link-S-X-SX-Datasheet-13.pdf",
+    "document": "GomSpace NanoCom Link S, X and SX Communication Products datasheet DS 1076242 rev. 13.0 (22 maggio 2026)",
+    "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-link-s-x-and-sx-communication-products-13.0.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 17040489
    },
    "shape": {
     "type": "box",
@@ -4869,6 +5478,219 @@
     ],
     "basis": "declared",
     "note": "Pagina EnduroSat."
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "isis-solar-1u",
+   "category": "solar_panel",
+   "vendor": "ISISpace",
+   "name": "Solar Panel 1U",
+   "mass_kg": 0.05,
+   "temp_op_c": [
+    -40,
+    125
+   ],
+   "notes": "Celle GaAs AZUR Space, efficienza 30%. Potenza di picco 1U: 2.3 W; tensione 3 V standard (5 V e 8 V su richiesta). Massa dichiarata '1U: 50 g, dipende dalla configurazione'. Spessore: pannello laterale 2.5 mm, superiore e inferiore 1.8 mm. Tolleranza alle radiazioni: 'minimo 2 anni in LEO' (nessun valore di TID). Stessa brochure, stessa foto e stesso documento di isis-solar-3u.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-Solar-Panels-Brochure-v1.pdf",
+    "document": "ISIS Solar Panels Brochure v1",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "face": "1U",
+    "peak_power_w": 2.3,
+    "voltage_options_v": [
+     3,
+     5,
+     8
+    ],
+    "open_circuit_voltage_v": null,
+    "degradation_per_year": null
+   },
+   "dimensions": {
+    "mm": [
+     100,
+     113.5,
+     2.5
+    ],
+    "basis": "derived",
+    "note": "Brochure ISIS: pannello laterale 1U, spessore 2.5 mm (superiore e inferiore 1.8 mm); taglia di faccia nominale CDS 1U (100 x 113.5 mm)."
+   },
+   "image": {
+    "file": "images/ISISpace-SolarPanel3U.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-Solar-Panels-Brochure-v1.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-Solar-Panels-Brochure-v1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-13",
+    "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: isis-solar-3u"
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__ISIS-Solar-Panels-Brochure-v1.pdf",
+    "document": "ISIS Solar Panels Brochure v1",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-Solar-Panels-Brochure-v1.pdf",
+    "retrieved": "2026-10-14",
+    "bytes": 505597
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "endurosat-solar-1u",
+   "category": "solar_panel",
+   "vendor": "EnduroSat",
+   "name": "1U Solar Panel",
+   "mass_kg": null,
+   "notes": "Catalogo EnduroSat 02/2022 pag. 17: 2 celle AZUR Space 3G30A in 2S1P, efficienza fino al 30%, potenza massima in LEO 2.4 W; sensori di sole e temperatura, giroscopio e magnetorquer opzionali, interfaccia SPI. Massa, dimensioni e tensioni non sono pubblicate nel catalogo; le pagine prodotto del sito non sono piu' raggiungibili (l'indirizzo '1u-solar-panel-x-y' rimanda all'elenco dei pannelli) e i valori degli aggregatori non sono stati usati.",
+   "source": {
+    "url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
+    "document": "EnduroSat Product Catalogue 02/2022",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "face": "1U",
+    "peak_power_w": 2.4,
+    "voltage_options_v": null,
+    "open_circuit_voltage_v": null,
+    "degradation_per_year": null
+   },
+   "image": {
+    "file": "images/EnduroSat-1USolarPanel.png",
+    "image_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf#page=16",
+    "page_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/EnduroSat__Endurosat_Product_Catalogue_02_22.pdf",
+    "document": "EnduroSat Product Catalogue 02/2022",
+    "source_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
+    "retrieved": "2026-10-14",
+    "bytes": 2357779
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "dhv-1u-xy",
+   "category": "solar_panel",
+   "vendor": "DHV Technology",
+   "name": "DHV-1U-XY solar panel (1U, lateral)",
+   "mass_kg": null,
+   "temp_op_c": [
+    -50,
+    125
+   ],
+   "notes": "Brochure DHV 'CubeSat Products overview' pag. 4-5. 2 celle AzurSpace 3G30A con vetro di copertura da 100 um (2S1P), 2 diodi di blocco in parallelo, diodi di bypass, sensore di temperatura digitale/analogico, fotodiodo, magnetorquer opzionale; TRL 9; almeno 3 anni in LEO tra -50 e +125 C. Parametri elettrici (tabella): Pmp BOL 2.47 W a -50 C, 2.07 W a 28 C, 1.52 W a 125 C; EOL 2.33 / 1.93 / 1.38 W; Voc BOL 6.35 / 5.38 / 4.18 V. peak_power_w = 2.47 W (massimo della tabella, BOL, -50 C) e open_circuit_voltage_v = 6.35 V (massimo, -50 C). Massa e spessore non sono pubblicati nel brochure (il datasheet e' un documento separato, non scaricato). Le due varianti (XY laterale e Z superiore/inferiore) hanno gli stessi parametri elettrici. Dimensioni dal disegno 'Mechanical interface' (pag. 5): ingombro 82.80 x 97.80 mm.",
+   "source": {
+    "url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959",
+    "document": "DHV Technology CubeSat Products overview (brochure, 24 pagine)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "face": "1U",
+    "peak_power_w": 2.47,
+    "voltage_options_v": null,
+    "open_circuit_voltage_v": 6.35,
+    "degradation_per_year": null
+   },
+   "dimensions": {
+    "mm": [
+     82.8,
+     97.8,
+     null
+    ],
+    "basis": "declared",
+    "note": "Disegno 'Mechanical interface' del brochure DHV (pag. 5): 82.80 x 97.80 mm; spessore non indicato."
+   },
+   "image": {
+    "file": "images/DHV-1USolarPanel.png",
+    "image_url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959#page=4",
+    "page_url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/DHV-Technology__CubeSat-Products-Overview.pdf",
+    "document": "DHV Technology CubeSat Products overview (brochure, 24 pagine)",
+    "source_url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959",
+    "retrieved": "2026-10-15",
+    "bytes": 2581347
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "dhv-1u-z",
+   "category": "solar_panel",
+   "vendor": "DHV Technology",
+   "name": "DHV-1U-Z solar panel (1U, top/bottom)",
+   "mass_kg": null,
+   "temp_op_c": [
+    -50,
+    125
+   ],
+   "notes": "Brochure DHV 'CubeSat Products overview' pag. 4-5. 2 celle AzurSpace 3G30A con vetro di copertura da 100 um (2S1P), 2 diodi di blocco in parallelo, diodi di bypass, sensore di temperatura digitale/analogico, fotodiodo, magnetorquer opzionale; TRL 9; almeno 3 anni in LEO tra -50 e +125 C. Parametri elettrici (tabella): Pmp BOL 2.47 W a -50 C, 2.07 W a 28 C, 1.52 W a 125 C; EOL 2.33 / 1.93 / 1.38 W; Voc BOL 6.35 / 5.38 / 4.18 V. peak_power_w = 2.47 W (massimo della tabella, BOL, -50 C) e open_circuit_voltage_v = 6.35 V (massimo, -50 C). Massa e spessore non sono pubblicati nel brochure (il datasheet e' un documento separato, non scaricato). Le due varianti (XY laterale e Z superiore/inferiore) hanno gli stessi parametri elettrici. Dimensioni dal disegno 'Mechanical interface' (pag. 5): ingombro 97.80 x 97.80 mm.",
+   "source": {
+    "url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959",
+    "document": "DHV Technology CubeSat Products overview (brochure, 24 pagine)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "face": "1U Z",
+    "peak_power_w": 2.47,
+    "voltage_options_v": null,
+    "open_circuit_voltage_v": 6.35,
+    "degradation_per_year": null
+   },
+   "dimensions": {
+    "mm": [
+     97.8,
+     97.8,
+     null
+    ],
+    "basis": "declared",
+    "note": "Disegno 'Mechanical interface' del brochure DHV (pag. 5): 97.80 x 97.80 mm; spessore non indicato."
+   },
+   "image": {
+    "file": "images/DHV-1USolarPanel.png",
+    "image_url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959#page=4",
+    "page_url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: dhv-1u-xy"
+   },
+   "datasheet": {
+    "file": "datasheets/DHV-Technology__CubeSat-Products-Overview.pdf",
+    "document": "DHV Technology CubeSat Products overview (brochure, 24 pagine)",
+    "source_url": "https://cdn-assets.inwink.com/dc9072b4-cd94-4669-ba98-1adcec9979bf/61a4eb6f-9616-46a6-96b4-ab411b285959",
+    "retrieved": "2026-10-15",
+    "bytes": 2581347
    },
    "shape": {
     "type": "panel",
@@ -7580,6 +8402,567 @@
    }
   },
   {
+   "id": "sodern-auriga-oh",
+   "category": "star_tracker",
+   "vendor": "Sodern",
+   "name": "AURIGA optical head with 35 deg baffle",
+   "mass_kg": 0.225,
+   "power_w": 0.8,
+   "temp_op_c": [
+    -20,
+    40
+   ],
+   "notes": "Brochure Sodern (8 pagine): testa ottica (OH) con baffle da 35 gradi di esclusione solare: 66 x 59 x 94 mm, 225 g, 0.8 W per testa. Errore spaziale a bassa frequenza (campo di vista) XY / Z a 3 sigma: 9 / 51 arcsec; a alta frequenza (pixel) 6.6 / 38 arcsec (si riporta il primo); bias nel caso peggiore 0.017 gradi; velocita' angolare in tracciamento fino a 3 gradi/s. Aggiornamento: 'fino a 10 Hz' con piu' teste unite (limite superiore). Il campo di vista della testa non e' pubblicato. Per l'attitudine serve l'unita' elettronica (EU), esclusa: 91 x 117 x 25 mm, 315 g, 2.1 W piu' 0.8 W per testa, RS-422 UART, 5 V, fino a 3 teste via SpaceWire (in alternativa il software gira sull'OBC). Vita 10 anni in LEO (400-1200 km), 15 in GEO; temperatura operativa -20/+40 C; piu' di 1500 unita' lanciate dal 2019. Opzione baffle da 26 gradi (60 x 66 x 122 mm, <250 g, FM nel 2025) non catalogata.",
+   "source": {
+    "url": "https://api.sodern.com/uploads/AURIGA_8_PAGE_a11f9a3724.pdf",
+    "document": "Sodern AURIGA brochure (8 pagine)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "accuracy_cross_arcsec": 9.0,
+    "accuracy_roll_arcsec": 51.0,
+    "accuracy_basis": "3-sigma",
+    "update_rate_hz": 10.0,
+    "fov_deg": null,
+    "data_interfaces": [
+     "SpaceWire",
+     "RS-422 UART"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      5,
+      5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     66,
+     59,
+     94
+    ],
+    "basis": "declared",
+    "note": "Brochure Sodern: 66 x 59 x 94 mm (altezza compreso il baffle)."
+   },
+   "image": {
+    "file": "images/Sodern-AURIGA.png",
+    "image_url": "https://api.sodern.com/uploads/AURIGA_8_PAGE_a11f9a3724.pdf#page=1",
+    "page_url": "https://api.sodern.com/uploads/AURIGA_8_PAGE_a11f9a3724.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/Sodern__AURIGA-8-PAGE.pdf",
+    "document": "Sodern AURIGA brochure (8 pagine)",
+    "source_url": "https://api.sodern.com/uploads/AURIGA_8_PAGE_a11f9a3724.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 9703628
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "rocketlab-st16rt2-short-baffle",
+   "category": "star_tracker",
+   "vendor": "Rocket Lab (Sinclair Interplanetary)",
+   "name": "ST-16RT2 star tracker with short baffle",
+   "family": "rocketlab-st16",
+   "mass_kg": 0.185,
+   "power_w": 0.5,
+   "volume_u": null,
+   "price": {
+    "amount": 140000,
+    "currency": "USD",
+    "as_of": "scheda non datata (letta il 2026-10-13)"
+   },
+   "temp_op_c": [
+    -40,
+    50
+   ],
+   "notes": "Stessa scheda Rocket Lab ST-16RT2 (vedi rocketlab-st16rt2), variante con baffle corto: 185 g, esclusione solare 34 gradi dal Sole alla boresight, US$140000. Campo di vista 8 gradi di semiampiezza (16 gradi pieno, DERIVATO). Accuratezza, aggiornamento, tensioni e interfacce come la versione senza baffle.",
+   "source": {
+    "url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
+    "document": "Rocket Lab Second Generation Star Tracker (ST-16RT2) product sheet",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "accuracy_cross_arcsec": 5.0,
+    "accuracy_roll_arcsec": 55.0,
+    "accuracy_basis": "RMS",
+    "update_rate_hz": 2.0,
+    "fov_deg": [
+     16.0,
+     16.0
+    ],
+    "data_interfaces": [
+     "RS-485",
+     "RS-422"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      9.0,
+      34.0
+     ]
+    ]
+   },
+   "image": {
+    "file": "images/RocketLab-ST16RT2.png",
+    "image_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf#page=1",
+    "page_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-13",
+    "note": "Foto condivisa con le altre varianti/componenti della stessa famiglia: rocketlab-st16rt2"
+   },
+   "dimensions": {
+    "mm": [
+     62,
+     56,
+     68
+    ],
+    "basis": "declared",
+    "note": "Scheda Rocket Lab: 62 x 56 x 68 mm con baffle corto."
+   },
+   "datasheet": {
+    "file": "datasheets/Rocket-Lab-Sin__Star-trackers-product-sheet.pdf",
+    "document": "Rocket Lab Second Generation Star Tracker (ST-16RT2) product sheet",
+    "source_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
+    "retrieved": "2026-10-14",
+    "bytes": 5585622
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "rocketlab-st16rt2-large-baffle",
+   "category": "star_tracker",
+   "vendor": "Rocket Lab (Sinclair Interplanetary)",
+   "name": "ST-16RT2 star tracker with large baffle",
+   "family": "rocketlab-st16",
+   "mass_kg": 0.235,
+   "power_w": 0.5,
+   "volume_u": null,
+   "price": {
+    "amount": 140000,
+    "currency": "USD",
+    "as_of": "scheda non datata (letta il 2026-10-13)"
+   },
+   "temp_op_c": [
+    -40,
+    50
+   ],
+   "notes": "Stessa scheda Rocket Lab ST-16RT2 (vedi rocketlab-st16rt2), variante con baffle grande: 235 g, esclusione solare 22 gradi dal Sole alla boresight, US$140000. Campo di vista 7.5 x 10 gradi di semiampiezza (15 x 20 pieno). Accuratezza, aggiornamento, tensioni e interfacce come la versione senza baffle.",
+   "source": {
+    "url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
+    "document": "Rocket Lab Second Generation Star Tracker (ST-16RT2) product sheet",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "accuracy_cross_arcsec": 5.0,
+    "accuracy_roll_arcsec": 55.0,
+    "accuracy_basis": "RMS",
+    "update_rate_hz": 2.0,
+    "fov_deg": [
+     15.0,
+     20.0
+    ],
+    "data_interfaces": [
+     "RS-485",
+     "RS-422"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      9.0,
+      34.0
+     ]
+    ]
+   },
+   "image": {
+    "file": "images/RocketLab-ST16RT2.png",
+    "image_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf#page=1",
+    "page_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-13",
+    "note": "Foto condivisa con le altre varianti/componenti della stessa famiglia: rocketlab-st16rt2"
+   },
+   "dimensions": {
+    "mm": [
+     99,
+     99,
+     120
+    ],
+    "basis": "derived",
+    "note": "Scheda Rocket Lab: 99 mm di diametro x 120 mm con baffle grande (ingombro DERIVATO: scatola 99 x 99 x 120)."
+   },
+   "datasheet": {
+    "file": "datasheets/Rocket-Lab-Sin__Star-trackers-product-sheet.pdf",
+    "document": "Rocket Lab Second Generation Star Tracker (ST-16RT2) product sheet",
+    "source_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
+    "retrieved": "2026-10-14",
+    "bytes": 5585622
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "newspace-ncss-sa05",
+   "category": "sun_sensor",
+   "vendor": "NewSpace Systems",
+   "name": "NCSS-SA05 coarse sun sensor",
+   "mass_kg": 0.005,
+   "temp_op_c": [
+    -25,
+    70
+   ],
+   "power_w": 0.05,
+   "notes": "Datasheet 2020-10a: campo di vista 114 gradi, frequenza di aggiornamento '>10 Hz (limitata dall'ADC del cliente)' (si riporta 10), accuratezza '<0.01 gradi di errore RMS sul campo di vista' come stampata nel datasheet. Massa '<5 g' (limite superiore). Corrente '<10 mA a 5 V': potenza 0.05 W DERIVATA (5 V x 10 mA), non dichiarata in W. Interfaccia: 5 canali analogici, connettore Nano-D a 9 vie femmina, 3 fori filettati M2. Radiazioni: n.d. Una scheda di un aggregatore dichiara per lo stesso sensore un'accuratezza migliore di 0.5 gradi: non e' coerente con il datasheet e non e' stata usata.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf",
+    "document": "NewSpace Systems Sun Sensor datasheet (NCSS-SA05 e NFSS-411), 2020-10a",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "sensor_type": "coarse",
+    "fov_deg": [
+     114
+    ],
+    "accuracy_deg": 0.01,
+    "accuracy_basis": "RMS",
+    "update_rate_hz": 10,
+    "data_interfaces": [
+     "analogue"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      5,
+      5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     33,
+     11,
+     6
+    ],
+    "basis": "declared",
+    "note": "Datasheet NewSpace Systems 2020-10a."
+   },
+   "image": {
+    "file": "images/NewSpace-NCSS-SA05.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/NewSpace-Systems__NewSpace-Sun-Sensor_2020-10a.pdf",
+    "document": "NewSpace Systems Sun Sensor datasheet (NCSS-SA05 e NFSS-411), 2020-10a",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1177652
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "newspace-nfss-411",
+   "category": "sun_sensor",
+   "vendor": "NewSpace Systems",
+   "name": "NFSS-411 fine sun sensor",
+   "mass_kg": 0.035,
+   "temp_op_c": [
+    -25,
+    70
+   ],
+   "power_w": 0.15,
+   "tid_krad": 20,
+   "notes": "Datasheet 2020-10a: campo di vista 140 gradi; accuratezza '<=0.1 gradi di errore RMS su 120 gradi di campo di vista'; aggiornamento 5 Hz tipico. Massa '<35 g' (limite superiore). Potenza: in attesa <3 mA [15 mW], modo bootloader <8 mA [40 mW], modo applicazione attivo <30 mA [150 mW] (si riporta 0.15 W). Alimentazione da 5 V a 50 V (5 V nominale); interfaccia RS-485 UART; connettore Micro-D a 9 vie; 4 fori passanti M2. Radiazioni: 20 krad a livello di componente. Davanti ha una finestra di zaffiro sintetico con fessure incise.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf",
+    "document": "NewSpace Systems Sun Sensor datasheet (NCSS-SA05 e NFSS-411), 2020-10a",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "sensor_type": "fine",
+    "fov_deg": [
+     140
+    ],
+    "accuracy_deg": 0.1,
+    "accuracy_basis": "RMS",
+    "update_rate_hz": 5,
+    "data_interfaces": [
+     "RS-485 UART"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      5,
+      50
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     34,
+     40,
+     20
+    ],
+    "basis": "declared",
+    "note": "Datasheet NewSpace Systems 2020-10a (una scheda precedente, versione 6a, secondo un aggregatore riportava 34 x 32 x 20 mm: non verificato)."
+   },
+   "image": {
+    "file": "images/NewSpace-NFSS-411.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto dal datasheet: la stessa pagina mostra NCSS-SA05 e NFSS-411"
+   },
+   "datasheet": {
+    "file": "datasheets/NewSpace-Systems__NewSpace-Sun-Sensor_2020-10a.pdf",
+    "document": "NewSpace Systems Sun Sensor datasheet (NCSS-SA05 e NFSS-411), 2020-10a",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-Sun-Sensor_2020-10a.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1177652
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "solarmems-ssoc-a60",
+   "category": "sun_sensor",
+   "vendor": "Solar MEMS Technologies",
+   "name": "SSOC-A60 sun sensor on a chip (analog)",
+   "mass_kg": 0.025,
+   "temp_op_c": [
+    -45,
+    85
+   ],
+   "power_w": 0.036,
+   "tid_krad": 100,
+   "notes": "Documento Solar MEMS v1.14 (novembre 2015): due assi ortogonali, campo di vista +-60 gradi (120 gradi pieno, DERIVATO dal +-60), accuratezza '<0.3 gradi', precisione '<0.05 gradi' (la base statistica non e' dichiarata), alimentazione 5.00 V, consumo '<36 mW', dimensioni ridotte 30 x 30 x 12 mm, peso 25 g, temperatura -45..85 C, radiazioni 'TID >100 krad' (limite inferiore), LET 6 MeV/mg/cm2, shock 3000 g, vibrazioni 14 g; sensore di temperatura incluso. Uscita analogica. Il fornitore non lo classifica fine o coarse.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/SSOCA60-Technical-Specifications.pdf",
+    "document": "Solar MEMS SSOC-A60 Technical Specification, Interfaces & Operation v1.14 (novembre 2015)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "sensor_type": null,
+    "fov_deg": [
+     120
+    ],
+    "accuracy_deg": 0.3,
+    "accuracy_basis": null,
+    "update_rate_hz": null,
+    "data_interfaces": [
+     "analogue"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      5,
+      5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     30,
+     30,
+     12
+    ],
+    "basis": "declared",
+    "note": "Documento Solar MEMS: 'Reduced size: 30 x 30 x 12 mm'."
+   },
+   "image": {
+    "file": "images/SolarMEMS-SSOC-A60.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/SSOCA60-Technical-Specifications.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/SSOCA60-Technical-Specifications.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/Solar-MEMS__SSOC-A60-Technical-Specifications.pdf",
+    "document": "Solar MEMS SSOC-A60 Technical Specification, Interfaces & Operation v1.14 (novembre 2015)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/SSOCA60-Technical-Specifications.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 861627
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "solarmems-nanossoc-d60",
+   "category": "sun_sensor",
+   "vendor": "Solar MEMS Technologies",
+   "name": "nanoSSOC-D60 sun sensor (digital)",
+   "mass_kg": 0.0065,
+   "temp_op_c": [
+    -30,
+    85
+   ],
+   "power_w": 0.115,
+   "tid_krad": 30,
+   "notes": "Brochure SpaceQuest (distributore): due assi ortogonali, campo di vista +-60 gradi (120 gradi pieno, DERIVATO dal +-60), accuratezza '<0.5 gradi (3 sigma)', precisione '<0.1 gradi', interfaccia UART, I2C o SPI (connettore a 10 pin), alimentazione 3.3 V o 5 V, consumo '<23 mA': potenza 0.115 W DERIVATA (5 V x 23 mA), non dichiarata in W. Involucro in alluminio 6082 anodizzato nero; temperatura -30..85 C; radiazioni 30 krad (gamma); piu' di 50 modelli di volo consegnati per piu' di 15 missioni. Il fornitore non lo classifica fine o coarse.",
+   "source": {
+    "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/NSD_60_07_MAN_102_Brochure_SQ_20160525_4036cc7b30.pdf",
+    "document": "SpaceQuest (distributore Solar MEMS): brochure nanoSSOC-D60 (NSD60-07-MAN-102)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "sensor_type": null,
+    "fov_deg": [
+     120
+    ],
+    "accuracy_deg": 0.5,
+    "accuracy_basis": "3-sigma",
+    "update_rate_hz": null,
+    "data_interfaces": [
+     "UART",
+     "I2C",
+     "SPI"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      3.3,
+      3.3
+     ],
+     [
+      5,
+      5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     43,
+     14,
+     5.9
+    ],
+    "basis": "declared",
+    "note": "Brochure SpaceQuest/Solar MEMS: 43 x 14 x 5.9 mm."
+   },
+   "image": {
+    "file": "images/SolarMEMS-nanoSSOC-D60.png",
+    "image_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/NSD_60_07_MAN_102_Brochure_SQ_20160525_4036cc7b30.pdf#page=1",
+    "page_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/NSD_60_07_MAN_102_Brochure_SQ_20160525_4036cc7b30.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/Solar-MEMS__nanoSSOC-D60-Brochure.pdf",
+    "document": "SpaceQuest (distributore Solar MEMS): brochure nanoSSOC-D60 (NSD60-07-MAN-102)",
+    "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/NSD_60_07_MAN_102_Brochure_SQ_20160525_4036cc7b30.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 953365
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cubespace-cubesense-sun",
+   "category": "sun_sensor",
+   "vendor": "CubeSpace",
+   "name": "CubeSense Sun fine sun sensor",
+   "mass_kg": 0.015,
+   "temp_op_c": [
+    -20,
+    80
+   ],
+   "power_w": 0.174,
+   "tid_krad": 24,
+   "notes": "Pagina prodotto CubeSatShop (informazioni del fornitore CubeSpace): sensore CMOS con modello di distorsione precalibrato, accuratezza 0.2 gradi (rollio ed elevazione, 2 sigma), velocita' angolare massima 70 gradi/s, campo di vista di rilevazione 166 gradi (orizzontale e verticale) e 176 gradi in diagonale, aggiornamento fino a 2 Hz, alimentazione 3.3 V, potenza di picco 174 mW e media 100 mW (si riporta il picco), bus CAN/UART/RS-485 (I2C su richiesta), connettore Molex Pico-Lock Plus, dimensioni 35 x 22 x 24 mm (L x A x P), radiazioni 24 krad, vibrazioni 14.16 g rms, vuoto termico -20..80 C, vita 5+ anni. Nessun PDF: la pagina e' la sola fonte.",
+   "source": {
+    "url": "https://www.cubesatshop.com/product/fine-sun-sensor-cubesense-sun/",
+    "document": "Pagina prodotto CubeSatShop 'Fine Sun Sensor - CubeSense Sun' (CubeSpace)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "sensor_type": "fine",
+    "fov_deg": [
+     166
+    ],
+    "accuracy_deg": 0.2,
+    "accuracy_basis": "2-sigma",
+    "update_rate_hz": 2,
+    "data_interfaces": [
+     "CAN",
+     "UART",
+     "RS-485"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      3.3,
+      3.3
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     35,
+     22,
+     24
+    ],
+    "basis": "declared",
+    "note": "Pagina prodotto: 'Dimensions [WxHxL] 35x22x24 mm'."
+   },
+   "image": {
+    "file": "images/CubeSpace-CubeSenseSun.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2023/06/Cubesense-Sun.png",
+    "page_url": "https://www.cubesatshop.com/product/fine-sun-sensor-cubesense-sun/",
+    "type": "web",
+    "retrieved": "2026-10-15"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
    "id": "tesat-cubelct",
    "category": "payload",
    "vendor": "Tesat-Spacecom",
@@ -9087,6 +10470,585 @@
    }
   },
   {
+   "id": "dawn-cubedrive-0-8u",
+   "category": "propulsion",
+   "vendor": "Dawn Aerospace",
+   "name": "CubeDrive 0.8U (bipropellant, 400 N s)",
+   "family": "dawn-cubedrive",
+   "mass_kg": 1.25,
+   "power_w": null,
+   "volume_u": 0.8,
+   "notes": "Bipropellente verde N2O (ossido di diazoto) + propilene, auto-pressurizzato (nessuna pompa ne' pressurante), serbatoi stampati in 3D in Inconel, con propulsore B1, valvole, strumenti di monitoraggio e elettronica di controllo. Bus dati CAN (altri protocolli su richiesta); alimentazione digitale 5-5.2 V e attuatori 14 V non regolati. Le potenze di valvole e accensione sono dichiarate solo per il propulsore B1 (valvola 17.5 W per 15 ms di apertura e 0.75 W di tenuta, accenditore 6.4 W al massimo per 50 ms) e non per il modulo: potenza del modulo lasciata non dichiarata. Isp non dichiarato per il modulo (il solo B1 dichiara >=248 s): lasciato null. 0.8U: in orbita (9 sistemi in orbita e 20+ ordinati secondo la brochure panoramica: non sono missioni, eredita' di volo non dichiarata), 1 propulsore B1, spinta 0.44-1.15 N, impulso minimo 68 mN s (bipropellente) e 0.48 mN s (gas freddo), impulso totale 400 N s, massa a secco/a pieno carico 1051 g / 1250 g, 80 x 96 x 96 mm. Propellente 0.199 kg DERIVATO (1250 - 1051 g), non dichiarato. Altre schede e pagine Dawn riportano valori diversi per lo stesso modulo (405 o 425 N s, 970-1080 g a secco): si usa solo il documento scaricato.",
+   "source": {
+    "url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "document": "Dawn Aerospace CubeDrive Spec-Sheet (PDF dalla pagina Resources, 2025)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "nitrous oxide + propylene",
+    "thrust_mn_min": 440.0,
+    "thrust_mn_max": 1150.0,
+    "isp_s": null,
+    "propellant_mass_kg": 0.199,
+    "dry_mass_kg": 1.051,
+    "power_w_firing": null,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": [
+     "CAN"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      5.0,
+      5.2
+     ],
+     [
+      14.0,
+      14.0
+     ]
+    ],
+    "propulsion_type": "bipropellant",
+    "total_impulse_ns": 400.0
+   },
+   "dimensions": {
+    "mm": [
+     80,
+     96,
+     96
+    ],
+    "basis": "declared",
+    "note": "Scheda Dawn CubeDrive: 80 x 96 x 96 mm."
+   },
+   "image": {
+    "file": "images/Dawn-CubeDrive-0-8U.png",
+    "image_url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "page_url": "https://www.dawnaerospace.com/resources",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/Dawn-Aerospace__CubeDrive-Spec-Sheet-2025.pdf",
+    "document": "Dawn Aerospace CubeDrive Spec-Sheet (PDF dalla pagina Resources, 2025)",
+    "source_url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1626682
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "dawn-cubedrive-2u",
+   "category": "propulsion",
+   "vendor": "Dawn Aerospace",
+   "name": "CubeDrive 2U (bipropellant, 1500 N s)",
+   "family": "dawn-cubedrive",
+   "mass_kg": 2.75,
+   "power_w": null,
+   "volume_u": 2.0,
+   "notes": "Bipropellente verde N2O (ossido di diazoto) + propilene, auto-pressurizzato (nessuna pompa ne' pressurante), serbatoi stampati in 3D in Inconel, con propulsore B1, valvole, strumenti di monitoraggio e elettronica di controllo. Bus dati CAN (altri protocolli su richiesta); alimentazione digitale 5-5.2 V e attuatori 14 V non regolati. Le potenze di valvole e accensione sono dichiarate solo per il propulsore B1 (valvola 17.5 W per 15 ms di apertura e 0.75 W di tenuta, accenditore 6.4 W al massimo per 50 ms) e non per il modulo: potenza del modulo lasciata non dichiarata. Isp non dichiarato per il modulo (il solo B1 dichiara >=248 s): lasciato null. 2U: in qualificazione (non ancora in orbita), spinta e impulso minimo non dichiarati per il 2U, impulso totale 1500 N s, massa a secco/a pieno carico 2000 g / 2750 g, 200 x 96 x 96 mm. Spinta del propulsore B1 (0.44-1.15 N) dichiarata solo per il modulo 0.8U: lasciata non dichiarata qui. Propellente 0.750 kg DERIVATO (2750 - 2000 g).",
+   "source": {
+    "url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "document": "Dawn Aerospace CubeDrive Spec-Sheet (PDF dalla pagina Resources, 2025)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "nitrous oxide + propylene",
+    "thrust_mn_min": null,
+    "thrust_mn_max": null,
+    "isp_s": null,
+    "propellant_mass_kg": 0.75,
+    "dry_mass_kg": 2.0,
+    "power_w_firing": null,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": [
+     "CAN"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      5.0,
+      5.2
+     ],
+     [
+      14.0,
+      14.0
+     ]
+    ],
+    "propulsion_type": "bipropellant",
+    "total_impulse_ns": 1500.0
+   },
+   "dimensions": {
+    "mm": [
+     200,
+     96,
+     96
+    ],
+    "basis": "declared",
+    "note": "Scheda Dawn CubeDrive: 200 x 96 x 96 mm."
+   },
+   "image": {
+    "file": "images/Dawn-CubeDrive-0-8U.png",
+    "image_url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "page_url": "https://www.dawnaerospace.com/resources",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto del CubeDrive 0.8U (unico modulo fotografato nel documento), condivisa con le altre taglie della famiglia."
+   },
+   "datasheet": {
+    "file": "datasheets/Dawn-Aerospace__CubeDrive-Spec-Sheet-2025.pdf",
+    "document": "Dawn Aerospace CubeDrive Spec-Sheet (PDF dalla pagina Resources, 2025)",
+    "source_url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1626682
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "dawn-cubedrive-8u",
+   "category": "propulsion",
+   "vendor": "Dawn Aerospace",
+   "name": "CubeDrive 8U (bipropellant, 3500 N s)",
+   "family": "dawn-cubedrive",
+   "mass_kg": 7.9,
+   "power_w": null,
+   "volume_u": 8.0,
+   "notes": "Brochure panoramica 2025 (non la scheda tecnica): modulo CubeDrive 8U 'in sviluppo, disponibile nel 2026', 4 propulsori da 1 N, impulso totale 3500 N s, massa a secco/a pieno carico 6 kg / 7.9 kg. Dimensioni, spinta totale, Isp, alimentazione e propellente non dichiarati nel documento: lasciati null. Bipropellente N2O + propilene, auto-pressurizzato. Prodotto non ancora disponibile alla data del documento.",
+   "source": {
+    "url": "https://www.dawnaerospace.com/_files/ugd/ac85e2_650518c1f53940b5ab0c3cd5418f3c29.pdf",
+    "document": "Dawn Aerospace CubeDrive, brochure panoramica (PDF dalla pagina Resources, 2025)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "nitrous oxide + propylene",
+    "thrust_mn_min": null,
+    "thrust_mn_max": null,
+    "isp_s": null,
+    "propellant_mass_kg": null,
+    "dry_mass_kg": 6.0,
+    "power_w_firing": null,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "bipropellant",
+    "total_impulse_ns": 3500.0
+   },
+   "image": {
+    "file": "images/Dawn-CubeDrive-0-8U.png",
+    "image_url": "https://www.dawnaerospace.com/_files/ugd/cfd301_f8a4f032deb94cbb93b3e95b6155a1f6.pdf",
+    "page_url": "https://www.dawnaerospace.com/resources",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto del CubeDrive 0.8U (unico modulo fotografato nel documento), condivisa con le altre taglie della famiglia."
+   },
+   "datasheet": {
+    "file": "datasheets/Dawn-Aerospace__CubeDrive-Overview-2025.pdf",
+    "document": "Dawn Aerospace CubeDrive, brochure panoramica (PDF dalla pagina Resources, 2025)",
+    "source_url": "https://www.dawnaerospace.com/_files/ugd/ac85e2_650518c1f53940b5ab0c3cd5418f3c29.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1521200
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cuaerospace-mpuc-1u",
+   "category": "propulsion",
+   "vendor": "CU Aerospace",
+   "name": "MPUC 1U (green monopropellant, 740 N s)",
+   "family": "cuaerospace-mpuc",
+   "mass_kg": 1.774,
+   "power_w": null,
+   "volume_u": 1.0,
+   "notes": "Datasheet luglio 2024: sistema a monopropellente verde (CUA monopropellant formulazione 10 'CMP-X', H2O2-etanolo, temperatura di fiamma circa 950 C), spinto da gas inerte, spinta 230 mN, portata 132 mg/s, Isp 178 s (media sulla vita; fino a 188 s a 230 mN in prova al banco), potenza nominale 3 W, 'prevista' da hardware precedente. TRL 6 per la testa del propulsore, 4 per il sistema integrato 1.5U. Il documento avverte che non va usato per il progetto ma solo come informazione e che le specifiche possono cambiare senza preavviso. Il volume e' del corpo del sistema senza la lunghezza della testa esterna del propulsore, che si assume alloggiata nella molla del deployer. Massa piena e propellente come dichiarati in tabella (massa piena = massa a secco + propellente). 1U: volume del corpo 1000 cm3, impulso totale 740 N s, propellente 424 g, massa a secco 1350 g, massa piena 1774 g. Inviluppo di progetto 1U: corpo 10.2 x 9.5 x 9.5 cm piu' 5 cm di testa del propulsore (dimensioni dichiarate qui senza la testa; il prodotto di 10.2 x 9.5 x 9.5 cm, 921 cm3, non coincide con i 1000 cm3 dichiarati).",
+   "source": {
+    "url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "document": "CU Aerospace MPUC System datasheet (luglio 2024)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "H2O2-ethanol (CMP-X)",
+    "thrust_mn_min": 230.0,
+    "thrust_mn_max": 230.0,
+    "isp_s": 178.0,
+    "propellant_mass_kg": 0.424,
+    "dry_mass_kg": 1.35,
+    "power_w_firing": 3.0,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "green_monoprop",
+    "total_impulse_ns": 740.0
+   },
+   "dimensions": {
+    "mm": [
+     102,
+     95,
+     95
+    ],
+    "basis": "declared",
+    "note": "Datasheet MPUC luglio 2024, inviluppo di progetto 1U: corpo 10.2 x 9.5 x 9.5 cm, esclusa la testa del propulsore di 5 cm."
+   },
+   "image": {
+    "file": "images/CU-Aerospace-MPUC.png",
+    "image_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "page_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/CU-Aerospace__MPUC-Datasheet-240729b.pdf",
+    "document": "CU Aerospace MPUC System datasheet (luglio 2024)",
+    "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 402712
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cuaerospace-mpuc-1-5u",
+   "category": "propulsion",
+   "vendor": "CU Aerospace",
+   "name": "MPUC 1.5U (green monopropellant, 1407 N s)",
+   "family": "cuaerospace-mpuc",
+   "mass_kg": 2.446,
+   "power_w": null,
+   "volume_u": 1.5,
+   "notes": "Datasheet luglio 2024: sistema a monopropellente verde (CUA monopropellant formulazione 10 'CMP-X', H2O2-etanolo, temperatura di fiamma circa 950 C), spinto da gas inerte, spinta 230 mN, portata 132 mg/s, Isp 178 s (media sulla vita; fino a 188 s a 230 mN in prova al banco), potenza nominale 3 W, 'prevista' da hardware precedente. TRL 6 per la testa del propulsore, 4 per il sistema integrato 1.5U. Il documento avverte che non va usato per il progetto ma solo come informazione e che le specifiche possono cambiare senza preavviso. Il volume e' del corpo del sistema senza la lunghezza della testa esterna del propulsore, che si assume alloggiata nella molla del deployer. Massa piena e propellente come dichiarati in tabella (massa piena = massa a secco + propellente). 1.5U: volume del corpo 1500 cm3, impulso totale 1407 N s, propellente 805 g, massa a secco 1641 g, massa piena 2446 g. Dimensioni non dichiarate: lasciate null.",
+   "source": {
+    "url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "document": "CU Aerospace MPUC System datasheet (luglio 2024)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "H2O2-ethanol (CMP-X)",
+    "thrust_mn_min": 230.0,
+    "thrust_mn_max": 230.0,
+    "isp_s": 178.0,
+    "propellant_mass_kg": 0.805,
+    "dry_mass_kg": 1.641,
+    "power_w_firing": 3.0,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "green_monoprop",
+    "total_impulse_ns": 1407.0
+   },
+   "image": {
+    "file": "images/CU-Aerospace-MPUC.png",
+    "image_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "page_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Disegno della versione 1U, condiviso con le altre taglie della famiglia."
+   },
+   "datasheet": {
+    "file": "datasheets/CU-Aerospace__MPUC-Datasheet-240729b.pdf",
+    "document": "CU Aerospace MPUC System datasheet (luglio 2024)",
+    "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 402712
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cuaerospace-mpuc-2u",
+   "category": "propulsion",
+   "vendor": "CU Aerospace",
+   "name": "MPUC 2U (green monopropellant, 2122 N s)",
+   "family": "cuaerospace-mpuc",
+   "mass_kg": 3.25,
+   "power_w": null,
+   "volume_u": 2.0,
+   "notes": "Datasheet luglio 2024: sistema a monopropellente verde (CUA monopropellant formulazione 10 'CMP-X', H2O2-etanolo, temperatura di fiamma circa 950 C), spinto da gas inerte, spinta 230 mN, portata 132 mg/s, Isp 178 s (media sulla vita; fino a 188 s a 230 mN in prova al banco), potenza nominale 3 W, 'prevista' da hardware precedente. TRL 6 per la testa del propulsore, 4 per il sistema integrato 1.5U. Il documento avverte che non va usato per il progetto ma solo come informazione e che le specifiche possono cambiare senza preavviso. Il volume e' del corpo del sistema senza la lunghezza della testa esterna del propulsore, che si assume alloggiata nella molla del deployer. Massa piena e propellente come dichiarati in tabella (massa piena = massa a secco + propellente). 2U: volume del corpo 2000 cm3, impulso totale 2122 N s, propellente 1214 g, massa a secco 2036 g, massa piena 3250 g. Dimensioni non dichiarate: lasciate null.",
+   "source": {
+    "url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "document": "CU Aerospace MPUC System datasheet (luglio 2024)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "H2O2-ethanol (CMP-X)",
+    "thrust_mn_min": 230.0,
+    "thrust_mn_max": 230.0,
+    "isp_s": 178.0,
+    "propellant_mass_kg": 1.214,
+    "dry_mass_kg": 2.036,
+    "power_w_firing": 3.0,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "green_monoprop",
+    "total_impulse_ns": 2122.0
+   },
+   "image": {
+    "file": "images/CU-Aerospace-MPUC.png",
+    "image_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "page_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Disegno della versione 1U, condiviso con le altre taglie della famiglia."
+   },
+   "datasheet": {
+    "file": "datasheets/CU-Aerospace__MPUC-Datasheet-240729b.pdf",
+    "document": "CU Aerospace MPUC System datasheet (luglio 2024)",
+    "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/MPUC-Datasheet-240729b.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 402712
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cuaerospace-puc",
+   "category": "propulsion",
+   "vendor": "CU Aerospace",
+   "name": "PUC 0.35U (micro-plasma, SO2)",
+   "family": "cuaerospace-puc",
+   "mass_kg": 0.718,
+   "power_w": null,
+   "volume_u": 0.35,
+   "notes": "Matrice prestazioni CU Aerospace luglio 2023 ('sistemi a gas caldo'): scarica a micro-plasma con SO2, volume del sistema 350 cm3 (serbatoio disponibile 219 cm3), potenza 15 W in spinta (10 W con ciclo di lavoro medio), Isp 70 s, portata 6.5 mg/s, spinta 4.5 mN, impulso totale 184 N s, propellente 268 g, massa a secco 450 g, massa piena 718 g, spinta continua al massimo 20 min (riposo 10 min), TRL 6. Il documento avverte che non va usato per il progetto ma solo come informazione. Dimensioni, interfacce e alimentazione non dichiarate. Nessuna immagine nel documento.",
+   "source": {
+    "url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CUA-Propulsion-Systems-230731-PDF.pdf",
+    "document": "CU Aerospace, Performance Matrices for CUA Propulsion Systems (luglio 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "SO2",
+    "thrust_mn_min": 4.5,
+    "thrust_mn_max": 4.5,
+    "isp_s": 70.0,
+    "propellant_mass_kg": 0.268,
+    "dry_mass_kg": 0.45,
+    "power_w_firing": 15.0,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "warm_gas",
+    "total_impulse_ns": 184.0
+   },
+   "datasheet": {
+    "file": "datasheets/CU-Aerospace__Propulsion-Systems-230731.pdf",
+    "document": "CU Aerospace, Performance Matrices for CUA Propulsion Systems (luglio 2023)",
+    "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CUA-Propulsion-Systems-230731-PDF.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 142478
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cuaerospace-mvp",
+   "category": "propulsion",
+   "vendor": "CU Aerospace",
+   "name": "MVP 0.93U (micro-resistojet, Delrin)",
+   "family": "cuaerospace-mvp",
+   "mass_kg": 1.055,
+   "power_w": null,
+   "volume_u": 0.926,
+   "notes": "Matrice prestazioni CU Aerospace luglio 2023 ('sistemi a gas caldo'): micro-resistojet con fibra polimerica (Delrin), volume del sistema 926 cm3 (serbatoio disponibile 309 cm3), potenza 45 W in spinta (13.5 W con ciclo di lavoro medio), Isp 66 s, portata 7.0 mg/s, spinta 4.5 mN, impulso totale 280 N s, propellente 433 g, massa a secco 622 g, massa piena 1055 g, spinta continua al massimo 3 min (riposo 7 min), TRL 6. Il documento avverte che non va usato per il progetto ma solo come informazione. Dimensioni, interfacce e alimentazione non dichiarate. Nessuna immagine nel documento.",
+   "source": {
+    "url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CUA-Propulsion-Systems-230731-PDF.pdf",
+    "document": "CU Aerospace, Performance Matrices for CUA Propulsion Systems (luglio 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "Delrin (polymer fiber)",
+    "thrust_mn_min": 4.5,
+    "thrust_mn_max": 4.5,
+    "isp_s": 66.0,
+    "propellant_mass_kg": 0.433,
+    "dry_mass_kg": 0.622,
+    "power_w_firing": 45.0,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "warm_gas",
+    "total_impulse_ns": 280.0
+   },
+   "datasheet": {
+    "file": "datasheets/CU-Aerospace__Propulsion-Systems-230731.pdf",
+    "document": "CU Aerospace, Performance Matrices for CUA Propulsion Systems (luglio 2023)",
+    "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CUA-Propulsion-Systems-230731-PDF.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 142478
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "cuaerospace-fppt",
+   "category": "propulsion",
+   "vendor": "CU Aerospace",
+   "name": "FPPT 1.7U (fiber-fed pulsed plasma, 24000 N s)",
+   "family": "cuaerospace-fppt",
+   "mass_kg": 3.03,
+   "power_w": null,
+   "volume_u": 1.719,
+   "notes": "Matrice prestazioni CU Aerospace luglio 2023 ('sistemi ad alto impulso totale'): propulsore al plasma pulsato alimentato a fibra di Teflon, volume del sistema 1719 cm3 (serbatoio disponibile 360 cm3), potenza 32 W (a 1 Hz di frequenza d'impulso), energia del banco di condensatori 32 J, Isp 3200 s, portata 0.00265 mg/s, spinta 0.85 mN a 1 Hz, impulso totale 24000 N s, propellente 780 g, massa a secco 2250 g, massa piena 3030 g. Il documento avverte che non va usato per il progetto ma solo come informazione. La tabella unisce le celle di alcune righe tra MPUC e FPPT: i valori a 32 W e 32 J sono attribuiti all'FPPT perche' sono gli unici dichiarati per la colonna. Dimensioni, interfacce e alimentazione non dichiarate. Nessuna immagine nel documento.",
+   "source": {
+    "url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CUA-Propulsion-Systems-230731-PDF.pdf",
+    "document": "CU Aerospace, Performance Matrices for CUA Propulsion Systems (luglio 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "Teflon (fiber)",
+    "thrust_mn_min": 0.85,
+    "thrust_mn_max": 0.85,
+    "isp_s": 3200.0,
+    "propellant_mass_kg": 0.78,
+    "dry_mass_kg": 2.25,
+    "power_w_firing": 32.0,
+    "power_w_standby": null,
+    "min_form_factor_u": null,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null,
+    "propulsion_type": "pulsed_plasma",
+    "total_impulse_ns": 24000.0
+   },
+   "datasheet": {
+    "file": "datasheets/CU-Aerospace__Propulsion-Systems-230731.pdf",
+    "document": "CU Aerospace, Performance Matrices for CUA Propulsion Systems (luglio 2023)",
+    "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CUA-Propulsion-Systems-230731-PDF.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 142478
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "enpulsion-micro-r3",
+   "category": "propulsion",
+   "vendor": "Enpulsion",
+   "name": "MICRO R3 (configuration 030)",
+   "family": "enpulsion-micro",
+   "mass_kg": 3.95,
+   "power_w": null,
+   "volume_u": 2.1,
+   "notes": "Datasheet DAT-00006_2.00 (marzo 2026): propulsore FEEP (emissione di campo) a indio con 4 emettitori, serbatoio da 1.25 kg di indio, configurazione impilata con la PPU sotto la testa con la stessa impronta. Campo di spinta dinamico 0.5-1 mN (nominale 1 mN, garantito al 75% a fine vita), Isp 2700 s a 1 mN (intervallo 2700-3600 s; 2930 s al secondo punto garantito), impulso totale 26 kN s a 1 mN, potenza di sistema 64-120 W (110 W alla spinta nominale con neutralizzatore), attesa a caldo 12-18 W (usati 110 W e 18 W, estremo superiore dichiarato per l'attesa), alimentazione 28 V, interfaccia RS422/RS485. Massa a secco/a pieno carico con PPU 2.7 kg / 3.95 kg. Dimensioni esterne 140 x 120 x 126.5 mm senza sporgenze (131.5 mm con le sporgenze); volume del modulo con serbatoio 2.1 L. Il modulo si fissa all'esterno del satellite. La spinta e' di millinewton: i tempi di manovra sono di mesi. Coerenza dei valori: Isp x g0 x propellente = 2700 x 9.80665 x 1.25 = circa 33100 N s, piu' dei 26000 N s dichiarati; il datasheet non dice se parte del propellente non sia utilizzabile: si usa il valore dichiarato (26 kN s) e la differenza resta non spiegata.",
+   "source": {
+    "url": "https://www.enpulsion.com/wp-content/uploads/DataSheet_Micro_20260323.pdf",
+    "document": "Enpulsion MICRO R3 Datasheet, configurazione 030 (Doc. DAT-00006_2.00, marzo 2026)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "propellant": "indium (solid)",
+    "thrust_mn_min": 0.5,
+    "thrust_mn_max": 1.0,
+    "isp_s": 2700.0,
+    "propellant_mass_kg": 1.25,
+    "dry_mass_kg": 2.7,
+    "power_w_firing": 110.0,
+    "power_w_standby": 18.0,
+    "min_form_factor_u": null,
+    "data_interfaces": [
+     "RS-422",
+     "RS-485"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      28.0,
+      28.0
+     ]
+    ],
+    "propulsion_type": "feep",
+    "total_impulse_ns": 26000.0
+   },
+   "dimensions": {
+    "mm": [
+     140,
+     120,
+     126.5
+    ],
+    "basis": "declared",
+    "note": "Datasheet Enpulsion MICRO R3, dimensioni esterne senza sporgenze (con sporgenze 140 x 120 x 131.5 mm)."
+   },
+   "image": {
+    "file": "images/Enpulsion-MICRO-R3.png",
+    "image_url": "https://www.enpulsion.com/wp-content/uploads/DataSheet_Micro_20260323.pdf",
+    "page_url": "https://www.enpulsion.com/wp-content/uploads/DataSheet_Micro_20260323.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/Enpulsion__MICRO-R3-Datasheet-20260323.pdf",
+    "document": "Enpulsion MICRO R3 Datasheet, configurazione 030 (Doc. DAT-00006_2.00, marzo 2026)",
+    "source_url": "https://www.enpulsion.com/wp-content/uploads/DataSheet_Micro_20260323.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 981825
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
    "id": "isis-ants-1u3u",
    "category": "antenna",
    "vendor": "ISISpace",
@@ -10254,6 +12216,230 @@
    }
   },
   {
+   "id": "isis-gapa",
+   "category": "gnss_antenna",
+   "vendor": "ISISpace",
+   "name": "GNSS Active Patch Antenna (GAPA)",
+   "mass_kg": 0.018,
+   "temp_op_c": [
+    -30,
+    70
+   ],
+   "power_w": 0.05,
+   "notes": "Datasheet ISIS-GAPA-DSH-0001 issue 2.2 (2022-11-09): antenna attiva su patch ceramico per GPS L1 / Galileo E1, frequenza 1572-1578 MHz (banda 6 MHz), polarizzazione RHCP, rapporto assiale <3 dB, return loss >15 dB, guadagno del circuito attivo 34.5 dB, filtri SAW, connettore MMCX unico per RF e alimentazione, alimentazione 3-5 V, assorbimento '<10 mA a 5 V': potenza 0.05 W DERIVATA (5 V x 10 mA), non dichiarata in W. Massa 18 g in tabella ('<20 g' nelle caratteristiche), 70 x 70 x 9.7 mm, con piastra di montaggio per CubeSat. Qualificata termicamente da -30 a +70 C e per 15 g quasi-statici. Il guadagno di picco del patch e' scritto 5.5 dBi nelle caratteristiche e 5.2 dBi a 1575 MHz nella tabella: valori in contraddizione, lasciato non dichiarato (passive_gain_dbi null). La pagina CubeSatShop riporta una versione precedente (<16 g, 3.5 V a 9 mA): non usata.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2023/04/ISIS-GAPA-DSH-0001-GNSS_Antenna_Datasheet-02_02.pdf",
+    "document": "ISISpace GNSS Active Patch Antenna datasheet ISIS-GAPA-DSH-0001 issue 2.2 (2022-11-09)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "bands": [
+     "GPS L1",
+     "Galileo E1"
+    ],
+    "frequency_ranges_mhz": [
+     [
+      1572,
+      1578
+     ]
+    ],
+    "active": true,
+    "passive_gain_dbi": null,
+    "lna_gain_db": 34.5,
+    "total_gain_dbi": null,
+    "noise_figure_db": null,
+    "beamwidth_deg": null,
+    "polarization": "RHCP",
+    "supply_voltage_ranges_v": [
+     [
+      3,
+      5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     70,
+     70,
+     9.7
+    ],
+    "basis": "declared",
+    "note": "Datasheet ISIS GAPA issue 2.2: 70 x 70 x 9.7 mm (A x L x P)."
+   },
+   "image": {
+    "file": "images/ISISpace-GAPA.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2019/12/GPS-Antenna-web.jpg",
+    "page_url": "https://www.cubesatshop.com/product/isis-gps-patch-antenna/",
+    "type": "web",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/ISISpace__ISIS-GAPA-GNSS-Antenna-Datasheet-2_2.pdf",
+    "document": "ISISpace GNSS Active Patch Antenna datasheet ISIS-GAPA-DSH-0001 issue 2.2 (2022-11-09)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2023/04/ISIS-GAPA-DSH-0001-GNSS_Antenna_Datasheet-02_02.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 326815
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "exa-gca01",
+   "category": "gnss_antenna",
+   "vendor": "EXA (Ecuadorian Space Agency)",
+   "name": "GCA01 compact GNSS active patch antenna",
+   "mass_kg": 0.01138,
+   "temp_op_c": [
+    -40,
+    85
+   ],
+   "power_w": 0.1265,
+   "notes": "Datasheet EXA (bozza con refusi): patch ceramico a doppia risonanza con LNA a uno stadio e filtro SAW, GPS L1 (1575.42 +-1.023 MHz), Galileo, GLONASS (1602 +-5 MHz), BeiDou (1561.098 +-2.046 MHz), banda complessiva 1561-1606 MHz, RHCP, 50 ohm, VSWR in uscita <=2.0. Guadagno del solo patch allo zenit: -2.5 dBi (GPS/Galileo), -1.5 (GLONASS), -1 (BeiDou); guadagno complessivo allo zenit (antenna + SAW + LNA + cavo + connettore): 15.5 +-3 dBi (GPS/Galileo), 16.5 +-3 (GLONASS), 17 +-3 (BeiDou). LNA: 12 / 18 / 22 dB min / tipico / max a 1.8 / 3.0 / 5.5 V, assorbimento 5 / 10 / 23 mA, cifra di rumore 3.0 / 2.8 / 3.0 dB. Potenza 0.1265 W DERIVATA (5.5 V x 23 mA, massimo), non dichiarata in W. Campo di vista 112 gradi (non e' la larghezza di fascio a -3 dB). Il datasheet scrive 'Galileo 1575.42 +-4GHz': refuso, non usato. Dimensioni: ceramica 25.1 x 25.1 x 4.7 mm; con la custodia di schermo 25.1 x 25.1 x 7.9 mm (riportata); cavo coassiale 60 mm; massa 11.38 g; radiazioni 'minimo 4 anni in LEO'; eredita' di volo dal 2018.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2021/03/EXA-GCA01-COMPACT-GNSS-ACTIVE-PATCH-ANTENNA-Datasheet.pdf",
+    "document": "EXA GCA01 Compact GNSS Active Patch Antenna datasheet (bozza con refusi)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "bands": [
+     "GPS L1",
+     "Galileo E1",
+     "GLONASS G1",
+     "BeiDou B1"
+    ],
+    "frequency_ranges_mhz": [
+     [
+      1561,
+      1606
+     ]
+    ],
+    "active": true,
+    "passive_gain_dbi": -2.5,
+    "lna_gain_db": 18.0,
+    "total_gain_dbi": 15.5,
+    "noise_figure_db": 2.8,
+    "beamwidth_deg": null,
+    "polarization": "RHCP",
+    "supply_voltage_ranges_v": [
+     [
+      1.8,
+      5.5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     25.1,
+     25.1,
+     7.9
+    ],
+    "basis": "declared",
+    "note": "Datasheet EXA: 25.1 x 25.1 x 7.9 mm con la custodia di schermo (ceramica 25.1 x 25.1 x 4.7 mm)."
+   },
+   "image": {
+    "file": "images/EXA-GCA01.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2021/03/EXA-GCA01-COMPACT-GNSS-ACTIVE-PATCH-ANTENNA-Datasheet.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2021/03/EXA-GCA01-COMPACT-GNSS-ACTIVE-PATCH-ANTENNA-Datasheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/EXA__GCA01-Compact-GNSS-Active-Patch-Antenna.pdf",
+    "document": "EXA GCA01 Compact GNSS Active Patch Antenna datasheet (bozza con refusi)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2021/03/EXA-GCA01-COMPACT-GNSS-ACTIVE-PATCH-ANTENNA-Datasheet.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1928952
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "newspace-nant-ptcl1",
+   "category": "gnss_antenna",
+   "vendor": "NewSpace Systems",
+   "name": "NANT-PTCL1 active GPS antenna",
+   "mass_kg": 0.08,
+   "temp_op_c": [
+    -25,
+    55
+   ],
+   "power_w": 0.08,
+   "tid_krad": 10,
+   "notes": "Datasheet NewSpace Systems GPS Receiver 2020-10a (pag. 1): antenna attiva GPS L1 a 1575.42 MHz con banda 20 MHz (intervallo 1565.42-1585.42 MHz DERIVATO da centro e banda), larghezza di fascio a -3 dB >=100 gradi, polarizzazione RHCP, guadagno attivo >=16 dBiC allo zenit (limite inferiore), cifra di rumore <2 dB (limite superiore), rapporto assiale <10 dB, return loss <=-5 dB, 50 ohm; massa '<80 g' (limite superiore), potenza '<80 mW', alimentazione 5 V, connettore SMA femmina, 4 fori M3 passanti; temperatura operativa -25..+55 C (non operativa -30..+60 C); vibrazioni 14 g rms; radiazioni 10 krad a livello di componente.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-GPS-Receiver_2020-10a.pdf",
+    "document": "NewSpace Systems GPS Receiver datasheet, versione 10a (ottobre 2020)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "bands": [
+     "GPS L1"
+    ],
+    "frequency_ranges_mhz": [
+     [
+      1565.42,
+      1585.42
+     ]
+    ],
+    "active": true,
+    "passive_gain_dbi": null,
+    "lna_gain_db": null,
+    "total_gain_dbi": 16.0,
+    "noise_figure_db": 2.0,
+    "beamwidth_deg": 100.0,
+    "polarization": "RHCP",
+    "supply_voltage_ranges_v": [
+     [
+      5,
+      5
+     ]
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     54,
+     54,
+     14.1
+    ],
+    "basis": "declared",
+    "note": "Datasheet NewSpace Systems 2020-10a."
+   },
+   "image": {
+    "file": "images/NewSpace-NANT-PTCL1.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-GPS-Receiver_2020-10a.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-GPS-Receiver_2020-10a.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/NewSpace-Syste__NewSpace-GPS-Receiver_2020-10a.pdf",
+    "document": "NewSpace Systems GPS Receiver datasheet, versione 10a (ottobre 2020)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-GPS-Receiver_2020-10a.pdf",
+    "retrieved": "2026-10-14",
+    "bytes": 1245655
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
+   }
+  },
+  {
    "id": "isis-structure-1u",
    "category": "structure",
    "vendor": "ISISpace",
@@ -11266,6 +13452,1234 @@
     "basis": "subsystem",
     "set": "2026-10-15"
    }
+  },
+  {
+   "id": "aac-rw400-15",
+   "category": "reaction_wheel",
+   "vendor": "AAC Clyde Space",
+   "name": "RW400.15 reaction wheel",
+   "mass_kg": 0.197,
+   "temp_op_c": [
+    -40,
+    60
+   ],
+   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'.",
+   "source": {
+    "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 15.0,
+    "max_torque_mnm": 8.0,
+    "max_speed_rpm": 5000,
+    "power_w_nominal": 1.0,
+    "power_w_peak": 1.9,
+    "supply_voltage_ranges_v": [
+     [
+      4.5,
+      5.25
+     ]
+    ],
+    "data_interfaces": [
+     "I2C",
+     "RS-422"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     50,
+     50,
+     27
+    ],
+    "basis": "declared",
+    "note": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)."
+   },
+   "datasheet": {
+    "file": "datasheets/AAC-Clyde-Space__RW400-Reaction-Wheels.pdf",
+    "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
+    "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1424224
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 36.0,
+   "image": {
+    "file": "images/AAC-RW400.png",
+    "image_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf#page=1",
+    "page_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   }
+  },
+  {
+   "id": "aac-rw400-30",
+   "category": "reaction_wheel",
+   "vendor": "AAC Clyde Space",
+   "name": "RW400.30 reaction wheel",
+   "mass_kg": 0.21,
+   "temp_op_c": [
+    -40,
+    60
+   ],
+   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'.",
+   "source": {
+    "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 30.0,
+    "max_torque_mnm": 8.0,
+    "max_speed_rpm": 5000,
+    "power_w_nominal": 1.0,
+    "power_w_peak": 1.9,
+    "supply_voltage_ranges_v": [
+     [
+      4.5,
+      5.25
+     ]
+    ],
+    "data_interfaces": [
+     "I2C",
+     "RS-422"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     50,
+     50,
+     27
+    ],
+    "basis": "declared",
+    "note": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)."
+   },
+   "datasheet": {
+    "file": "datasheets/AAC-Clyde-Space__RW400-Reaction-Wheels.pdf",
+    "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
+    "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1424224
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 36.0,
+   "image": {
+    "file": "images/AAC-RW400.png",
+    "image_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf#page=1",
+    "page_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre versioni RW400"
+   }
+  },
+  {
+   "id": "aac-rw400-50",
+   "category": "reaction_wheel",
+   "vendor": "AAC Clyde Space",
+   "name": "RW400.50 reaction wheel",
+   "mass_kg": 0.375,
+   "temp_op_c": [
+    -40,
+    60
+   ],
+   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'.",
+   "source": {
+    "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 50.0,
+    "max_torque_mnm": 8.0,
+    "max_speed_rpm": 5000,
+    "power_w_nominal": 1.0,
+    "power_w_peak": 1.9,
+    "supply_voltage_ranges_v": [
+     [
+      4.5,
+      5.25
+     ]
+    ],
+    "data_interfaces": [
+     "I2C",
+     "RS-422"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     50,
+     50,
+     27
+    ],
+    "basis": "declared",
+    "note": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)."
+   },
+   "datasheet": {
+    "file": "datasheets/AAC-Clyde-Space__RW400-Reaction-Wheels.pdf",
+    "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
+    "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1424224
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 36.0,
+   "image": {
+    "file": "images/AAC-RW400.png",
+    "image_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf#page=1",
+    "page_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre versioni RW400"
+   }
+  },
+  {
+   "id": "aac-rw222-30",
+   "category": "reaction_wheel",
+   "vendor": "AAC Clyde Space",
+   "name": "RW222.30 reaction wheel",
+   "mass_kg": null,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "notes": "Per CubeSat 1U-3U. Momento +-3.0 o +-6.0 mN m s, coppia massima 2 mN m, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V (3.3 tipica), interfaccia I2C (altre su richiesta), -20..+60 C. Il documento scrive massa 'TBC' e radiazioni 'TBC': non pubblicate. Velocita' massima '10000 / 15000' con unita' 'To be tested': non associata a una versione, lasciata non dichiarata. Primo volo nel 2017.",
+   "source": {
+    "url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
+    "document": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 3.0,
+    "max_torque_mnm": 2.0,
+    "max_speed_rpm": null,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": [
+     [
+      3.25,
+      3.5
+     ]
+    ],
+    "data_interfaces": [
+     "I2C"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     25,
+     25,
+     15
+    ],
+    "basis": "declared",
+    "note": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/AAC-Clyde-Space__RW222-Reaction-Wheels.pdf",
+    "document": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)",
+    "source_url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1421253
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/AAC-RW222.png",
+    "image_url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf#page=1",
+    "page_url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   }
+  },
+  {
+   "id": "aac-rw222-60",
+   "category": "reaction_wheel",
+   "vendor": "AAC Clyde Space",
+   "name": "RW222.60 reaction wheel",
+   "mass_kg": null,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "notes": "Per CubeSat 1U-3U. Momento +-3.0 o +-6.0 mN m s, coppia massima 2 mN m, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V (3.3 tipica), interfaccia I2C (altre su richiesta), -20..+60 C. Il documento scrive massa 'TBC' e radiazioni 'TBC': non pubblicate. Velocita' massima '10000 / 15000' con unita' 'To be tested': non associata a una versione, lasciata non dichiarata. Primo volo nel 2017.",
+   "source": {
+    "url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
+    "document": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 6.0,
+    "max_torque_mnm": 2.0,
+    "max_speed_rpm": null,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": [
+     [
+      3.25,
+      3.5
+     ]
+    ],
+    "data_interfaces": [
+     "I2C"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     25,
+     25,
+     15
+    ],
+    "basis": "declared",
+    "note": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/AAC-Clyde-Space__RW222-Reaction-Wheels.pdf",
+    "document": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)",
+    "source_url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 1421253
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/AAC-RW222.png",
+    "image_url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf#page=1",
+    "page_url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre versioni RW222"
+   }
+  },
+  {
+   "id": "astrofein-rw1-a",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW1 Type A",
+   "mass_kg": 0.024,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 0.58 mN m s, coppia NOMINALE 0.023 mN m (si riporta nel campo della coppia massima), velocita' massima 16380 giri/min, massa '<=24 g' (limite superiore), 21 x 21 x 12 mm, -20..+50 C; 1 anno di vita hardware; velocita' nominale 8000 giri/min, momento a 8000 giri/min. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 0.58,
+    "max_torque_mnm": 0.023,
+    "max_speed_rpm": 16380,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     21,
+     21,
+     12
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw1-b",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW1 Type B",
+   "mass_kg": 0.012,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 0.1 mN m s, coppia NOMINALE 0.004 mN m (si riporta nel campo della coppia massima), velocita' massima 16380 giri/min, massa '<=12 g' (limite superiore), 21 x 21 x 12 mm, -20..+50 C; 1 anno di vita hardware; velocita' nominale 8000 giri/min, momento a 8000 giri/min. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 0.1,
+    "max_torque_mnm": 0.004,
+    "max_speed_rpm": 16380,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     21,
+     21,
+     12
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw25",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW25",
+   "mass_kg": 0.2,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 30 mN m s, coppia NOMINALE 2 mN m (si riporta nel campo della coppia massima), velocita' massima 5500 giri/min, massa '<=200 g' (limite superiore), 50 x 50 x 25 mm, -20..+50 C; 2 (5) anni di vita hardware; velocita' nominale 5000 giri/min. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 30.0,
+    "max_torque_mnm": 2.0,
+    "max_speed_rpm": 5500,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     50,
+     50,
+     25
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw35",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW35 (CubeSat line)",
+   "mass_kg": 0.5,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 100 mN m s, coppia NOMINALE 5 mN m (si riporta nel campo della coppia massima), velocita' massima 5000 giri/min, massa '<=500 g' (limite superiore), 102 x 102 x 58 mm, -20..+50 C; 5 anni di vita hardware; velocita' nominale 5000 giri/min; momento d'inerzia 1.9e-4 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 100.0,
+    "max_torque_mnm": 5.0,
+    "max_speed_rpm": 5000,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     102,
+     102,
+     58
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw90",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW90 (CubeSat line)",
+   "mass_kg": 0.9,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 350 mN m s, coppia NOMINALE 15 mN m (si riporta nel campo della coppia massima), velocita' massima 7800 giri/min, massa '<=900 g' (limite superiore), 103 x 101 x 80 mm, -20..+50 C; 7 anni di vita hardware; velocita' nominale 6000 giri/min, momento a 7800 giri/min; momento d'inerzia 4.2e-4 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 350.0,
+    "max_torque_mnm": 15.0,
+    "max_speed_rpm": 7800,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     103,
+     101,
+     80
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw100",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW100 (CubeSat line)",
+   "mass_kg": 0.8,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 400 mN m s, coppia NOMINALE 20 mN m (si riporta nel campo della coppia massima), velocita' massima 7000 giri/min, massa '<=800 g' (limite superiore), 100 x 100 x 60 mm, -20..+50 C; 7 anni di vita hardware; velocita' nominale 6000 giri/min; momento d'inerzia 6.52e-4 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 400.0,
+    "max_torque_mnm": 20.0,
+    "max_speed_rpm": 7000,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     100,
+     100,
+     60
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw150",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW150 (CubeSat line)",
+   "mass_kg": 1.3,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 1000 mN m s, coppia NOMINALE 30 mN m (si riporta nel campo della coppia massima), velocita' massima 7080 giri/min, massa '<=1300 g' (limite superiore), 150 x 150 x 60 mm, -20..+50 C; 7 anni di vita hardware; velocita' nominale 6000 giri/min; momento d'inerzia 1.592e-3 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 1000.0,
+    "max_torque_mnm": 30.0,
+    "max_speed_rpm": 7080,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     150,
+     150,
+     60
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rw250",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RW250 (CubeSat line)",
+   "mass_kg": 2.7,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 4000 mN m s, coppia NOMINALE 100 mN m (si riporta nel campo della coppia massima), velocita' massima 5000 giri/min, massa '<=2700 g' (limite superiore), 180 x 180 x 82 mm, -20..+50 C; 7 anni di vita hardware; velocita' nominale 5000 giri/min; momento d'inerzia 7.65e-3 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 4000.0,
+    "max_torque_mnm": 100.0,
+    "max_speed_rpm": 5000,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     180,
+     180,
+     82
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rwt150",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RWT150 (SmallSat line)",
+   "mass_kg": 1.5,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 1000 mN m s, coppia NOMINALE 100 mN m (si riporta nel campo della coppia massima), velocita' massima 7080 giri/min, massa '<=1500 g' (limite superiore), 150 x 150 x 60 mm, -20..+50 C; 7 anni di vita hardware; velocita' nominale 6000 giri/min; momento d'inerzia 1.592e-3 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 1000.0,
+    "max_torque_mnm": 100.0,
+    "max_speed_rpm": 7080,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     150,
+     150,
+     60
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "astrofein-rwt250",
+   "category": "reaction_wheel",
+   "vendor": "ASTROFEIN",
+   "name": "RWT250 (SmallSat line)",
+   "mass_kg": 3.0,
+   "temp_op_c": [
+    -20,
+    50
+   ],
+   "notes": "Documento ASTROFEIN (famiglia di ruote): momento 4000 mN m s, coppia NOMINALE 300 mN m (si riporta nel campo della coppia massima), velocita' massima 5000 giri/min, massa '<=3000 g' (limite superiore), 200 x 200 x 100 mm, -20..+50 C; 7 anni di vita hardware; velocita' nominale 5000 giri/min; momento d'inerzia 7.65e-3 kg m2. Potenza, tensioni e interfacce non pubblicate nel documento.",
+   "source": {
+    "url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 4000.0,
+    "max_torque_mnm": 300.0,
+    "max_speed_rpm": 5000,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": null
+   },
+   "dimensions": {
+    "mm": [
+     200,
+     200,
+     100
+    ],
+    "basis": "declared",
+    "note": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)."
+   },
+   "datasheet": {
+    "file": "datasheets/ASTROFEIN__Reaction-Wheel-Family_20230425.pdf",
+    "document": "ASTROFEIN Reaction Wheel Family (25 aprile 2023)",
+    "source_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 107600
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/ASTROFEIN-RW.png",
+    "image_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf#page=1",
+    "page_url": "https://www.astrofein.com/wp-content/uploads/2023/04/ASTROFEIN-Reaction-Wheel-Family_20230425.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci ASTROFEIN: Foto dal documento della famiglia ASTROFEIN: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "newspace-nrwa-t005",
+   "category": "reaction_wheel",
+   "vendor": "NewSpace Systems",
+   "name": "NRWA-T005 reaction wheel (wheel only)",
+   "mass_kg": 0.5,
+   "temp_op_c": [
+    -30,
+    60
+   ],
+   "notes": "Datasheet NewSpace 2021-10c: momento massimo 0.05 N m s (a 10 mN m), coppia massima 10 mN m, +-9000 giri/min, ruota 65 x 65 x 65 mm e massa 500 g 'solo ruota': l'elettronica di controllo e' un'unita' separata di 100 x 100 x 75 mm (massa non pubblicata, non inclusa). Consumo '40 mA per mN m' (non in W). Alimentazione 5 V o 12-20 V, RS-422 o UART TTL, connettore D a 9 pin (potenza) e HD a 26 pin (dati), 4 fori M3. Radiazioni 10 krad a livello di componente; temperatura di accettazione -30..+60 C.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "document": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 50.0,
+    "max_torque_mnm": 10.0,
+    "max_speed_rpm": 9000,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": [
+     [
+      5,
+      5
+     ],
+     [
+      12,
+      20
+     ]
+    ],
+    "data_interfaces": [
+     "RS-422",
+     "TTL UART"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     65,
+     65,
+     65
+    ],
+    "basis": "declared",
+    "note": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)."
+   },
+   "datasheet": {
+    "file": "datasheets/NewSpace-Syste__wSpace-Reaction-Wheel_2021-10c.pdf",
+    "document": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 981148
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 10.0,
+   "image": {
+    "file": "images/NewSpace-NRWA.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto del documento NewSpace: non indica a quale modello appartenga"
+   }
+  },
+  {
+   "id": "newspace-nrwa-t065",
+   "category": "reaction_wheel",
+   "vendor": "NewSpace Systems",
+   "name": "NRWA-T065 reaction wheel",
+   "mass_kg": 1.55,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "notes": "Datasheet NewSpace 2021-10c: momento massimo 0.65 N m s (a 20 mN m), coppia massima 20 mN m, +-9000 giri/min, 102 x 102 x 105 mm, 1.55 kg, elettronica interna, consumo '40 mA per mN m', 28 V non regolati, RS-422, connettore D a 9 pin, 4 fori M5, 10 krad a livello di componente, -20..+60 C. Ruota di classe SmallSat.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "document": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 650.0,
+    "max_torque_mnm": 20.0,
+    "max_speed_rpm": 9000,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": [
+     [
+      28,
+      28
+     ]
+    ],
+    "data_interfaces": [
+     "RS-422"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     102,
+     102,
+     105
+    ],
+    "basis": "declared",
+    "note": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)."
+   },
+   "datasheet": {
+    "file": "datasheets/NewSpace-Syste__wSpace-Reaction-Wheel_2021-10c.pdf",
+    "document": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 981148
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 10.0,
+   "image": {
+    "file": "images/NewSpace-NRWA.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci NewSpace NRWA"
+   }
+  },
+  {
+   "id": "newspace-nrwa-t2",
+   "category": "reaction_wheel",
+   "vendor": "NewSpace Systems",
+   "name": "NRWA-T2 reaction wheel",
+   "mass_kg": 2.55,
+   "temp_op_c": [
+    -20,
+    60
+   ],
+   "notes": "Datasheet NewSpace 2021-10c: momento massimo 1.6 N m s, coppia massima 94 mN m, +-3050 giri/min, 150 x 150 x 75 mm, 2.55 kg, elettronica interna, consumo '12 mA per mN m', 28 V non regolati, RS-422, connettore D a 9 pin, 4 fori M5, 10 krad a livello di componente, -20..+60 C. Ruota di classe SmallSat.",
+   "source": {
+    "url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "document": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 1600.0,
+    "max_torque_mnm": 94.0,
+    "max_speed_rpm": 3050,
+    "power_w_nominal": null,
+    "power_w_peak": null,
+    "supply_voltage_ranges_v": [
+     [
+      28,
+      28
+     ]
+    ],
+    "data_interfaces": [
+     "RS-422"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     150,
+     150,
+     75
+    ],
+    "basis": "declared",
+    "note": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)."
+   },
+   "datasheet": {
+    "file": "datasheets/NewSpace-Syste__wSpace-Reaction-Wheel_2021-10c.pdf",
+    "document": "NewSpace Systems Reaction Wheel datasheet 2021-10c (NRWA-T005, T065, T2)",
+    "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 981148
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 10.0,
+   "image": {
+    "file": "images/NewSpace-NRWA.png",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/07/NewSpace-Reaction-Wheel_2021-10c.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15",
+    "note": "Foto condivisa con le altre voci NewSpace NRWA"
+   }
+  },
+  {
+   "id": "vectronic-vrw-02",
+   "category": "reaction_wheel",
+   "vendor": "Vectronic Aerospace",
+   "name": "VRW-02 reaction wheel",
+   "mass_kg": 1.0,
+   "temp_op_c": [
+    -20,
+    70
+   ],
+   "notes": "Datasheet Vectronic: momento 0.2 N m s; coppia massima +-20 mN m; velocita' nominale +-5000 e massima +-6500 giri/min; 70 x 70 x 48 mm, 1.0 kg; potenza '<1.0 W' a 0 giri/min, '<3.0 W' a 4000 giri/min (riportata come nominale) e '<25 W' alla coppia massima (riportata come picco); interfacce RS422, RS485 e CAN; connettore MDM-25; vita in orbita '>45000 ore'; -20..+70 C; radiazioni '>20 krad' (limite inferiore); vibrazioni 15 g rms; sbilanciamento statico/dinamico <1 g mm / 80 g mm2. Tensione di alimentazione non pubblicata.",
+   "source": {
+    "url": "https://www.vectronic-aerospace.com/wp-content/uploads/2020/03/VAS-VRW02-DS3.pdf",
+    "document": "Vectronic Aerospace VRW-02 reaction wheel datasheet (VAS-VRW02-DS3)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 200.0,
+    "max_torque_mnm": 20.0,
+    "max_speed_rpm": 6500,
+    "power_w_nominal": 3.0,
+    "power_w_peak": 25.0,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": [
+     "RS-422",
+     "RS-485",
+     "CAN"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     70,
+     70,
+     48
+    ],
+    "basis": "declared",
+    "note": "Vectronic Aerospace VRW-02 reaction wheel datasheet (VAS-VRW02-DS3)."
+   },
+   "datasheet": {
+    "file": "datasheets/Vectronic__VAS-VRW02-DS3.pdf",
+    "document": "Vectronic Aerospace VRW-02 reaction wheel datasheet (VAS-VRW02-DS3)",
+    "source_url": "https://www.vectronic-aerospace.com/wp-content/uploads/2020/03/VAS-VRW02-DS3.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 176334
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 20.0,
+   "image": {
+    "file": "images/Vectronic-VRW02.png",
+    "image_url": "https://www.vectronic-aerospace.com/wp-content/uploads/2020/03/VAS-VRW02-DS3.pdf#page=1",
+    "page_url": "https://www.vectronic-aerospace.com/wp-content/uploads/2020/03/VAS-VRW02-DS3.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-15"
+   }
+  },
+  {
+   "id": "vectronic-vrw-1",
+   "category": "reaction_wheel",
+   "vendor": "Vectronic Aerospace",
+   "name": "VRW-1 reaction wheel",
+   "mass_kg": 1.8,
+   "temp_op_c": [
+    -20,
+    70
+   ],
+   "notes": "Datasheet Vectronic: momento 1.0 N m s; coppia massima +-25 mN m; velocita' nominale +-5000 e massima +-6500 giri/min; 115 x 115 x 77 mm, 1.8 kg; potenza '<1.0 W' a 0 giri/min, '<3.0 W' a 4000 giri/min (riportata come nominale) e '<25 W' alla coppia massima (riportata come picco); interfaccia RS422 / RS485; connettore MDM-9; vita in orbita '>45000 ore'; -20..+70 C; radiazioni '>20 krad' (limite inferiore); vibrazioni 15 g rms; sbilanciamento statico/dinamico <1 g mm / 80 g mm2. Tensione di alimentazione non pubblicata.",
+   "source": {
+    "url": "https://www.vectronic-aerospace.com/wp-content/uploads/2020/03/VAS-VRW1-DS11.pdf",
+    "document": "Vectronic Aerospace VRW-1 reaction wheel datasheet (VAS-VRW1-DS11)",
+    "retrieved": "2026-10-15",
+    "verified": false,
+    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+   },
+   "specs": {
+    "momentum_mnms": 1000.0,
+    "max_torque_mnm": 25.0,
+    "max_speed_rpm": 6500,
+    "power_w_nominal": 3.0,
+    "power_w_peak": 25.0,
+    "supply_voltage_ranges_v": null,
+    "data_interfaces": [
+     "RS-422",
+     "RS-485"
+    ]
+   },
+   "dimensions": {
+    "mm": [
+     115,
+     115,
+     77
+    ],
+    "basis": "declared",
+    "note": "Vectronic Aerospace VRW-1 reaction wheel datasheet (VAS-VRW1-DS11)."
+   },
+   "datasheet": {
+    "file": "datasheets/Vectronic__VAS-VRW1-DS11.pdf",
+    "document": "Vectronic Aerospace VRW-1 reaction wheel datasheet (VAS-VRW1-DS11)",
+    "source_url": "https://www.vectronic-aerospace.com/wp-content/uploads/2020/03/VAS-VRW1-DS11.pdf",
+    "retrieved": "2026-10-15",
+    "bytes": 101766
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
+   },
+   "tid_krad": 20.0
   }
  ]
 }

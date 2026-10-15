@@ -31,8 +31,8 @@ class TestSelectApi(unittest.TestCase):
     def test_overview_lists_classes_and_subsystems(self):
         o = SERVICE.overview()
         self.assertEqual([c["class_u"] for c in o["classes"]], [1, 3, 6, 12])
-        self.assertEqual(len(o["subsystems"]), 15)
-        self.assertEqual(o["n_components"], 179)
+        self.assertEqual(len(o["subsystems"]), 17)
+        self.assertEqual(o["n_components"], 232)
 
     def test_component_record_carries_the_rows_and_the_dimensions(self):
         rec = SERVICE.component("aac-kryten-m3", with_image=False)
@@ -112,7 +112,7 @@ class TestCli(unittest.TestCase):
         with redirect_stdout(buf):
             self.assertEqual(main(["validate"]), 0)
             self.assertEqual(main(["list", "--category", "magnetorquer"]), 0)
-        self.assertIn("179 valid components", buf.getvalue())
+        self.assertIn("232 valid components", buf.getvalue())
         self.assertIn("isis-imtq", buf.getvalue())
 
 

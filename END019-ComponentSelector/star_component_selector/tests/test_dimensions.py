@@ -57,7 +57,8 @@ class TestDimensions(unittest.TestCase):
             a, b, h = d["mm"]
             density = c.mass_kg * 1000 / (a * b * h / 1000)
             top = 6.0 if c.category in ("reaction_wheel", "magnetorquer") else 3.5   # volano e nucleo delle barre sono di metallo
-            self.assertTrue(0.2 <= density <= top, (c.id, density))
+            low = 0.15 if c.category == "star_tracker" else 0.2      # i baffle sono quasi vuoti: la scatola che li racchiude e' molto piu' grande della massa
+            self.assertTrue(low <= density <= top, (c.id, density))
 
     def test_standard_basis_is_only_used_for_published_formats(self):
         for c in CAT.values():

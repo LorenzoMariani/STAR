@@ -47,7 +47,7 @@ def _thumbnail_uri(path: Path, max_px: int = 360) -> str | None:
 ACRONYMS = {"structure": ("STR", "Structure"), "obc": ("OBC", "On-board computer"), "eps": ("EPS", "Electrical power system"), "battery": ("BAT", "Battery"),
             "solar_panel": ("SOL", "Solar cells"), "comms": ("COM", "Communications"), "antenna": ("ANT", "Antenna"),
             "adcs": ("ADCS", "Attitude determination and control"), "magnetorquer": ("MTQ", "Magnetorquer"), "reaction_wheel": ("RW", "Reaction wheel"),
-            "star_tracker": ("STK", "Star tracker"), "gps": ("GPS", "GNSS receiver"), "propulsion": ("PRP", "Propulsion"),
+            "star_tracker": ("STK", "Star tracker"), "sun_sensor": ("SUN", "Sun sensor"), "gps": ("GPS", "GNSS receiver"), "gnss_antenna": ("GNA", "GNSS antenna"), "propulsion": ("PRP", "Propulsion"),
             "payload_imager": ("IMG", "Payload imager"), "payload_optical": ("OPT", "Payload optical terminal")}
 
 

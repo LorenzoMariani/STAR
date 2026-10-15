@@ -56,27 +56,39 @@ SUBSYSTEMS = (
     ("magnetorquer", "magnetorquer", "MAGNETORQUER"),
     ("reaction_wheel", "reaction_wheel", "REACTION WHEEL"),
     ("star_tracker", "star_tracker", "STAR TRACKER"),
+    ("sun_sensor", "sun_sensor", "SUN SENSOR"),
     ("gps", "gps", "GNSS RECEIVER"),
+    ("gnss_antenna", "gnss_antenna", "GNSS ANTENNA"),
     ("propulsion", "propulsion", "PROPULSION"),
     ("payload_imager", "payload", "PAYLOAD · IMAGER"),
     ("payload_optical", "payload", "PAYLOAD · OPTICAL TERMINAL"),
 )
 LABELS = {sid: label for sid, _, label in SUBSYSTEMS}
 # Regola dichiarata (non un dato del fornitore): questi sottosistemi si montano sulle facce del CubeSat e non occupano il volume interno
-EXTERNAL_SUBSYSTEMS = ("solar_panel", "antenna")
+EXTERNAL_SUBSYSTEMS = ("solar_panel", "antenna", "sun_sensor", "gnss_antenna")
 NO_POWER_SUBSYSTEMS = ("structure", "battery", "solar_panel", "antenna")   # non assorbono potenza (o non e' un dato significativo)
 
 
 # faccia di una struttura CubeSat (larghezza x lunghezza, mm): un pannello "3U" e' fatto per la faccia 100 x 340.5 mm
-FACE_MM = {"1U": (100.0, 113.5), "2U": (100.0, 227.0), "3U": (100.0, 340.5), "6U": (226.3, 340.5)}
+FACE_MM = {"1U": (100.0, 113.5), "1U Z": (100.0, 100.0), "2U": (100.0, 227.0), "3U": (100.0, 340.5), "6U": (226.3, 340.5)}   # "1U Z" = faccia superiore o inferiore
+
+
+def panel_face(c: Component) -> tuple[float, float] | None:
+    """Impronta (mm) di un pannello solare senza tutte e tre le quote: le due quote pubblicate se ci sono (lo spessore manca), altrimenti la faccia dichiarata."""
+    if c.category != "solar_panel":
+        return None
+    known = [float(x) for x in (c.dimensions_mm or []) if x is not None]
+    if len(known) == 2:
+        return known[0], known[1]
+    return FACE_MM.get(str(c.raw["specs"].get("face")))
 
 
 def fits_envelope(c: Component, env: tuple[float, float, float]) -> bool:
-    """Le dimensioni pubblicate entrano nell'ingombro in una qualunque orientazione. Se non sono pubblicate si usa, per i pannelli solari, la faccia per cui
-    il fornitore li dichiara (campo `face`); senza nemmeno quella non si puo' escludere."""
+    """Le dimensioni pubblicate entrano nell'ingombro in una qualunque orientazione. Se non sono pubblicate si usa, per i pannelli solari, l'impronta pubblicata
+    o la faccia per cui il fornitore li dichiara (campo `face`); senza nemmeno quella non si puo' escludere."""
     d = c.dimensions_mm
     if not d or any(x is None for x in d):
-        face = FACE_MM.get(str(c.raw["specs"].get("face"))) if c.category == "solar_panel" else None
+        face = panel_face(c)
         if face:
             return any(face[0] <= x + 1e-9 and face[1] <= y + 1e-9 for x, y in itertools.permutations(env, 2))
         return True

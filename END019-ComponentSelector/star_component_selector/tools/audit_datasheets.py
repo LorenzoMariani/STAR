@@ -84,7 +84,7 @@ def name_tokens(c):
 
 def relevant_pages(c, pages):
     """Pagine che nominano il prodotto (tutti i token distintivi); se sono molte o nessuna, tutto il documento."""
-    if len(pages) <= 6:
+    if len(pages) <= 10:      # documenti brevi: un solo prodotto, le sue specifiche possono stare su pagine che non ripetono il nome
         return list(range(len(pages))), "document"
     toks = [t for t in name_tokens(c) if not re.fullmatch(r"(cubesat|structure|solar|panel|u|kit|system|module|board|3u|6u|1u|12u)", t)]
     if toks:

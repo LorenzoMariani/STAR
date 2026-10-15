@@ -16,7 +16,7 @@ from typing import Any
 
 from . import layout
 from .rows import subsystem_of
-from .selector import EXTERNAL_SUBSYSTEMS, FACE_MM, Selection
+from .selector import EXTERNAL_SUBSYSTEMS, Selection, panel_face
 
 EPS = 1e-9
 LABELS = {"fits": "Fits the CDS envelope", "does_not_fit": "Does not fit", "not_shown": "Not shown to fit", "undetermined": "Undetermined"}
@@ -99,8 +99,9 @@ def _place_external(c, env, taken: set[str]):
     """Appoggia un componente esterno alla faccia piu' piccola su cui entra (centrato; in un angolo se la faccia e' gia' occupata)."""
     dims = _full_dims(c)
     published = dims is not None
+    known = [float(x) for x in (c.dimensions_mm or []) if x is not None]
     if dims is None:
-        face = FACE_MM.get(str(c.raw["specs"].get("face"))) if c.category == "solar_panel" else None
+        face = panel_face(c)
         if not face:
             return None
         dims = (face[0], face[1], VISUAL_THICKNESS_MM)
@@ -127,7 +128,7 @@ def _place_external(c, env, taken: set[str]):
     pos[j] = 0.0 if corner else (lj - db) / 2
     pos[n] = env[n]
     taken.add(name)
-    return {"face": name, "pos": [round(v, 1) for v in pos], "size": [round(v, 2) for v in size], "size_published": published,
+    return {"face": name, "pos": [round(v, 1) for v in pos], "size": [round(v, 2) for v in size], "size_published": published, "published_mm": known,
             "shape": shape_for(c, dims if published else None, perm) if published else {**shape_for(c, dims, perm), "axis": None}}
 
 

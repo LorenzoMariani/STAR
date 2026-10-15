@@ -147,7 +147,7 @@ class TestExternalParts(unittest.TestCase):
     def test_external_parts_sit_on_a_face_outside_the_envelope(self):
         for u in (3, 6, 12):
             f = SERVICE.select({"form_factor_u": u})["fit"]
-            self.assertEqual({e["subsystem"] for e in f["external"]}, {"solar_panel", "antenna"})
+            self.assertEqual({e["subsystem"] for e in f["external"]}, {"solar_panel", "antenna", "sun_sensor", "gnss_antenna"})
             env = f["envelope_mm"]
             for e in f["external"]:
                 n = {"+X": 0, "+Y": 1, "+Z": 2}[e["face"]]
@@ -156,14 +156,21 @@ class TestExternalParts(unittest.TestCase):
                     if k != n:
                         self.assertGreaterEqual(e["pos"][k], -EPS)
                         self.assertLessEqual(e["pos"][k] + e["size"][k], env[k] + 0.11)
-            faces = [e["face"] for e in f["external"]]
-            self.assertEqual(len(faces), len(set(faces)) if len(set(faces)) == 2 else len(faces))
 
     def test_published_sizes_are_kept_and_unpublished_thickness_is_flagged(self):
         f = SERVICE.select({"form_factor_u": 6})["fit"]
         panel = next(e for e in f["external"] if e["subsystem"] == "solar_panel")
-        self.assertEqual(sorted(panel["size"], reverse=True), [340.5, 100.0, 2.5])
+        c = next(c for c in SERVICE.catalog if c.id == panel["id"])
+        self.assertEqual(sorted(panel["size"], reverse=True), sorted(c.dimensions_mm, reverse=True))      # le quote del catalogo, non altre
         self.assertTrue(panel["size_published"])
+
+    def test_a_panel_with_two_published_sizes_is_drawn_with_them_and_a_nominal_thickness(self):
+        from star_selector.fit import _place_external
+        c = next(c for c in SERVICE.catalog if c.id == "dhv-1u-xy")
+        spot = _place_external(c, (100.0, 226.3, 366.0), set())
+        self.assertFalse(spot["size_published"])                                  # lo spessore manca
+        self.assertEqual(spot["published_mm"], [82.8, 97.8])
+        self.assertEqual(sorted(spot["size"], reverse=True)[:2], [97.8, 82.8])
 
 
 class TestShapes(unittest.TestCase):

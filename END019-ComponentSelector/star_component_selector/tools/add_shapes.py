@@ -33,12 +33,23 @@ put("board", None, "aac-kryten-m3", "aac-q7s", "gomspace-nanomind-a3200", "pumpk
     "pumpkin-csk-mb-ppmd1", "pumpkin-csk-mb-ppmd2", "pumpkin-fm430")
 put("box", None, "aac-sirius-obc-leon3ft", "alenspace-dara-obc", "endurosat-obc", "innoflight-cfc-400-champs", "nanoavionics-satbus-3c2")
 put("board", None, "aac-starbuck-nano", "aac-starbuck-nano-plus", "gomspace-nanopower-p60", "pumpkin-linear-eps-11wh", "pumpkin-linear-eps-22wh")
+put("box", None, "gomspace-nanocom-link-s", "gomspace-nanocom-link-x", "gomspace-nanocom-link-sx")
+put("board", None, "isis-iobc", "isis-trxuv", "isis-iceps2-type-a", "isis-iceps2-type-b", "isis-iceps2-type-c")
 put("box", None, "endurosat-cubesat-eps", "endurosat-eps-i", "endurosat-eps-ii", "gomspace-nanopower-p80", "nanoavionics-eps-1-0", "spacemind-gemini-eps")
 put("stack", None, "nanoavionics-eps-2-0", "cubespace-cubeadcs-3axis-small", "cubespace-cubeadcs-ymomentum-small", "hyperion-iadcs200", "gomspace-nanoprop-cgp3")
 put("board", None, "aac-optimus-30", "aac-optimus-40", "aac-optimus-80", "pumpkin-bm1-40wh")
 put("box", None, "bct-battery-1p8s", "bct-battery-2p8s", "gomspace-bp8-100wh", "gomspace-bpx-100wh-16v", "gomspace-bpx-100wh-32v")
 put("panel", None, "aac-photon-side-3u", "endurosat-solar-3u", "endurosat-solar-3u-deployable-double", "endurosat-solar-3u-deployable-single", "endurosat-solar-6u",
-    "endurosat-solar-6u-deployable-single", "gomspace-dsp-135-mk2", "isis-solar-3u", "spacemind-sp3x", "spacemind-sp6x")
+    "endurosat-solar-6u-deployable-single", "gomspace-dsp-135-mk2", "isis-solar-3u", "spacemind-sp3x", "spacemind-sp6x",
+    "isis-solar-1u", "endurosat-solar-1u", "dhv-1u-xy", "dhv-1u-z")
+put("box", None, "newspace-ncss-sa05", "solarmems-ssoc-a60", "solarmems-nanossoc-d60", "cubespace-cubesense-sun")
+put("cylinder", SHORT, "newspace-nfss-411")
+put("cylinder", SHORT, "aac-rw400-15", "aac-rw400-30", "aac-rw400-50", "aac-rw222-30", "aac-rw222-60", "astrofein-rw1-a", "astrofein-rw1-b", "astrofein-rw25", "astrofein-rw35",
+    "astrofein-rw90", "astrofein-rw100", "astrofein-rw150", "astrofein-rw250", "astrofein-rwt150", "astrofein-rwt250", "newspace-nrwa-t005", "newspace-nrwa-t065", "newspace-nrwa-t2",
+    "vectronic-vrw-02", "vectronic-vrw-1")
+put("lens_box", LONG, "sodern-auriga-oh", "rocketlab-st16rt2-short-baffle", "rocketlab-st16rt2-large-baffle")
+put("patch", None, "isis-gapa", "exa-gca01")
+put("box", None, "newspace-nant-ptcl1")
 put("board", None, "aac-pulsar-hstx", "aac-pulsar-stx", "aac-pulsar-utrx", "aac-pulsar-vutrx", "isis-trxvu", "nanoavionics-satcom-uhf")
 put("box", None, "aac-quasar-strx", "aac-trx-u", "endurosat-sband", "endurosat-sband-max", "endurosat-uhf", "endurosat-xband", "endurosat-xband-sdr", "gomspace-nanocom-ax100",
     "satlab-srs-3", "satlab-srs-4", "satlab-srx-8")
@@ -49,7 +60,7 @@ put("lens_box", LONG, "hyperion-iadcs400", "cubespace-cubestar", "rocketlab-st16
 put("baffle_box", LONG, "bct-nst-full", "bct-nst-mid", "bct-nst-standard")
 put("board", None, "hyperion-gnss200", "skyfox-pinav-ng", "sstl-sgr-ligo")
 put("box", None, "newspace-ngps-01-422", "newspace-ngps-03-422", "aac-pm200", "busek-bgt-x5", "busek-bit-3", "cuaerospace-chips-1000", "cuaerospace-chips-180", "cuaerospace-chips-500",
-    "enpulsion-nano-r3", "l3harris-mps-120-1u", "l3harris-mps-120-2u", "l3harris-mps-130-1u", "l3harris-mps-130-2u", "thrustme-npt30-i2-1-5u", "thrustme-npt30-i2-1u",
+    "enpulsion-nano-r3", "enpulsion-micro-r3", "dawn-cubedrive-0-8u", "dawn-cubedrive-2u", "dawn-cubedrive-8u", "cuaerospace-mpuc-1u", "cuaerospace-mpuc-1-5u", "cuaerospace-mpuc-2u", "l3harris-mps-120-1u", "l3harris-mps-120-2u", "l3harris-mps-130-1u", "l3harris-mps-130-2u", "thrustme-npt30-i2-1-5u", "thrustme-npt30-i2-1u",
     "vacco-mips-0-5u", "vacco-mips-1u")
 put("cylinder", SHORT, "l3harris-mps-135-4u")
 put("cylinder", LONG, "dragonfly-caiman-ms", "dragonfly-caiman-rgb", "dragonfly-chameleon-hs", "dragonfly-chameleon-ms", "dragonfly-chameleon-rgb", "satlantis-graphium",

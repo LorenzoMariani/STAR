@@ -116,7 +116,7 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 const $ = id => document.getElementById(id);
 const NA = 'Not publicly available';
 const NAD = 'Not available in the database';
-const HUE = {structure:[220,12],obc:[165,60],eps:[34,85],battery:[8,75],solar_panel:[215,70],comms:[195,75],antenna:[150,55],adcs:[280,55],magnetorquer:[300,50],reaction_wheel:[255,55],star_tracker:[330,60],gps:[95,52],propulsion:[18,82],payload_imager:[52,85],payload_optical:[75,70]};
+const HUE = {structure:[220,12],obc:[165,60],eps:[34,85],battery:[8,75],solar_panel:[215,70],comms:[195,75],antenna:[150,55],adcs:[280,55],magnetorquer:[300,50],reaction_wheel:[255,55],star_tracker:[330,60],sun_sensor:[45,30],gps:[95,52],gnss_antenna:[120,40],propulsion:[18,82],payload_imager:[52,85],payload_optical:[75,70]};
 const catColor = (c, l = 55) => `hsl(${(HUE[c]||[0,0])[0]} ${(HUE[c]||[0,0])[1]}% ${l}%)`;
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sci = (v, d = 3) => { if (v == null) return NA; if (v === 0) return '0'; const e = Math.floor(Math.log10(Math.abs(v))); const m = v / Math.pow(10, e); const sup = String(e).replace(/-/g, '⁻').replace(/\d/g, x => '⁰¹²³⁴⁵⁶⁷⁸⁹'[x]); return `${m.toFixed(d)}×10${sup}`; };
@@ -206,6 +206,8 @@ function iconPrims(id) {
     case 'magnetorquer': return [B_([0, 0, -0.5], [1.5, 1.5, 0.05], -8), B_([0, 0.2, -0.3], [1.3, 0.14, 0.14], 8), B_([0.2, -0.3, -0.3], [0.14, 1.0, 0.14], 8), Cz([0, 0, -0.45], 0.55, 0.06, 12)];
     case 'reaction_wheel': return [B_([0, 0, -0.45], [1.2, 1.2, 0.08], -8), Cz([0, 0, -0.1], 0.58, 0.5, 0), Cz([0, 0, 0.17], 0.42, 0.06, 10), Cz([0, 0, 0.22], 0.1, 0.06, 18)];
     case 'star_tracker': return [B_([0, 0, -0.35], [0.7, 0.7, 0.45], 4), Cz([0, 0, 0.18], 0.17, 0.62, -14, 0.34), B_([0.25, 0.25, -0.62], [0.2, 0.2, 0.1], 10)];
+    case 'sun_sensor': return [B_([0, 0, -0.3], [1.0, 1.0, 0.3], 4), Cz([0, 0, -0.08], 0.36, 0.14, 12), B_([0, 0, 0.0], [0.24, 0.24, 0.05], -16), B_([0.62, 0, -0.3], [0.2, 0.5, 0.16], 10)];
+    case 'gnss_antenna': return [B_([0, 0, -0.3], [1.2, 1.2, 0.06], -6), B_([0, 0, -0.2], [0.7, 0.7, 0.16], 16), B_([0.45, 0.45, -0.25], [0.2, 0.2, 0.1], 10), Rod([0.55, 0.55, -0.22], [1, 1, 0.6], 0.45, 0.02, 8)];
     case 'gps': return [board(-0.35, 1.1, 0.8), B_([0, 0, -0.27], [0.4, 0.3, 0.08], 10), Cz([0.3, 0, -0.1], 0.04, 0.35, 8), B_([0.3, 0, 0.12], [0.55, 0.55, 0.07], 16), B_([-0.4, 0.2, -0.3], [0.25, 0.2, 0.05], 6)];
     case 'propulsion': return [Cz([0, 0, 0.1], 0.4, 1.0), Cz([0, 0, 0.64], 0.12, 0.1, 10), Cz([0, 0, -0.62], 0.22, 0.4, -14, 0.07), B_([0.52, 0, -0.1], [0.28, 0.2, 0.2], 10), Rod([0.45, 0, -0.05], [0, 0, -1], 0.45, 0.03, 4)];
     case 'payload_optical': { const o = [B_([0, 0, -0.45], [1.15, 1.15, 0.3], 4)]; for (let i = 0; i < 4; i++) o.push(Cz([0, 0, -0.27 + i * 0.12], 0.45 * Math.cos((i + 1) * 0.4), 0.12, -6 * i, 0.45 * Math.cos(i * 0.4))); return o; }
@@ -268,7 +270,7 @@ function renderIndicators(r) {
   const massOk = t.mass_kg <= t.mass_limit_kg, volOk = t.volume_m3 <= t.volume_limit_m3;
   $('kpis').innerHTML = [
     kpi('Mass', f(t.mass_kg, 3), `of ${f(t.mass_limit_kg)} kg`, massOk ? 'ok' : 'bad', t.mass_unknown.length ? 'Without published mass: ' + t.mass_unknown.join(', ') : 'Sum of the published masses of the selected components'),
-    kpi('Internal volume', sci(t.volume_m3), `of ${sci(t.volume_limit_m3)} m³`, volOk ? 'ok' : 'bad', t.volume_unknown.length ? `${t.volume_unknown.length} component(s) without published size are not counted` : 'Sum of length × width × height of the selected internal components (solar panels and antennas are mounted on the faces and not counted)'),
+    kpi('Internal volume', sci(t.volume_m3), `of ${sci(t.volume_limit_m3)} m³`, volOk ? 'ok' : 'bad', t.volume_unknown.length ? `${t.volume_unknown.length} component(s) without published size are not counted` : 'Sum of length × width × height of the selected internal components (solar panels, antennas and sun sensors are mounted on the faces and not counted)'),
     r.fit ? kpi('Envelope fit', esc(r.fit.label), '', {fits: 'ok', does_not_fit: 'bad', not_shown: 'warn', undetermined: 'warn'}[r.fit.state], r.fit.message) : '',
     kpi('Power (declared peak)', f(t.power_w_declared_peak, 2), 'W', t.power_unknown.length ? 'warn' : 'ok', t.power_unknown.length ? `Not publicly available for ${t.power_unknown.length} subsystem(s): ` + t.power_unknown.join(', ') : 'Sum of the maximum powers declared by the vendors'),
     kpi('Subsystems covered', t.n_covered, `of ${t.n_subsystems}`, t.n_covered === t.n_subsystems ? 'ok' : 'warn', 'Subsystems with at least one component that fits'),
@@ -391,10 +393,12 @@ function renderPlacement(r) {
     return `<g class="pb" data-id="${esc(p.id)}"><title>${esc(p.name)}</title>${polys.map(fc => `<polygon points="${pts(fc.pts)}" fill="${catColor(p.subsystem, clamp(fc.l, 12, 86))}" ${fc.op < 1 ? `fill-opacity="${fc.op}"` : ''} stroke="${sel === p.id ? 'var(--accent)' : 'rgba(0,0,0,.4)'}" stroke-width="${sel === p.id ? 1.8 : .7}" stroke-linejoin="round"/>`).join('')}</g>`;
   }).join('');
   const L = {}; for (const c of (r.library && r.library.classes) || []) L[c.id] = c;
-  const sizeTxt = p => p.ext && !p.size_published ? `Size: ${NA}` : p.size.map(v => f(v, 1)).sort((a, b) => b - a).join(' × ') + ' mm';
+  const sizeTxt = p => p.ext && !p.size_published
+    ? (p.published_mm && p.published_mm.length ? `${p.published_mm.map(v => f(v, 1)).join(' × ')} mm · thickness: ${NA}` : `Size: ${NA}`)
+    : p.size.map(v => f(v, 1)).sort((a, b) => b - a).join(' × ') + ' mm';
   const leg = parts.map(p => `<div class="it ${sel === p.id ? 'sel' : ''}" data-id="${esc(p.id)}" title="${esc(p.name)}"><b class="sw" style="background:${catColor(p.subsystem)}"></b><span class="ac">${esc((L[p.subsystem] || {}).acronym || p.subsystem)}${p.shape && p.shape.basis === 'subsystem' ? '<sup title="Shape chosen from the subsystem: no usable product image">*</sup>' : ''}</span><span class="nm">${esc(p.name)}</span><span class="sz">${esc(sizeTxt(p))}${p.ext ? ' · external' : ''}</span></div>`).join('');
   $('pl').innerHTML = `<div class="plwrap"><div class="plview"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Isometric view of the chosen components inside the ${r.cubesat.class_u}U CubeSat"><title>${r.cubesat.class_u}U CubeSat, components placed inside</title>${back}${behind}${body}${front}</svg></div><div class="pleg">${leg}</div></div>
-    <div class="plnote">${esc(F.message)} Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; <sup>*</sup> marks a shape chosen from the subsystem because there is no usable product image.</div>`;
+    <div class="plnote">${esc(F.message)} Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna, sun sensor, GNSS antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; <sup>*</sup> marks a shape chosen from the subsystem because there is no usable product image.</div>`;
 }
 $('pl').onclick = e => { const el = e.target.closest('[data-id]'); if (el && el.dataset.id) select(el.dataset.id); };
 

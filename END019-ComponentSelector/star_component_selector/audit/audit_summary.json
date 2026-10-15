@@ -1,21 +1,21 @@
 {
- "components": 98,
+ "components": 150,
  "no_text": 0,
  "mass": {
-  "found": 66,
-  "missing": 6,
-  "skipped": 0,
-  "number_only": 26
+  "found": 99,
+  "missing": 7,
+  "skipped": 5,
+  "number_only": 39
  },
  "dims": {
-  "all": 78,
-  "partial": 4,
-  "none": 4,
-  "skipped": 12
+  "all": 116,
+  "partial": 5,
+  "none": 6,
+  "skipped": 23
  },
  "specs": {
-  "found": 240,
-  "missing": 17,
-  "skipped": 554
+  "found": 413,
+  "missing": 22,
+  "skipped": 811
  }
 }

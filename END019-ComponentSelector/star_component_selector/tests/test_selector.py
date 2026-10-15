@@ -32,14 +32,14 @@ class TestCatalog(unittest.TestCase):
     def setUpClass(cls):
         cls.cat = load_catalog(CATALOG)
 
-    def test_catalog_is_valid_and_has_179_components_in_all_categories(self):
-        self.assertEqual(len(self.cat), 179)
+    def test_catalog_is_valid_and_has_232_components_in_all_categories(self):
+        self.assertEqual(len(self.cat), 232)
         by_cat = {}
         for c in self.cat:
             by_cat[c.category] = by_cat.get(c.category, 0) + 1
         self.assertEqual(set(by_cat), set(CATEGORIES))
         self.assertEqual({k: by_cat[k] for k in ("structure", "magnetorquer", "reaction_wheel", "propulsion", "antenna", "gps")},
-                         {"structure": 16, "magnetorquer": 8, "reaction_wheel": 10, "propulsion": 17, "antenna": 11, "gps": 6})
+                         {"structure": 16, "magnetorquer": 8, "reaction_wheel": 30, "propulsion": 27, "antenna": 11, "gps": 6})
 
     def test_every_component_has_a_source_and_none_is_marked_verified_without_a_person(self):
         for c in self.cat:
@@ -182,8 +182,8 @@ class TestSelection(unittest.TestCase):
 
     def test_counts_in_the_database_and_fitting(self):
         by = {s["id"]: s for s in SERVICE.select({"form_factor_u": 6})["subsystems"]}
-        self.assertEqual(by["eps"]["n_database"], 12)
-        self.assertEqual(by["propulsion"]["n_database"], 17)
+        self.assertEqual(by["eps"]["n_database"], 15)
+        self.assertEqual(by["propulsion"]["n_database"], 27)
         self.assertEqual(by["payload_imager"]["n_database"] + by["payload_optical"]["n_database"], 33)
         for s in by.values():
             self.assertLessEqual(s["n_fit"], s["n_database"], s["id"])
@@ -198,12 +198,22 @@ class TestSelection(unittest.TestCase):
         self.assertTrue(any("do not fit" in m for m in res["messages"]))
         self.assertGreater(res["totals"]["mass_kg"], 2.0)
 
-    def test_a_3u_solar_panel_does_not_fit_a_1u(self):
+    def test_a_3u_solar_panel_does_not_fit_a_1u_but_the_1u_panels_do(self):
         by = {s["id"]: s for s in SERVICE.select({"form_factor_u": 1})["subsystems"]}
-        self.assertIsNone(by["solar_panel"]["selected"])
-        self.assertEqual(by["solar_panel"]["n_fit"], 0)
-        self.assertIn("fits a 1U", by["solar_panel"]["note"])
+        sp = by["solar_panel"]
+        self.assertEqual(sp["selected"]["id"], "isis-solar-1u")            # l'unico 1U con massa pubblicata; gli altri tre (EnduroSat 1U, DHV-1U-XY e -Z) ne sono privi
+        self.assertEqual((sp["n_fit"], sp["n_fit_without_mass"]), (1, 3))
+        self.assertNotIn("isis-solar-3u", [sp["selected"]["id"]] + [a["id"] for a in sp["alternatives"]])
         self.assertIsNotNone({s["id"]: s for s in SERVICE.select({"form_factor_u": 3})["subsystems"]}["solar_panel"]["selected"])
+
+    def test_the_1u_panels_come_from_vendor_documents_and_nothing_is_estimated(self):
+        for cid, mass, power in (("isis-solar-1u", 0.05, 2.3), ("endurosat-solar-1u", None, 2.4), ("dhv-1u-xy", None, 2.47), ("dhv-1u-z", None, 2.47)):
+            c = CAT[cid]
+            self.assertEqual((c.mass_kg, c.spec("peak_power_w")), (mass, power), cid)
+            self.assertTrue(c.raw["datasheet"]["file"] and c.raw["image"]["file"], cid)
+        self.assertEqual(CAT["dhv-1u-xy"].dimensions_mm, [82.8, 97.8, None])      # lo spessore non e' pubblicato: resta null
+        self.assertEqual(CAT["dhv-1u-z"].dimensions_mm, [97.8, 97.8, None])
+        self.assertIsNone(CAT["endurosat-solar-1u"].dimensions_mm)
 
     def test_a_component_without_published_mass_is_never_chosen_when_another_exists(self):
         for u in CLASSES:

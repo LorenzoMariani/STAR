@@ -9,9 +9,9 @@ responsible:
 short_description: For a CubeSat class (1U, 3U, 6U, 12U), selects at least one real component per subsystem that fits the CubeSat mass and volume limits, preferring components with the most complete public data.
 description: >
   END-019 takes the CubeSat class (1U, 3U, 6U or 12U) and, for each subsystem (structure, on-board computer, EPS, battery,
-  solar cells, communication radio, antenna, ADCS, magnetorquer, reaction wheel, star tracker, GNSS receiver, propulsion,
+  solar cells, communication radio, antenna, ADCS, magnetorquer, reaction wheel, star tracker, sun sensor, GNSS receiver, GNSS antenna, propulsion,
   imaging payload, optical terminal), selects at least one component from a catalogue of real products built from public
-  vendor datasheets (179 components, every value with its source). Constraints are only those of the CubeSat Design
+  vendor datasheets (232 components, every value with its source). Constraints are only those of the CubeSat Design
   Specification Rev. 14.1: total mass (1U 2 kg, 3U 6 kg, 6U 12 kg, 12U 24 kg) and the volume of the envelope. Among the
   components that fit, the ones with the most complete public data are preferred. A value that the vendor does not publish is
   reported as "Not publicly available" and is never estimated; the module makes no design assumption (no power balance, no

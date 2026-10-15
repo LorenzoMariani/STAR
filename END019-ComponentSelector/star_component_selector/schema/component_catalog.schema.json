@@ -25,7 +25,9 @@
               "magnetorquer",
               "reaction_wheel",
               "star_tracker",
+              "sun_sensor",
               "gps",
+              "gnss_antenna",
               "propulsion",
               "payload"
             ]
@@ -1106,7 +1108,7 @@
                   "properties": {
                     "propulsion_type": {
                       "type": "string",
-                      "description": "cold_gas, warm_gas, green_monoprop, hydrazine_monoprop, bipropellant, feep, gridded_ion, electrospray"
+                      "description": "cold_gas, warm_gas, green_monoprop, hydrazine_monoprop, bipropellant, feep, gridded_ion, electrospray, pulsed_plasma"
                     },
                     "propellant": {
                       "anyOf": [
@@ -1421,6 +1423,128 @@
             "if": {
               "properties": {
                 "category": {
+                  "const": "sun_sensor"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "sensor_type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "fine o coarse, come lo chiama il fornitore; null se non lo classifica"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fov_deg": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "Campo di vista pieno [gradi] (una o due dimensioni)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "accuracy_deg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Accuratezza dichiarata [gradi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "accuracy_basis": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "Base statistica dell'accuratezza: '1-sigma', '2-sigma', '3-sigma' o 'RMS'; null se non dichiarata"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "update_rate_hz": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Frequenza di aggiornamento [Hz]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "data_interfaces": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Interfacce dati verso l'OBC (analogue per le uscite analogiche)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sensor_type",
+                    "fov_deg",
+                    "accuracy_deg",
+                    "accuracy_basis",
+                    "update_rate_hz",
+                    "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
                   "const": "gps"
                 }
               },
@@ -1568,6 +1692,162 @@
                     "channels",
                     "antenna_included",
                     "data_interfaces",
+                    "supply_voltage_ranges_v"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "gnss_antenna"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "bands": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Segnali ricevuti, es. ['GPS L1', 'Galileo E1', 'GLONASS G1', 'BeiDou B1']"
+                    },
+                    "frequency_ranges_mhz": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Intervalli di frequenza [[min,max],...] in MHz"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "active": {
+                      "anyOf": [
+                        {
+                          "type": "boolean",
+                          "description": "True se ha un amplificatore (LNA) integrato"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "passive_gain_dbi": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Guadagno del solo patch [dBi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lna_gain_db": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Guadagno dell'amplificatore [dB]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "total_gain_dbi": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Guadagno complessivo dell'antenna attiva (patch + LNA + cavo e connettore) allo zenit [dBi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "noise_figure_db": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Cifra di rumore dell'amplificatore [dB]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "beamwidth_deg": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Larghezza di fascio a -3 dB [gradi]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "polarization": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "RHCP, LHCP, linear"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "supply_voltage_ranges_v": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "description": "Tensioni di alimentazione accettate [[min,max],...]"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "bands",
+                    "frequency_ranges_mhz",
+                    "active",
+                    "passive_gain_dbi",
+                    "lna_gain_db",
+                    "total_gain_dbi",
+                    "noise_figure_db",
+                    "beamwidth_deg",
+                    "polarization",
                     "supply_voltage_ranges_v"
                   ],
                   "additionalProperties": false

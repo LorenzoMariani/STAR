@@ -79,6 +79,8 @@ def main():
     n = 0
     for c in comps:
         u = (c.get("source") or {}).get("url") or ""
+        if not is_pdf_url(u) and (PROJ / (c.get("datasheet") or {}).get("file", "-")).is_file():
+            continue        # PDF aggiunto a mano (fonte senza estensione .pdf, es. tools/add_solar_1u.py): non si tocca
         c.pop("datasheet", None)
         if u in done:
             name, size = done[u]

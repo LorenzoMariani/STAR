@@ -12,9 +12,9 @@
    "platform_array_power_w": 100.0,
    "selector": {
     "within_limits": true,
-    "total_mass_kg": 4.2415,
-    "bus_subsystems_mass_kg_one_each": 2.0515,
-    "bus_subsystems_mass_kg_platform_quantities": 2.4285,
+    "total_mass_kg": 4.1578800000000005,
+    "bus_subsystems_mass_kg_one_each": 1.9515,
+    "bus_subsystems_mass_kg_platform_quantities": 2.3285,
     "quantities_used": {
      "structure": 1,
      "obc": 1,
@@ -33,16 +33,16 @@
      "name": "HyperScape50 (xScape50, 32 bande VNIR)",
      "mass_kg": 0.51
     },
-    "declared_peak_power_w": 32.2,
+    "declared_peak_power_w": 32.3765,
     "power_unknown": [
      "pumpkin-linear-eps-11wh"
     ],
-    "subsystems_covered": 15
+    "subsystems_covered": 17
    },
    "ratios": {
-    "one_each_over_platform_bus": 0.22794444444444442,
-    "platform_quantities_over_platform_bus": 0.26983333333333337,
-    "selector_total_over_platform_launch_max": 0.30296428571428574
+    "one_each_over_platform_bus": 0.21683333333333332,
+    "platform_quantities_over_platform_bus": 0.25872222222222224,
+    "selector_total_over_platform_launch_max": 0.29699142857142863
    },
    "module_mapping": [
     {
@@ -121,6 +121,8 @@
     "solar_panel",
     "antenna",
     "adcs",
+    "sun_sensor",
+    "gnss_antenna",
     "propulsion",
     "payload_imager",
     "payload_optical"
@@ -137,9 +139,9 @@
    "platform_array_power_w": 100.0,
    "selector": {
     "within_limits": true,
-    "total_mass_kg": 4.9624999999999995,
-    "bus_subsystems_mass_kg_one_each": 2.7725,
-    "bus_subsystems_mass_kg_platform_quantities": 3.4375000000000004,
+    "total_mass_kg": 4.87888,
+    "bus_subsystems_mass_kg_one_each": 2.6725,
+    "bus_subsystems_mass_kg_platform_quantities": 3.3375,
     "quantities_used": {
      "structure": 1,
      "obc": 1,
@@ -158,16 +160,16 @@
      "name": "HyperScape50 (xScape50, 32 bande VNIR)",
      "mass_kg": 0.51
     },
-    "declared_peak_power_w": 32.2,
+    "declared_peak_power_w": 32.3765,
     "power_unknown": [
      "pumpkin-linear-eps-11wh"
     ],
-    "subsystems_covered": 15
+    "subsystems_covered": 17
    },
    "ratios": {
-    "one_each_over_platform_bus": 0.18483333333333332,
-    "platform_quantities_over_platform_bus": 0.22916666666666669,
-    "selector_total_over_platform_launch_max": 0.19849999999999998
+    "one_each_over_platform_bus": 0.17816666666666667,
+    "platform_quantities_over_platform_bus": 0.2225,
+    "selector_total_over_platform_launch_max": 0.19515519999999997
    },
    "module_mapping": [
     {
@@ -246,6 +248,8 @@
     "solar_panel",
     "antenna",
     "adcs",
+    "sun_sensor",
+    "gnss_antenna",
     "propulsion",
     "payload_imager",
     "payload_optical"

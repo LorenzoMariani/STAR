@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 # `payload` resta sempre l'ultima (la ricerca la tratta a parte); star_tracker, propulsion, antenna e gps sono opzionali
-CATEGORIES = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna", "adcs", "magnetorquer", "reaction_wheel", "star_tracker", "gps", "propulsion", "payload")
+CATEGORIES = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna", "adcs", "magnetorquer", "reaction_wheel", "star_tracker", "sun_sensor", "gps", "gnss_antenna", "propulsion", "payload")
 
 # Tipi dei campi di `specs`:
 #   num, int, str, strs (lista di stringhe), nums (lista di numeri),
@@ -115,7 +115,7 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
     # di lancio, che e' una stima per difetto. Se il fornitore dichiara un intervallo di Isp o di spinta si riporta il valore dichiarato piu'
     # prudente (minimo) e l'altro estremo e' nelle note.
     "propulsion": {
-        "propulsion_type": ("str", "cold_gas, warm_gas, green_monoprop, hydrazine_monoprop, bipropellant, feep, gridded_ion, electrospray", True),
+        "propulsion_type": ("str", "cold_gas, warm_gas, green_monoprop, hydrazine_monoprop, bipropellant, feep, gridded_ion, electrospray, pulsed_plasma", True),
         "propellant": ("str", "Propellente", False),
         "thrust_mn_min": ("num", "Spinta minima dichiarata [mN]", False),
         "thrust_mn_max": ("num", "Spinta massima o nominale dichiarata [mN]", False),
@@ -143,6 +143,17 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
         "data_interfaces": ("strs", "Interfacce di comando/telemetria del dispiegamento", False),
         "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
     },
+    # Sensore solare (sun sensor): determina il vettore Sole. `sensor_type` e' il termine del fornitore (fine, coarse); null se non lo usa. Il campo di vista e'
+    # quello pieno (un fornitore che scrive +-60 gradi vale 120). Accuratezza con la sua base statistica quando dichiarata.
+    "sun_sensor": {
+        "sensor_type": ("str", "fine o coarse, come lo chiama il fornitore; null se non lo classifica", False),
+        "fov_deg": ("nums", "Campo di vista pieno [gradi] (una o due dimensioni)", False),
+        "accuracy_deg": ("num", "Accuratezza dichiarata [gradi]", False),
+        "accuracy_basis": ("str", "Base statistica dell'accuratezza: '1-sigma', '2-sigma', '3-sigma' o 'RMS'; null se non dichiarata", False),
+        "update_rate_hz": ("num", "Frequenza di aggiornamento [Hz]", False),
+        "data_interfaces": ("strs", "Interfacce dati verso l'OBC (analogue per le uscite analogiche)", False),
+        "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
+    },
     # Ricevitore GNSS (opzionale): accuratezza di posizione dichiarata con la sua base statistica.
     "gps": {
         "constellations": ("strs", "Costellazioni: GPS, Galileo, GLONASS, BeiDou", False),
@@ -154,6 +165,20 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
         "channels": ("int", "Canali del ricevitore", False),
         "antenna_included": ("bool", "True se l'antenna GNSS e' fornita con il ricevitore", False),
         "data_interfaces": ("strs", "Interfacce dati verso l'OBC", False),
+        "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
+    },
+    # Antenna GNSS: antenna di ricezione dei segnali di navigazione (distinta dall'antenna di comunicazione). Le tre voci di guadagno sono grandezze diverse e restano
+    # separate: `passive_gain_dbi` e' il guadagno del solo patch, `lna_gain_db` quello del solo amplificatore, `total_gain_dbi` quello dell'antenna attiva completa.
+    "gnss_antenna": {
+        "bands": ("strs", "Segnali ricevuti, es. ['GPS L1', 'Galileo E1', 'GLONASS G1', 'BeiDou B1']", True),
+        "frequency_ranges_mhz": ("ranges", "Intervalli di frequenza [[min,max],...] in MHz", False),
+        "active": ("bool", "True se ha un amplificatore (LNA) integrato", False),
+        "passive_gain_dbi": ("num", "Guadagno del solo patch [dBi]", False),
+        "lna_gain_db": ("num", "Guadagno dell'amplificatore [dB]", False),
+        "total_gain_dbi": ("num", "Guadagno complessivo dell'antenna attiva (patch + LNA + cavo e connettore) allo zenit [dBi]", False),
+        "noise_figure_db": ("num", "Cifra di rumore dell'amplificatore [dB]", False),
+        "beamwidth_deg": ("num", "Larghezza di fascio a -3 dB [gradi]", False),
+        "polarization": ("str", "RHCP, LHCP, linear", False),
         "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
     },
     # Payload: camere e telescopi di osservazione (`payload_type` = "imager") oppure terminali di comunicazione ottica
