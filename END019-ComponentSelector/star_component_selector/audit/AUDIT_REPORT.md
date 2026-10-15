@@ -36,7 +36,7 @@ Script: `python tools/audit_datasheets.py` (solo lettura; scrive `audit/audit_da
 - **Confronto con una ricerca esaustiva.** 240 cataloghi casuali (classi 1U, 3U e 6U, 6 sottosistemi, 2-4 candidati ciascuno, valori non pubblicati a caso): per ognuno una funzione indipendente prova tutte le combinazioni e il risultato di `select()` deve avere la stessa completezza totale e la stessa massa. Include i casi in cui i limiti non ammettono soluzione (il selettore deve dichiararlo).
 - **Errore trovato e corretto.** La ricerca esatta (usata solo quando la scelta migliore di ogni sottosistema supera i limiti) non controllava i limiti sull'ultima combinazione completa: poteva restituire `within_limits = True` con una massa oltre il limite (visto con un 1U sintetico: 2.52 kg contro 2 kg). Corretto in `star_selector/selector.py`. Sul catalogo reale il risultato non cambia (1U: non entra tutto, segnalato; 3U, 6U, 12U: entra tutto con la prima scelta), quindi nessun risultato mostrato finora era sbagliato.
 - **Invarianti sul catalogo reale, per 1U, 3U, 6U e 12U.** I componenti scelti rispettano massa e ingombro; massa, volume e potenza totali sono la somma dei valori del catalogo; la struttura e' della classe; due esecuzioni danno lo stesso risultato; le alternative entrano tutte e non contengono il componente scelto; cio' che entra in una classe entra in quella piu' grande; ogni sottosistema senza componente ha una scheda con il motivo; nessun numero e' inventato (massa e potenza coincidono con quelle del catalogo).
-- Totale test del progetto: **78**, tutti passano.
+- Totale test del progetto: **94**, tutti passano (dopo il controllo di ingombro, le forme e la pila, sezione D). L'oracolo include ora anche la pila a serpentina.
 
 ## C. Confronto con le piattaforme di riferimento (`tools/validate_platforms.py`, `audit/platform_comparison.json`)
 
@@ -63,6 +63,19 @@ Letture e limiti:
 - **Sovrapposizione funzionale non controllata:** la scelta dell'ADCS (es. un'unita' integrata con ruote e magnetorquer) insieme a ruote, magnetorquer e star tracker separati duplica funzioni. Il selettore non lo controlla perche' verifica solo massa e volume.
 - La potenza dichiarata (32.2 W) e' la somma dei massimi dichiarati dai fornitori dei componenti scelti, con un componente senza dato (Pumpkin Linear EPS 11 Wh): non e' confrontabile in modo stretto con i 100 W di un array, che e' una capacita' di generazione e non un consumo.
 - I valori delle piattaforme sono `verified: false`.
+
+## D. Controllo di ingombro (aggiunto il 2026-10-15, `tests/test_fit.py`, 9 test)
+
+Il volume del selettore ora conta solo i componenti interni (pannelli solari e antenne sono esterni: **regola dichiarata**) e un controllo separato dice se le scatole con le quote pubblicate entrano nell'ingombro CDS. Test: disposizioni trovate valide (dentro l'ingombro, senza sovrapposizioni, rotazioni di 90 gradi: 150 casi casuali), casi noti, i quattro stati, componenti esterni appoggiati a una faccia con le quote pubblicate.
+
+| Classe | Volume interno / ingombro | Esito |
+|---|---|---|
+| 1U | 236 % | Does not fit |
+| 3U | 56 % (dopo la pila; prima 97 %) | Fits (pila) |
+| 6U | 40 % | Fits (12 componenti interni) |
+| 12U | 18 % | Fits (12 componenti interni) |
+
+Il 3U, prima dato come "entra" al 99 % del volume e poi "Not shown to fit" al 97 %, ora sceglie una combinazione che entra nella pila (2.449 kg, volume interno 56 %): la lunghezza della pila e' diventata un vincolo della selezione. Limite: l'euristica puo' dimostrare che i pezzi entrano, non che non entrano; pareti, guide, connettori e zone di rispetto non sono pubblicati e non sono modellati.
 
 ## Cosa non e' stato possibile validare
 

@@ -47,6 +47,12 @@
     "source_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2357779
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -95,6 +101,12 @@
     "source_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2357779
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -142,6 +154,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-CubeSat-Structures-Brochure-v1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1313359
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -190,6 +208,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-CubeSat-Structures-Brochure-v1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1313359
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -229,6 +253,12 @@
     "page_url": "https://www.endurosat.com/products/onboard-computer",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -286,6 +316,12 @@
     "source_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2357779
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -346,6 +382,12 @@
     "source_url": "https://endurosat.com/wp-content/uploads/2022/02/Endurosat_Product_Catalogue_02_22.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2357779
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -428,6 +470,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/AAC_DataSheet_Starbuck-Nano.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2078365
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -483,6 +531,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/AAC_DataSheet_Optimus.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1750221
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -538,6 +592,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/AAC_DataSheet_Optimus.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1750221
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -593,6 +653,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/AAC_DataSheet_Optimus.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1750221
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -622,6 +688,12 @@
     "page_url": "https://www.endurosat.com/products/3u-solar-panel",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -651,6 +723,12 @@
     "page_url": "https://www.endurosat.com/products/6u-solar-panel",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -704,6 +782,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-Solar-Panels-Brochure-v1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 505597
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -752,6 +836,12 @@
     ],
     "basis": "declared",
     "note": "Scheda satsearch (89 x 95 x 23.2 mm, aggiornata il 2026-07-14): non e' sul sito EnduroSat, dove le quote sono dietro modulo CAD/datasheet."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -790,6 +880,12 @@
     "page_url": "https://www.endurosat.com/products/s-band-transmitter",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -839,6 +935,12 @@
     ],
     "basis": "declared",
     "note": "Scheda satsearch (95.9 x 90.2 x 23.3 mm): attenzione, la scheda riporta 270 g come il catalogo EnduroSat 2022, mentre la pagina attuale ne dichiara 396: le quote potrebbero riferirsi a una revisione precedente."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -897,6 +999,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/VHF-UHF-Full-Duplex-Transceiver-Brochure-web-1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 9715146
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -950,6 +1058,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2023/05/GEN-1-ADCS-Jan-2023-web.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2593896
+   },
+   "shape": {
+    "type": "stack",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1003,6 +1117,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2023/05/GEN-1-ADCS-Jan-2023-web.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2593896
+   },
+   "shape": {
+    "type": "stack",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1050,6 +1170,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanostructure-6u-Mk2-1060779-12-EXT.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1821419
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1107,6 +1233,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/NanoMind_A3200.pdf",
     "retrieved": "2026-10-14",
     "bytes": 753990
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1184,6 +1316,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanopower-p60-dock-30.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1702529
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1269,6 +1407,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/Data-Sheet-NanoPower-P80.pdf",
     "retrieved": "2026-10-14",
     "bytes": 3789919
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1323,6 +1467,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanopower-BPX-100-Wh-1076870-1.1.0.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1122266
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1377,6 +1527,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanopower-BPX-100-Wh-1076870-1.1.0.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1122266
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1430,6 +1586,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/08/gs-ds-nanopower-bp8-100-Wh-2.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1443844
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1472,6 +1634,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/Datasheet-NanoPower-Deployable-Solar-Panel.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2378888
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1532,6 +1700,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanocom-ax100.pdf",
     "retrieved": "2026-10-14",
     "bytes": 803501
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1594,6 +1768,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_MB_710-00484-E.pdf",
     "retrieved": "2026-10-14",
     "bytes": 490765
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1656,6 +1836,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_PPM_A2_710-00486-B.pdf",
     "retrieved": "2026-10-14",
     "bytes": 257625
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1718,6 +1904,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_PPM_A3_710-00516-B.pdf",
     "retrieved": "2026-10-14",
     "bytes": 264962
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1780,6 +1972,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_PPM_B1_710-00487-A.pdf",
     "retrieved": "2026-10-14",
     "bytes": 274842
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1842,6 +2040,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_PPM_D1_710-00527-A.pdf",
     "retrieved": "2026-10-14",
     "bytes": 281213
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1904,6 +2108,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_PPM_D2_710-00528-A.pdf",
     "retrieved": "2026-10-14",
     "bytes": 277724
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -1961,6 +2171,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_FM430_710-00252-C.pdf",
     "retrieved": "2026-10-14",
     "bytes": 624705
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2034,6 +2250,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_Linear_EPS_711-00338-D.pdf",
     "retrieved": "2026-10-14",
     "bytes": 292434
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2107,6 +2329,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_Linear_EPS_711-00338-D.pdf",
     "retrieved": "2026-10-14",
     "bytes": 292434
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2155,6 +2383,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_BM_1_710-01006-A.pdf",
     "retrieved": "2026-10-14",
     "bytes": 196663
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2213,6 +2447,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_ADACS_634-00412-A.pdf",
     "retrieved": "2026-10-14",
     "bytes": 745663
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2271,6 +2511,12 @@
     "source_url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_ADACS_634-00458-A.pdf",
     "retrieved": "2026-10-14",
     "bytes": 745488
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2316,6 +2562,12 @@
     ],
     "basis": "standard",
     "note": "La pagina non pubblica dimensioni: ingombro nominale del 6U secondo la CDS Rev. 14.1."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2353,6 +2605,12 @@
     "page_url": "https://nanoavionics.com/cubesat-components/satbus-3c2/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2412,6 +2670,12 @@
     ],
     "basis": "standard",
     "note": "La pagina dichiara lo standard PC/104 senza quote: ingombro in pianta normato, altezza non dichiarata."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2476,6 +2740,12 @@
     "page_url": "https://nanoavionics.com/cubesat-components/cubesat-electrical-power-system-eps/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "stack",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2529,6 +2799,12 @@
     ],
     "basis": "declared",
     "note": "Pagina NanoAvionics SatCOM UHF."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2590,6 +2866,12 @@
     "source_url": "https://www.satlab.com/resources/SLDS-SRS3-1.3.pdf",
     "retrieved": "2026-10-14",
     "bytes": 627211
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2651,6 +2933,12 @@
     "source_url": "https://www.satlab.com/resources/SLDS-SRS4-1.2.pdf",
     "retrieved": "2026-10-14",
     "bytes": 836345
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2711,6 +2999,12 @@
     "source_url": "https://www.satlab.com/resources/SL-PRO-DS-SRX-8-1.0.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2100844
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2767,6 +3061,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1480289
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2823,6 +3123,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1480289
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2879,6 +3185,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1480289
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2927,6 +3239,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/Batteries-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 916233
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -2975,6 +3293,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/Batteries-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 916233
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3019,6 +3343,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto Spacemind, senza kill switch; ordine z, x, y."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3059,6 +3389,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto Spacemind, senza kill switch; ordine z, x, y."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3130,6 +3466,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Spacemind GEMINI."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3167,6 +3509,12 @@
     "page_url": "https://www.npcspacemind.com/product/spm-sp3x/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3199,6 +3547,12 @@
     "page_url": "https://www.npcspacemind.com/product/spm-sp6x/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3257,6 +3611,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/iADCS200.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1448331
+   },
+   "shape": {
+    "type": "stack",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3315,6 +3675,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/iADCS400-1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 386728
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 1,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3361,6 +3727,12 @@
     ],
     "basis": "standard",
     "note": "La pagina dichiara il formato PC104 senza quote: ingombro in pianta normato, altezza non dichiarata."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3424,6 +3796,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/434/SatCatalog_-_Innoflight_-_CFC-400_-_Datasheet.pdf?lastmod=20210708055852",
     "retrieved": "2026-10-14",
     "bytes": 562696
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3475,6 +3853,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/AAC_DataSheet_Zaphod-2.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1652016
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3527,6 +3911,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/AAC_DataSheet_Zaphod-2.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1652016
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3577,6 +3967,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/AAC_DataSheet_Photon_original.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1783031
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3661,6 +4057,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/AAC_DataSheet_Starbuck-Nano.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2078365
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3709,6 +4111,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC KRYTEN-M3."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3761,6 +4169,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC SIRIUS-OBC."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3812,6 +4226,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC Q7S: altezza 9-19 mm secondo il connettore (usato il massimo)."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3868,6 +4288,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC PULSAR-UTRX."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3924,6 +4350,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC PULSAR-VUTRX."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -3969,6 +4401,12 @@
     "type": "web",
     "retrieved": "2026-10-13",
     "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: aac-pulsar-hstx"
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4023,6 +4461,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC PULSAR-HSTX."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4072,6 +4516,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC TRX-U."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4120,6 +4570,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet AAC QUASAR."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4184,6 +4640,12 @@
     "page_url": "https://www.endurosat.com/products/cubesat-eps/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4223,6 +4685,12 @@
     "page_url": "https://www.endurosat.com/products/s-band-transceiver-max/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4267,6 +4735,12 @@
     "page_url": "https://www.endurosat.com/products/x-band-sdr/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4306,6 +4780,12 @@
     ],
     "basis": "declared",
     "note": "Pagina EnduroSat: 84-87 x 335 x 7.7-8.5 mm (usati i massimi)."
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4345,6 +4825,12 @@
     ],
     "basis": "declared",
     "note": "Pagina EnduroSat: 84-87 x 335 x 7.7-8.5 mm (usati i massimi); la versione doppia non ha dimensioni separate."
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4383,6 +4869,12 @@
     ],
     "basis": "declared",
     "note": "Pagina EnduroSat."
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4459,6 +4951,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace Gecko."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4535,6 +5033,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace: stessa taglia della versione standard."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4610,6 +5114,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace Mantis."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4686,6 +5196,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace: stessa taglia di tutte le versioni Mantis."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4762,6 +5278,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace: stessa taglia di tutte le versioni Mantis."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4837,6 +5359,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace Chameleon (2.5U)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4913,6 +5441,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace: stessa taglia di tutte le versioni Chameleon."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -4989,6 +5523,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace: stessa taglia di tutte le versioni Chameleon."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5064,6 +5604,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace Caiman (3U, con nCCM posteriore)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5140,6 +5686,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Dragonfly Aerospace: stessa taglia delle versioni Caiman."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5217,6 +5769,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/IM200.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1429647
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5291,6 +5849,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape50."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5366,6 +5930,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape50."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5440,6 +6010,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape50."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5514,6 +6090,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape100."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5589,6 +6171,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape100."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5663,6 +6251,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape100."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5737,6 +6331,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape200."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5810,6 +6410,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape200."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5885,6 +6491,12 @@
     ],
     "basis": "declared",
     "note": "Pagina Simera Sense xScape200."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5932,6 +6544,12 @@
     "type": "web (scelta manuale)",
     "retrieved": "2026-10-13",
     "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: satlantis-isim-90-swir"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -5978,6 +6596,12 @@
     "type": "web (scelta manuale)",
     "retrieved": "2026-10-13",
     "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: satlantis-isim-90"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6017,6 +6641,12 @@
     "max_range_km": null,
     "wavelength_nm": null,
     "host_pointing_deg": null
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6055,6 +6685,12 @@
     "max_range_km": null,
     "wavelength_nm": null,
     "host_pointing_deg": null
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6102,6 +6738,12 @@
     "page_url": "https://www.satlantis.com/graphium/",
     "type": "web",
     "retrieved": "2026-10-13"
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6179,6 +6821,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/12/gs-ds-nanocam-c1u_DS_-_1010105_-_1_-_18_-_1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 793519
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 1,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6256,6 +6904,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/12/gs-ds-nanocam-c1u_DS_-_1010105_-_1_-_18_-_1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 793519
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 1,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6333,6 +6987,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/12/gs-ds-nanocam-c1u_DS_-_1010105_-_1_-_18_-_1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 793519
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6379,6 +7039,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-NanoStructure_12U_Platform_DataSheet_DS_-_1043916_-_1_-_10_-_1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1932296
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6424,6 +7090,12 @@
     ],
     "basis": "declared",
     "note": "Scheda satsearch del fornitore; ordine z, x, y."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6463,6 +7135,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto Spacemind, senza kill switch; ordine z, x, y."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6526,6 +7204,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/ST200-1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1359374
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6586,6 +7270,12 @@
     ],
     "basis": "declared",
     "note": "Pagina CubeSat Shop CubeStar (L x A x P come sulla pagina)."
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 1,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6656,6 +7346,12 @@
     "source_url": "https://rocketlabcorp.com/assets/Uploads/Star-trackers-product-sheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 5585622
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6725,6 +7421,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/NST-May-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 5379255
+   },
+   "shape": {
+    "type": "baffle_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6794,6 +7496,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/NST-May-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 5379255
+   },
+   "shape": {
+    "type": "baffle_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6863,6 +7571,12 @@
     "source_url": "https://www.bluecanyontech.com/wp-content/uploads/NST-May-2026.pdf",
     "retrieved": "2026-10-14",
     "bytes": 5379255
+   },
+   "shape": {
+    "type": "baffle_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -6929,6 +7643,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/568/SatCatalog_-_Tesat-Spacecom_-_CubeLCT_100M_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1852030
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7007,6 +7727,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/CUBECAT.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1385526
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7063,6 +7789,12 @@
     ],
     "basis": "derived",
     "note": "Taglia nominale 1U dalla scheda satsearch; dimensioni reali non pubblicate."
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7127,6 +7859,12 @@
     "source_url": "https://www.tesat.de/images/tesat/products/260803_DataSheet_SCOT30_A4.pdf",
     "retrieved": "2026-10-14",
     "bytes": 960515
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7196,6 +7934,12 @@
     "source_url": "https://www.tesat.de/images/tesat/products/250820_DataSheet_SCOT80_A4.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1345373
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7260,6 +8004,12 @@
     "source_url": "https://www.enpulsion.com/wp-content/uploads/DataSheet_Nano_20260319.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1905080
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7324,6 +8074,12 @@
     "source_url": "https://thrustme.fr/base/stock/ProductBannerFiles/2_thrustme-npt30-i2.pdf",
     "retrieved": "2026-10-14",
     "bytes": 585165
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7388,6 +8144,12 @@
     "source_url": "https://thrustme.fr/base/stock/ProductBannerFiles/2_thrustme-npt30-i2.pdf",
     "retrieved": "2026-10-14",
     "bytes": 585165
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7444,6 +8206,12 @@
     "page_url": "https://www.busek.com/bgtx5",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7511,6 +8279,12 @@
     "source_url": "https://www.busek.com/s/BIT3_v10.pdf",
     "retrieved": "2026-10-14",
     "bytes": 782215
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7584,6 +8358,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/PM200.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1392360
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7651,6 +8431,12 @@
     "source_url": "https://www.vacco.com/images/uploads/pdfs/MiPS_standard_0714.pdf",
     "retrieved": "2026-10-14",
     "bytes": 617780
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7718,6 +8504,12 @@
     "source_url": "https://www.vacco.com/images/uploads/pdfs/MiPS_standard_0714.pdf",
     "retrieved": "2026-10-14",
     "bytes": 617780
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7790,6 +8582,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/1082/SatCatalog_-_GomSpace_-_NanoProp_CGP3_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 2292505
+   },
+   "shape": {
+    "type": "stack",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7846,6 +8644,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/892/SatCatalog_-_Aerojet_Rocketdyne_-_MPS-120-1U_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1751653
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7902,6 +8706,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/892/SatCatalog_-_Aerojet_Rocketdyne_-_MPS-120-1U_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1751653
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -7958,6 +8768,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/892/SatCatalog_-_Aerojet_Rocketdyne_-_MPS-120-1U_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1751653
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8014,6 +8830,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/892/SatCatalog_-_Aerojet_Rocketdyne_-_MPS-120-1U_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1751653
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8070,6 +8892,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/892/SatCatalog_-_Aerojet_Rocketdyne_-_MPS-120-1U_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1751653
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8126,6 +8954,12 @@
     "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CHIPS-Data-Sheet-230724-180.pdf",
     "retrieved": "2026-10-14",
     "bytes": 347590
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8182,6 +9016,12 @@
     "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CHIPS-Data-Sheet-230724-180.pdf",
     "retrieved": "2026-10-14",
     "bytes": 347590
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8238,6 +9078,12 @@
     "source_url": "https://cuaerospace.com/Portals/0/SiteContent/assets/PDF/CHIPS-Data-Sheet-230724-180.pdf",
     "retrieved": "2026-10-14",
     "bytes": 347590
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8309,6 +9155,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-Antenna-systems-Brochure-v1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 516816
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8365,6 +9217,12 @@
     "page_url": "https://www.endurosat.com/products/uhf-antenna-iii",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8428,6 +9286,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/667/SatCatalog_-_GomSpace_-_NanoCom_ANT430_-_Datasheet.PDF",
     "retrieved": "2026-10-14",
     "bytes": 860336
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8492,6 +9356,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/555/SatCatalog_-_Innovative_Solutions_In_Space_-_S-Band_Patch_Antenna_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 310680
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8561,6 +9431,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2023/04/X-Band-Antenna-Datasheet-09.2022.pdf",
     "retrieved": "2026-10-14",
     "bytes": 127037
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8619,6 +9495,12 @@
     "page_url": "https://satsearch.co/products/endurosat-x-band-single-patch-antenna",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8677,6 +9559,12 @@
     "page_url": "https://satsearch.co/products/endurosat-x-band-2x2-patch-array-antenna",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8735,6 +9623,12 @@
     "page_url": "https://satsearch.co/products/endurosat-x-band-4x4-patch-array-antenna",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8792,6 +9686,12 @@
     "page_url": "https://satsearch.co/products/endurosat-x-band-8x12-patch-array-antenna",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8850,6 +9750,12 @@
     "page_url": "https://satsearch.co/products/endurosat-s-band-patch-antenna-type-ii",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8897,6 +9803,12 @@
     "page_url": "https://endurosat.com/products/s-band-antenna-wideband",
     "type": "web",
     "retrieved": "2026-10-14"
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -8969,6 +9881,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-GPS-Receiver_2020-10a.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1245655
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9036,6 +9954,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2020/11/NewSpace-GPS-Receiver_2020-10a.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1245655
+   },
+   "shape": {
+    "type": "box",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9102,6 +10026,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/58/SatCatalog_-_SkyFox_Labs_-_piNAV-NG_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1224383
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9167,6 +10097,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/39/SatCatalog_-_Hyperion_Technologies_-_GNSS200_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1240526
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9240,6 +10176,12 @@
     "source_url": "https://satcatalog.s3.amazonaws.com/components/68/SatCatalog_-_Surrey_Satellite_Technology_-_SGR-Ligo_-_Datasheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 545042
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9303,6 +10245,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto Spacemanic Celeste."
+   },
+   "shape": {
+    "type": "board",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9342,6 +10290,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-CubeSat-Structures-Brochure-v1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1313359
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9374,6 +10328,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto EnduroSat."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9406,6 +10366,12 @@
     ],
     "basis": "declared",
     "note": "Datasheet Spacemanic, ingombro esterno."
+   },
+   "shape": {
+    "type": "frame",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9458,6 +10424,12 @@
     "source_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/iMTQ-Brochure-v1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 957727
+   },
+   "shape": {
+    "type": "coil_board",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9510,6 +10482,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-NanoTorqueGST600mk2-1062432-2-EXT.pdf",
     "retrieved": "2026-10-14",
     "bytes": 571794
+   },
+   "shape": {
+    "type": "coil_board",
+    "axis": 1,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9544,6 +10522,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9578,6 +10562,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9612,6 +10602,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9646,6 +10642,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9680,6 +10682,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9714,6 +10722,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 0,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9768,6 +10782,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW210.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1418276
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9822,6 +10842,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW210.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1418276
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9876,6 +10902,12 @@
     "source_url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW210.pdf",
     "retrieved": "2026-10-14",
     "bytes": 1418276
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9936,6 +10968,12 @@
     "source_url": "https://www.rocketlab.co.nz/assets/Uploads/3-mNms-RW-0.003-Data-Sheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 190685
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -9997,6 +11035,12 @@
     "source_url": "https://www.rocketlab.co.nz/assets/Uploads/10-mNms-RW-0.01-Data-Sheet.pdf",
     "retrieved": "2026-10-14",
     "bytes": 452863
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -10042,6 +11086,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto CubeSatShop."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -10085,6 +11135,12 @@
     ],
     "basis": "declared",
     "note": "Pagina prodotto NanoAvionics/satsearch."
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -10139,6 +11195,12 @@
     "source_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanotorque-gsw-600-25-1.pdf",
     "retrieved": "2026-10-14",
     "bytes": 951472
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": 2,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -10165,6 +11227,12 @@
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
     "data_interfaces": null
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   },
   {
@@ -10191,6 +11259,12 @@
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
     "data_interfaces": null
+   },
+   "shape": {
+    "type": "cylinder",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-15"
    }
   }
  ]

@@ -15,7 +15,8 @@ from typing import Any
 from .models import Component, load_catalog
 from .platforms import load_platforms
 from .rows import rows_for, subsystem_of
-from .selector import CDS_SOURCE, CLASSES, LABELS, SUBSYSTEMS, Candidate, Selection, select
+from .fit import check_fit
+from .selector import CDS_SOURCE, CLASSES, EXTERNAL_SUBSYSTEMS, LABELS, SUBSYSTEMS, Candidate, Selection, select
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CATALOG = ROOT / "data" / "catalog.json"
@@ -98,7 +99,8 @@ def component_record(c: Component, root: Path = ROOT, with_image: bool = False) 
 def _candidate_record(k: Candidate, root: Path, with_image: bool, full: bool) -> dict[str, Any]:
     rec = component_record(k.comp, root, with_image=with_image) if full else {
         "id": k.comp.id, "vendor": k.comp.raw["vendor"], "name": k.comp.raw["name"], "category": k.comp.category}
-    rec.update({"mass_kg": k.mass_kg, "volume_m3": k.volume_m3, "power_w_declared": k.power_w, "completeness": round(k.completeness, 3)})
+    rec.update({"mass_kg": k.mass_kg, "volume_m3": k.volume_m3, "power_w_declared": k.power_w, "completeness": round(k.completeness, 3),
+                "external": subsystem_of(k.comp) in EXTERNAL_SUBSYSTEMS})
     if full:
         rec["rows"] = rows_for(k.comp)
     return rec
@@ -107,7 +109,7 @@ def _candidate_record(k: Candidate, root: Path, with_image: bool, full: bool) ->
 def selection_to_dict(sel: Selection, root: Path = ROOT, with_images: bool = False, library: dict[str, Any] | None = None) -> dict[str, Any]:
     cls = sel.cubesat
     return {
-        "ok": True, "library": library,
+        "ok": True, "library": library, "fit": check_fit(sel), "external_subsystems": list(EXTERNAL_SUBSYSTEMS),
         "cubesat": {"class_u": cls.units, "mass_limit_kg": cls.mass_limit_kg, "envelope_mm": list(cls.envelope_mm), "volume_limit_m3": cls.volume_limit_m3, "standard": CDS_SOURCE},
         "within_limits": sel.within_limits,
         "subsystems": [{

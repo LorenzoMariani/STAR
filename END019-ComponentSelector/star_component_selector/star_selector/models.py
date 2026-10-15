@@ -23,6 +23,9 @@ CATEGORIES = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "ant
 #   range ([min, max]), ranges (lista di [min, max]), faces (faccia -> n. pannelli)
 # Terzo elemento: True se il valore non puo' essere null.
 DIMENSION_BASES = ("declared", "standard", "derived")
+SHAPE_TYPES = ("board", "box", "cylinder", "lens_box", "baffle_box", "stack", "panel", "patch", "coil_board", "frame")
+AXIS_SHAPES = ("cylinder", "lens_box", "baffle_box", "coil_board")     # richiedono l'asse (lato lungo o corto)
+SHAPE_BASES = ("image", "subsystem")
 SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
     "structure": {
         "form_factor_u": ("num", "Taglia in U (1, 3, 6...)", True),
@@ -201,6 +204,8 @@ COMMON_FIELDS: dict[str, tuple[str, bool, str]] = {
                                  "o passo del modulo) o derived (da taglia nominale, es. 1U); assente se non pubblicato"),
     "image": ("obj", False, "Immagine del prodotto: {file, image_url, page_url, type, retrieved, note}; assente se non trovata"),
     "datasheet": ("obj", False, "Copia locale del documento della fonte (datasheet o brochure PDF): {file, document, source_url, retrieved, bytes}; assente se la fonte non e' un PDF scaricabile"),
+    "shape": ("obj", False, "Forma semplificata per la vista Placement, disegnata dentro la scatola delle quote pubblicate: {type, axis, basis, set}; type in SHAPE_TYPES, axis = indice (0-2) della quota lungo l'asse "
+                            "(cylinder, lens_box, baffle_box, coil_board; null se le quote non sono tutte pubblicate), basis = image (letta dall'immagine del prodotto) o subsystem (nessuna immagine utilizzabile)"),
     "source": ("obj", True, "Provenienza dei dati: url, document, retrieved, verified"),
     "specs": ("obj", True, "Specifiche dipendenti dalla categoria"),
 }
@@ -280,6 +285,16 @@ def validate_component(d: dict) -> list[str]:
     img = d.get("image")
     if isinstance(img, dict):
         errs += [f"{cid}: image.{k} mancante" for k in ("file", "image_url", "retrieved") if not img.get(k)]
+    sh = d.get("shape")
+    if isinstance(sh, dict):
+        if sh.get("type") not in SHAPE_TYPES:
+            errs.append(f"{cid}: shape.type deve essere una tra {', '.join(SHAPE_TYPES)}")
+        if sh.get("basis") not in SHAPE_BASES:
+            errs.append(f"{cid}: shape.basis deve essere una tra {', '.join(SHAPE_BASES)}")
+        if sh.get("axis") not in (None, 0, 1, 2):
+            errs.append(f"{cid}: shape.axis deve essere null, 0, 1 o 2")
+        if sh.get("type") in AXIS_SHAPES and sh.get("axis") is None and d.get("dimensions") and all(x is not None for x in d["dimensions"].get("mm") or [None]):
+            errs.append(f"{cid}: shape.axis obbligatorio per {sh.get('type')} quando le quote sono tutte pubblicate")
     ds = d.get("datasheet")
     if isinstance(ds, dict):
         errs += [f"{cid}: datasheet.{k} mancante" for k in ("file", "retrieved") if not ds.get(k)]

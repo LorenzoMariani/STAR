@@ -99,6 +99,10 @@
             "type": "object",
             "description": "Copia locale del documento della fonte (datasheet o brochure PDF): {file, document, source_url, retrieved, bytes}; assente se la fonte non e' un PDF scaricabile"
           },
+          "shape": {
+            "type": "object",
+            "description": "Forma semplificata per la vista Placement, disegnata dentro la scatola delle quote pubblicate: {type, axis, basis, set}; type in SHAPE_TYPES, axis = indice (0-2) della quota lungo l'asse (cylinder, lens_box, baffle_box, coil_board; null se le quote non sono tutte pubblicate), basis = image (letta dall'immagine del prodotto) o subsystem (nessuna immagine utilizzabile)"
+          },
           "source": {
             "type": "object",
             "description": "Provenienza dei dati: url, document, retrieved, verified"

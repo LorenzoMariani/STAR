@@ -5,8 +5,9 @@ import unittest
 
 from star_selector.api import SelectorService
 from star_selector.models import SPEC_FIELDS, Component
-from star_selector.rows import completeness, declared_power_w, volume_m3
-from star_selector.selector import CLASSES, SUBSYSTEMS, fits_envelope, select
+from star_selector.rows import completeness, declared_power_w, subsystem_of, volume_m3
+from star_selector import layout
+from star_selector.selector import CLASSES, EXTERNAL_SUBSYSTEMS, SUBSYSTEMS, _admissible, fits_envelope, select
 
 SERVICE = SelectorService()
 CATALOG = SERVICE.catalog
@@ -42,25 +43,34 @@ def random_catalog(seed, units):
 
 
 def brute_force(catalog, units):
-    """Ricerca esaustiva indipendente: massima completezza totale, poi minima massa, con somma di masse e volumi entro i limiti."""
+    """Ricerca esaustiva indipendente: massima completezza totale, poi minima massa, con somma di masse e volumi entro i limiti e pila a serpentina fattibile."""
     cls = CLASSES[units]
     from star_selector.rows import subsystem_of
-    pools = []
+    pools, sids = [], []
     for sid, _, _ in SUBSYSTEMS:
         members = [c for c in catalog if subsystem_of(c) == sid]
         if sid == "structure":
             fit = [c for c in members if c.spec("form_factor_u") == units]
         else:
-            fit = [c for c in members if fits_envelope(c, cls.envelope_mm) and (c.mass_kg is None or c.mass_kg <= cls.mass_limit_kg)]
+            fit = [c for c in members if _admissible(c, sid, cls)]
         known = [c for c in fit if c.mass_kg is not None]
         pool = known or fit
+        if sid in layout.ORDER and any(layout.spec(c, sid, cls.envelope_mm) for c in pool):
+            pool = [c for c in pool if layout.spec(c, sid, cls.envelope_mm)]      # senza quote complete solo se non c'e' di meglio
         if pool:
             pools.append(pool)
+            sids.append(sid)
     best = None
     for combo in itertools.product(*pools):
         mass = sum(c.mass_kg or 0.0 for c in combo)
-        vol = sum(0.0 if c.category == "structure" else (volume_m3(c) or 0.0) for c in combo)
+        vol = sum(0.0 if c.category == "structure" or subsystem_of(c) in EXTERNAL_SUBSYSTEMS else (volume_m3(c) or 0.0) for c in combo)
         if mass > cls.mass_limit_kg + 1e-12 or vol > cls.volume_limit_m3 + 1e-15:
+            continue
+        heights = {}
+        for sid, c in zip(sids, combo):
+            st = layout.spec(c, sid, cls.envelope_mm) if sid in layout.ORDER else None
+            heights[sid] = st["height"] if st else None
+        if not layout.stack_feasible(heights, cls.envelope_mm):
             continue
         key = (round(sum(completeness(c) for c in combo), 9), -mass)
         if best is None or key > best:
@@ -101,7 +111,7 @@ class TestRealCatalogueInvariants(unittest.TestCase):
                     self.assertTrue(fits_envelope(k.comp, cls.envelope_mm), (units, k.comp.id))
                 self.assertTrue(k.mass_kg is None or k.mass_kg <= cls.mass_limit_kg + EPS, (units, k.comp.id))
             self.assertAlmostEqual(res.mass_kg, sum(k.comp.mass_kg or 0.0 for k in chosen), places=9)
-            self.assertAlmostEqual(res.volume_m3, sum(0.0 if k.comp.category == "structure" else (volume_m3(k.comp) or 0.0) for k in chosen), places=12)
+            self.assertAlmostEqual(res.volume_m3, sum(0.0 if k.comp.category == "structure" or subsystem_of(k.comp) in EXTERNAL_SUBSYSTEMS else (volume_m3(k.comp) or 0.0) for k in chosen), places=12)
             self.assertAlmostEqual(res.power_w, sum(declared_power_w(k.comp) or 0.0 for k in chosen), places=9)
             if res.within_limits:
                 self.assertLessEqual(res.mass_kg, cls.mass_limit_kg + EPS)
