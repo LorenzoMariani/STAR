@@ -186,6 +186,22 @@ def _covers_supply(b: Candidate, a: Candidate) -> bool:
     return not rb or (bool(ra) and all(any(blo <= lo + 1e-9 and hi <= bhi + 1e-9 for blo, bhi in rb) for lo, hi in ra))
 
 
+# Struttura (regole dichiarate, 2026-10-16): la pila dei componenti interni e il controllo di ingombro usano le dimensioni pubblicate della
+# struttura scelta (non l'ingombro massimo della classe: un 6U puo' essere lungo 366 o 340.5 mm); il pannello solare si monta su una faccia
+# che la struttura offre (specs.panel_faces).
+def structure_envelope(struct: Component | None, cls: CubeSatClass) -> tuple[float, float, float]:
+    """Ingombro della struttura scelta (lati della sezione, lunghezza), entro quello della classe; senza quote pubblicate quello della classe."""
+    d = struct.dimensions_mm if struct is not None else None
+    if not d or any(x is None for x in d):
+        return cls.envelope_mm
+    return tuple(min(float(a), float(b)) for a, b in zip(sorted(float(x) for x in d), cls.envelope_mm))
+
+
+def panel_on_structure(panel: Component, struct: Component) -> bool:
+    faces, face = struct.raw["specs"].get("panel_faces"), panel.raw["specs"].get("face")
+    return not faces or not face or str(face).replace(" Z", "") in faces
+
+
 # sottosistemi in cui il catalogo pubblica la classe minima dichiarata dal fornitore (specs.min_form_factor_u): propulsori, imager e
 # terminali ottici (2026-10-16). Inoltre, per ogni sottosistema, i prodotti non piu' in vendita (status "nla") solo se non c'e' altro.
 MIN_CLASS_SUBSYSTEMS = ("propulsion", "payload_imager", "payload_optical")
@@ -414,6 +430,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
 
     def covers_of(i: int):
         sid, fs = results[i].subsystem, []
+        if sid in ("structure", "solar_panel"):
+            return lambda b, a: False           # lunghezza della struttura e facce per il pannello: nessun taglio (insiemi piccoli)
         if jx is not None and sid in ("eps", "battery", "solar_panel"):
             return lambda b, a: False           # vincoli di coppia con l'EPS: nessun taglio (insiemi piccoli)
         if jo is not None:
@@ -441,8 +459,17 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     stack_room = layout.columns(cls.envelope_mm) * cls.envelope_mm[2]       # somma delle altezze al piu' colonne x lunghezza (condizione necessaria)
     sids = [results[i].subsystem for i in idx]
 
+    jst = next((j for j, i in enumerate(idx) if results[i].subsystem == "structure"), None)
+    jsp = next((j for j, i in enumerate(idx) if results[i].subsystem == "solar_panel"), None)
+
     def stack_ok(cands) -> bool:
-        return layout.stack_feasible([(sid, k.height_mm) for sid, k in zip(sids, cands)], cls.envelope_mm)
+        """La pila dei componenti interni entra nella struttura scelta (le sue quote pubblicate, entro l'ingombro della classe)."""
+        env = structure_envelope(cands[jst].comp, cls) if jst is not None else cls.envelope_mm
+        return layout.stack_feasible([(sid, k.height_mm) for sid, k in zip(sids, cands)], env)
+
+    def faces_ok(cands) -> bool:
+        """Il pannello solare si monta su una faccia che la struttura offre."""
+        return jst is None or jsp is None or panel_on_structure(cands[jsp].comp, cands[jst].comp)
 
     def dv_ok(cands, mass: float) -> bool:
         """Il propulsore da' il delta-v richiesto al satellite intero: impulso totale / massa (somma delle masse pubblicate dei componenti scelti)."""
@@ -490,7 +517,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if j == len(idx):
             cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
-            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands) or not supply_ok(cands):
+            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands) or not supply_ok(cands) or not faces_ok(cands):
                 return
             key = (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
@@ -514,7 +541,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     greedy = [pools[i][0] for i in idx]
     g_mass = sum((k.mass_kg or 0.0) for k in greedy)
     g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy):
+    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy) and faces_ok(greedy):
         chosen = greedy
     else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
         rec(0, 0.0, 0.0, 0.0, [])

@@ -53,7 +53,7 @@ from .fit import check_fit
 from .models import Component
 from .rows import subsystem_of
 from .selector import (CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, battery_ok, eps_rails, firing_power_w, interfaces, is_electric, panel_ok,
-                       panel_voltages, powered_by, supply_ranges, total_impulse_ns)
+                       panel_on_structure, panel_voltages, powered_by, structure_envelope, supply_ranges, total_impulse_ns)
 from .selector import select as _select
 
 
@@ -682,6 +682,16 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "structure" and r.selected:      # selector.structure_envelope: la pila usa le quote della struttura scelta
+            env = structure_envelope(r.selected.comp, sel.cubesat)
+            faces = r.selected.comp.raw["specs"].get("panel_faces") or {}
+            panel = next((x.selected.comp for x in sel.subsystems if x.subsystem == "solar_panel" and x.selected), None)
+            rows.append({"requirement": None, "what": "holds the stack of the internal components",
+                         "value": f"{env[0]:g} x {env[1]:g} x {env[2]:g} mm", "met": sel.within_limits})
+            if faces and panel is not None and panel.raw["specs"].get("face"):
+                rows.append({"requirement": None, "what": "a face for the solar panel",
+                             "value": f"{panel.raw['specs']['face']} panel on " + ", ".join(f"{k} x{v}" for k, v in faces.items()) + " faces",
+                             "met": panel_on_structure(panel, r.selected.comp)})
         if r.subsystem == "eps" and r.selected:      # selector: l'EPS alimenta i componenti, accetta pannello e batteria, copre la potenza
             eps = r.selected.comp
             rails = eps_rails(eps)

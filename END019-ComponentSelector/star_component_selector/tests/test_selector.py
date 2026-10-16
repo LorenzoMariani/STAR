@@ -282,3 +282,34 @@ class TestBudgetSearch(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStructureFit(unittest.TestCase):
+    """La pila dei componenti interni usa le quote della struttura scelta (2026-10-16): un 6U lungo 340.5 mm porta meno di uno lungo 366 mm."""
+
+    def test_a_long_stack_picks_the_longer_structure(self):
+        from star_selector.selector import structure_envelope
+        short = synthetic("s-short", "structure", 0.5, [100, 226.3, 340.5], form_factor_u=6, max_total_mass_kg=12.0)
+        long_ = synthetic("s-long", "structure", 0.9, [100, 226.3, 366.0], form_factor_u=6, max_total_mass_kg=12.0)
+        # quattro blocchi alti 180 mm: in una colonna da 366 mm ne stanno due, in una da 340.5 uno solo (6U: due colonne)
+        parts = [synthetic(f"b-{cat}", cat, 0.3, [90, 90, 180]) for cat in ("obc", "eps", "battery", "adcs")]
+        res = select([short, long_, *parts], 6)
+        self.assertTrue(res.within_limits)
+        self.assertEqual(next(r for r in res.subsystems if r.id == "structure").selected.comp.id, "s-long")
+        self.assertEqual(structure_envelope(long_, CLASSES[6]), (100.0, 226.3, 366.0))
+        res = select([short, *parts], 6)               # only the short one: the stack does not fit
+        self.assertFalse(res.within_limits)
+
+    def test_the_lighter_structure_when_the_stack_fits_both(self):
+        short = synthetic("s-short", "structure", 0.5, [100, 226.3, 340.5], form_factor_u=6, max_total_mass_kg=12.0)
+        long_ = synthetic("s-long", "structure", 0.9, [100, 226.3, 366.0], form_factor_u=6, max_total_mass_kg=12.0)
+        parts = [synthetic(f"b-{cat}", cat, 0.3, [90, 90, 100]) for cat in ("obc", "eps", "battery", "adcs")]
+        res = select([short, long_, *parts], 6)
+        self.assertEqual(next(r for r in res.subsystems if r.id == "structure").selected.comp.id, "s-short")
+
+    def test_the_panel_mounts_on_a_face_of_the_structure(self):
+        from star_selector.selector import panel_on_structure
+        self.assertTrue(panel_on_structure(CAT["spacemind-sp6x"], CAT["gomspace-nanostruct-12u"] if "gomspace-nanostruct-12u" in CAT
+                                           else next(c for c in SERVICE.catalog if c.category == "structure" and c.spec("form_factor_u") == 12)))
+        three_u = next(c for c in SERVICE.catalog if c.category == "structure" and c.spec("form_factor_u") == 3 and c.spec("panel_faces"))
+        self.assertFalse(panel_on_structure(CAT["spacemind-sp6x"], three_u))       # a 6U panel on a 3U structure

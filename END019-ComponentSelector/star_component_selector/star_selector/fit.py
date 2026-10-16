@@ -16,7 +16,7 @@ from typing import Any
 
 from . import layout
 from .rows import subsystem_of
-from .selector import EXTERNAL_SUBSYSTEMS, Selection, panel_face
+from .selector import EXTERNAL_SUBSYSTEMS, Selection, panel_face, structure_envelope
 
 EPS = 1e-9
 LABELS = {"fits": "Fits the CDS envelope", "does_not_fit": "Does not fit", "not_shown": "Not shown to fit", "undetermined": "Undetermined"}
@@ -160,7 +160,8 @@ def stack_arrangement(env, internal):
 
 def check_fit(sel: Selection) -> dict[str, Any]:
     cls = sel.cubesat
-    env = cls.envelope_mm
+    struct = next((r.selected.comp for r in sel.subsystems if (r.subsystem or r.id) == "structure" and r.selected), None)
+    env = structure_envelope(struct, cls)          # le quote della struttura scelta (2026-10-16), entro l'ingombro della classe
     internal, unknown, external = [], [], []
     for r in sel.subsystems:
         k = r.selected
@@ -176,12 +177,13 @@ def check_fit(sel: Selection) -> dict[str, Any]:
         else:
             internal.append((r.id, sid, k, d))
     vol = sum(d[0] * d[1] * d[2] for _, _, _, d in internal) * 1e-9
-    out: dict[str, Any] = {"state": None, "label": None, "envelope_mm": list(env), "internal_volume_m3": vol, "volume_limit_m3": cls.volume_limit_m3,
-                           "internal_volume_fraction": vol / cls.volume_limit_m3, "unknown_size": unknown, "placed": [], "external": [], "message": ""}
+    vlim = env[0] * env[1] * env[2] * 1e-9          # volume dell'ingombro della struttura scelta (<= quello della classe)
+    out: dict[str, Any] = {"state": None, "label": None, "envelope_mm": list(env), "internal_volume_m3": vol, "volume_limit_m3": vlim,
+                           "internal_volume_fraction": vol / vlim, "unknown_size": unknown, "placed": [], "external": [], "message": ""}
     if unknown:
         out["state"] = "undetermined"
         out["message"] = "The size is not publicly available for: " + ", ".join(unknown) + ". The fit cannot be verified."
-    elif vol > cls.volume_limit_m3 + 1e-15:
+    elif vol > vlim + 1e-15:
         out["state"] = "does_not_fit"
         out["message"] = f"The internal components alone need {100 * out['internal_volume_fraction']:.0f}% of the volume of the CDS envelope: no arrangement can exist."
     else:
