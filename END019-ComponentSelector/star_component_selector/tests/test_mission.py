@@ -118,6 +118,41 @@ class NeedsTest(unittest.TestCase):
         self.assertIn("battery", {r.subsystem for r in sel.subsystems})
         self.assertEqual(next(r for r in m["requirements"] if r["requirement"] and r["requirement"]["id"] == "REQ-018")["status"], "not_verifiable")
 
+    def test_telecommand_radio_has_a_receiver(self):
+        sel, m = design(CATALOG, V6)
+        uhf = slots_of(sel)["comms_uhf"].selected.comp
+        self.assertTrue(uhf.spec("has_receiver"))
+        self.assertTrue(next(c for c in m["subsystems"]["comms_uhf"]["checks"] if c["what"] == "receiver for the telecommands")["met"])
+        sel, _ = design(CATALOG, [{"id": "R1", "text": "The satellite shall take images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}])
+        self.assertTrue(slots_of(sel)["comms_s"].selected.comp.spec("has_receiver"))     # one radio: it must receive the telecommands too
+
+    def test_image_radio_has_the_highest_rate_of_its_band(self):
+        sel, m = design(CATALOG, V6)
+        s_radio = slots_of(sel)["comms_s"].selected.comp
+        self.assertEqual(str(s_radio.spec("band")).upper(), "S")
+        best = max(c.spec("data_rate_kbps_max") for c in CATALOG if subsystem_of(c) == "comms" and str(c.spec("band")).upper() == "S")
+        self.assertEqual(s_radio.spec("data_rate_kbps_max"), best)
+        self.assertIn("highest published data rate", m["subsystems"]["comms_s"]["why"])
+        self.assertEqual(m["radio"]["slot"], "comms_s")
+
+    def test_stated_data_rate_is_checked(self):
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The satellite shall take images with a GSD of 40 m at 500 km of altitude."},
+                                  {"id": "R2", "text": "Images shall be downlinked in S-band with a data rate of at least 2 Mbps."}])
+        self.assertGreaterEqual(slots_of(sel)["comms_s"].selected.comp.spec("data_rate_kbps_max"), 2000)
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("data rate"))["status"], "met")
+        _, m = design(CATALOG, [{"id": "R1", "text": "The satellite shall take images with a GSD of 40 m at 500 km of altitude."},
+                                {"id": "R2", "text": "Images shall be downlinked in UHF with a data rate of at least 5 Mbps."}])
+        self.assertTrue(any(u.startswith("Does not satisfy R2 (data rate >= 5 Mbps): no UHF radio in the database meets it") for u in m["unmet"]), m["unmet"])
+
+    def test_antenna_included_in_the_radio_is_not_duplicated(self):
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The satellite shall take images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}])
+        s = slots_of(sel)
+        self.assertIn("+ ANT", s["comms_s"].selected.comp.raw["name"])
+        self.assertNotIn("antenna_s", s)
+        ant = [e for e in m["extras"] if e["subsystem"] == "antenna"]
+        self.assertEqual([e["id"] for e in ant], ["antenna_s"])
+        self.assertIn("included in the radio", ant[0]["why_not"])
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})

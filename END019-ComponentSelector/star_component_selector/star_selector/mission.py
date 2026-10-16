@@ -24,7 +24,10 @@ Requisiti verificati con i dati pubblicati:
     (selector.CLASS_PANEL_FACES);
   * batteria: con END-004 nella stessa run, energia che la batteria da' in un'orbita (la scarica peggiore tra i modi volati, con il
     margine di END-004) diviso la profondita' di scarica massima dei requisiti (o della batteria, se pubblicata): capacita' minima. Se
-    la batteria integrata in un EPS basta, il progetto senza batteria separata e' preferito a parita' di classe (un componente in meno).
+    la batteria integrata in un EPS basta, il progetto senza batteria separata e' preferito a parita' di classe (un componente in meno);
+  * radio: quella della banda piu' bassa riceve i telecomandi (ricevitore pubblicato); con un imager quella della banda piu' alta scarica
+    le immagini: velocita' >= quella dei requisiti, altrimenti la piu' alta pubblicata tra le radio della sola banda che entra nel progetto;
+    una radio che comprende la sua antenna ("+ ANT..." nel nome del prodotto) non ha l'antenna separata della sua banda.
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -43,6 +46,7 @@ from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, select, tota
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
              "fifteen": 15, "twenty": 20, "twenty-five": 25, "thirty": 30}
 BANDS = (("UHF", r"\buhf\b"), ("VHF", r"\bvhf\b"), ("S", r"\bs[- ]band\b"), ("X", r"\bx[- ]band\b"))
+BAND_ORDER = {"VHF": 0, "UHF": 1, "S": 2, "X": 3, "COMMS": 1}     # dalla frequenza piu' bassa; "comms" = una sola radio senza banda nominata
 BUS = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna")
 # esiti del controllo di ingombro con cui una classe e' accettata: "undetermined" = a un componente mancano le quote pubblicate (massa,
 # volume e pila noti entro i limiti; non e' dimostrato che non entri: l'avviso resta nell'esito)
@@ -199,7 +203,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         need(sid, "every CubeSat needs it", None, "bus")
     for band, r in bands:
         tag = band.lower()
-        radio = need("comms", f"the mission downlinks in {band} band", r, "requirement", f"comms_{tag}", f"COMMS RADIO · {band}")
+        radio = need("comms", f"{band}-band link of the mission", r, "requirement", f"comms_{tag}", f"COMMS RADIO · {band}")
         radio.checks.append(Check("band", radio.slot.id, r, f"radio in {band} band",
                                   lambda c, b=band: None if not c.spec("band") else b in str(c.spec("band")).upper().replace("-BAND", "").split("/"),
                                   lambda c: c.spec("band")))
@@ -216,6 +220,28 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             need(sid, why, hit[0], "requirement")
     if "payload_imager" in needs and "adcs" not in needs:
         need("adcs", "an imaging payload needs pointing", needs["payload_imager"].req, "rule")
+
+    # radio (regole dichiarate): la radio della banda piu' bassa riceve i telecomandi (ricetrasmettitore); con un imager, la radio della
+    # banda piu' alta scarica le immagini: la velocita' scritta nei requisiti, altrimenti la piu' alta pubblicata che entra nel progetto
+    radio_slots = sorted([nd for nd in needs.values() if nd.slot.subsystem == "comms"], key=lambda nd: BAND_ORDER.get(nd.slot.id.split("_")[-1].upper(), 9))
+    ttc_radio = radio_slots[0] if radio_slots else None
+    data_radio = radio_slots[-1] if radio_slots and "payload_imager" in needs else None
+    if ttc_radio:
+        hit = _find(reqs, r"\b(uplink|telecommand\w*|tele-?command\w*|commanded|commands)\b")
+        ttc_radio.checks.append(Check("receiver", ttc_radio.slot.id, hit[0] if hit else None, "receiver for the telecommands",
+                                      lambda c: None if c.spec("has_receiver") is None else bool(c.spec("has_receiver")),
+                                      lambda c: None if c.spec("has_receiver") is None else ("transceiver" if c.spec("has_receiver") else "transmitter only")))
+        if len(radio_slots) > 1:
+            ttc_radio.why += "; it receives the telecommands"
+    data_rate = None
+    if data_radio:
+        if (hit := _find(reqs, rf"(?:data rate|downlink rate|bit rate)[^.\d]{{0,30}}?{NUM}\s*(kbps|kbit/s|mbps|mbit/s|gbps|gbit/s)")):
+            kbps = float(hit[1].group(1)) * {"k": 1.0, "m": 1e3, "g": 1e6}[hit[1].group(2)[0]]
+            data_rate = {"kbps": kbps, "req": hit[0]}
+            data_radio.checks.append(Check("data_rate", data_radio.slot.id, hit[0], f"data rate >= {kbps / 1e3:g} Mbps",
+                                           lambda c, k=kbps: None if c.spec("data_rate_kbps_max") is None else float(c.spec("data_rate_kbps_max")) >= k - 1e-9,
+                                           lambda c: None if c.spec("data_rate_kbps_max") is None else f"{float(c.spec('data_rate_kbps_max')) / 1e3:g} Mbps"))
+        data_radio.why += "; it downlinks the images"
 
     # delta-v: scritto nei requisiti, oppure calcolato da END-016 per la scadenza di smaltimento dei requisiti
     dv: dict[str, Any] | None = None
@@ -333,7 +359,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
 
     order = {sid: n for n, (sid, _, _) in enumerate(SUBSYSTEMS)}
     ordered = sorted(needs.values(), key=lambda nd: (order[nd.slot.subsystem], nd.slot.id))
-    return {"reqs": reqs, "needs": ordered, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery, "notes": notes}
+    return {"reqs": reqs, "needs": ordered, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery,
+            "data_radio": data_radio.slot.id if data_radio else None, "data_rate": data_rate, "notes": notes}
 
 
 # --------------------------------------------------------------------------- componenti ammessi per posto
@@ -442,6 +469,61 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         u = classes[-1]
         found = (u, select(catalog, u, time_budget_s, slots=slots, dv_m_s=dv, mass_limit_kg=mass_limit))
     units, sel = found
+    dv_eff = dv if "dv" not in relaxed else None
+    ml_eff = mass_limit if "mass" not in relaxed else None
+
+    def ok_sel(s: Selection) -> bool:
+        return s.within_limits and all(r.selected for r in s.subsystems) and check_fit(s)["state"] in ACCEPTED_FIT
+
+    # radio delle immagini: senza una velocita' scritta nei requisiti, la piu' alta pubblicata che entra nel progetto (nella classe scelta)
+    radio_info = None
+    dr = a["data_radio"]
+    if dr and not a["data_rate"]:
+        sl = next(s for s in slots if s.id == dr)
+        band = dr.split("_", 1)[1].upper() if "_" in dr else None
+        # solo le radio della sola banda delle immagini: la velocita' massima pubblicata di una radio multibanda (es. S/X) e' quella della
+        # banda piu' veloce, non di quella che la missione usa
+        cands = [c for c in catalog if subsystem_of(c) == "comms" and (sl.allowed is None or c.id in sl.allowed) and c.spec("data_rate_kbps_max")
+                 and (band is None or str(c.spec("band")).upper() == band)]
+        cur = next((r.selected for r in sel.subsystems if r.id == dr and r.selected), None)
+        cur_rate = float(cur.comp.spec("data_rate_kbps_max") or 0.0) if cur and (band is None or str(cur.comp.spec("band")).upper() == band) else 0.0
+        for rate in sorted({float(c.spec("data_rate_kbps_max")) for c in cands}, reverse=True):
+            if rate <= cur_rate + 1e-9:
+                break
+            keep = frozenset(c.id for c in cands if float(c.spec("data_rate_kbps_max")) >= rate - 1e-9)
+            trial_slots = [Slot(s.id, s.subsystem, s.label, keep) if s.id == dr else s for s in slots]
+            trial = select(catalog, units, time_budget_s, slots=trial_slots, dv_m_s=dv_eff, mass_limit_kg=ml_eff)
+            if ok_sel(trial):
+                sel, slots = trial, trial_slots
+                break
+        chosen = next((r.selected for r in sel.subsystems if r.id == dr and r.selected), None)
+        if chosen:
+            radio_info = {"slot": dr, "name": chosen.comp.raw["name"], "data_rate_kbps": chosen.comp.spec("data_rate_kbps_max"),
+                          "why": "the radio that downlinks the images has the highest published data rate that fits the design "
+                                 "(the requirements state no data rate)"}
+
+    # una radio che comprende la sua antenna (nel nome del prodotto: "... + ANT...") non ha bisogno dell'antenna separata della sua banda
+    dropped: list[dict[str, Any]] = []
+    for r in list(sel.subsystems):
+        if r.subsystem != "comms" or not r.selected or not re.search(r"\+\s*ANT", str(r.selected.comp.raw.get("name", ""))):
+            continue
+        ant_id = "antenna" + r.id[len("comms"):]          # comms_s -> antenna_s, comms -> antenna
+        prev = next((x for x in sel.subsystems if x.id == ant_id), None)
+        if prev is None:
+            continue
+        trial_slots = [Slot(s.id, s.subsystem, s.label, frozenset({r.selected.comp.id})) if s.id == r.id else s for s in slots if s.id != ant_id]
+        trial = select(catalog, units, time_budget_s, slots=trial_slots, dv_m_s=dv_eff, mass_limit_kg=ml_eff)
+        if ok_sel(trial):
+            name = r.selected.comp.raw["name"]
+            sel, slots = trial, trial_slots
+            dropped.append({"id": ant_id, "subsystem": "antenna", "label": prev.label, "why_not": f"included in the radio {name} (the product comes with its antenna)",
+                            "n_database": prev.n_database, "n_fit": prev.n_fit, "best": None if prev.selected is None else
+                            {"id": prev.selected.comp.id, "name": prev.selected.comp.raw["name"], "vendor": prev.selected.comp.raw["vendor"], "mass_kg": prev.selected.mass_kg},
+                            "fits_with_design": True})
+            for nd in needs:
+                if nd.slot.id == ant_id:
+                    for ck in nd.checks:
+                        ck.what += " (antenna included in the radio)"
 
     # requisiti del progetto (delta-v, massa) e della classe
     checks: list[Check] = [ck for nd in needs for ck in nd.checks]
@@ -514,6 +596,8 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if radio_info and r.id == radio_info["slot"] and radio_info.get("data_rate_kbps"):
+            why = f"{nd.why}; highest published data rate that fits the design ({float(radio_info['data_rate_kbps']) / 1e3:g} Mbps)"
         if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:
             why = f"{nd.why}; its integrated battery is the satellite battery"
         per_slot[r.id] = {"why": why, "source": nd.source, "requirement": nd.req.as_dict() if nd.req else None, "checks": rows}
@@ -522,7 +606,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     needed = {s.subsystem for s in slots}
     extras = []
     for sid, _, label in SUBSYSTEMS:
-        if sid in needed:
+        if sid in needed or (sid == "antenna" and dropped):      # l'antenna compresa nella radio e' elencata sotto (dropped)
             continue
         if sid == "battery" and bat_info and bat_info.get("integrated_wh") is not None:
             reason = (f"the battery integrated in the EPS ({bat_info['integrated_wh']:g} Wh) covers the {bat['need_wh']:.1f} Wh the mission needs "
@@ -542,6 +626,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                        "best": None if alone is None else {"id": alone.comp.id, "name": alone.comp.raw["name"], "vendor": alone.comp.raw["vendor"],
                                                            "mass_kg": alone.mass_kg},
                        "fits_with_design": together})
+    extras += dropped          # antenne comprese nella radio scelta
 
     stated = a["stated"]
     notes = list(a["notes"])
@@ -559,6 +644,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         "altitude": None if not alt else {"min_km": alt["min_km"], "max_km": alt["max_km"], "source": alt["source"]},
         "dv": dv_info,
         "battery": bat_info,
+        "radio": radio_info,
         "mass_limit": None if not a["mass_limit"] else {"kg": a["mass_limit"]["kg"], "requirement": a["mass_limit"]["req"].as_dict()},
         "requirements": [{"requirement": ck.req.as_dict() if ck.req else None, "what": ck.what, "slot": ck.slot, "status": ck.status,
                           "message": ck.message} for ck in checks],
