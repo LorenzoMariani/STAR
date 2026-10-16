@@ -35,7 +35,10 @@ Requisiti verificati con i dati pubblicati:
     multi/iperspettrale, SWIR, infrarosso termico, RGB, video; push-broom = non "snapshot" nel nome), poi GSD e swath; terminale ottico:
     tipo di collegamento (verso terra o tra satelliti) e velocita';
   * OBC: almeno un'interfaccia dati in comune con ogni componente che pubblica le sue (selector, interface_check, vincolo nella ricerca
-    esatta); dose totale di radiazione dei requisiti <= quella pubblicata.
+    esatta); dose totale di radiazione dei requisiti <= quella pubblicata;
+  * EPS: classi dichiarate, almeno un ingresso solare, alimenta ogni componente che pubblica le tensioni (uscite regolate o batteria
+    integrata), accetta la tensione del pannello e la batteria esterna, potenza massima >= componente piu' esigente (selector,
+    power_supply_check, vincolo nella ricerca esatta).
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -49,7 +52,8 @@ from typing import Any, Callable
 from .fit import check_fit
 from .models import Component
 from .rows import subsystem_of
-from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, firing_power_w, interfaces, is_electric, total_impulse_ns
+from .selector import (CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, battery_ok, eps_rails, firing_power_w, interfaces, is_electric, panel_ok,
+                       panel_voltages, powered_by, supply_ranges, total_impulse_ns)
 from .selector import select as _select
 
 
@@ -58,6 +62,7 @@ def select(*args: Any, **kwargs: Any) -> Selection:
     deve avere un'interfaccia dati in comune con ogni componente che pubblica le sue."""
     kwargs.setdefault("electric_power_check", True)
     kwargs.setdefault("interface_check", True)
+    kwargs.setdefault("power_supply_check", True)
     return _select(*args, **kwargs)
 
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
@@ -677,6 +682,33 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "eps" and r.selected:      # selector: l'EPS alimenta i componenti, accetta pannello e batteria, copre la potenza
+            eps = r.selected.comp
+            rails = eps_rails(eps)
+            others = [x for x in sel.subsystems if x.selected and x.id != r.id]
+            fed = [x for x in others if x.subsystem not in ("battery", "solar_panel") and supply_ranges(x.selected.comp)]
+            bad = [x.label for x in fed if not powered_by(x.selected.comp, eps)]
+            used = sorted({rv for x in fed for rv in rails for lo, hi in supply_ranges(x.selected.comp) if lo <= rv[1] + 1e-9 and rv[0] <= hi + 1e-9})
+            fmt = lambda a, b: f"{a:g}" if a == b else f"{a:g}-{b:g}"      # noqa: E731
+            if rails and fed:
+                rows.append({"requirement": None, "what": "powers every component that publishes its supply voltages",
+                             "value": ("rails " + ", ".join(fmt(a, b) for a, b in used) + " V") if not bad else "not: " + ", ".join(bad), "met": not bad})
+            panel = next((x.selected.comp for x in others if x.subsystem == "solar_panel"), None)
+            pv, vs = eps.raw["specs"].get("pv_voltage_v"), panel_voltages(panel) if panel else []
+            if panel is not None and pv and vs:
+                rows.append({"requirement": None, "what": "solar input accepts the panel voltage",
+                             "value": f"{', '.join(f'{v:g}' for v in vs)} V in {fmt(*pv)} V", "met": panel_ok(panel, eps)})
+            batt = next((x.selected.comp for x in others if x.subsystem == "battery"), None)
+            s = eps.raw["specs"]
+            if batt is not None and (s.get("battery_voltage_v") or s.get("battery_families")):
+                rows.append({"requirement": None, "what": "accepts the battery (voltage, family)", "value": batt.raw["name"], "met": battery_ok(batt, eps)})
+            if s.get("output_power_w_max") is not None:
+                peak = max((x.selected.power_w or 0.0 for x in others), default=0.0)
+                rows.append({"requirement": None, "what": "maximum output power covers the most demanding component",
+                             "value": f"{peak:g} W of {float(s['output_power_w_max']):g} W", "met": peak <= float(s["output_power_w_max"]) + 1e-9})
+            unfed = [x.label for x in others if x.subsystem not in ("structure", "battery", "solar_panel", "antenna") and not supply_ranges(x.selected.comp)]
+            if unfed:
+                why += f" (supply voltages not published: {', '.join(unfed)})"
         if r.subsystem == "obc" and r.selected:      # selector.interfaces: l'OBC parla con ogni componente che pubblica le sue interfacce
             oi = interfaces(r.selected.comp) or frozenset()
             others = [x for x in sel.subsystems if x.selected and x.id != r.id]
@@ -708,7 +740,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         if radio_info and r.id == radio_info["slot"] and radio_info.get("data_rate_kbps"):
             why = f"{nd.why}; highest published data rate that fits the design ({float(radio_info['data_rate_kbps']) / 1e3:g} Mbps)"
         if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:
-            why = f"{nd.why}; its integrated battery is the satellite battery"
+            why += "; its integrated battery is the satellite battery"
         per_slot[r.id] = {"why": why, "source": nd.source, "requirement": nd.req.as_dict() if nd.req else None, "checks": rows}
 
     # sottosistemi non richiesti: miglior componente che entra nella classe e se starebbe insieme al progetto

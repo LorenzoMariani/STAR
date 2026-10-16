@@ -136,9 +136,9 @@ class TestRealCatalogueInvariants(unittest.TestCase):
                     self.assertTrue(fits_envelope(k.comp, cls.envelope_mm) or k.comp.category == "structure")
 
     def test_what_fits_a_smaller_class_fits_a_larger_one(self):
-        # struttura, pannello solare e ADCS sono quelli fatti per la classe (classe della struttura, faccia del pannello, classe dichiarata
-        # dell'unita' ADCS): non crescono con la classe
-        fit = {u: {r.id: r.n_fit for r in select(CATALOG, u).subsystems if r.id not in ("structure", "solar_panel", "adcs")} for u in CLASSES}
+        # struttura, pannello solare, ADCS ed EPS sono quelli fatti per la classe (classe della struttura, faccia del pannello, classi
+        # dichiarate dell'unita' ADCS e dell'EPS): non crescono con la classe
+        fit = {u: {r.id: r.n_fit for r in select(CATALOG, u).subsystems if r.id not in ("structure", "solar_panel", "adcs", "eps")} for u in CLASSES}
         for small, big in ((1, 3), (3, 6), (6, 12)):
             for sid, n in fit[small].items():
                 self.assertLessEqual(n, fit[big][sid], (small, big, sid))

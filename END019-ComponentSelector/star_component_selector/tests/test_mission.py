@@ -195,8 +195,16 @@ class NeedsTest(unittest.TestCase):
 
     def test_unreachable_delta_v_takes_the_closest_thruster(self):
         sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall raise its orbit with a delta-v of 1000 m/s and downlink through UHF."}])
+        from star_selector import mission
+        from star_selector.fit import check_fit
         thr = slots_of(sel)["propulsion"].selected.comp
-        self.assertGreater(total_impulse_ns(thr), 40.0)                # not the smallest one (NanoProp CGP3, 40 N s)
+        slots = [Slot(r.id, r.subsystem, r.label, frozenset({r.selected.comp.id})) for r in sel.subsystems if r.subsystem != "propulsion"]
+        for c in CATALOG:                       # no thruster with more impulse fits this design (the closest to the delta-v is chosen);
+            # a thruster without published size is a candidate only when no other is (selector rule), so only sized ones compete
+            if subsystem_of(c) == "propulsion" and (total_impulse_ns(c) or 0) > total_impulse_ns(thr) and c.dimensions_mm and None not in c.dimensions_mm:
+                trial = mission.select(CATALOG, sel.cubesat.units, slots=slots + [Slot("propulsion", "propulsion", "PRP", frozenset({c.id}))])
+                self.assertFalse(trial.within_limits and all(r.selected for r in trial.subsystems)
+                                 and check_fit(trial)["state"] in mission.ACCEPTED_FIT, c.id)
         self.assertIn("dv", m["relaxed"])
         self.assertTrue(any("no thruster in the database gives 1000.0 m/s" in u for u in m["unmet"]))
 
@@ -253,6 +261,29 @@ class NeedsTest(unittest.TestCase):
         sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall relay messages through UHF; its computer shall tolerate a total ionizing dose of 30 krad."}])
         self.assertGreaterEqual(slots_of(sel)["obc"].selected.comp.raw["tid_krad"], 30)
         self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("radiation"))["status"], "met")
+
+    def test_eps_powers_every_component(self):
+        from star_selector.selector import eps_class_ok, panel_ok, powered_by
+        for reqs, ctx in ((V6, {"altitude_km": [641.6, 641.6], "end016": END016}),
+                          ([{"id": "R1", "text": "The satellite shall take multispectral images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}], {})):
+            sel, m = design(CATALOG, reqs, ctx)
+            s = slots_of(sel)
+            eps = s["eps"].selected.comp
+            self.assertTrue(eps_class_ok(eps, sel.cubesat.units))
+            self.assertNotEqual(eps.raw["specs"].get("pv_channels"), 0)                   # it can charge from the panels
+            self.assertTrue(panel_ok(s["solar_panel"].selected.comp, eps))
+            for r in sel.subsystems:
+                if r.selected and r.subsystem not in ("eps", "battery", "solar_panel"):
+                    self.assertTrue(powered_by(r.selected.comp, eps), (r.id, r.selected.comp.id, eps.id))
+            self.assertTrue(all(c["met"] for c in m["subsystems"]["eps"]["checks"]))
+        sel, _ = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        self.assertNotEqual(slots_of(sel)["eps"].selected.comp.id, "pumpkin-linear-eps-11wh")    # 3.3/5 V only, no solar input: not for the 12 V XACT
+
+    def test_supply_check_in_the_selector(self):
+        xact, linear = BY_ID["bct-xact-15"], BY_ID["pumpkin-linear-eps-11wh"]
+        slots = [Slot("eps", "eps", "EPS", frozenset({linear.id})), Slot("adcs", "adcs", "ADCS", frozenset({xact.id}))]
+        self.assertTrue(select(CATALOG, 3, slots=slots).within_limits)
+        self.assertFalse(select(CATALOG, 3, slots=slots, power_supply_check=True).within_limits)
 
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])

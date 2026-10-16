@@ -128,6 +128,64 @@ def interfaces(c: Component) -> frozenset[str] | None:
     return frozenset(IFACE_ALIASES.get(str(x).strip().upper(), str(x).strip().upper()) for x in v)
 
 
+# Alimentazione (regole dichiarate, 2026-10-16):
+#  * sempre: un EPS che dichiara le classi compatibili (compatible_form_factors_u) le rispetta; un EPS senza ingressi solari (pv_channels 0)
+#    non carica la batteria dai pannelli e si usa solo se non c'e' altro;
+#  * con power_supply_check: ogni componente che pubblica le tensioni di alimentazione (supply_voltage_ranges_v) e' alimentato da
+#    un'uscita regolata dell'EPS (output_voltage_ranges_v) o dalla tensione della sua batteria integrata (gli intervalli si sovrappongono); la
+#    tensione del pannello (voltage_options_v, altrimenti quella a vuoto) entra nell'ingresso solare dell'EPS (pv_voltage_v); una batteria
+#    esterna ha la tensione e la famiglia che l'EPS ammette (battery_voltage_v, battery_families); la potenza massima in uscita dell'EPS
+#    (output_power_w_max) copre la potenza dichiarata piu' alta di un componente. Dati non pubblicati: non si verifica e non si blocca.
+def _ranges(v) -> list[tuple[float, float]]:
+    return [(float(r[0]), float(r[1])) for r in v] if v else []
+
+
+def supply_ranges(c: Component) -> list[tuple[float, float]]:
+    return _ranges(c.raw["specs"].get("supply_voltage_ranges_v"))
+
+
+def eps_rails(eps: Component) -> list[tuple[float, float]]:
+    rails = _ranges(eps.raw["specs"].get("output_voltage_ranges_v"))
+    iv = eps.raw["specs"].get("integrated_battery_voltage_v")
+    return rails + ([(float(iv), float(iv))] if iv else [])
+
+
+def powered_by(c: Component, eps: Component) -> bool:
+    sr, rails = supply_ranges(c), eps_rails(eps)
+    return not sr or not rails or any(lo <= rhi + 1e-9 and rlo <= hi + 1e-9 for lo, hi in sr for rlo, rhi in rails)
+
+
+def panel_voltages(c: Component) -> list[float]:
+    s = c.raw["specs"]
+    if s.get("voltage_options_v"):
+        return [float(v) for v in s["voltage_options_v"]]
+    return [float(s["open_circuit_voltage_v"])] if s.get("open_circuit_voltage_v") else []
+
+
+def panel_ok(panel: Component, eps: Component) -> bool:
+    pv, vs = eps.raw["specs"].get("pv_voltage_v"), panel_voltages(panel)
+    return not pv or not vs or any(pv[0] - 1e-9 <= v <= pv[1] + 1e-9 for v in vs)
+
+
+def battery_ok(batt: Component, eps: Component) -> bool:
+    s = eps.raw["specs"]
+    bv, fam, br = s.get("battery_voltage_v"), s.get("battery_families"), batt.raw["specs"].get("voltage_range_v")
+    if bv and br and not (bv[0] - 1e-9 <= br[0] and br[1] <= bv[1] + 1e-9):
+        return False
+    return not fam or batt.raw.get("family") in fam
+
+
+def eps_class_ok(c: Component, units: int) -> bool:
+    ff = c.raw["specs"].get("compatible_form_factors_u")
+    return not ff or units in [int(round(float(x))) for x in ff]
+
+
+def _covers_supply(b: Candidate, a: Candidate) -> bool:
+    """b e' alimentato da ogni EPS che alimenta a: tensioni non pubblicate, oppure ogni intervallo di a sta in un intervallo di b."""
+    rb, ra = supply_ranges(b.comp), supply_ranges(a.comp)
+    return not rb or (bool(ra) and all(any(blo <= lo + 1e-9 and hi <= bhi + 1e-9 for blo, bhi in rb) for lo, hi in ra))
+
+
 # sottosistemi in cui il catalogo pubblica la classe minima dichiarata dal fornitore (specs.min_form_factor_u): propulsori, imager e
 # terminali ottici (2026-10-16). Inoltre, per ogni sottosistema, i prodotti non piu' in vendita (status "nla") solo se non c'e' altro.
 MIN_CLASS_SUBSYSTEMS = ("propulsion", "payload_imager", "payload_optical")
@@ -265,13 +323,14 @@ CATEGORY_OF = {sid: cat for sid, cat, _ in SUBSYSTEMS}
 
 def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
            dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False,
-           interface_check: bool = False) -> Selection:
+           interface_check: bool = False, power_supply_check: bool = False) -> Selection:
     """Selezione per la classe `units`. Senza parametri facoltativi: un posto per ciascuno dei 17 sottosistemi, tutti i componenti, limiti CDS.
     slots: i posti del progetto (mission.py: solo i sottosistemi che la missione chiede, una radio per banda, i componenti che soddisfano i requisiti);
     dv_m_s: il propulsore scelto deve dare questo delta-v al satellite intero (impulso totale pubblicato / somma delle masse pubblicate);
     mass_limit_kg: massa massima chiesta dalla missione, se sotto il limite CDS della classe;
     electric_power_check: un propulsore elettrico deve funzionare con la potenza di picco del pannello solare scelto (mission.py lo attiva);
-    interface_check: l'OBC ha almeno un'interfaccia dati in comune con ogni componente che pubblica le sue (mission.py lo attiva)."""
+    interface_check: l'OBC ha almeno un'interfaccia dati in comune con ogni componente che pubblica le sue (mission.py lo attiva);
+    power_supply_check: l'EPS alimenta ogni componente, accetta il pannello e la batteria e ne copre la potenza (mission.py lo attiva)."""
     if units not in CLASSES:
         raise ValueError(f"unsupported CubeSat class {units}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
     cls = CLASSES[units]
@@ -297,6 +356,9 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
         if sid == "solar_panel":
             fitting = [c for c in fitting if panel_for_class(c, units)] or fitting     # il pannello fatto per la faccia della classe
+        if sid == "eps":                                                                # classi dichiarate, almeno un ingresso solare
+            fitting = [c for c in fitting if eps_class_ok(c, units)]
+            fitting = [c for c in fitting if c.raw["specs"].get("pv_channels") != 0] or fitting
         adcs_small_only = False
         if sid == "adcs" and fitting:                                                   # l'unita' ADCS dichiarata per la classe
             tiers = [adcs_tier(c, units) for c in fitting]
@@ -348,7 +410,27 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             parts.append(lambda k: -float(k.comp.spec("peak_power_w") or 0.0))
         return (lambda k: [f(k) for f in parts]) if parts else None
     jo = next((j for j, i in enumerate(idx) if results[i].subsystem == "obc"), None) if interface_check else None
-    spools = {i: _pareto(pools[i], extra_of(i), _covers_interfaces if jo is not None else None) for i in idx}
+    jx = next((j for j, i in enumerate(idx) if results[i].subsystem == "eps"), None) if power_supply_check else None
+
+    def covers_of(i: int):
+        sid, fs = results[i].subsystem, []
+        if jx is not None and sid in ("eps", "battery", "solar_panel"):
+            return lambda b, a: False           # vincoli di coppia con l'EPS: nessun taglio (insiemi piccoli)
+        if jo is not None:
+            fs.append(_covers_interfaces)
+        if jx is not None:
+            fs.append(_covers_supply)
+        return (lambda b, a: all(f(b, a) for f in fs)) if fs else None
+    spools = {i: _pareto(pools[i], extra_of(i), covers_of(i)) for i in idx}
+
+    def fits_eps(k: Candidate, eps: Component) -> bool:
+        """Il componente funziona con questo EPS: batteria (tensione, famiglia), pannello (ingresso solare), altrimenti tensione di alimentazione."""
+        sid = subsystem_of(k.comp)
+        if sid == "battery":
+            return battery_ok(k.comp, eps)
+        if sid == "solar_panel":
+            return panel_ok(k.comp, eps)
+        return powered_by(k.comp, eps)
     min_mass = [min((k.mass_kg or 0.0) for k in spools[i]) for i in idx]
     min_vol = [min((k.volume_m3 or 0.0) for k in spools[i]) for i in idx]
     max_score = [max(k.completeness for k in spools[i]) for i in idx]
@@ -382,6 +464,16 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         if oi is None:
             return True
         return all(not (ci := interfaces(k.comp)) or (ci & oi) for j, k in enumerate(cands) if j != jo)
+
+    def supply_ok(cands) -> bool:
+        """L'EPS alimenta ogni componente, accetta pannello e batteria e la sua potenza massima copre il componente piu' esigente."""
+        if jx is None:
+            return True
+        eps = cands[jx].comp
+        if not all(fits_eps(k, eps) for j, k in enumerate(cands) if j != jx):
+            return False
+        pmax = eps.raw["specs"].get("output_power_w_max")
+        return pmax is None or max((k.power_w or 0.0 for j, k in enumerate(cands) if j != jx), default=0.0) <= float(pmax) + 1e-9
     suffix_score = [sum(max_score[j:]) for j in range(len(idx) + 1)]
     best: dict = {"key": None, "pick": None}
     deadline = time.monotonic() + time_budget_s
@@ -398,7 +490,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if j == len(idx):
             cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
-            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands):
+            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands) or not supply_ok(cands):
                 return
             key = (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
@@ -406,10 +498,13 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if best["key"] is not None and (round(score + suffix_score[j], 9), -(mass + suffix_mass[j])) <= best["key"]:
             return
-        # con l'OBC gia' scelto (livello jo) i componenti senza interfacce in comune con lui si scartano subito
+        # con l'OBC o l'EPS gia' scelti (livelli jo, jx) i componenti che non comunicano con l'OBC o che l'EPS non alimenta si scartano subito
         oi = interfaces(spools[idx[jo]][pick[jo]].comp) if jo is not None and j > jo else None
+        eps = spools[idx[jx]][pick[jx]].comp if jx is not None and j > jx else None
         for n, k in enumerate(spools[idx[j]]):
             if oi is not None and (ci := interfaces(k.comp)) and not (ci & oi):
+                continue
+            if eps is not None and not fits_eps(k, eps):
                 continue
             pick.append(n)
             rec(j + 1, mass + (k.mass_kg or 0.0), vol + (k.volume_m3 or 0.0), score + k.completeness, pick, hsum + (k.height_mm or 0.0))
@@ -419,7 +514,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     greedy = [pools[i][0] for i in idx]
     g_mass = sum((k.mass_kg or 0.0) for k in greedy)
     g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy):
+    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy):
         chosen = greedy
     else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
         rec(0, 0.0, 0.0, 0.0, [])
