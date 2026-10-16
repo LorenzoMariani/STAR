@@ -21,7 +21,10 @@ Requisiti verificati con i dati pubblicati:
   * precisione di puntamento pubblicata dell'unita' ADCS; tre assi (escluse le unita' a ruota singola "Y-Momentum");
   * banda della radio e dell'antenna; delta-v del propulsore (impulso totale / somma delle masse pubblicate); massa massima del satellite;
   * pannello solare dispiegabile se i requisiti lo chiedono (nome del prodotto); la faccia del pannello segue sempre la classe
-    (selector.CLASS_PANEL_FACES).
+    (selector.CLASS_PANEL_FACES);
+  * batteria: con END-004 nella stessa run, energia che la batteria da' in un'orbita (la scarica peggiore tra i modi volati, con il
+    margine di END-004) diviso la profondita' di scarica massima dei requisiti (o della batteria, se pubblicata): capacita' minima. Se
+    la batteria integrata in un EPS basta, il progetto senza batteria separata e' preferito a parita' di classe (un componente in meno).
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -288,6 +291,34 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         sp.checks.append(Check("deployable", sp.slot.id, hit[0], "deployable solar panel",
                                lambda c: "deployable" in str(c.raw.get("name", "")).lower(),
                                lambda c: "deployable" if "deployable" in str(c.raw.get("name", "")).lower() else "body-mounted"))
+    # batteria: energia che deve dare in un'orbita (END-004 della stessa run, con il suo margine) e profondita' di scarica massima dei
+    # requisiti: capacita' x min(DoD dei requisiti, DoD massima pubblicata) >= energia per orbita
+    dod = None
+    if (hit := _find(reqs, rf"depth of discharge[^.\d]{{0,40}}?{NUM}\s*(?:%|percent|per cent)")):
+        dod = {"fraction": float(hit[1].group(1)) / 100.0, "req": hit[0]}
+    battery = None
+    e4 = ctx.get("end004") or None
+    if e4:
+        cap4 = (e4.get("orbit") or {}).get("batteryCapacityWh") or ((e4.get("input_config") or {}).get("battery") or {}).get("capacity_Wh")
+        modes = [m for m in e4.get("mode_summaries") or [] if (m.get("orbits_per_day") or 0) > 0] or list(e4.get("mode_summaries") or [])
+        vals = [(float(m["orbital_DoD"]) * float(cap4), str(m.get("mode") or m.get("mode_key"))) for m in modes
+                if isinstance(m.get("orbital_DoD"), (int, float)) and cap4]
+        if vals:
+            e_wh, mode = max(vals)
+            limit = dod["fraction"] if dod else 1.0
+            battery = {"energy_wh": e_wh, "mode": mode, "dod": limit, "need_wh": e_wh / limit, "req": dod["req"] if dod else None,
+                       "why": f"END-004 of this run: the battery gives up to {e_wh:.2f} Wh in an orbit ({mode}, END-004 subsystem powers, "
+                              f"duty cycles and margin)" + (f"; depth of discharge <= {100 * limit:g}% ({dod['req'].id})" if dod else "")}
+            bat = needs["battery"]
+            bat.checks.append(Check("battery", bat.slot.id, battery["req"], f"capacity >= {battery['need_wh']:.1f} Wh",
+                                    lambda c, b=battery: None if not c.spec("capacity_wh") else
+                                    float(c.spec("capacity_wh")) * min(b["dod"], float(c.spec("max_dod") or 1.0)) >= b["energy_wh"] - 1e-9,
+                                    lambda c: None if not c.spec("capacity_wh") else f"{c.spec('capacity_wh'):g} Wh"))
+    elif dod:
+        bat = needs["battery"]
+        bat.checks.append(Check("battery", bat.slot.id, dod["req"], f"depth of discharge <= {100 * dod['fraction']:g}%", status="not_verifiable",
+                                message=f"{dod['req'].id}: the battery capacity is not verifiable: the energy per orbit comes from END-004 Power Budget, "
+                                        "which is not in this run."))
     if dv is not None:
         needs["propulsion"].checks.append(Check("dv", "propulsion", dv["req"], f"delta-v >= {dv['dv_m_s']:.1f} m/s",
                                                 lambda c: None if total_impulse_ns(c) is None else True,
@@ -302,7 +333,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
 
     order = {sid: n for n, (sid, _, _) in enumerate(SUBSYSTEMS)}
     ordered = sorted(needs.values(), key=lambda nd: (order[nd.slot.subsystem], nd.slot.id))
-    return {"reqs": reqs, "needs": ordered, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "notes": notes}
+    return {"reqs": reqs, "needs": ordered, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery, "notes": notes}
 
 
 # --------------------------------------------------------------------------- componenti ammessi per posto
@@ -366,27 +397,45 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     mass_limit = a["mass_limit"]["kg"] if a["mass_limit"] else None
     classes = [forced_class_u] if forced_class_u else sorted(CLASSES)
 
-    def search(dv_x, ml_x):
+    # batteria: con il fabbisogno di END-004 si prova anche il progetto senza batteria separata, con un EPS la cui batteria integrata basta
+    # (un componente in meno: preferito a parita' di classe)
+    bat = a["battery"]
+    variants: list[tuple[str, list[Slot]]] = [("separate", slots)]
+    eps_wh: dict[str, float] = {}
+    if bat:
+        eps_wh = {c.id: float(c.spec("integrated_battery_wh")) for c in catalog
+                  if subsystem_of(c) == "eps" and c.spec("integrated_battery_wh") and float(c.spec("integrated_battery_wh")) * bat["dod"] >= bat["energy_wh"] - 1e-9}
+        if eps_wh:
+            ok_eps = frozenset(eps_wh)
+            variants.insert(0, ("eps", [Slot(s.id, s.subsystem, s.label, ok_eps if s.allowed is None else s.allowed & ok_eps) if s.subsystem == "eps" else s
+                                        for s in slots if s.subsystem != "battery"]))
+
+    def search(slots_x, dv_x, ml_x):
         log, found = [], None
         for u in classes:
-            sel = select(catalog, u, time_budget_s, slots=slots, dv_m_s=dv_x, mass_limit_kg=ml_x)
+            sel = select(catalog, u, time_budget_s, slots=slots_x, dv_m_s=dv_x, mass_limit_kg=ml_x)
             fit = check_fit(sel)
             ok = sel.within_limits and all(r.selected for r in sel.subsystems) and fit["state"] in ACCEPTED_FIT
-            log.append({"class_u": u, "ok": ok, "why": "fits" if ok else _class_reason(sel, fit, dv_x, catalog, slots, ml_x),
+            log.append({"class_u": u, "ok": ok, "why": "fits" if ok else _class_reason(sel, fit, dv_x, catalog, slots_x, ml_x),
                         "mass_kg": round(sel.mass_kg, 3), "volume_m3": sel.volume_m3, "fit": fit["state"]})
             if ok:
                 found = (u, sel)
                 break
         return found, log
 
-    found, log = search(dv, mass_limit)
+    tried = [(n, name, sl, *search(sl, dv, mass_limit)) for n, (name, sl) in enumerate(variants)]
+    good = [t for t in tried if t[3] is not None]
+    if good:
+        _, battery_variant, slots, found, log = min(good, key=lambda t: (t[3][0], t[0]))    # classe piu' piccola, poi meno componenti
+    else:
+        _, battery_variant, slots, found, log = tried[-1]                                     # il progetto con la batteria separata
     relaxed: list[str] = []
     if found is None and dv:
-        alt_found, _ = search(None, mass_limit)
+        alt_found, _ = search(slots, None, mass_limit)
         if alt_found:
             found, relaxed = alt_found, ["dv"]
     if found is None and mass_limit:
-        alt_found, _ = search(dv if "dv" not in relaxed else None, None)
+        alt_found, _ = search(slots, dv if "dv" not in relaxed else None, None)
         if alt_found:
             found, relaxed = alt_found, relaxed + ["mass"]
     if found is None:       # nemmeno la classe piu' grande li porta: si mostra quella, con il motivo
@@ -407,6 +456,18 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             ck.status = "not_met"
             if ck not in unmet:
                 unmet.append(ck)
+    eps_sel = next((r.selected for r in sel.subsystems if r.subsystem == "eps" and r.selected), None)
+    bat_info = None
+    if bat:
+        ck = next(c for c in checks if c.key == "battery")
+        bat_info = {"energy_wh": bat["energy_wh"], "mode": bat["mode"], "dod": bat["dod"], "need_wh": bat["need_wh"], "why": bat["why"],
+                    "requirement": bat["req"].as_dict() if bat["req"] else None, "variant": battery_variant}
+        if battery_variant == "eps" and eps_sel is not None:
+            wh = eps_wh.get(eps_sel.comp.id)
+            bat_info["integrated_wh"] = wh
+            ck.what = f"battery capacity >= {bat['need_wh']:.1f} Wh (battery integrated in the EPS)"
+            ck.status, ck.message = "met", ""
+            unmet = [u for u in unmet if u is not ck]
     if a["mass_limit"]:
         ml = a["mass_limit"]
         ck = Check("mass", None, ml["req"], f"satellite mass <= {ml['kg']:g} kg")
@@ -449,15 +510,24 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                 met = dv_info["given_m_s"] >= dv - 1e-9
                 val = f"{dv_info['given_m_s']:.1f} m/s ({val})"
             rows.append({"requirement": ck.req.id if ck.req else None, "what": ck.what, "value": val, "met": met})
-        per_slot[r.id] = {"why": nd.why, "source": nd.source, "requirement": nd.req.as_dict() if nd.req else None, "checks": rows}
+        if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:
+            rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
+                         "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
+        why = nd.why
+        if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:
+            why = f"{nd.why}; its integrated battery is the satellite battery"
+        per_slot[r.id] = {"why": why, "source": nd.source, "requirement": nd.req.as_dict() if nd.req else None, "checks": rows}
 
     # sottosistemi non richiesti: miglior componente che entra nella classe e se starebbe insieme al progetto
-    needed = {nd.slot.subsystem for nd in needs}
+    needed = {s.subsystem for s in slots}
     extras = []
     for sid, _, label in SUBSYSTEMS:
         if sid in needed:
             continue
-        if sid in ADCS_PARTS and "adcs" in needed:
+        if sid == "battery" and bat_info and bat_info.get("integrated_wh") is not None:
+            reason = (f"the battery integrated in the EPS ({bat_info['integrated_wh']:g} Wh) covers the {bat['need_wh']:.1f} Wh the mission needs "
+                      f"({bat['energy_wh']:.2f} Wh per orbit from END-004" + (f", depth of discharge <= {100 * bat['dod']:g}%)" if bat["req"] else ")"))
+        elif sid in ADCS_PARTS and "adcs" in needed:
             reason = "contained in the integrated ADCS unit of the design (the catalogue's ADCS units include their sensors and actuators)"
         elif sid in ADCS_PARTS:
             reason = "no requirement asks for attitude control"
@@ -488,6 +558,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         "relaxed": relaxed,
         "altitude": None if not alt else {"min_km": alt["min_km"], "max_km": alt["max_km"], "source": alt["source"]},
         "dv": dv_info,
+        "battery": bat_info,
         "mass_limit": None if not a["mass_limit"] else {"kg": a["mass_limit"]["kg"], "requirement": a["mass_limit"]["req"].as_dict()},
         "requirements": [{"requirement": ck.req.as_dict() if ck.req else None, "what": ck.what, "slot": ck.slot, "status": ck.status,
                           "message": ck.message} for ck in checks],

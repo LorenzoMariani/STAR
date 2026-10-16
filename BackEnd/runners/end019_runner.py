@@ -77,8 +77,9 @@ def _approved_inputs(items: list[dict[str, Any]], defaults_only: bool | None = N
 
 
 def mission_context(modules_output: Path | None) -> dict[str, Any]:
-    """Products of the same run that END-019 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers)
-    and the END-016 space-safety summary (disposal delta-v -> propulsion)."""
+    """Products of the same run that END-019 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers),
+    the END-004 power budget (energy the battery gives in an orbit -> battery capacity) and the END-016 space-safety summary
+    (disposal delta-v -> propulsion)."""
     ctx: dict[str, Any] = {}
     if not modules_output:
         return ctx
@@ -92,12 +93,13 @@ def mission_context(modules_output: Path | None) -> dict[str, Any]:
     if alts:
         ctx["altitude_km"] = [min(alts), max(alts)]
         ctx["altitude_source"] = f"END-001 of this run ({len(alts)} satellite orbits)"
-    e16 = modules_output / "END-016" / "output_collision_avoidance" / "space_safety_summary.json"
-    if e16.is_file():
-        try:
-            ctx["end016"] = json.loads(e16.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            pass
+    for key, path in (("end004", modules_output / "END-004" / "output_power_budget" / "power_budget_summary.json"),
+                      ("end016", modules_output / "END-016" / "output_collision_avoidance" / "space_safety_summary.json")):
+        if path.is_file():
+            try:
+                ctx[key] = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                pass
     return ctx
 
 
@@ -151,7 +153,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     if forced:
         notes.append(f"CubeSat class chosen by the user: {forced}U")
     context = mission_context(Path(output_dir).resolve().parent)
-    used = [k for k in ("altitude_km", "end016") if k in context]
+    used = [k for k in ("altitude_km", "end004", "end016") if k in context]
     log("EXECUTION", f"END-019 mission design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
 
     service = SelectorService()

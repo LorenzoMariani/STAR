@@ -27,6 +27,16 @@ END016 = {"kpis": {"disposal_dv_m_s_5y_rule_mean_activity": 58.0, "disposal_dv_m
           "config": {"mission_lifetime_years": 3}}
 
 
+REQ_DOD = {"id": "REQ-018", "text": "The daily energy balance shall not be negative and the battery depth of discharge shall not exceed 30 percent in any orbit."}
+
+
+def end004(per_orbit_wh, capacity_wh=19.0):
+    """Riepilogo END-004 minimo: un modo volato con la scarica per orbita data (orbital_DoD = energia / capacita' usata da END-004)."""
+    return {"orbit": {"batteryCapacityWh": capacity_wh},
+            "mode_summaries": [{"mode": "Payload mode", "orbits_per_day": 8, "orbital_DoD": per_orbit_wh / capacity_wh},
+                               {"mode": "TX mode S BAND", "orbits_per_day": 0, "orbital_DoD": 10 * per_orbit_wh / capacity_wh}]}
+
+
 def slots_of(sel):
     return {r.id: r for r in sel.subsystems}
 
@@ -84,6 +94,29 @@ class NeedsTest(unittest.TestCase):
         self.assertIn("deployable", panel.raw["name"].lower())
         self.assertEqual(panel.raw["specs"]["face"], f"{sel.cubesat.units}U" if sel.cubesat.units != 12 else "6U")
         self.assertEqual(next(r for r in m["requirements"] if r["what"] == "deployable solar panel")["status"], "met")
+
+    def test_small_energy_need_uses_the_battery_of_the_eps(self):
+        sel, m = design(CATALOG, V6 + [REQ_DOD], {"altitude_km": [641.6, 641.6], "end004": end004(1.29)})
+        self.assertNotIn("battery", {r.subsystem for r in sel.subsystems})
+        eps = slots_of(sel)["eps"].selected.comp
+        self.assertGreaterEqual(eps.spec("integrated_battery_wh") * 0.30, 1.29)
+        self.assertAlmostEqual(m["battery"]["need_wh"], 1.29 / 0.30)
+        self.assertEqual(m["battery"]["mode"], "Payload mode")          # only the modes the mission flies
+        self.assertIn("integrated in the EPS", next(e for e in m["extras"] if e["id"] == "battery")["why_not"])
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("battery capacity"))["status"], "met")
+
+    def test_large_energy_need_selects_a_battery_big_enough(self):
+        need_per_orbit = 45.0                       # 150 Wh at 30 % depth of discharge: no EPS battery, only the 198 Wh pack
+        sel, m = design(CATALOG, V6 + [REQ_DOD], {"altitude_km": [641.6, 641.6], "end004": end004(need_per_orbit)})
+        batt = slots_of(sel)["battery"].selected.comp
+        self.assertGreaterEqual(batt.spec("capacity_wh") * 0.30, need_per_orbit)
+        row = next(c for c in m["subsystems"]["battery"]["checks"] if c["what"].startswith("capacity"))
+        self.assertTrue(row["met"])
+
+    def test_battery_without_end004_is_not_verifiable(self):
+        sel, m = design(CATALOG, V6 + [REQ_DOD])
+        self.assertIn("battery", {r.subsystem for r in sel.subsystems})
+        self.assertEqual(next(r for r in m["requirements"] if r["requirement"] and r["requirement"]["id"] == "REQ-018")["status"], "not_verifiable")
 
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])

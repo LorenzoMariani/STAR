@@ -65,6 +65,7 @@ activation_rules:
   required_upstream_modules: []
   optional_upstream_modules:
     - END-001
+    - END-004
     - END-016
 planning_guidance: >
   Select END-019 when the mission request asks to design or size a small satellite or CubeSat, to choose its components or
@@ -111,12 +112,14 @@ execution:
   upstream_dependencies: []
   optional_upstream_dependencies:
   - END-001
+  - END-004
   - END-016
   downstream_dependencies: []
   estimated_runtime: 2
 interface_notes: >
   The Python runner reads the module input JSON written by the orchestrator (requirements and resolved inputs) and, when they
-  are in the same run, the END-001 orbits (altitude for the GSD and swath of the imagers) and the END-016 space-safety summary
+  are in the same run, the END-001 orbits (altitude for the GSD and swath of the imagers), the END-004 power budget (energy per orbit
+  for the battery capacity) and the END-016 space-safety summary
   (disposal delta-v). It designs the CubeSat for the mission (star_selector.mission: subsystems the mission needs, smallest
   class, requirements checked, other subsystems apart) and writes the products under modules_output/END-019/output_component_selector
   and the frontend files under modules_output/END-019/results_component_selector. The runner needs the star_component_selector
