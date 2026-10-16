@@ -97,6 +97,28 @@ def adcs_tier(c: Component, units: int) -> int:
     return 0 if lo <= units <= hi else (1 if lo > units else 2)
 
 
+# Regole dichiarate per i propulsori (2026-10-16):
+#  * la classe minima che il fornitore dichiara (specs.min_form_factor_u) va rispettata;
+#  * con electric_power_check un propulsore elettrico (acceso per ore o giorni) deve funzionare con la potenza del pannello solare del
+#    progetto: potenza in accensione pubblicata <= potenza di picco pubblicata del pannello. I propulsori chimici e a gas fanno accensioni
+#    brevi alimentate dalla batteria e non hanno questo limite.
+ELECTRIC_PROPULSION = ("gridded_ion", "feep", "pulsed_plasma", "hall", "electrospray")
+
+
+def is_electric(c: Component) -> bool:
+    return c.category == "propulsion" and str(c.spec("propulsion_type")) in ELECTRIC_PROPULSION
+
+
+def firing_power_w(c: Component) -> float | None:
+    v = c.spec("power_w_firing") if c.category == "propulsion" else None
+    return float(v) if v is not None else None
+
+
+def min_class_ok(c: Component, units: int) -> bool:
+    v = c.raw["specs"].get("min_form_factor_u")
+    return v is None or float(v) <= units + 1e-9
+
+
 def panel_face(c: Component) -> tuple[float, float] | None:
     """Impronta (mm) di un pannello solare senza tutte e tre le quote: le due quote pubblicate se ci sono (lo spessore manca), altrimenti la faccia dichiarata."""
     if c.category != "solar_panel":
@@ -198,11 +220,12 @@ def _order(cands: list[Candidate]) -> list[Candidate]:
     return sorted(cands, key=lambda k: (-k.completeness, k.mass_kg if k.mass_kg is not None else 1e9, k.comp.id))
 
 
-def _pareto(pool: list[Candidate], with_impulse: bool = False) -> list[Candidate]:
+def _pareto(pool: list[Candidate], extra=None) -> list[Candidate]:
     """Per la ricerca esatta: toglie i candidati battuti da un altro con completezza >= e massa, volume e altezza <= (non servono mai per l'ottimo).
-    Con il vincolo di delta-v un propulsore e' battuto solo da uno che ha anche l'impulso totale >=."""
+    extra(k) aggiunge le grandezze dei vincoli attivi (piu' piccolo = meglio): con il delta-v l'impulso totale (cambiato di segno), con la
+    potenza dei propulsori elettrici la potenza in accensione del propulsore e la potenza di picco del pannello (cambiata di segno)."""
     def key(k):
-        return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0) + ((-(total_impulse_ns(k.comp) or 0.0),) if with_impulse else ())
+        return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0) + (tuple(extra(k)) if extra else ())
     keep: list[Candidate] = []
     for a in pool:      # il pool e' ordinato per completezza decrescente, poi massa
         if not any(b.completeness >= a.completeness - 1e-12 and all(x <= y + 1e-15 for x, y in zip(key(b), key(a))) for b in keep):
@@ -214,11 +237,12 @@ CATEGORY_OF = {sid: cat for sid, cat, _ in SUBSYSTEMS}
 
 
 def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
-           dv_m_s: float | None = None, mass_limit_kg: float | None = None) -> Selection:
+           dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False) -> Selection:
     """Selezione per la classe `units`. Senza parametri facoltativi: un posto per ciascuno dei 17 sottosistemi, tutti i componenti, limiti CDS.
     slots: i posti del progetto (mission.py: solo i sottosistemi che la missione chiede, una radio per banda, i componenti che soddisfano i requisiti);
     dv_m_s: il propulsore scelto deve dare questo delta-v al satellite intero (impulso totale pubblicato / somma delle masse pubblicate);
-    mass_limit_kg: massa massima chiesta dalla missione, se sotto il limite CDS della classe."""
+    mass_limit_kg: massa massima chiesta dalla missione, se sotto il limite CDS della classe;
+    electric_power_check: un propulsore elettrico deve funzionare con la potenza di picco del pannello solare scelto (mission.py lo attiva)."""
     if units not in CLASSES:
         raise ValueError(f"unsupported CubeSat class {units}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
     cls = CLASSES[units]
@@ -236,6 +260,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             fitting = [c for c in allowed if c.spec("form_factor_u") == units]
         else:
             fitting = [c for c in allowed if _admissible(c, sid, cls)]
+        if sid == "propulsion":
+            fitting = [c for c in fitting if min_class_ok(c, units)]    # classe minima dichiarata dal fornitore
         if dv and sid == "propulsion":
             fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
         if sid == "solar_panel":
@@ -269,7 +295,26 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     # scelta: massimizza la completezza totale (poi minimizza la massa) con somma delle masse e dei volumi noti entro i limiti
     idx = [i for i, p in enumerate(pools) if p]
     prop = [j for j, i in enumerate(idx) if results[i].subsystem == "propulsion"] if dv else []
-    spools = {i: _pareto(pools[i], with_impulse=bool(prop) and results[i].subsystem == "propulsion") for i in idx}
+    jp = next((j for j, i in enumerate(idx) if results[i].subsystem == "propulsion"), None) if electric_power_check else None
+    js = next((j for j, i in enumerate(idx) if results[i].subsystem == "solar_panel"), None) if electric_power_check else None
+
+    def fire_key(k: Candidate) -> float:
+        if not is_electric(k.comp):
+            return 0.0
+        p = firing_power_w(k.comp)
+        return p if p is not None else 1e9
+
+    def extra_of(i: int):
+        sid = results[i].subsystem
+        parts = []
+        if sid == "propulsion" and prop:
+            parts.append(lambda k: -(total_impulse_ns(k.comp) or 0.0))
+        if sid == "propulsion" and jp is not None:
+            parts.append(fire_key)
+        if sid == "solar_panel" and jp is not None:
+            parts.append(lambda k: -float(k.comp.spec("peak_power_w") or 0.0))
+        return (lambda k: [f(k) for f in parts]) if parts else None
+    spools = {i: _pareto(pools[i], extra_of(i)) for i in idx}
     min_mass = [min((k.mass_kg or 0.0) for k in spools[i]) for i in idx]
     min_vol = [min((k.volume_m3 or 0.0) for k in spools[i]) for i in idx]
     max_score = [max(k.completeness for k in spools[i]) for i in idx]
@@ -286,6 +331,14 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     def dv_ok(cands, mass: float) -> bool:
         """Il propulsore da' il delta-v richiesto al satellite intero: impulso totale / massa (somma delle masse pubblicate dei componenti scelti)."""
         return all(mass > 0 and (total_impulse_ns(cands[j].comp) or 0.0) / mass >= dv - 1e-9 for j in prop)
+
+    def power_ok(cands) -> bool:
+        """Un propulsore elettrico funziona con la potenza di picco pubblicata del pannello solare scelto."""
+        if jp is None or not is_electric(cands[jp].comp):
+            return True
+        fire = firing_power_w(cands[jp].comp)
+        peak = cands[js].comp.spec("peak_power_w") if js is not None else None
+        return fire is not None and peak is not None and fire <= float(peak) + 1e-9
     suffix_score = [sum(max_score[j:]) for j in range(len(idx) + 1)]
     best: dict = {"key": None, "pick": None}
     deadline = time.monotonic() + time_budget_s
@@ -302,7 +355,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if j == len(idx):
             cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
-            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)):
+            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands):
                 return
             key = (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
@@ -319,7 +372,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     greedy = [pools[i][0] for i in idx]
     g_mass = sum((k.mass_kg or 0.0) for k in greedy)
     g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)):
+    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy):
         chosen = greedy
     else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
         rec(0, 0.0, 0.0, 0.0, [])

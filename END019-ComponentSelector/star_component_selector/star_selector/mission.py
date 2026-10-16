@@ -27,7 +27,10 @@ Requisiti verificati con i dati pubblicati:
     la batteria integrata in un EPS basta, il progetto senza batteria separata e' preferito a parita' di classe (un componente in meno);
   * radio: quella della banda piu' bassa riceve i telecomandi (ricevitore pubblicato); con un imager quella della banda piu' alta scarica
     le immagini: velocita' >= quella dei requisiti, altrimenti la piu' alta pubblicata tra le radio della sola banda che entra nel progetto;
-    una radio che comprende la sua antenna ("+ ANT..." nel nome del prodotto) non ha l'antenna separata della sua banda.
+    una radio che comprende la sua antenna ("+ ANT..." nel nome del prodotto) non ha l'antenna separata della sua banda;
+  * propulsore: delta-v (impulso totale / massa), classe minima dichiarata dal fornitore, un propulsore elettrico deve funzionare con la
+    potenza di picco del pannello solare scelto (selector, electric_power_check), propellente non tossico se richiesto; se nessuno da' il
+    delta-v, quello con l'impulso piu' alto che entra nella classe scelta.
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -41,7 +44,14 @@ from typing import Any, Callable
 from .fit import check_fit
 from .models import Component
 from .rows import subsystem_of
-from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, select, total_impulse_ns
+from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, firing_power_w, is_electric, total_impulse_ns
+from .selector import select as _select
+
+
+def select(*args: Any, **kwargs: Any) -> Selection:
+    """La selezione del progetto per la missione: un propulsore elettrico deve funzionare con la potenza del pannello solare scelto."""
+    kwargs.setdefault("electric_power_check", True)
+    return _select(*args, **kwargs)
 
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
              "fifteen": 15, "twenty": 20, "twenty-five": 25, "thirty": 30}
@@ -345,6 +355,10 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         bat.checks.append(Check("battery", bat.slot.id, dod["req"], f"depth of discharge <= {100 * dod['fraction']:g}%", status="not_verifiable",
                                 message=f"{dod['req'].id}: the battery capacity is not verifiable: the energy per orbit comes from END-004 Power Budget, "
                                         "which is not in this run."))
+    if "propulsion" in needs and (hit := _find(reqs, r"\b(non-?toxic|green) propellants?|\bhydrazine[- ]free\b|\bno hydrazine\b|\bwithout hydrazine\b")):
+        needs["propulsion"].checks.append(Check("green", "propulsion", hit[0], "non-toxic propellant (no hydrazine)",
+                                                lambda c: None if c.spec("propellant") is None else "hydrazine" not in str(c.spec("propellant")).lower(),
+                                                lambda c: c.spec("propellant")))
     if dv is not None:
         needs["propulsion"].checks.append(Check("dv", "propulsion", dv["req"], f"delta-v >= {dv['dv_m_s']:.1f} m/s",
                                                 lambda c: None if total_impulse_ns(c) is None else True,
@@ -475,6 +489,19 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     def ok_sel(s: Selection) -> bool:
         return s.within_limits and all(r.selected for r in s.subsystems) and check_fit(s)["state"] in ACCEPTED_FIT
 
+    # delta-v che nessun propulsore da': nella classe scelta il propulsore con l'impulso totale piu' alto che entra (quello che piu' si avvicina)
+    if "dv" in relaxed:
+        psl = next((s for s in slots if s.subsystem == "propulsion"), None)
+        if psl is not None:
+            cands = [c for c in catalog if subsystem_of(c) == "propulsion" and (psl.allowed is None or c.id in psl.allowed) and total_impulse_ns(c)]
+            for imp in sorted({total_impulse_ns(c) for c in cands}, reverse=True):
+                keep = frozenset(c.id for c in cands if total_impulse_ns(c) >= imp - 1e-9)
+                trial_slots = [Slot(s.id, s.subsystem, s.label, keep) if s.id == psl.id else s for s in slots]
+                trial = select(catalog, units, time_budget_s, slots=trial_slots, mass_limit_kg=ml_eff)
+                if ok_sel(trial):
+                    sel, slots = trial, trial_slots
+                    break
+
     # radio delle immagini: senza una velocita' scritta nei requisiti, la piu' alta pubblicata che entra nel progetto (nella classe scelta)
     radio_info = None
     dr = a["data_radio"]
@@ -596,6 +623,18 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "propulsion" and r.selected:      # selector: propulsori elettrici alimentati dal pannello solare
+            thr = r.selected.comp
+            if is_electric(thr):
+                panel = next((x.selected.comp for x in sel.subsystems if x.subsystem == "solar_panel" and x.selected), None)
+                peak = panel.spec("peak_power_w") if panel else None
+                fire = firing_power_w(thr)
+                rows.append({"requirement": None, "what": "electric thruster: firing power <= peak power of the solar panel",
+                             "value": f"{fire:g} W of {float(peak):g} W" if fire is not None and peak is not None else None,
+                             "met": fire is not None and peak is not None and fire <= float(peak) + 1e-9})
+                why += "; electric thruster, powered by the solar panel"
+            else:
+                why += f"; {str(thr.spec('propulsion_type') or 'chemical').replace('_', ' ')} thruster: short burns powered by the battery"
         if r.subsystem == "adcs" and r.selected:      # selector.adcs_tier: l'unita' dichiarata per la classe del progetto
             rng = r.selected.comp.spec("form_factor_range_u")
             why += ("; declared by its vendor for " + (f"{rng[0]:g}U" if rng[0] == rng[1] else f"{rng[0]:g}U-{rng[1]:g}U") + " CubeSats"

@@ -165,6 +165,41 @@ class NeedsTest(unittest.TestCase):
         self.assertEqual(sel.cubesat.units, 1)
         self.assertIn("none is declared for a 1U", m["subsystems"]["adcs"]["why"])
 
+    def test_thruster_the_solar_panel_can_power(self):
+        from star_selector.selector import firing_power_w, is_electric
+        sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        thr, panel = slots_of(sel)["propulsion"].selected.comp, slots_of(sel)["solar_panel"].selected.comp
+        if is_electric(thr):
+            self.assertLessEqual(firing_power_w(thr), panel.spec("peak_power_w"))
+        self.assertNotEqual(thr.id, "thrustme-npt30-i2-1u")          # 65 W ion thruster on an 18.4 W panel (the choice before 2026-10-16)
+        self.assertGreaterEqual(total_impulse_ns(thr) / sel.mass_kg, 58.0)
+
+    def test_electric_power_check_in_the_selector(self):
+        nano = next(c for c in CATALOG if c.raw["name"].startswith("NANO R3"))                     # FEEP, 45 W firing
+        panel = BY_ID["endurosat-solar-6u-deployable-single"]                                      # 38.4 W peak
+        slots = [Slot("solar_panel", "solar_panel", "SOL", frozenset({panel.id})), Slot("propulsion", "propulsion", "PRP", frozenset({nano.id}))]
+        self.assertTrue(select(CATALOG, 6, slots=slots).within_limits)
+        self.assertFalse(select(CATALOG, 6, slots=slots, electric_power_check=True).within_limits)
+
+    def test_vendor_minimum_class_of_the_thruster(self):
+        r = next(r for r in select(CATALOG, 1).subsystems if r.id == "propulsion")
+        self.assertNotIn("aac-pm200", [k.comp.id for k in [r.selected, *r.alternatives] if k])      # declared from 3U
+        r = next(r for r in select(CATALOG, 3).subsystems if r.id == "propulsion")
+        self.assertIn("aac-pm200", [k.comp.id for k in [r.selected, *r.alternatives] if k])
+
+    def test_green_propellant_when_asked(self):
+        sel, m = design(CATALOG, V6 + [{"id": "REQ-098", "text": "The propulsion system shall use a non-toxic propellant."}],
+                        {"altitude_km": [641.6, 641.6], "end016": END016})
+        self.assertNotIn("hydrazine", str(slots_of(sel)["propulsion"].selected.comp.spec("propellant")).lower())
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("non-toxic"))["status"], "met")
+
+    def test_unreachable_delta_v_takes_the_closest_thruster(self):
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall raise its orbit with a delta-v of 1000 m/s and downlink through UHF."}])
+        thr = slots_of(sel)["propulsion"].selected.comp
+        self.assertGreater(total_impulse_ns(thr), 40.0)                # not the smallest one (NanoProp CGP3, 40 N s)
+        self.assertIn("dv", m["relaxed"])
+        self.assertTrue(any("no thruster in the database gives 1000.0 m/s" in u for u in m["unmet"]))
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})
