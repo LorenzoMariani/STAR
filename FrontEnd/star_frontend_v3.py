@@ -5725,7 +5725,6 @@ def build_results_frontend_html(web_dir: Path) -> str:
     shell = shell_path.read_text(encoding="utf-8")
 
     frame_files = {
-        "__SRCDOC_PLACEHOLDER_FRAME_POWER__": "end004_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_POWERVIZ__": "end004_power_insights.html",
         "__SRCDOC_PLACEHOLDER_FRAME_SYNTHETIC__": "end007_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__": "end010_results.html",

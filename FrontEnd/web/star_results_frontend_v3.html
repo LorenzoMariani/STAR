@@ -239,8 +239,7 @@ code{color:var(--accent-2)}
         <input id="star-root-folder-input" class="star-hidden-file-input" type="file" webkitdirectory directory multiple hidden />
         <button class="tab-button active" id="tab-constellation" data-tab="constellation" type="button"><span class="tab-code">END001</span><span class="tab-title">Constellation Optimization</span></button>
         <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END0003</span><span class="tab-title">Attitude Propagation</span></button>
-        <button class="tab-button" id="tab-power" data-tab="power" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Budget</span></button>
-        <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Insights</span></button>
+        <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Budget</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
@@ -255,59 +254,6 @@ code{color:var(--accent-2)}
       </div>
     </div>
     <div class="frame-wrap">
-      <iframe id="frame-power" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
-&lt;head&gt;
-&lt;meta charset=&quot;UTF-8&quot; /&gt;
-&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
-&lt;title&gt;STAR — Power Budget&lt;/title&gt;
-&lt;style&gt;
-@import url(&#x27;https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap&#x27;);
-:root{--bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);--text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;--danger:#ff5c7a;--success:#61f6a8;--plot-bg:#090a0d;--shadow:0 24px 80px rgba(0,0,0,.32);color-scheme:dark}
-:root[data-theme=&quot;light&quot;]{--bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);--text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;--danger:#bd2450;--success:#047857;--plot-bg:#fff;--shadow:0 18px 60px rgba(31,41,55,.12);color-scheme:light}
-*{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:&#x27;Space Mono&#x27;,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
-button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:9px 12px;cursor:pointer}button:hover{border-color:var(--accent-2)}.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}.hidden-file-input{display:none}.app-shell{width:100%;padding:0}.dashboard-grid{display:grid;grid-template-columns:minmax(340px,430px) minmax(0,1fr);gap:18px;align-items:start}.panel,.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}.sidebar{position:sticky;top:0;max-height:calc(100vh - 48px);overflow-y:auto}.panel-header,.card-header{padding:16px 18px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-header h2,.card h3,.sidebar-section h2{margin:0;color:var(--text-strong);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:13px}.sidebar-section{padding:18px}.sidebar-section+.sidebar-section{border-top:1px solid var(--border)}.main-content{display:flex;flex-direction:column;gap:18px;min-width:0}.data-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--border-soft)}.data-row:last-child{border-bottom:0}.data-label{color:var(--muted);font-size:12px}.data-value{color:var(--accent);font-weight:700;text-align:right;overflow-wrap:anywhere}.status-dot{width:11px;height:11px;margin-top:4px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}.file-status-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--border-soft)}.file-title{color:var(--text-strong);font-weight:700}.file-path{color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:3px}.file-row-button{padding:7px 10px;border-radius:10px;font-size:11px;white-space:nowrap}.status-message{color:var(--muted);border:1px dashed var(--border);border-radius:14px;background:var(--panel-muted);padding:12px;font-size:11px}.table-wrap{overflow:auto;max-height:520px;border:1px solid var(--border-soft);border-radius:16px}table{border-collapse:collapse;width:100%;min-width:920px;font-size:12px}th,td{border-bottom:1px solid var(--border-soft);border-right:1px solid var(--border-soft);padding:8px 10px;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.035em;font-size:10px;z-index:1}td.numeric{text-align:right;color:var(--accent)}td.blank{color:var(--muted)}.sheet-tabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--border);background:var(--panel-strong)}.sheet-tab{font-size:11px}.sheet-tab.active{background:var(--accent-2);color:#07100d;border-color:transparent;font-weight:700}.sheet-panel{display:none}.sheet-panel.active{display:block}.figure-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;padding:14px}.figure-card{border:1px solid var(--border-soft);border-radius:16px;background:var(--panel-muted);padding:10px}.figure-card img{display:block;width:100%;height:auto;border-radius:12px;background:#fff}.empty{color:var(--muted);text-align:center;padding:28px}.small{font-size:11px;color:var(--muted)}@media(max-width:1280px){.dashboard-grid{grid-template-columns:1fr}.sidebar{position:static;max-height:none}}
-&lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;div class=&quot;app-shell&quot;&gt;
-  &lt;input id=&quot;powerFolderInput&quot; class=&quot;hidden-file-input&quot; type=&quot;file&quot; webkitdirectory directory multiple /&gt;
-  &lt;div class=&quot;dashboard-grid&quot;&gt;
-    &lt;aside class=&quot;panel sidebar&quot;&gt;
-      &lt;div class=&quot;panel-header&quot;&gt;&lt;h2&gt;Power Budget&lt;/h2&gt;&lt;span class=&quot;small&quot; id=&quot;load-status&quot;&gt;Pending&lt;/span&gt;&lt;/div&gt;
-      &lt;div class=&quot;sidebar-section&quot;&gt;&lt;h2&gt;File Access Status&lt;/h2&gt;&lt;div id=&quot;file-access-panel&quot;&gt;&lt;/div&gt;&lt;div class=&quot;status-message&quot; style=&quot;margin-top:14px&quot;&gt;Select the RUN output folder from the main interface, or select the END-004 Power Budget output folder here.&lt;/div&gt;&lt;/div&gt;
-      &lt;div class=&quot;sidebar-section&quot;&gt;&lt;h2&gt;Analysis Summary&lt;/h2&gt;&lt;div id=&quot;summary-panel&quot;&gt;&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;Daily balance&lt;/span&gt;&lt;span class=&quot;data-value&quot; id=&quot;daily-balance&quot;&gt;—&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;Orbit period&lt;/span&gt;&lt;span class=&quot;data-value&quot; id=&quot;period-min&quot;&gt;—&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;Battery capacity&lt;/span&gt;&lt;span class=&quot;data-value&quot; id=&quot;battery-capacity&quot;&gt;—&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;Loaded tables&lt;/span&gt;&lt;span class=&quot;data-value&quot; id=&quot;loaded-tables&quot;&gt;—&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
-      &lt;div class=&quot;sidebar-section&quot;&gt;&lt;h2&gt;Expected RUN Paths&lt;/h2&gt;&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;Products&lt;/span&gt;&lt;span class=&quot;data-value&quot;&gt;modules_output/END-004/output_power_budget&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;Results&lt;/span&gt;&lt;span class=&quot;data-value&quot;&gt;modules_output/END-004/results_power_budget&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
-    &lt;/aside&gt;
-    &lt;main class=&quot;main-content&quot;&gt;
-      &lt;article class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Excel-Equivalent Tables&lt;/h3&gt;&lt;button id=&quot;manual-load&quot; class=&quot;primary-action&quot; type=&quot;button&quot;&gt;Select END-004 Folder&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;sheet-tabs&quot;&gt;&lt;button class=&quot;sheet-tab active&quot; data-sheet=&quot;sheet1&quot; type=&quot;button&quot;&gt;Sheet1&lt;/button&gt;&lt;button class=&quot;sheet-tab&quot; data-sheet=&quot;foglio1&quot; type=&quot;button&quot;&gt;Foglio1&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;sheet1&quot; class=&quot;sheet-panel active&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table id=&quot;sheet1-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No Sheet1 table loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;div id=&quot;foglio1&quot; class=&quot;sheet-panel&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table id=&quot;foglio1-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No Foglio1 table loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;
-      &lt;article class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Diagnostic Figures&lt;/h3&gt;&lt;span class=&quot;small&quot; id=&quot;figure-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;&lt;div id=&quot;figure-grid&quot; class=&quot;figure-grid&quot;&gt;&lt;div class=&quot;empty&quot;&gt;No figures loaded.&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;
-    &lt;/main&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-&lt;script&gt;
-(() =&gt; {
-&#x27;use strict&#x27;;
-const $ = id =&gt; document.getElementById(id);
-const state = { summary:null, sheet1:[], foglio1:[], figures:[], loaded:false, productLabel:&#x27;modules_output/END-004/output_power_budget&#x27;, resultsLabel:&#x27;modules_output/END-004/results_power_budget&#x27; };
-function esc(value){return String(value ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;).replaceAll(&quot;&#x27;&quot;,&#x27;&amp;#039;&#x27;);}
-function isNumeric(value){if(value === null || value === undefined || value === &#x27;&#x27;) return false; return Number.isFinite(Number(String(value).replace(&#x27;,&#x27;, &#x27;.&#x27;)));}
-function parseCSV(text){const rows=[];let row=[], cell=&#x27;&#x27;, q=false;for(let i=0;i&lt;String(text).length;i++){const ch=text[i], nx=text[i+1];if(q){if(ch===&#x27;&quot;&#x27;&amp;&amp;nx===&#x27;&quot;&#x27;){cell+=&#x27;&quot;&#x27;;i++;}else if(ch===&#x27;&quot;&#x27;){q=false;}else{cell+=ch;}}else{if(ch===&#x27;&quot;&#x27;){q=true;}else if(ch===&#x27;,&#x27;){row.push(cell);cell=&#x27;&#x27;;}else if(ch===&#x27;\n&#x27;){row.push(cell);rows.push(row);row=[];cell=&#x27;&#x27;;}else if(ch===&#x27;\r&#x27;){}else{cell+=ch;}}}row.push(cell);if(row.some(v=&gt;String(v).trim()!==&#x27;&#x27;)) rows.push(row);return rows;}
-function renderTable(id, rows){const table=$(id);if(!rows||!rows.length){table.innerHTML=&#x27;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No table data available.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&#x27;;return;}const maxCols=Math.max(...rows.map(r=&gt;r.length));const body=rows.map((r,idx)=&gt;&#x27;&lt;tr&gt;&#x27;+Array.from({length:maxCols},(_,c)=&gt;{const v=r[c]??&#x27;&#x27;;const tag=idx===0?&#x27;th&#x27;:&#x27;td&#x27;;const cls=v===&#x27;&#x27;?&#x27;blank&#x27;:isNumeric(v)?&#x27;numeric&#x27;:&#x27;&#x27;;return `&lt;${tag} class=&quot;${cls}&quot;&gt;${esc(v)}&lt;/${tag}&gt;`;}).join(&#x27;&#x27;)+&#x27;&lt;/tr&gt;&#x27;).join(&#x27;&#x27;);table.innerHTML=&#x27;&lt;tbody&gt;&#x27;+body+&#x27;&lt;/tbody&gt;&#x27;;}
-function extractJsPayload(text){const m=String(text||&#x27;&#x27;).match(/(?:window\.)?powerBudgetData\s*=\s*([\s\S]*?)\s*;?\s*$/);if(!m) return null;return JSON.parse(m[1]);}
-function setSummary(summary){state.summary=summary||state.summary;const s=state.summary||{};const orbit=s.orbit||{};const analysis=s.analysis||{};$(&#x27;daily-balance&#x27;).textContent=Number.isFinite(Number(analysis.daily_balance_Wh))?`${Number(analysis.daily_balance_Wh).toFixed(3)} Wh`:&#x27;—&#x27;;$(&#x27;period-min&#x27;).textContent=Number.isFinite(Number(orbit.periodMin))?`${Number(orbit.periodMin).toFixed(3)} min`:&#x27;—&#x27;;$(&#x27;battery-capacity&#x27;).textContent=Number.isFinite(Number(orbit.batteryCapacityWh))?`${Number(orbit.batteryCapacityWh).toFixed(3)} Wh`:&#x27;—&#x27;;}
-function updateStatus(){const loadedTables=[state.sheet1.length?&#x27;Sheet1&#x27;:null,state.foglio1.length?&#x27;Foglio1&#x27;:null].filter(Boolean);state.loaded=loadedTables.length&gt;0;$(&#x27;load-status&#x27;).textContent=state.loaded?&#x27;Loaded&#x27;:&#x27;Pending&#x27;;$(&#x27;loaded-tables&#x27;).textContent=loadedTables.length?loadedTables.join(&#x27;, &#x27;):&#x27;—&#x27;;$(&#x27;file-access-panel&#x27;).innerHTML=`&lt;div class=&quot;file-status-row&quot;&gt;&lt;span class=&quot;status-dot ${state.sheet1.length?&#x27;loaded&#x27;:&#x27;&#x27;}&quot;&gt;&lt;/span&gt;&lt;div&gt;&lt;div class=&quot;file-title&quot;&gt;Sheet1 table · ${state.sheet1.length?&#x27;Loaded&#x27;:&#x27;Missing&#x27;}&lt;/div&gt;&lt;div class=&quot;file-path&quot;&gt;${esc(state.productLabel)}/power_budget_sheet1.csv&lt;/div&gt;&lt;/div&gt;&lt;button id=&quot;select-folder-button&quot; class=&quot;file-row-button&quot; type=&quot;button&quot;&gt;Select Folder&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;file-status-row&quot;&gt;&lt;span class=&quot;status-dot ${state.foglio1.length?&#x27;loaded&#x27;:&#x27;&#x27;}&quot;&gt;&lt;/span&gt;&lt;div&gt;&lt;div class=&quot;file-title&quot;&gt;Foglio1 table · ${state.foglio1.length?&#x27;Loaded&#x27;:&#x27;Missing&#x27;}&lt;/div&gt;&lt;div class=&quot;file-path&quot;&gt;${esc(state.productLabel)}/power_budget_foglio1.csv&lt;/div&gt;&lt;/div&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;file-status-row&quot;&gt;&lt;span class=&quot;status-dot ${state.summary?&#x27;loaded&#x27;:&#x27;&#x27;}&quot;&gt;&lt;/span&gt;&lt;div&gt;&lt;div class=&quot;file-title&quot;&gt;Summary JSON/JS · ${state.summary?&#x27;Loaded&#x27;:&#x27;Missing&#x27;}&lt;/div&gt;&lt;div class=&quot;file-path&quot;&gt;${esc(state.productLabel)} or ${esc(state.resultsLabel)}&lt;/div&gt;&lt;/div&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;`;const btn=$(&#x27;select-folder-button&#x27;);if(btn) btn.onclick=requestPowerFolder;$(&#x27;figure-count&#x27;).textContent=state.figures.length?`${state.figures.length} figure(s)`:&#x27;No figures&#x27;;}
-async function loadPowerFiles(files, labels={}){const arr=Array.from(files||[]);state.productLabel=labels.product||labels.all||state.productLabel;state.resultsLabel=labels.results||labels.all||state.resultsLabel;const sheet1=arr.find(f=&gt;f.name.toLowerCase()===&#x27;power_budget_sheet1.csv&#x27;);const foglio1=arr.find(f=&gt;f.name.toLowerCase()===&#x27;power_budget_foglio1.csv&#x27;);const summaryJson=arr.find(f=&gt;f.name.toLowerCase()===&#x27;power_budget_summary.json&#x27;);const js=arr.find(f=&gt;f.name.toLowerCase()===&#x27;power_budget_tables.js&#x27;);if(sheet1) state.sheet1=parseCSV(await sheet1.text());if(foglio1) state.foglio1=parseCSV(await foglio1.text());if(summaryJson){try{setSummary(JSON.parse(await summaryJson.text()));}catch(e){console.warn(e);}}if(js){try{setSummary(extractJsPayload(await js.text()));}catch(e){console.warn(e);}}state.figures.forEach(fig=&gt;{try{URL.revokeObjectURL(fig.url)}catch(_){}});state.figures=arr.filter(f=&gt;/\.png$/i.test(f.name)).sort((a,b)=&gt;a.name.localeCompare(b.name,undefined,{numeric:true})).map(f=&gt;({name:f.name,url:URL.createObjectURL(f)}));renderTable(&#x27;sheet1-table&#x27;,state.sheet1);renderTable(&#x27;foglio1-table&#x27;,state.foglio1);renderFigures();updateStatus();}
-function renderFigures(){const grid=$(&#x27;figure-grid&#x27;);if(!state.figures.length){grid.innerHTML=&#x27;&lt;div class=&quot;empty&quot;&gt;No figures loaded.&lt;/div&gt;&#x27;;return;}grid.innerHTML=state.figures.map(fig=&gt;`&lt;div class=&quot;figure-card&quot;&gt;&lt;img src=&quot;${fig.url}&quot; alt=&quot;${esc(fig.name)}&quot;/&gt;&lt;div class=&quot;small&quot; style=&quot;margin-top:8px&quot;&gt;${esc(fig.name)}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);}
-async function requestPowerFolder(){if(window.parent&amp;&amp;window.parent!==window&amp;&amp;typeof window.parent.STAR_PICK_DIRECTORY===&#x27;function&#x27;){const picked=await window.parent.STAR_PICK_DIRECTORY(&#x27;power&#x27;,&#x27;all&#x27;);if(picked&amp;&amp;picked.files){await loadPowerFiles(picked.files,{all:picked.label});return;}}if(&#x27;showDirectoryPicker&#x27; in window){try{const handle=await window.showDirectoryPicker({mode:&#x27;read&#x27;,id:&#x27;star-power-budget&#x27;});const files=await collectFilesFromDirectoryHandle(handle,`${handle.name}/`);await loadPowerFiles(files,{all:handle.name});return;}catch(error){if(error&amp;&amp;error.name===&#x27;AbortError&#x27;)return;console.warn(error);}}$(&#x27;powerFolderInput&#x27;).click();}
-async function collectFilesFromDirectoryHandle(handle,prefix=&#x27;&#x27;){const files=[];for await(const [name,entry] of handle.entries()){if(entry.kind===&#x27;file&#x27;){const f=await entry.getFile();f.relativeDisplayPath=`${prefix}${name}`;files.push(f);}else if(entry.kind===&#x27;directory&#x27;){files.push(...await collectFilesFromDirectoryHandle(entry,`${prefix}${name}/`));}}return files;}
-window.receivePowerBudgetFilesFromParent=async function(payload={},labels={}){const files=[...(payload.productFiles||[]),...(payload.resultFiles||[])];await loadPowerFiles(files,{product:labels.product,results:labels.results,all:labels.all});};
-window.refreshPowerBudgetDashboard=function(){renderTable(&#x27;sheet1-table&#x27;,state.sheet1);renderTable(&#x27;foglio1-table&#x27;,state.foglio1);renderFigures();updateStatus();};
-document.addEventListener(&#x27;DOMContentLoaded&#x27;,()=&gt;{$(&#x27;manual-load&#x27;).onclick=requestPowerFolder;$(&#x27;powerFolderInput&#x27;).addEventListener(&#x27;change&#x27;,async e=&gt;{await loadPowerFiles(e.target.files,{all:&#x27;Selected END-004 folder&#x27;});e.target.value=&#x27;&#x27;;});document.querySelectorAll(&#x27;.sheet-tab&#x27;).forEach(btn=&gt;btn.addEventListener(&#x27;click&#x27;,()=&gt;{document.querySelectorAll(&#x27;.sheet-tab&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;active&#x27;,b===btn));document.querySelectorAll(&#x27;.sheet-panel&#x27;).forEach(p=&gt;p.classList.toggle(&#x27;active&#x27;,p.id===btn.dataset.sheet));}));updateStatus();});
-})();
-&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;" title="Power Budget"></iframe>
       <iframe id="frame-powerviz" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -992,7 +938,7 @@ document.addEventListener(&#x27;DOMContentLoaded&#x27;, () =&gt; {
 &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;
-" title="Power Budget Insights"></iframe>
+" title="Power Budget"></iframe>
       <iframe id="frame-synthetic" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -4881,6 +4827,9 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .plmsg{padding:14px 12px}
 .plmsg .st{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-weight:700;margin-bottom:6px}
 .plmsg .st.bad{color:var(--danger);border-color:var(--danger)}.plmsg .st.warn{color:var(--warn);border-color:var(--warn)}
+.plbanner{padding:10px 12px 0;display:flex;flex-direction:column;gap:3px}.plbanner .st{align-self:flex-start;margin-bottom:2px}
+.pleg .it.nd b.sw{background:transparent;border:1.5px dashed}.pleg .it.fr b.sw{background:transparent;border:1.5px dashed var(--accent-2)}.pleg .it.fr{cursor:default}
+.pleg .it .sz b.out{color:var(--danger);font-weight:700}
 .ext{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:0 7px;font-size:10px;color:var(--muted-2);margin:0 0 5px}
 .kvg{display:grid;grid-template-columns:auto 1fr;gap:2px 10px}.kvg .k{color:var(--muted)}
 .badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 7px;margin:0 4px 4px 0;font-size:10px;color:var(--muted-2)}
@@ -4908,8 +4857,8 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
     &lt;div class=&quot;card&quot; id=&quot;db-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Database&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;db-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div id=&quot;db&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Indicators&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;std&quot;&gt;&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;kpis&quot; id=&quot;kpis&quot;&gt;&lt;/div&gt;&lt;div class=&quot;msgs&quot; id=&quot;msgs&quot;&gt;&lt;/div&gt;&lt;div class=&quot;budgets&quot; id=&quot;budgets&quot;&gt;&lt;/div&gt;&lt;/div&gt;
-    &lt;div class=&quot;card&quot; id=&quot;rq-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Mission requirements&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;rq-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;reqs&quot; id=&quot;reqs&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot; id=&quot;pl-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Placement&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;pl-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div id=&quot;pl&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;card&quot; id=&quot;rq-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Mission requirements&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;rq-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;reqs&quot; id=&quot;reqs&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3 id=&quot;grid-title&quot;&gt;Components&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;count&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;grid&quot; id=&quot;grid&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot; id=&quot;x-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Not required by this mission&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;x-count&quot;&gt;&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;hint&quot; style=&quot;padding:8px 12px 0&quot;&gt;Not part of the design: not counted in mass, volume, power or placement. Each card shows the best component that fits the class and whether it would still fit together with the design.&lt;/div&gt;
@@ -5196,13 +5145,15 @@ function shapePrims(p, C) {
 function renderPlacement(r) {
   const F = r.fit; $(&#x27;pl-card&#x27;).style.display = F ? &#x27;&#x27; : &#x27;none&#x27;;
   if (!F) return;
-  $(&#x27;pl-sum&#x27;).textContent = `${F.label} · internal volume ${Math.round(100 * F.internal_volume_fraction)}% of the envelope · simplified shapes, fixed view`;
-  if (F.state !== &#x27;fits&#x27;) {
-    $(&#x27;pl&#x27;).innerHTML = `&lt;div class=&quot;plmsg&quot;&gt;&lt;span class=&quot;st ${F.state === &#x27;does_not_fit&#x27; ? &#x27;bad&#x27; : &#x27;warn&#x27;}&quot;&gt;${esc(F.label)}&lt;/span&gt;&lt;p style=&quot;margin:0 0 4px&quot;&gt;No arrangement to show.&lt;/p&gt;&lt;div class=&quot;hint&quot;&gt;${esc(F.message)}&lt;/div&gt;&lt;/div&gt;`;
-    return;
-  }
+  // a proof of fit is drawn as it is; otherwise the preview (published sizes only, stack extended if needed): something is always drawn
+  const proof = F.state === &#x27;fits&#x27;, PV = proof ? null : (F.preview || {placed: [], free: [], not_drawn: [], message: &#x27;&#x27;});
+  $(&#x27;pl-sum&#x27;).textContent = proof
+    ? `${F.label} · internal volume ${Math.round(100 * F.internal_volume_fraction)}% of the envelope · simplified shapes, fixed view`
+    : `${F.label} · preview, not a proof of fit · simplified shapes, fixed view`;
   const env = F.envelope_mm, ctr = env.map(v =&gt; v / 2);
-  const parts = [...F.placed.map(p =&gt; ({...p, ext: false})), ...F.external.map(p =&gt; ({...p, ext: true}))];
+  const parts = [...(proof ? F.placed : PV.placed).map(p =&gt; ({...p, ext: false})), ...F.external.map(p =&gt; ({...p, ext: true}))];
+  const free = proof ? [] : (PV.free || []).map(b =&gt; ({...b, free: true}));
+  const notDrawn = proof ? [] : (PV.not_drawn || []);
   const toC = p =&gt; p.pos.map((v, i) =&gt; v + p.size[i] / 2 - ctr[i]);
   const proj = v =&gt; { const q = rotate(v, VIEW.yaw, VIEW.pitch); return {x: q[0], y: -q[2], d: q[1]}; };
   const corner = (a, b, c) =&gt; [(a ? 1 : -1) * env[0] / 2, (b ? 1 : -1) * env[1] / 2, (c ? 1 : -1) * env[2] / 2];
@@ -5227,7 +5178,7 @@ function renderPlacement(r) {
     const line = `&lt;line x1=&quot;${px(v0)[0].toFixed(1)}&quot; y1=&quot;${px(v0)[1].toFixed(1)}&quot; x2=&quot;${px(v1)[0].toFixed(1)}&quot; y2=&quot;${px(v1)[1].toFixed(1)}&quot; stroke=&quot;var(--muted-2)&quot; stroke-width=&quot;${rail ? 2.2 : 1}&quot;${shown ? &#x27;&#x27; : &#x27; stroke-dasharray=&quot;4 4&quot; opacity=&quot;.6&quot;&#x27;} stroke-linecap=&quot;round&quot;/&gt;`;
     if (shown) front += line; else behind += line;
   }
-  const order = parts.slice().sort((a, b) =&gt; proj(toC(b)).d - proj(toC(a)).d);
+  const order = [...parts, ...free].sort((a, b) =&gt; proj(toC(b)).d - proj(toC(a)).d);
   const sel = S.sel &amp;&amp; S.sel.id;
   const ln = Math.hypot(...VIEW.light);
   const partPolys = p =&gt; {    // visible faces of every primitive of a part, far to near, lit like the subsystem drawings
@@ -5239,17 +5190,24 @@ function renderPlacement(r) {
     }
     return out.sort((x, y) =&gt; y.d - x.d);
   };
+  const freePolys = b =&gt; facesOf({k: &#x27;box&#x27;, c: toC(b), s: b.size}).filter(fc =&gt; rotate(fc.n, VIEW.yaw, VIEW.pitch)[1] &lt;= 0.0001)
+    .map(fc =&gt; `&lt;polygon points=&quot;${pts(fc.pts)}&quot; fill=&quot;var(--accent-2)&quot; fill-opacity=&quot;.05&quot; stroke=&quot;var(--accent-2)&quot; stroke-opacity=&quot;.7&quot; stroke-width=&quot;.8&quot; stroke-dasharray=&quot;4 3&quot; stroke-linejoin=&quot;round&quot;/&gt;`).join(&#x27;&#x27;);
   const body = order.map(p =&gt; {
-    const polys = partPolys(p);
-    return `&lt;g class=&quot;pb&quot; data-id=&quot;${esc(p.id)}&quot;&gt;&lt;title&gt;${esc(p.name)}&lt;/title&gt;${polys.map(fc =&gt; `&lt;polygon points=&quot;${pts(fc.pts)}&quot; fill=&quot;${catColor(p.subsystem, clamp(fc.l, 12, 86))}&quot; ${fc.op &lt; 1 ? `fill-opacity=&quot;${fc.op}&quot;` : &#x27;&#x27;} stroke=&quot;${sel === p.id ? &#x27;var(--accent)&#x27; : &#x27;rgba(0,0,0,.4)&#x27;}&quot; stroke-width=&quot;${sel === p.id ? 1.8 : .7}&quot; stroke-linejoin=&quot;round&quot;/&gt;`).join(&#x27;&#x27;)}&lt;/g&gt;`;
+    if (p.free) return `&lt;g class=&quot;pf&quot;&gt;&lt;title&gt;Free space · ${f(p.size[0] * p.size[1] * p.size[2] * 1e-6, 2)} L&lt;/title&gt;${freePolys(p)}&lt;/g&gt;`;
+    const polys = partPolys(p), stroke = sel === p.id ? &#x27;var(--accent)&#x27; : p.outside ? &#x27;var(--danger)&#x27; : &#x27;rgba(0,0,0,.4)&#x27;;
+    return `&lt;g class=&quot;pb&quot; data-id=&quot;${esc(p.id)}&quot;&gt;&lt;title&gt;${esc(p.name)}${p.outside ? &#x27; · outside the envelope&#x27; : &#x27;&#x27;}&lt;/title&gt;${polys.map(fc =&gt; `&lt;polygon points=&quot;${pts(fc.pts)}&quot; fill=&quot;${catColor(p.subsystem, clamp(fc.l, 12, 86))}&quot; ${fc.op &lt; 1 ? `fill-opacity=&quot;${fc.op}&quot;` : &#x27;&#x27;} stroke=&quot;${stroke}&quot; stroke-width=&quot;${sel === p.id || p.outside ? 1.8 : .7}&quot; stroke-linejoin=&quot;round&quot;/&gt;`).join(&#x27;&#x27;)}&lt;/g&gt;`;
   }).join(&#x27;&#x27;);
   const L = {}; for (const c of (r.library &amp;&amp; r.library.classes) || []) L[c.id] = c;
   const sizeTxt = p =&gt; p.ext &amp;&amp; !p.size_published
     ? (p.published_mm &amp;&amp; p.published_mm.length ? `${p.published_mm.map(v =&gt; f(v, 1)).join(&#x27; × &#x27;)} mm · thickness: ${NA}` : `Size: ${NA}`)
     : p.size.map(v =&gt; f(v, 1)).sort((a, b) =&gt; b - a).join(&#x27; × &#x27;) + &#x27; mm&#x27;;
-  const leg = parts.map(p =&gt; `&lt;div class=&quot;it ${sel === p.id ? &#x27;sel&#x27; : &#x27;&#x27;}&quot; data-id=&quot;${esc(p.id)}&quot; title=&quot;${esc(p.name)}&quot;&gt;&lt;b class=&quot;sw&quot; style=&quot;background:${catColor(p.subsystem)}&quot;&gt;&lt;/b&gt;&lt;span class=&quot;ac&quot;&gt;${esc((L[p.subsystem] || {}).acronym || p.subsystem)}${p.shape &amp;&amp; p.shape.basis === &#x27;subsystem&#x27; ? &#x27;&lt;sup title=&quot;Shape chosen from the subsystem: no usable product image&quot;&gt;*&lt;/sup&gt;&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;span class=&quot;nm&quot;&gt;${esc(p.name)}&lt;/span&gt;&lt;span class=&quot;sz&quot;&gt;${esc(sizeTxt(p))}${p.ext ? &#x27; · external&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
-  $(&#x27;pl&#x27;).innerHTML = `&lt;div class=&quot;plwrap&quot;&gt;&lt;div class=&quot;plview&quot;&gt;&lt;svg viewBox=&quot;0 0 ${W} ${H}&quot; role=&quot;img&quot; aria-label=&quot;Isometric view of the chosen components inside the ${r.cubesat.class_u}U CubeSat&quot;&gt;&lt;title&gt;${r.cubesat.class_u}U CubeSat, components placed inside&lt;/title&gt;${back}${behind}${body}${front}&lt;/svg&gt;&lt;/div&gt;&lt;div class=&quot;pleg&quot;&gt;${leg}&lt;/div&gt;&lt;/div&gt;
-    &lt;div class=&quot;plnote&quot;&gt;${esc(F.message)} Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna, sun sensor, GNSS antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; &lt;sup&gt;*&lt;/sup&gt; marks a shape chosen from the subsystem because there is no usable product image.&lt;/div&gt;`;
+  const acr = sid =&gt; esc((L[sid] || {}).acronym || sid);
+  const leg = parts.map(p =&gt; `&lt;div class=&quot;it ${sel === p.id ? &#x27;sel&#x27; : &#x27;&#x27;}&quot; data-id=&quot;${esc(p.id)}&quot; title=&quot;${esc(p.name)}&quot;&gt;&lt;b class=&quot;sw&quot; style=&quot;background:${catColor(p.subsystem)}&quot;&gt;&lt;/b&gt;&lt;span class=&quot;ac&quot;&gt;${acr(p.subsystem)}${p.shape &amp;&amp; p.shape.basis === &#x27;subsystem&#x27; ? &#x27;&lt;sup title=&quot;Shape chosen from the subsystem: no usable product image&quot;&gt;*&lt;/sup&gt;&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;span class=&quot;nm&quot;&gt;${esc(p.name)}&lt;/span&gt;&lt;span class=&quot;sz&quot;&gt;${esc(sizeTxt(p))}${p.ext ? &#x27; · external&#x27; : &#x27;&#x27;}${p.outside ? &#x27; · &lt;b class=&quot;out&quot;&gt;outside the envelope&lt;/b&gt;&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)
+    + notDrawn.map(p =&gt; `&lt;div class=&quot;it nd ${sel === p.id ? &#x27;sel&#x27; : &#x27;&#x27;}&quot; data-id=&quot;${esc(p.id)}&quot; title=&quot;${esc(p.name)}: no published size, not drawn&quot;&gt;&lt;b class=&quot;sw&quot; style=&quot;border-color:${catColor(p.subsystem)}&quot;&gt;&lt;/b&gt;&lt;span class=&quot;ac&quot;&gt;${acr(p.subsystem)}&lt;/span&gt;&lt;span class=&quot;nm&quot;&gt;${esc(p.name)}${p.quantity &gt; 1 ? ` × ${p.quantity}` : &#x27;&#x27;}&lt;/span&gt;&lt;span class=&quot;sz&quot;&gt;Size: ${NA} · not drawn&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)
+    + (free.length ? `&lt;div class=&quot;it fr&quot; title=&quot;Space left below the stack in the columns of the class&quot;&gt;&lt;b class=&quot;sw&quot;&gt;&lt;/b&gt;&lt;span class=&quot;ac&quot;&gt;FREE&lt;/span&gt;&lt;span class=&quot;nm&quot;&gt;Free space&lt;/span&gt;&lt;span class=&quot;sz&quot;&gt;${f(PV.free_volume_l, 2)} L · dashed&lt;/span&gt;&lt;/div&gt;` : &#x27;&#x27;);
+  const banner = proof ? &#x27;&#x27; : `&lt;div class=&quot;plmsg plbanner&quot;&gt;&lt;span class=&quot;st ${F.state === &#x27;does_not_fit&#x27; ? &#x27;bad&#x27; : &#x27;warn&#x27;}&quot;&gt;${esc(F.label)}&lt;/span&gt;&lt;div class=&quot;hint&quot;&gt;${esc(F.message)}&lt;/div&gt;&lt;div class=&quot;hint&quot;&gt;${esc(PV.message)}&lt;/div&gt;&lt;/div&gt;`;
+  $(&#x27;pl&#x27;).innerHTML = `${banner}&lt;div class=&quot;plwrap&quot;&gt;&lt;div class=&quot;plview&quot;&gt;&lt;svg viewBox=&quot;0 0 ${W} ${H}&quot; role=&quot;img&quot; aria-label=&quot;Isometric view of the chosen components inside the ${r.cubesat.class_u}U CubeSat&quot;&gt;&lt;title&gt;${r.cubesat.class_u}U CubeSat, components placed inside${proof ? &#x27;&#x27; : &#x27; (preview)&#x27;}&lt;/title&gt;${back}${behind}${body}${front}&lt;/svg&gt;&lt;/div&gt;&lt;div class=&quot;pleg&quot;&gt;${leg}&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;plnote&quot;&gt;${proof ? esc(F.message) + &#x27; &#x27; : &#x27;&#x27;}Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna, sun sensor, GNSS antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; &lt;sup&gt;*&lt;/sup&gt; marks a shape chosen from the subsystem because there is no usable product image.&lt;/div&gt;`;
 }
 $(&#x27;pl&#x27;).onclick = e =&gt; { const el = e.target.closest(&#x27;[data-id]&#x27;); if (el &amp;&amp; el.dataset.id) select(el.dataset.id); };
 
@@ -5518,7 +5476,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -5894,27 +5852,6 @@ async function loadConstellationFromStarRoot() {
 }
 
 
-async function loadPowerBudgetFromStarRoot() {
-  if (!hasRunFolderSelection()) return false;
-  const frame = $('frame-power');
-  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receivePowerBudgetFilesFromParent !== 'function') return false;
-  try {
-    const productPath = ['modules_output','END-004','output_power_budget'];
-    const resultsPath = ['modules_output','END-004','results_power_budget'];
-    const productLabel = selectedPathLabel(productPath);
-    const resultsLabel = selectedPathLabel(resultsPath);
-    const payload = {
-      productFiles: await collectFilesFromSelectedPath(productPath),
-      resultFiles: await collectFilesFromSelectedPath(resultsPath)
-    };
-    await frame.contentWindow.receivePowerBudgetFilesFromParent(payload, { product: productLabel, results: resultsLabel });
-    return true;
-  } catch (error) {
-    console.warn('Unable to load END-004 power-budget data from the selected RUN folder:', error);
-    return false;
-  }
-}
-
 async function loadPowerInsightsFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-powerviz');
@@ -6194,7 +6131,6 @@ function switchTab(tabName) {
   const frameByTab = {
     constellation: $('frame-constellation'),
     attitude: $('frame-attitude'),
-    power: $('frame-power'),
     powerviz: $('frame-powerviz'),
     synthetic: $('frame-synthetic'),
     reflectance: $('frame-reflectance'),
@@ -6218,9 +6154,6 @@ function switchTab(tabName) {
         if (tabName === 'attitude') {
           if (!window.attitudePropagationData && hasRunFolderSelection()) await loadAttitudeDataFromStarRoot();
           if (window.attitudePropagationData) deliverAttitudeDataToFrame();
-        }
-        if (tabName === 'power' && hasRunFolderSelection()) {
-          await loadPowerBudgetFromStarRoot();
         }
         if (tabName === 'powerviz' && hasRunFolderSelection()) {
           await loadPowerInsightsFromStarRoot();
@@ -6249,7 +6182,6 @@ function switchTab(tabName) {
         if (typeof activeFrame.contentWindow.refreshComponentSelectorDashboard === 'function') activeFrame.contentWindow.refreshComponentSelectorDashboard();
         if (typeof activeFrame.contentWindow.refreshConstellationDashboard === 'function') activeFrame.contentWindow.refreshConstellationDashboard();
         if (typeof activeFrame.contentWindow.refreshAttitudeDashboard === 'function') activeFrame.contentWindow.refreshAttitudeDashboard();
-        if (typeof activeFrame.contentWindow.refreshPowerBudgetDashboard === 'function') activeFrame.contentWindow.refreshPowerBudgetDashboard();
         if (typeof activeFrame.contentWindow.refreshPowerInsightsDashboard === 'function') activeFrame.contentWindow.refreshPowerInsightsDashboard();
         if (typeof activeFrame.contentWindow.refreshSyntheticDashboard === 'function') activeFrame.contentWindow.refreshSyntheticDashboard();
         if (typeof activeFrame.contentWindow.refreshReflectanceDashboard === 'function') activeFrame.contentWindow.refreshReflectanceDashboard();
@@ -6271,7 +6203,6 @@ function bindEvents() {
       await ensureStarRootFolder();
       await loadConstellationFromStarRoot();
       await loadAttitudeDataFromStarRoot();
-      await loadPowerBudgetFromStarRoot();
       await loadPowerInsightsFromStarRoot();
       await loadSyntheticImagesFromStarRoot();
       await loadReflectanceFromStarRoot();
@@ -6290,7 +6221,7 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
       if (frame.id === 'frame-collision' && hasRunFolderSelection()) {
         loadCollisionAvoidanceFromStarRoot();
@@ -6308,9 +6239,6 @@ function bindEvents() {
       }
       if (frame.id === 'frame-constellation' && hasRunFolderSelection()) {
         loadConstellationFromStarRoot();
-      }
-      if (frame.id === 'frame-power' && hasRunFolderSelection()) {
-        loadPowerBudgetFromStarRoot();
       }
       if (frame.id === 'frame-powerviz' && hasRunFolderSelection()) {
         loadPowerInsightsFromStarRoot();

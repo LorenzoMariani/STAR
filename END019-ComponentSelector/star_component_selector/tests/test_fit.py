@@ -95,6 +95,68 @@ class TestStates(unittest.TestCase):
         self.assertEqual(f["state"], "does_not_fit")
 
 
+def no_overlap(placed):
+    return valid_witness((1e9, 1e9, 1e9), [(n, x + 1e8, y + 1e8, z + 1e8, dx, dy, dz) for n, x, y, z, dx, dy, dz, *_ in placed])
+
+
+class TestPreview(unittest.TestCase):
+    """Anteprima quando l'ingombro non e' dimostrato (2026-10-16): c'e' sempre qualcosa da disegnare, "placed" resta la sola dimostrazione."""
+
+    def test_a_proof_has_no_preview(self):
+        self.assertIsNone(SERVICE.select({"form_factor_u": 6})["fit"]["preview"])
+
+    def test_unknown_size_draws_the_others_and_the_free_space(self):
+        obc = synthetic("obc-nosize", "obc", 0.05, None)
+        eps = synthetic("eps-s", "eps", 0.05, [90, 90, 15])
+        f = check_fit(select([structure_1u(), obc, eps], 1))
+        pv = f["preview"]
+        self.assertEqual((f["state"], f["placed"]), ("undetermined", []))
+        self.assertEqual([p["id"] for p in pv["placed"]], ["eps-s"])
+        self.assertFalse(pv["placed"][0]["outside"])
+        self.assertEqual([p["id"] for p in pv["not_drawn"]], ["obc-nosize"])
+        self.assertEqual(len(pv["free"]), 1)
+        free = pv["free"][0]
+        self.assertAlmostEqual(free["pos"][2] + free["size"][2], pv["placed"][0]["pos"][2], places=1)      # below the stack, up to it
+        self.assertIn("not drawn", pv["message"])
+
+    def test_v6_design_without_the_imager_size(self):
+        import json
+        from pathlib import Path
+        from star_selector.mission import design
+        from tests.test_mission import CATALOG
+        v6 = json.loads((Path(__file__).resolve().parents[3] / "Input/input_base_knowledge/sample_inputs/Mission_Proposal_v6_requirements.json").read_text(encoding="utf-8"))["requirements"]
+        f = check_fit(design(CATALOG, v6, {"altitude_km": [641.6, 641.6]})[0])
+        pv = f["preview"]
+        self.assertEqual(f["state"], "undetermined")
+        self.assertEqual(pv["kind"], "stack")
+        self.assertIn("satlantis-isim-90", [p["id"] for p in pv["not_drawn"]])
+        self.assertTrue(pv["placed"] and not any(p["outside"] for p in pv["placed"]))
+        self.assertGreater(pv["free_volume_l"], 1.0)
+
+    def test_does_not_fit_shows_the_extended_stack(self):
+        f = SERVICE.select({"form_factor_u": 1})["fit"]
+        pv = f["preview"]
+        self.assertEqual((f["state"], f["placed"]), ("does_not_fit", []))
+        self.assertEqual(pv["kind"], "extended_stack")
+        self.assertEqual(len(pv["placed"]), 12)                                  # every internal component drawn
+        self.assertGreater(pv["stack_length_mm"], f["envelope_mm"][2])
+        self.assertTrue(any(p["outside"] for p in pv["placed"]))
+        boxes = [(p["id"], *p["pos"], *p["size"]) for p in pv["placed"]]
+        self.assertTrue(no_overlap(boxes))
+        tops = [p["pos"][2] + p["size"][2] for p in pv["placed"]]
+        self.assertAlmostEqual(max(tops), f["envelope_mm"][2], places=1)      # the stack starts at the top face
+
+    def test_extended_stack_is_the_shortest_that_fits_the_columns(self):
+        from star_selector.fit import extended_stack
+        from star_selector import layout
+        env = (226.3, 100.0, 100.0)                                              # two columns of 100 mm
+        internal = [(f"s{i}", "obc", type("K", (), {"comp": synthetic(f"b{i}", "obc", 0.1, [90, 90, 40]), "quantity": 1})(), (90.0, 90.0, 40.0)) for i in range(6)]
+        placed, length = extended_stack(env, internal)
+        self.assertAlmostEqual(length, 120.0, delta=0.11)                        # 6 x 40 mm in 2 columns: 3 per column
+        self.assertIsNotNone(layout.serpentine([(n, 40.0) for n, *_ in internal], length, 2))
+        self.assertTrue(no_overlap(placed))
+
+
 class TestStack(unittest.TestCase):
     """Pila lungo l'asse lungo (layout.py): ordine, colonne, schede orizzontali, nessuna sovrapposizione."""
 

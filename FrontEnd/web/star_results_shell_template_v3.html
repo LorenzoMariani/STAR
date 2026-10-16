@@ -239,8 +239,7 @@ code{color:var(--accent-2)}
         <input id="star-root-folder-input" class="star-hidden-file-input" type="file" webkitdirectory directory multiple hidden />
         <button class="tab-button active" id="tab-constellation" data-tab="constellation" type="button"><span class="tab-code">END001</span><span class="tab-title">Constellation Optimization</span></button>
         <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END0003</span><span class="tab-title">Attitude Propagation</span></button>
-        <button class="tab-button" id="tab-power" data-tab="power" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Budget</span></button>
-        <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Insights</span></button>
+        <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Budget</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
@@ -255,8 +254,7 @@ code{color:var(--accent-2)}
       </div>
     </div>
     <div class="frame-wrap">
-      <iframe id="frame-power" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_POWER__" title="Power Budget"></iframe>
-      <iframe id="frame-powerviz" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_POWERVIZ__" title="Power Budget Insights"></iframe>
+      <iframe id="frame-powerviz" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_POWERVIZ__" title="Power Budget"></iframe>
       <iframe id="frame-synthetic" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_SYNTHETIC__" title="Synthetic Data Generation"></iframe>
       <iframe id="frame-reflectance" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__" title="Reflectance Determination"></iframe>
       <iframe id="frame-constellation" class="tab-frame active" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__" title="Constellation Optimizer"></iframe>
@@ -350,7 +348,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -726,27 +724,6 @@ async function loadConstellationFromStarRoot() {
 }
 
 
-async function loadPowerBudgetFromStarRoot() {
-  if (!hasRunFolderSelection()) return false;
-  const frame = $('frame-power');
-  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receivePowerBudgetFilesFromParent !== 'function') return false;
-  try {
-    const productPath = ['modules_output','END-004','output_power_budget'];
-    const resultsPath = ['modules_output','END-004','results_power_budget'];
-    const productLabel = selectedPathLabel(productPath);
-    const resultsLabel = selectedPathLabel(resultsPath);
-    const payload = {
-      productFiles: await collectFilesFromSelectedPath(productPath),
-      resultFiles: await collectFilesFromSelectedPath(resultsPath)
-    };
-    await frame.contentWindow.receivePowerBudgetFilesFromParent(payload, { product: productLabel, results: resultsLabel });
-    return true;
-  } catch (error) {
-    console.warn('Unable to load END-004 power-budget data from the selected RUN folder:', error);
-    return false;
-  }
-}
-
 async function loadPowerInsightsFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-powerviz');
@@ -1026,7 +1003,6 @@ function switchTab(tabName) {
   const frameByTab = {
     constellation: $('frame-constellation'),
     attitude: $('frame-attitude'),
-    power: $('frame-power'),
     powerviz: $('frame-powerviz'),
     synthetic: $('frame-synthetic'),
     reflectance: $('frame-reflectance'),
@@ -1050,9 +1026,6 @@ function switchTab(tabName) {
         if (tabName === 'attitude') {
           if (!window.attitudePropagationData && hasRunFolderSelection()) await loadAttitudeDataFromStarRoot();
           if (window.attitudePropagationData) deliverAttitudeDataToFrame();
-        }
-        if (tabName === 'power' && hasRunFolderSelection()) {
-          await loadPowerBudgetFromStarRoot();
         }
         if (tabName === 'powerviz' && hasRunFolderSelection()) {
           await loadPowerInsightsFromStarRoot();
@@ -1081,7 +1054,6 @@ function switchTab(tabName) {
         if (typeof activeFrame.contentWindow.refreshComponentSelectorDashboard === 'function') activeFrame.contentWindow.refreshComponentSelectorDashboard();
         if (typeof activeFrame.contentWindow.refreshConstellationDashboard === 'function') activeFrame.contentWindow.refreshConstellationDashboard();
         if (typeof activeFrame.contentWindow.refreshAttitudeDashboard === 'function') activeFrame.contentWindow.refreshAttitudeDashboard();
-        if (typeof activeFrame.contentWindow.refreshPowerBudgetDashboard === 'function') activeFrame.contentWindow.refreshPowerBudgetDashboard();
         if (typeof activeFrame.contentWindow.refreshPowerInsightsDashboard === 'function') activeFrame.contentWindow.refreshPowerInsightsDashboard();
         if (typeof activeFrame.contentWindow.refreshSyntheticDashboard === 'function') activeFrame.contentWindow.refreshSyntheticDashboard();
         if (typeof activeFrame.contentWindow.refreshReflectanceDashboard === 'function') activeFrame.contentWindow.refreshReflectanceDashboard();
@@ -1103,7 +1075,6 @@ function bindEvents() {
       await ensureStarRootFolder();
       await loadConstellationFromStarRoot();
       await loadAttitudeDataFromStarRoot();
-      await loadPowerBudgetFromStarRoot();
       await loadPowerInsightsFromStarRoot();
       await loadSyntheticImagesFromStarRoot();
       await loadReflectanceFromStarRoot();
@@ -1122,7 +1093,7 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-power'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
       if (frame.id === 'frame-collision' && hasRunFolderSelection()) {
         loadCollisionAvoidanceFromStarRoot();
@@ -1140,9 +1111,6 @@ function bindEvents() {
       }
       if (frame.id === 'frame-constellation' && hasRunFolderSelection()) {
         loadConstellationFromStarRoot();
-      }
-      if (frame.id === 'frame-power' && hasRunFolderSelection()) {
-        loadPowerBudgetFromStarRoot();
       }
       if (frame.id === 'frame-powerviz' && hasRunFolderSelection()) {
         loadPowerInsightsFromStarRoot();
