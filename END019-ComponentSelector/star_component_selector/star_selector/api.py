@@ -16,6 +16,7 @@ from .models import Component, load_catalog
 from .platforms import load_platforms
 from .rows import rows_for, subsystem_of
 from .fit import check_fit
+from .mission import design
 from .selector import CDS_SOURCE, CLASSES, EXTERNAL_SUBSYSTEMS, LABELS, SUBSYSTEMS, Candidate, Selection, select
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -106,14 +107,18 @@ def _candidate_record(k: Candidate, root: Path, with_image: bool, full: bool) ->
     return rec
 
 
-def selection_to_dict(sel: Selection, root: Path = ROOT, with_images: bool = False, library: dict[str, Any] | None = None) -> dict[str, Any]:
+def selection_to_dict(sel: Selection, root: Path = ROOT, with_images: bool = False, library: dict[str, Any] | None = None,
+                      mission: dict[str, Any] | None = None) -> dict[str, Any]:
+    """mission: il blocco di mission.design() (progetto per una missione): classe cercata, motivo di ogni scheda, requisiti, sottosistemi non richiesti."""
     cls = sel.cubesat
+    per = (mission or {}).get("subsystems") or {}
     return {
-        "ok": True, "library": library, "fit": check_fit(sel), "external_subsystems": list(EXTERNAL_SUBSYSTEMS),
+        "ok": True, "library": library, "fit": check_fit(sel), "external_subsystems": list(EXTERNAL_SUBSYSTEMS), "mission": mission,
         "cubesat": {"class_u": cls.units, "mass_limit_kg": cls.mass_limit_kg, "envelope_mm": list(cls.envelope_mm), "volume_limit_m3": cls.volume_limit_m3, "standard": CDS_SOURCE},
         "within_limits": sel.within_limits,
         "subsystems": [{
-            "id": r.id, "category": r.category, "label": r.label, "n_database": r.n_database, "n_fit": r.n_fit, "n_fit_without_mass": r.n_fit_without_mass,
+            "id": r.id, "subsystem": r.subsystem or r.id, "category": r.category, "label": r.label, "design": per.get(r.id),
+            "n_database": r.n_database, "n_fit": r.n_fit, "n_fit_without_mass": r.n_fit_without_mass,
             "note": r.note, "selected": None if r.selected is None else _candidate_record(r.selected, root, with_images, True),
             "alternatives": [_candidate_record(k, root, False, False) for k in r.alternatives],
         } for r in sel.subsystems],
@@ -192,6 +197,20 @@ class SelectorService:
             raise ValueError(f"invalid form_factor_u: {params['form_factor_u']}") from None
         sel = select(self.catalog, units, float(params.get("time_budget_s") or 5.0))
         return selection_to_dict(sel, self.root, with_images=with_images or bool(params.get("with_images")), library=self.library())
+
+    def design(self, params: dict[str, Any], with_images: bool = False) -> dict[str, Any]:
+        """Progetto per una missione (mission.design): params {"requirements": [{"id", "text"}...], "context": {"altitude_km": [min, max],
+        "altitude_source", "end016": riepilogo END-016}, "form_factor_u": classe scelta dall'utente (facoltativa)}. Solo i sottosistemi che la
+        missione chiede, nella classe CubeSat piu' piccola che li porta; gli altri nel blocco mission.extras."""
+        unknown = sorted(k for k in params if k not in ("requirements", "context", "form_factor_u", "with_images", "time_budget_s"))
+        if unknown:
+            raise ValueError(f"unknown parameters: {', '.join(unknown)}")
+        forced = params.get("form_factor_u")
+        forced = int(float(forced)) if forced not in (None, "") else None
+        if forced is not None and forced not in CLASSES:
+            raise ValueError(f"unsupported CubeSat class {forced}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
+        sel, mission = design(self.catalog, params.get("requirements") or [], params.get("context") or {}, forced, float(params.get("time_budget_s") or 2.0))
+        return selection_to_dict(sel, self.root, with_images=with_images or bool(params.get("with_images")), library=self.library(), mission=mission)
 
 
 # --------------------------------------------------------------------------- orchestratore: requisiti -> parametri

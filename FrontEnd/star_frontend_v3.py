@@ -5615,6 +5615,25 @@ Return only valid JSON:
             self.add_log("ERROR", f"Component selector failed: {exc}")
             return {"ok": False, "error": str(exc), "subsystems": []}
 
+    def component_selector_design(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Design for the mission of the current run (live END-019 GUI), as the runner does: the requirements, the END-001 orbits and the
+        END-016 delta-v of this run, the class the user chose in the input-resolution step; otherwise the smallest class that fits."""
+        try:
+            from runners.end019_runner import _approved_inputs, mission_context
+
+            params = dict(params or {})
+            service = self._component_selector_service()
+            reqs = [{"id": r.get("id"), "text": r.get("text", "")} for r in self.requirements] or ([self.uploaded_text] if self.uploaded_text else [])
+            if not reqs:
+                return {"ok": False, "error": "No mission requirements in this session: the design needs the requirements of a STAR run."}
+            modules_output = (self.current_run_path / "modules_output") if self.current_run_path else None
+            forced = _approved_inputs(self.missing_information or [], defaults_only=False).get("form_factor_u")
+            return service.design({"requirements": reqs, "context": mission_context(modules_output), "form_factor_u": forced},
+                                  with_images=bool(params.get("with_images", True)))
+        except Exception as exc:
+            self.add_log("ERROR", f"Component selector design failed: {exc}")
+            return {"ok": False, "error": str(exc), "subsystems": []}
+
     def component_selector_datasheet(self, component_id: str) -> dict[str, Any]:
         """Datasheet (PDF, base64) of a component for the END-019 drawer: the GUI runs without an HTTP server inside STAR."""
         try:

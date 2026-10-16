@@ -10,12 +10,13 @@ Regole (nessuna ipotesi di progetto):
     non superi i limiti e che i componenti interni si impilino nelle colonne della classe (layout.py: altezze lungo Z, impronta nella sezione di una
     colonna); il volume e' quello dei soli componenti interni (pannelli solari e antenne si montano sulle facce: regola dichiarata);
   * un valore che il fornitore non pubblica resta `None` (la GUI scrive "Not publicly available"): non si stima e non si usano valori di default.
-Non ci sono bilancio energetico, compatibilita' di tensioni o interfacce, ne' requisiti di missione."""
+Non ci sono bilancio energetico, compatibilita' di tensioni o interfacce. I requisiti di missione (quali sottosistemi servono, quali componenti li
+soddisfano, il delta-v, la massa massima) arrivano da mission.py attraverso i parametri facoltativi di select(): `slots`, `dv_m_s`, `mass_limit_kg`."""
 from __future__ import annotations
 
 import itertools
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from . import layout
 from .models import Component
@@ -116,6 +117,25 @@ class SubsystemResult:
     selected: Candidate | None
     alternatives: list[Candidate] = field(default_factory=list)
     note: str | None = None
+    subsystem: str | None = None        # sottosistema del posto (id e' il posto: "comms", "comms_s" per una seconda radio...)
+
+
+@dataclass(frozen=True)
+class Slot:
+    """Un posto del progetto: un componente del sottosistema `subsystem`, scelto tra `allowed` (id del catalogo; None = tutti)."""
+    id: str
+    subsystem: str
+    label: str
+    allowed: frozenset[str] | None = None
+
+
+def default_slots() -> list[Slot]:
+    return [Slot(sid, sid, label) for sid, _, label in SUBSYSTEMS]
+
+
+def total_impulse_ns(c: Component) -> float | None:
+    v = c.spec("total_impulse_ns") if c.category == "propulsion" else None
+    return float(v) if v is not None else None
 
 
 @dataclass
@@ -155,10 +175,11 @@ def _order(cands: list[Candidate]) -> list[Candidate]:
     return sorted(cands, key=lambda k: (-k.completeness, k.mass_kg if k.mass_kg is not None else 1e9, k.comp.id))
 
 
-def _pareto(pool: list[Candidate]) -> list[Candidate]:
-    """Per la ricerca esatta: toglie i candidati battuti da un altro con completezza >= e massa, volume e altezza <= (non servono mai per l'ottimo)."""
+def _pareto(pool: list[Candidate], with_impulse: bool = False) -> list[Candidate]:
+    """Per la ricerca esatta: toglie i candidati battuti da un altro con completezza >= e massa, volume e altezza <= (non servono mai per l'ottimo).
+    Con il vincolo di delta-v un propulsore e' battuto solo da uno che ha anche l'impulso totale >=."""
     def key(k):
-        return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0)
+        return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0) + ((-(total_impulse_ns(k.comp) or 0.0),) if with_impulse else ())
     keep: list[Candidate] = []
     for a in pool:      # il pool e' ordinato per completezza decrescente, poi massa
         if not any(b.completeness >= a.completeness - 1e-12 and all(x <= y + 1e-15 for x, y in zip(key(b), key(a))) for b in keep):
@@ -166,18 +187,34 @@ def _pareto(pool: list[Candidate]) -> list[Candidate]:
     return keep
 
 
-def select(catalog: list[Component], units: int, time_budget_s: float = 3.0) -> Selection:
+CATEGORY_OF = {sid: cat for sid, cat, _ in SUBSYSTEMS}
+
+
+def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
+           dv_m_s: float | None = None, mass_limit_kg: float | None = None) -> Selection:
+    """Selezione per la classe `units`. Senza parametri facoltativi: un posto per ciascuno dei 17 sottosistemi, tutti i componenti, limiti CDS.
+    slots: i posti del progetto (mission.py: solo i sottosistemi che la missione chiede, una radio per banda, i componenti che soddisfano i requisiti);
+    dv_m_s: il propulsore scelto deve dare questo delta-v al satellite intero (impulso totale pubblicato / somma delle masse pubblicate);
+    mass_limit_kg: massa massima chiesta dalla missione, se sotto il limite CDS della classe."""
     if units not in CLASSES:
         raise ValueError(f"unsupported CubeSat class {units}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
     cls = CLASSES[units]
+    if mass_limit_kg is not None and mass_limit_kg < cls.mass_limit_kg:
+        cls = replace(cls, mass_limit_kg=float(mass_limit_kg))
+    slots = list(slots) if slots is not None else default_slots()
+    dv = float(dv_m_s) if dv_m_s else None
     results: list[SubsystemResult] = []
     pools: list[list[Candidate]] = []
-    for sid, cat, label in SUBSYSTEMS:
+    for sl in slots:
+        sid = sl.subsystem
         members = [c for c in catalog if subsystem_of(c) == sid]
+        allowed = [c for c in members if sl.allowed is None or c.id in sl.allowed]
         if sid == "structure":
-            fitting = [c for c in members if c.spec("form_factor_u") == units]
+            fitting = [c for c in allowed if c.spec("form_factor_u") == units]
         else:
-            fitting = [c for c in members if _admissible(c, sid, cls)]
+            fitting = [c for c in allowed if _admissible(c, sid, cls)]
+        if dv and sid == "propulsion":
+            fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
         known = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is not None]
         unknown = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is None]
         pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
@@ -186,16 +223,19 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0) -> 
         note = None
         if not members:
             note = "No component of this subsystem is in the database."
+        elif not allowed:
+            note = "No component of this subsystem in the database meets the mission requirements."
         elif not fitting:
-            note = f"No component of this subsystem in the database fits a {units}U."
+            note = f"No component of this subsystem in the database fits a {units}U" + (" and publishes its total impulse." if dv and sid == "propulsion" else ".")
         elif not known:
             note = "Only components without a published mass are in the database for this subsystem."
-        results.append(SubsystemResult(sid, cat, label, len(members), len(pool), len(unknown), None, [], note))
+        results.append(SubsystemResult(sl.id, CATEGORY_OF.get(sid, sid), sl.label, len(members), len(pool), len(unknown), None, [], note, subsystem=sid))
         pools.append(pool)
 
     # scelta: massimizza la completezza totale (poi minimizza la massa) con somma delle masse e dei volumi noti entro i limiti
     idx = [i for i, p in enumerate(pools) if p]
-    spools = {i: _pareto(pools[i]) for i in idx}       # candidati della ricerca esatta (senza quelli battuti)
+    prop = [j for j, i in enumerate(idx) if results[i].subsystem == "propulsion"] if dv else []
+    spools = {i: _pareto(pools[i], with_impulse=bool(prop) and results[i].subsystem == "propulsion") for i in idx}
     min_mass = [min((k.mass_kg or 0.0) for k in spools[i]) for i in idx]
     min_vol = [min((k.volume_m3 or 0.0) for k in spools[i]) for i in idx]
     max_score = [max(k.completeness for k in spools[i]) for i in idx]
@@ -204,10 +244,14 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0) -> 
     min_h = [min((k.height_mm or 0.0) for k in spools[i]) for i in idx]
     suffix_h = [sum(min_h[j:]) for j in range(len(idx) + 1)]
     stack_room = layout.columns(cls.envelope_mm) * cls.envelope_mm[2]       # somma delle altezze al piu' colonne x lunghezza (condizione necessaria)
-    sids = [results[i].id for i in idx]
+    sids = [results[i].subsystem for i in idx]
 
     def stack_ok(cands) -> bool:
-        return layout.stack_feasible({sid: k.height_mm for sid, k in zip(sids, cands)}, cls.envelope_mm)
+        return layout.stack_feasible([(sid, k.height_mm) for sid, k in zip(sids, cands)], cls.envelope_mm)
+
+    def dv_ok(cands, mass: float) -> bool:
+        """Il propulsore da' il delta-v richiesto al satellite intero: impulso totale / massa (somma delle masse pubblicate dei componenti scelti)."""
+        return all(mass > 0 and (total_impulse_ns(cands[j].comp) or 0.0) / mass >= dv - 1e-9 for j in prop)
     suffix_score = [sum(max_score[j:]) for j in range(len(idx) + 1)]
     best: dict = {"key": None, "pick": None}
     deadline = time.monotonic() + time_budget_s
@@ -223,7 +267,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0) -> 
         if hsum + suffix_h[j] > stack_room + 1e-9:
             return
         if j == len(idx):
-            if not stack_ok([spools[idx[t]][pick[t]] for t in range(len(idx))]):
+            cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
+            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)):
                 return
             key = (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
@@ -237,21 +282,21 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0) -> 
             pick.pop()
 
     # prima prova: il miglior candidato di ogni sottosistema (piu' dati pubblicati, poi il piu' leggero); se rientra nei limiti e' la scelta
-    greedy = [0] * len(idx)
-    g_mass = sum((pools[i][0].mass_kg or 0.0) for i in idx)
-    g_vol = sum((pools[i][0].volume_m3 or 0.0) for i in idx)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok([pools[i][0] for i in idx]):
-        best["pick"] = greedy
+    greedy = [pools[i][0] for i in idx]
+    g_mass = sum((k.mass_kg or 0.0) for k in greedy)
+    g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
+    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)):
+        chosen = greedy
     else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
         rec(0, 0.0, 0.0, 0.0, [])
+        chosen = None if best["pick"] is None else [spools[i][best["pick"][j]] for j, i in enumerate(idx)]
     messages: list[str] = []
-    within = best["pick"] is not None
-    if within:
-        chosen = [spools[i][best["pick"][j]] for j, i in enumerate(idx)]
-    else:   # tutti i sottosistemi insieme non stanno in questa classe: ogni scheda mostra il miglior componente che ci sta da solo e il totale e' segnalato
-        chosen = [pools[i][0] for i in idx]
+    within = chosen is not None
+    if not within:   # tutti i sottosistemi insieme non stanno in questa classe: ogni scheda mostra il miglior componente che ci sta da solo e il totale e' segnalato
+        chosen = greedy
         messages.append(f"The {len(idx)} subsystems together do not fit the limits of a {units}U ({cls.mass_limit_kg:g} kg, {sci(cls.volume_limit_m3)} m³, "
-                        f"{layout.columns(cls.envelope_mm)} stack column(s) of {cls.envelope_mm[2]:g} mm): each card shows the component that fits on its own; "
+                        f"{layout.columns(cls.envelope_mm)} stack column(s) of {cls.envelope_mm[2]:g} mm"
+                        + (f", a thruster that gives {dv:g} m/s to the whole satellite" if prop else "") + "): each card shows the component that fits on its own; "
                         "a {u}U cannot carry all of them at once.".replace("{u}", str(units)))
     for j, i in enumerate(idx):
         results[i].selected = chosen[j]

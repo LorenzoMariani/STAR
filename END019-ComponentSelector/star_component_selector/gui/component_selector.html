@@ -92,6 +92,18 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .ext{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:0 7px;font-size:10px;color:var(--muted-2);margin:0 0 5px}
 .kvg{display:grid;grid-template-columns:auto 1fr;gap:2px 10px}.kvg .k{color:var(--muted)}
 .badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 7px;margin:0 4px 4px 0;font-size:10px;color:var(--muted-2)}
+.search{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}
+.search .st{border:1px solid var(--border);border-radius:10px;padding:3px 9px;font-size:10.5px;color:var(--muted-2);background:var(--panel-muted)}
+.search .st b{color:var(--text-strong)}.search .st.ok{border-color:var(--success)}.search .st.ok b{color:var(--success)}.search .st.no b{color:var(--danger)}.search .st.skip{opacity:.55}
+.why{font-size:10.5px;margin:0 0 6px;padding:3px 8px;border-radius:8px;background:var(--panel-muted);border:1px solid var(--border-soft);color:var(--muted-2)}
+.why b{color:var(--accent-2)}.why .rq{color:var(--text)}
+.ck{display:flex;gap:6px;font-size:10.5px;padding:1px 0}.ck .i{flex:0 0 12px;font-weight:700}.ck.ok .i{color:var(--success)}.ck.no .i{color:var(--danger)}.ck.no{color:var(--danger)}
+.reqs{padding:8px 12px 10px;display:flex;flex-direction:column;gap:5px}
+.rq-row{display:grid;grid-template-columns:18px 64px minmax(0,1fr);gap:8px;align-items:start;font-size:11px;padding:4px 8px;border:1px solid var(--border-soft);border-radius:9px;background:var(--panel-muted)}
+.rq-row .i{font-weight:700}.rq-row.met .i{color:var(--success)}.rq-row.not_met{border-color:var(--danger)}.rq-row.not_met .i,.rq-row.not_met .m{color:var(--danger)}
+.rq-row.not_verifiable .i,.rq-row.not_verifiable .m{color:var(--warn)}.rq-row .id{color:var(--text-strong);font-weight:700}.rq-row .t{color:var(--muted-2)}
+.xgrid .sub{opacity:.8;border-style:dashed}.xgrid .reason{color:var(--warn);font-size:10.5px;margin:0 0 6px}
+.xgrid .fitw{font-size:10.5px;color:var(--muted-2);border-top:1px solid var(--border-soft);padding-top:5px;margin-top:6px}
 @media(max-width:900px){.plwrap{grid-template-columns:1fr}.dual{grid-template-columns:1fr}body{overflow:auto}.app,.app.drawer-open{grid-template-columns:1fr;height:auto}}
 @media print{body{overflow:visible;background:#fff;color:#000}.drawer{display:none!important}.app{display:block}.card{box-shadow:none;border:1px solid #999}}
 </style>
@@ -100,12 +112,16 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 <div class="app" id="app">
   <section class="main">
     <div class="card"><div class="hd"><h2>Component Selector</h2><span class="pill" id="mode-pill">—</span></div>
-      <div class="inputs" id="inputs"></div></div>
+      <div class="inputs" id="inputs"></div><div class="search" id="search"></div></div>
     <div class="card" id="db-card"><div class="hd"><h3>Database</h3><span class="hint" id="db-sum"></span></div><div id="db"></div></div>
     <div class="card"><div class="hd"><h3>Indicators</h3><span class="hint" id="std"></span></div>
       <div class="kpis" id="kpis"></div><div class="msgs" id="msgs"></div><div class="budgets" id="budgets"></div></div>
+    <div class="card" id="rq-card"><div class="hd"><h3>Mission requirements</h3><span class="hint" id="rq-sum"></span></div><div class="reqs" id="reqs"></div></div>
     <div class="card" id="pl-card"><div class="hd"><h3>Placement</h3><span class="hint" id="pl-sum"></span></div><div id="pl"></div></div>
-    <div class="card"><div class="hd"><h3>Components</h3><span class="hint" id="count"></span></div><div class="grid" id="grid"></div></div>
+    <div class="card"><div class="hd"><h3 id="grid-title">Components</h3><span class="hint" id="count"></span></div><div class="grid" id="grid"></div></div>
+    <div class="card" id="x-card"><div class="hd"><h3>Not required by this mission</h3><span class="hint" id="x-count"></span></div>
+      <div class="hint" style="padding:8px 12px 0">Not part of the design: not counted in mass, volume, power or placement. Each card shows the best component that fits the class and whether it would still fit together with the design.</div>
+      <div class="grid xgrid" id="xgrid"></div></div>
   </section>
   <aside class="card drawer" id="drawer"><div class="hd"><h3 id="d-title">—</h3><button id="d-close">✕</button></div><div id="d-body"></div></aside>
 </div>
@@ -150,6 +166,10 @@ const API = {
   async fromRequirements() {
     if (S.mode === 'star') { try { return await findPywebview().component_selector_from_requirements(); } catch (_) {} }
     return null;
+  },
+  async design() {   // inside STAR: the design for the mission of the current run (requirements, END-001 orbits, END-016 delta-v)
+    const api = S.mode === 'star' && findPywebview();
+    return api && api.component_selector_design ? api.component_selector_design({with_images: true}) : null;
   }
 };
 
@@ -233,17 +253,49 @@ function render() {
   const r = S.result;
   $('mode-pill').textContent = S.mode === 'http' ? 'live (server)' : S.mode === 'star' ? 'live (STAR)' : 'view only (RUN results)';
   $('app').classList.toggle('drawer-open', !!S.sel);
-  if (!r || r.ok === false) { $('inputs').innerHTML = ''; $('kpis').innerHTML = `<div class="hint" style="padding:6px 0">${esc(r && r.error ? r.error : 'Computing…')}</div>`; $('budgets').innerHTML = ''; $('grid').innerHTML = ''; $('msgs').innerHTML = ''; $('db').innerHTML = ''; $('db-sum').textContent = ''; $('pl').innerHTML = ''; $('pl-sum').textContent = ''; return; }
-  renderInputs(r); renderDatabase(r); renderIndicators(r); renderPlacement(r); renderGrid(r); renderDrawer();
+  if (!r || r.ok === false) { $('inputs').innerHTML = ''; $('search').innerHTML = ''; $('kpis').innerHTML = `<div class="hint" style="padding:6px 0">${esc(r && r.error ? r.error : 'Computing…')}</div>`; $('budgets').innerHTML = ''; $('grid').innerHTML = ''; $('msgs').innerHTML = ''; $('db').innerHTML = ''; $('db-sum').textContent = ''; $('pl').innerHTML = ''; $('pl-sum').textContent = ''; $('rq-card').style.display = 'none'; $('x-card').style.display = 'none'; return; }
+  renderInputs(r); renderDatabase(r); renderIndicators(r); renderRequirements(r); renderPlacement(r); renderGrid(r); renderExtras(r); renderDrawer();
 }
+/* subsystem of a design slot ("comms_s" -> "comms"): colours, icons and acronyms follow the subsystem */
+const subOf = id => { const s = (S.result && S.result.subsystems || []).find(x => x.id === id); return (s && s.subsystem) || id; };
 function renderInputs(r) {
   const c = r.cubesat, env = c.envelope_mm.map(v => f(v, 1)).join(' × ');
   $('inputs').innerHTML = `<div><span class="lab">CubeSat class</span><div class="seg">${[1, 3, 6, 12].map(u => `<span class="${u === c.class_u ? 'on' : ''}">${u}U</span>`).join('')}</div></div>
     <div class="kv"><span class="lab">Mass limit</span><b>${f(c.mass_limit_kg)} kg</b></div>
     <div class="kv"><span class="lab">Volume limit</span><b>${sci(c.volume_limit_m3)} m³</b></div>
     <div class="kv"><span class="lab">Envelope</span><b>${esc(env)} mm</b></div>
-    <div class="ro">${S.mode === 'viewer' ? 'Results of a STAR run' : 'Inputs come from STAR'}, read-only</div>`;
+    <div class="ro">${r.mission ? (r.mission.forced_class_u ? 'Class chosen by the user' : 'Smallest CubeSat class that carries the subsystems the mission needs') + ' · ' : ''}${S.mode === 'viewer' ? 'Results of a STAR run' : 'Inputs come from STAR'}, read-only</div>`;
   $('std').textContent = c.standard;
+  const M = r.mission;
+  if (!M) { $('search').innerHTML = ''; return; }
+  const tried = M.class_search || [];
+  $('search').innerHTML = tried.map(x => `<span class="st ${x.class_u === c.class_u ? 'ok' : (x.ok ? '' : 'no')}" title="Mass ${f(x.mass_kg)} kg · internal volume ${sci(x.volume_m3)} m³ · envelope ${esc(x.fit)}"><b>${x.class_u}U</b> ${x.class_u === c.class_u ? (M.forced_class_u ? '✓ chosen by the user' : '✓ smallest class that carries them') : '✕ ' + esc(x.why)}</span>`).join('')
+    + [1, 3, 6, 12].filter(u => u > c.class_u && !tried.some(x => x.class_u === u)).map(u => `<span class="st skip"><b>${u}U</b> not needed: a smaller class carries them</span>`).join('')
+    + (M.stated_class ? `<span class="st" title="${esc(M.stated_class.requirement.text)}">Requirements state <b>${M.stated_class.class_u}U</b> (${esc(M.stated_class.requirement.id)})</span>` : '');
+}
+/* ---------------- Mission requirements: what the design meets, what no component of the database can meet ---------------- */
+function renderRequirements(r) {
+  const M = r.mission; $('rq-card').style.display = M ? '' : 'none';
+  if (!M) return;
+  const rows = M.requirements || [], bad = rows.filter(x => x.status !== 'met').length;
+  $('rq-sum').textContent = rows.length ? `${rows.length - bad} of ${rows.length} verified with published data are met` : 'No requirement can be verified with the published data';
+  const icon = {met: '✓', not_met: '✕', not_verifiable: '?'};
+  $('reqs').innerHTML = rows.map(x => `<div class="rq-row ${x.status}" title="${esc(x.requirement ? x.requirement.text : '')}"><span class="i">${icon[x.status] || '•'}</span>
+      <span class="id">${esc(x.requirement ? x.requirement.id : '—')}</span><span><span>${esc(x.what)}</span>${x.message ? `<div class="m">${esc(x.message)}</div>` : ''}
+      ${x.requirement ? `<div class="t">${esc(x.requirement.text)}</div>` : ''}</span></div>`).join('')
+    + (M.dv ? `<div class="hint">Delta-v ${f(M.dv.dv_m_s, 1)} m/s: ${esc(M.dv.why)}${M.dv.given_m_s != null ? ` · the selected thruster gives ${f(M.dv.given_m_s, 1)} m/s (total impulse / sum of the published masses)` : ''}</div>` : '')
+    + (M.altitude ? `<div class="hint">Orbit altitude ${f(M.altitude.min_km, 0)}${M.altitude.max_km !== M.altitude.min_km ? '–' + f(M.altitude.max_km, 0) : ''} km (${esc(M.altitude.source)}): GSD and swath of the imagers are scaled to it.</div>` : '')
+    + (M.notes || []).map(n => `<div class="hint">• ${esc(n)}</div>`).join('');
+}
+/* ---------------- subsystems the mission does not need ---------------- */
+function renderExtras(r) {
+  const X = (r.mission && r.mission.extras) || [];
+  $('x-card').style.display = X.length ? '' : 'none';
+  $('x-count').textContent = `${X.length} subsystem(s)`;
+  $('xgrid').innerHTML = X.map(x => `<div class="sub" data-id=""><div class="top">${iconSvg(x.subsystem || x.id)}<b>${esc(x.label)}</b><span class="cnt">${x.n_database} in database<br>${x.n_fit} fit a ${r.cubesat.class_u}U</span></div><div class="body">
+      <p class="reason">Not required: ${esc(x.why_not)}</p>
+      ${x.best ? `<p class="nm">${esc(x.best.name)}</p><p class="vd">${esc(x.best.vendor)} · ${f(x.best.mass_kg)} kg</p>` : `<p class="nm">No component meets the CubeSat ${r.cubesat.class_u}U standard</p>`}
+      <div class="fitw">${x.best ? (x.fits_with_design ? '✓ Would still fit together with the design' : '✕ Would not fit together with the design') : ''}</div></div></div>`).join('');
 }
 /* ---------------- Database panel: components, images and datasheets by class ---------------- */
 function dbBar(L, title, key, sum) {
@@ -273,15 +325,17 @@ function renderIndicators(r) {
     kpi('Internal volume', sci(t.volume_m3), `of ${sci(t.volume_limit_m3)} m³`, volOk ? 'ok' : 'bad', t.volume_unknown.length ? `${t.volume_unknown.length} component(s) without published size are not counted` : 'Sum of length × width × height of the selected internal components (solar panels, antennas and sun sensors are mounted on the faces and not counted)'),
     r.fit ? kpi('Envelope fit', esc(r.fit.label), '', {fits: 'ok', does_not_fit: 'bad', not_shown: 'warn', undetermined: 'warn'}[r.fit.state], r.fit.message) : '',
     kpi('Power (declared peak)', f(t.power_w_declared_peak, 2), 'W', t.power_unknown.length ? 'warn' : 'ok', t.power_unknown.length ? `Not publicly available for ${t.power_unknown.length} subsystem(s): ` + t.power_unknown.join(', ') : 'Sum of the maximum powers declared by the vendors'),
-    kpi('Subsystems covered', t.n_covered, `of ${t.n_subsystems}`, t.n_covered === t.n_subsystems ? 'ok' : 'warn', 'Subsystems with at least one component that fits'),
+    kpi(r.mission ? 'Required subsystems covered' : 'Subsystems covered', t.n_covered, `of ${t.n_subsystems}`, t.n_covered === t.n_subsystems ? 'ok' : 'warn', r.mission ? 'Subsystems the mission needs with at least one component that fits' : 'Subsystems with at least one component that fits'),
+    r.mission ? (() => { const q = r.mission.requirements || [], met = q.filter(x => x.status === 'met').length;
+      return kpi('Requirements met', met, `of ${q.length}`, met === q.length ? 'ok' : 'bad', 'Mission requirements verified with the published data of the selected components (see Mission requirements)'); })() : '',
     kpi('Published key data', Math.round(100 * comp), '%', comp >= 0.8 ? 'ok' : 'warn', 'Average fraction of the key data of the selected components that the vendors publish'),
     kpi('Vendors', vendors.size, '', 'ok', [...vendors].join(', ')),
   ].join('');
   $('msgs').innerHTML = r.messages.map(m => '• ' + esc(m)).join('<br>');
   const bar = (obj, unit, digits) => {
     const total = Object.values(obj).reduce((a, b) => a + b, 0) || 1, items = Object.entries(obj);
-    return `<div class="bar">${items.map(([k, v]) => `<i style="width:${100 * v / total}%;background:${catColor(k)}" title="${esc(labelOf(k))}: ${f(v, digits)} ${unit}"></i>`).join('')}</div>
-      <div class="legend">${items.map(([k, v]) => `<span><b style="background:${catColor(k)}"></b>${esc(labelOf(k))} ${f(v, digits)}</span>`).join('')}</div>`;
+    return `<div class="bar">${items.map(([k, v]) => `<i style="width:${100 * v / total}%;background:${catColor(subOf(k))}" title="${esc(labelOf(k))}: ${f(v, digits)} ${unit}"></i>`).join('')}</div>
+      <div class="legend">${items.map(([k, v]) => `<span><b style="background:${catColor(subOf(k))}"></b>${esc(labelOf(k))} ${f(v, digits)}</span>`).join('')}</div>`;
   };
   const mb = r.breakdown.mass_kg, pb = r.breakdown.power_w;
   const free = Math.max(0, t.mass_limit_kg - t.mass_kg);
@@ -293,15 +347,18 @@ const labelOf = id => { const s = (S.result && S.result.subsystems || []).find(x
 const nameOf = (r, cid) => { for (const s of r.subsystems) if (s.selected && s.selected.id === cid) return s.label; return cid; };
 function valueHtml(row) { return row.value == null ? `<span class="na">${NA}</span>` : esc(row.value) + (row.unit ? ' ' + esc(row.unit) : '') + '<sup>1</sup>'; }
 function renderGrid(r) {
-  $('count').textContent = `${r.totals.n_covered} of ${r.totals.n_subsystems} subsystems · one card per subsystem`;
+  $('grid-title').textContent = r.mission ? 'Design · components the mission needs' : 'Components';
+  $('count').textContent = r.mission ? `${r.totals.n_covered} of ${r.totals.n_subsystems} required subsystems · one card per subsystem` : `${r.totals.n_covered} of ${r.totals.n_subsystems} subsystems · one card per subsystem`;
   $('grid').innerHTML = r.subsystems.map(s => {
-    const k = s.selected, cls = r.cubesat.class_u;
-    const top = `<div class="top">${iconSvg(s.id)}<b>${esc(s.label)}</b><span class="cnt">${s.n_database} in database<br>${s.n_fit} fit a ${cls}U</span></div>`;
-    if (!k) return `<div class="sub" data-id="">${top}<div class="nodata"><b>No component meets the CubeSat ${cls}U standard</b>${s.note ? `<div class="hint" style="margin-top:4px">${esc(s.note)}</div>` : ''}</div></div>`;
+    const k = s.selected, cls = r.cubesat.class_u, D = s.design;
+    const top = `<div class="top">${iconSvg(s.subsystem || s.id)}<b>${esc(s.label)}</b><span class="cnt">${s.n_database} in database<br>${s.n_fit} fit a ${cls}U</span></div>`;
+    const why = D ? `<div class="why"><b>${D.source === 'bus' ? 'Bus' : 'Required'}</b> · ${esc(D.why)}${D.requirement ? ` · <span class="rq" title="${esc(D.requirement.text)}">${esc(D.requirement.id)}</span>` : ''}</div>` : '';
+    const checks = D ? (D.checks || []).map(c => `<div class="ck ${c.met ? 'ok' : 'no'}"><span class="i">${c.met ? '✓' : '✕'}</span><span>${esc(c.requirement || '')} ${esc(c.what)}${c.value ? ': ' + esc(c.value) : ''}</span></div>`).join('') : '';
+    if (!k) return `<div class="sub" data-id="">${top}<div class="nodata">${why}<b>No component meets the CubeSat ${cls}U standard</b>${s.note ? `<div class="hint" style="margin-top:4px">${esc(s.note)}</div>` : ''}</div></div>`;
     const alts = (s.alternatives || []).slice(0, 3).map(a => esc(a.name)).join(' · ') + (s.alternatives.length > 3 ? ` · +${s.alternatives.length - 3}` : '');
     const doc = (k.source || {}).document || (k.source || {}).url || '';
-    return `<div class="sub ${S.sel && S.sel.id === k.id ? 'sel' : ''}" data-id="${esc(k.id)}">${top}<div class="body">
-      <p class="nm">${esc(k.name)}</p><p class="vd">${esc(k.vendor)}</p>${k.external ? '<span class="ext" title="Mounted on a face of the CubeSat: not counted in the internal volume (declared rule)">External · outside the internal volume</span>' : ''}
+    return `<div class="sub ${S.sel && S.sel.id === k.id ? 'sel' : ''}" data-id="${esc(k.id)}">${top}<div class="body">${why}
+      <p class="nm">${esc(k.name)}</p><p class="vd">${esc(k.vendor)}</p>${checks ? `<div style="margin:0 0 5px">${checks}</div>` : ''}${k.external ? '<span class="ext" title="Mounted on a face of the CubeSat: not counted in the internal volume (declared rule)">External · outside the internal volume</span>' : ''}
       ${k.rows.map(row => `<div class="r"><span>${esc(row.label)}</span><span>${valueHtml(row)}</span></div>`).join('')}
       ${alts ? `<div class="alt">Also fit: ${alts}</div>` : ''}
       <div class="src"><sup>1</sup> ${esc(doc)}${(k.source || {}).retrieved ? ' · retrieved ' + esc(k.source.retrieved) : ''}</div></div></div>`;
@@ -448,7 +505,10 @@ $('d-close').onclick = () => { S.sel = null; render(); };
 /* ---------------- compute ---------------- */
 async function compute() {
   if (S.mode === 'viewer') return;
-  try { S.result = await API.select({form_factor_u: S.params.form_factor_u}); } catch (err) { S.result = {ok: false, error: String(err)}; }
+  try {   // the mission design when STAR has the requirements of a run, otherwise the selection for the class (all subsystems)
+    const d = await API.design();
+    S.result = d && d.ok !== false ? d : await API.select({form_factor_u: S.params.form_factor_u});
+  } catch (err) { S.result = {ok: false, error: String(err)}; }
   S.sel = null; render();
 }
 function loadResult(payload) {

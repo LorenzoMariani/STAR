@@ -1,0 +1,494 @@
+"""Progetto di un CubeSat per una missione (STAR, 2026-10-15): quali sottosistemi servono, quali componenti soddisfano i requisiti, la classe
+piu' piccola che li porta tutti e i sottosistemi non richiesti, elencati a parte.
+
+Ogni decisione e' una regola dichiarata applicata al testo dei requisiti o un confronto con i dati pubblicati dei fornitori, e cita il requisito
+da cui viene. Nessun valore e' stimato: un componente che non pubblica il dato non puo' dimostrare di soddisfare il requisito.
+
+Sottosistemi richiesti (regole dichiarate):
+  * bus, sempre: struttura, OBC, EPS, batteria, celle solari, una radio con la sua antenna;
+  * radio e antenna: una coppia per ogni banda nominata nei requisiti (UHF, VHF, S, X), altrimenti una;
+  * ADCS: stabilizzazione, puntamento, assetto, oppure un payload che riprende immagini. Le unita' ADCS del catalogo sono sistemi completi
+    (sensori e attuatori): ruote, magnetorquer, star tracker e sensori solari separati entrano solo se un requisito li nomina;
+  * GNSS (ricevitore e antenna): posizione a bordo, determinazione orbitale, geolocalizzazione, sincronizzazione, formazione, separazione
+    sicura o collisioni, oppure propulsione nel progetto;
+  * propulsione: manovre (mantenimento dell'orbita, phasing, formazione, compensazione della resistenza, delta-v, rientro controllato),
+    oppure END-016 nella stessa run: delta-v di smaltimento per la scadenza scritta nei requisiti, o orbita che decade prima della fine
+    della missione;
+  * imager: immagini, camera, GSD, swath; terminale ottico: link ottico o laser.
+Requisiti verificati con i dati pubblicati:
+  * GSD e swath dell'imager alla quota dell'orbita (al nadir sono proporzionali alla quota): quote di END-001 se ci sono, altrimenti la quota
+    peggiore dell'intervallo dei requisiti (la piu' alta per il GSD, la piu' bassa per lo swath);
+  * precisione di puntamento pubblicata dell'unita' ADCS; tre assi (escluse le unita' a ruota singola "Y-Momentum");
+  * banda della radio e dell'antenna; delta-v del propulsore (impulso totale / somma delle masse pubblicate); massa massima del satellite.
+  Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
+  sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
+Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
+una classe scelta dall'utente prevale. Una classe scritta nei requisiti e' solo riportata."""
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+from typing import Any, Callable
+
+from .fit import check_fit
+from .models import Component
+from .rows import subsystem_of
+from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, select, total_impulse_ns
+
+NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+             "fifteen": 15, "twenty": 20, "twenty-five": 25, "thirty": 30}
+BANDS = (("UHF", r"\buhf\b"), ("VHF", r"\bvhf\b"), ("S", r"\bs[- ]band\b"), ("X", r"\bx[- ]band\b"))
+BUS = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna")
+# esiti del controllo di ingombro con cui una classe e' accettata: "undetermined" = a un componente mancano le quote pubblicate (massa,
+# volume e pila noti entro i limiti; non e' dimostrato che non entri: l'avviso resta nell'esito)
+ACCEPTED_FIT = ("fits", "undetermined")
+ADCS_PARTS = ("magnetorquer", "reaction_wheel", "star_tracker", "sun_sensor")
+NUM = r"(\d+(?:\.\d+)?)"
+
+RULES: dict[str, tuple[str, str]] = {   # sottosistema -> (espressione sul testo dei requisiti, motivo)
+    "adcs": (r"\b(three-axis|3-axis|stabili[sz]\w*|pointing|point\w* (nominally )?at nadir|nadir[- ]pointing|attitude)\b",
+             "the mission asks for attitude control"),
+    "payload_imager": (r"\b(camera|imager|images?|imaging|push-?broom|ground sample distance|gsd|swath|multispectral|hyperspectral|panchromatic)\b",
+                       "the mission takes images"),
+    "payload_optical": (r"\b(optical|laser)[- ](communication|terminal|link|downlink)s?\b|\blasercom\b", "the mission asks for an optical link"),
+    "propulsion": (r"\b(man(o)?euv\w*|orbit (maintenance|raising|lowering|transfer|control)|station[- ]keeping|drag (compensation|make-?up)|"
+                   r"phasing|formation[- ](flying|keeping)|delta-?v|controlled re-?entry|de-?orbit\w* (burn|manoeuvre|maneuver))\b",
+                   "the mission asks for manoeuvres"),
+    "gps": (r"\b(gnss|gps|position knowledge|on-?board position|orbit determination|geolocat\w*|georeferenc\w*|time[- ]tagg\w*|"
+            r"formation|safe separation|collision\w*|close approach\w*)\b", "the mission needs the satellite position on board"),
+    "magnetorquer": (r"\b(magnetorquer|magnetic torquer|torque rod)s?\b", "named in the requirements"),
+    "reaction_wheel": (r"\breaction wheels?\b", "named in the requirements"),
+    "star_tracker": (r"\bstar trackers?\b", "named in the requirements"),
+    "sun_sensor": (r"\bsun sensors?\b", "named in the requirements"),
+}
+NOUNS = {"payload_imager": "payload imager", "payload_optical": "optical terminal", "comms": "radio", "antenna": "antenna", "adcs": "ADCS unit",
+         "propulsion": "thruster", "gps": "GNSS receiver", "gnss_antenna": "GNSS antenna", "solar_panel": "solar panel"}
+NOT_REQUIRED = {
+    "adcs": "no requirement asks for attitude control or images",
+    "payload_imager": "no requirement asks for images",
+    "payload_optical": "no requirement asks for an optical link",
+    "propulsion": "no requirement asks for manoeuvres and no delta-v is needed",
+    "gps": "no requirement needs the satellite position on board", "gnss_antenna": "no requirement needs the satellite position on board",
+}
+
+
+@dataclass
+class Req:
+    id: str
+    text: str
+
+    @property
+    def low(self) -> str:
+        return re.sub(r"\s+", " ", self.text.lower())
+
+    def as_dict(self) -> dict[str, str]:
+        return {"id": self.id, "text": self.text}
+
+
+@dataclass
+class Check:
+    """Un requisito verificabile con i dati pubblicati. test(componente) -> True/False (None = dato non pubblicato) per i requisiti di un posto."""
+    key: str
+    slot: str | None
+    req: Req | None
+    what: str
+    test: Callable[[Component], bool | None] | None = None
+    value: Callable[[Component], str | None] | None = None
+    status: str = "met"            # met | not_met | not_verifiable
+    message: str = ""
+
+
+@dataclass
+class Need:
+    slot: Slot
+    why: str
+    req: Req | None
+    source: str                    # bus | requirement | END-016 | rule
+    checks: list[Check] = field(default_factory=list)
+
+
+def _reqs(requirements: Any) -> list[Req]:
+    if isinstance(requirements, str):
+        requirements = [requirements]
+    out = []
+    for i, r in enumerate(requirements or [], start=1):
+        if isinstance(r, dict):
+            out.append(Req(str(r.get("id") or f"REQ-{i:03d}"), str(r.get("text") or "")))
+        else:
+            out.append(Req(f"REQ-{i:03d}", str(r)))
+    return [r for r in out if r.text.strip()]
+
+
+def _find(reqs: list[Req], rx: str) -> tuple[Req, re.Match] | None:
+    for r in reqs:
+        m = re.search(rx, r.low)
+        if m:
+            return r, m
+    return None
+
+
+def _num(word: str) -> float | None:
+    try:
+        return float(word)
+    except ValueError:
+        return NUM_WORDS.get(word.lower())
+
+
+def _scaled(c: Component, key: str, h_km: float) -> float | None:
+    """GSD o swath pubblicato alla quota di riferimento del fornitore, riportato alla quota h (al nadir sono proporzionali alla quota)."""
+    v, ref = c.spec(key), c.spec("reference_altitude_km")
+    if v is None or not ref:
+        return None
+    return float(v) * h_km / float(ref)
+
+
+def altitude_from_requirements(reqs: list[Req]) -> tuple[float, float, Req] | None:
+    for r in reqs:
+        if "altitude" not in r.low and "orbit" not in r.low:
+            continue
+        m = re.search(rf"{NUM}\s*km\s*(?:and|to|-|–)\s*{NUM}\s*km", r.low) or re.search(rf"between {NUM} and {NUM}\s*km", r.low)
+        if m:
+            a, b = float(m.group(1)), float(m.group(2))
+            return min(a, b), max(a, b), r
+        m = re.search(rf"(?:altitude of|at an altitude of|at) {NUM}\s*km", r.low) or re.search(rf"{NUM}\s*km (?:of )?altitude", r.low)
+        if m:
+            return float(m.group(1)), float(m.group(1)), r
+    return None
+
+
+# --------------------------------------------------------------------------- analisi dei requisiti
+
+
+def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Sottosistemi richiesti (posti), requisiti verificabili, delta-v e massa massima. context: {"altitude_km": [min, max], "altitude_source",
+    "end016": riepilogo di END-016 (space_safety_summary.json)}."""
+    ctx = context or {}
+    reqs = _reqs(requirements)
+    needs: dict[str, Need] = {}
+    notes: list[str] = []
+
+    # quota dell'orbita: END-001 della stessa run, altrimenti l'intervallo dei requisiti
+    alt = None
+    if ctx.get("altitude_km"):
+        v = ctx["altitude_km"]
+        lo, hi = (v, v) if isinstance(v, (int, float)) else (min(v), max(v))
+        alt = {"min_km": float(lo), "max_km": float(hi), "source": ctx.get("altitude_source") or "END-001 (designed orbits)", "req": None}
+    elif (a := altitude_from_requirements(reqs)):
+        alt = {"min_km": a[0], "max_km": a[1], "source": f"{a[2].id} (altitude range of the requirements)", "req": a[2]}
+
+    def need(sid: str, why: str, req: Req | None, source: str, slot_id: str | None = None, label: str | None = None) -> Need:
+        sid_slot = slot_id or sid
+        if sid_slot not in needs:
+            needs[sid_slot] = Need(Slot(sid_slot, sid, label or LABELS[sid]), why, req, source)
+        return needs[sid_slot]
+
+    # bus; radio e antenna per banda
+    bands = []
+    for band, rx in BANDS:
+        hit = _find(reqs, rx)
+        if hit:
+            bands.append((band, hit[0]))
+    for sid in BUS:
+        if sid in ("comms", "antenna") and bands:
+            continue
+        need(sid, "every CubeSat needs it", None, "bus")
+    for band, r in bands:
+        tag = band.lower()
+        radio = need("comms", f"the mission downlinks in {band} band", r, "requirement", f"comms_{tag}", f"COMMS RADIO · {band}")
+        radio.checks.append(Check("band", radio.slot.id, r, f"radio in {band} band",
+                                  lambda c, b=band: None if not c.spec("band") else b in str(c.spec("band")).upper().replace("-BAND", "").split("/"),
+                                  lambda c: c.spec("band")))
+        ant = need("antenna", f"antenna of the {band} radio", r, "requirement", f"antenna_{tag}", f"ANTENNA · {band}")
+        ant.checks.append(Check("band", ant.slot.id, r, f"antenna in {band} band",
+                                lambda c, b=band: None if not c.spec("bands") else b in [str(x).upper() for x in c.spec("bands")],
+                                lambda c: ", ".join(c.spec("bands") or []) or None))
+
+    # sottosistemi richiesti dai requisiti
+    for sid in ("payload_imager", "payload_optical", "adcs", "magnetorquer", "reaction_wheel", "star_tracker", "sun_sensor", "gps", "propulsion"):
+        rx, why = RULES[sid]
+        hit = _find(reqs, rx)
+        if hit:
+            need(sid, why, hit[0], "requirement")
+    if "payload_imager" in needs and "adcs" not in needs:
+        need("adcs", "an imaging payload needs pointing", needs["payload_imager"].req, "rule")
+
+    # delta-v: scritto nei requisiti, oppure calcolato da END-016 per la scadenza di smaltimento dei requisiti
+    dv: dict[str, Any] | None = None
+    if (hit := _find(reqs, rf"delta-?v[^.\d]{{0,30}}?{NUM}\s*m/s")):
+        dv = {"dv_m_s": float(hit[1].group(1)), "why": f"delta-v of {float(hit[1].group(1)):g} m/s", "req": hit[0], "source": "requirement"}
+    e16 = ctx.get("end016") or None
+    if dv is None and e16:
+        k = e16.get("kpis") or {}
+        total, parts, req = 0.0, [], None
+        hit = _find(reqs, r"(?:re-?enter|de-?orbit|dispos)\w*[^.]*?within (\d+|[a-z-]+) years")
+        if hit and (years := _num(hit[1].group(1))):
+            d = k.get(f"disposal_dv_m_s_{int(years)}y_rule_mean_activity")
+            if isinstance(d, (int, float)) and d > 0:
+                total += float(d)
+                life = k.get("passive_lifetime_years_mean_activity")
+                parts.append(f"re-entry within {int(years)} years ({hit[0].id}) needs {d:.1f} m/s"
+                             + (f": passive lifetime {life:.1f} years at mean solar activity" if isinstance(life, (int, float)) else ""))
+                req = hit[0]
+            elif d is None:
+                notes.append(f"END-016 has no disposal delta-v for the {int(years)}-year deadline of {hit[0].id}.")
+        if k.get("orbit_maintenance_needed"):
+            years = (e16.get("config") or {}).get("mission_lifetime_years")
+            rate = k.get("drag_makeup_dv_m_s_per_year_mean_activity")
+            if isinstance(years, (int, float)) and isinstance(rate, (int, float)):
+                total += rate * years
+                parts.append(f"the orbit decays before the end of the mission: drag make-up {rate:.2f} m/s per year for {years:g} years")
+        if total > 0:
+            dv = {"dv_m_s": total, "why": "END-016 of this run: " + "; ".join(parts) + " (spacecraft mass and drag area of END-001)", "req": req, "source": "END-016"}
+    if dv is not None and "propulsion" not in needs:
+        need("propulsion", dv["why"], dv["req"], dv["source"])
+    if "propulsion" in needs:
+        for sid in ("gps",):
+            need(sid, "manoeuvres need the orbit on board", needs["propulsion"].req, "rule")
+    if "gps" in needs:
+        need("gnss_antenna", "antenna of the GNSS receiver", needs["gps"].req, needs["gps"].source)
+
+    # requisiti verificabili dei posti
+    if "payload_imager" in needs:
+        img = needs["payload_imager"]
+        if (hit := _find(reqs, rf"(?:ground sample distance|gsd)[^.\d]{{0,40}}?{NUM}\s*m\b")):
+            g = float(hit[1].group(1))
+            if alt:
+                h = alt["max_km"]
+                img.checks.append(Check("gsd", img.slot.id, hit[0], f"GSD <= {g:g} m at {h:.0f} km",
+                                        lambda c, h=h, g=g: None if (v := _scaled(c, "gsd_m_at_ref", h)) is None else v <= g + 1e-9,
+                                        lambda c, h=h: None if (v := _scaled(c, "gsd_m_at_ref", h)) is None else f"{v:.2f} m at {h:.0f} km"))
+            else:
+                img.checks.append(Check("gsd", img.slot.id, hit[0], f"GSD <= {g:g} m", status="not_verifiable",
+                                        message=f"{hit[0].id}: GSD {g:g} m not verifiable: the orbit altitude is not known (no END-001 orbits, no altitude in the requirements)."))
+        if (hit := _find(reqs, rf"swath[^.\d]{{0,30}}?{NUM}\s*km")):
+            s = float(hit[1].group(1))
+            if alt:
+                h = alt["min_km"]
+                img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km at {h:.0f} km",
+                                        lambda c, h=h, s=s: None if (v := _scaled(c, "swath_km_at_ref", h)) is None else v >= s - 1e-9,
+                                        lambda c, h=h: None if (v := _scaled(c, "swath_km_at_ref", h)) is None else f"{v:.1f} km at {h:.0f} km"))
+            else:
+                img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km", status="not_verifiable",
+                                        message=f"{hit[0].id}: swath {s:g} km not verifiable: the orbit altitude is not known."))
+    if "adcs" in needs:
+        ad = needs["adcs"]
+        if (hit := _find(reqs, rf"pointing accuracy[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)")):
+            acc = float(hit[1].group(1)) / (3600.0 if hit[1].group(2).startswith("arc") else 1.0)
+            ad.checks.append(Check("pointing", ad.slot.id, hit[0], f"pointing accuracy <= {acc:g} deg",
+                                   lambda c, a=acc: None if c.spec("pointing_accuracy_deg") is None else float(c.spec("pointing_accuracy_deg")) <= a + 1e-12,
+                                   lambda c: None if c.spec("pointing_accuracy_deg") is None else f"{c.spec('pointing_accuracy_deg'):g} deg"))
+        if (hit := _find(reqs, r"\b(three-axis|3-axis)\b")):
+            ad.checks.append(Check("three_axis", ad.slot.id, hit[0], "three-axis control",
+                                   lambda c: "y-momentum" not in str(c.raw.get("name", "")).lower(),
+                                   lambda c: "single-wheel momentum bias" if "y-momentum" in str(c.raw.get("name", "")).lower() else "three-axis"))
+    if dv is not None:
+        needs["propulsion"].checks.append(Check("dv", "propulsion", dv["req"], f"delta-v >= {dv['dv_m_s']:.1f} m/s",
+                                                lambda c: None if total_impulse_ns(c) is None else True,
+                                                lambda c: None if total_impulse_ns(c) is None else f"total impulse {total_impulse_ns(c):g} N·s"))
+    mass_limit = None
+    if (hit := _find(reqs, rf"mass[^.\d]{{0,40}}?(?:not exceeding|not exceed|of at most|at most|no more than|below|up to|less than|<=?)\s*{NUM}\s*kg")):
+        mass_limit = {"kg": float(hit[1].group(1)), "req": hit[0]}
+
+    stated = None
+    if (hit := _find(reqs, r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)") or _find(reqs, r"\b(1|3|6|12)\s*-?\s*unit\s+cubesat")):
+        stated = {"class_u": int(hit[1].group(1)), "req": hit[0]}
+
+    order = {sid: n for n, (sid, _, _) in enumerate(SUBSYSTEMS)}
+    ordered = sorted(needs.values(), key=lambda nd: (order[nd.slot.subsystem], nd.slot.id))
+    return {"reqs": reqs, "needs": ordered, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "notes": notes}
+
+
+# --------------------------------------------------------------------------- componenti ammessi per posto
+
+
+def _allowed(catalog: list[Component], nd: Need) -> tuple[frozenset[str] | None, list[Check]]:
+    """Componenti del posto che soddisfano i suoi requisiti; se nessuno li soddisfa tutti, quelli che ne soddisfano di piu' (nell'ordine dei
+    requisiti). Restituisce (id ammessi o None = tutti, requisiti non soddisfatti da nessun componente del catalogo)."""
+    tests = [ck for ck in nd.checks if ck.test is not None and ck.status != "not_verifiable"]
+    if not tests:
+        return None, []
+    members = [c for c in catalog if subsystem_of(c) == nd.slot.subsystem]
+    scored = [(tuple(bool(ck.test(c)) for ck in tests), c) for c in members]
+    full = tuple(True for _ in tests)
+    ok = [c for s, c in scored if s == full]
+    if ok:
+        return frozenset(c.id for c in ok), []
+    if not scored:
+        return None, tests
+    best = max(s for s, _ in scored)
+    unmet = [ck for ck, met in zip(tests, best) if not met]
+    return frozenset(c.id for s, c in scored if s == best), unmet
+
+
+# --------------------------------------------------------------------------- progetto
+
+
+def _class_reason(sel: Selection, fit: dict[str, Any], dv: float | None, catalog, slots, mass_limit) -> str:
+    missing = [r.label for r in sel.subsystems if r.selected is None]
+    if missing:
+        return "no component fits for " + ", ".join(missing)
+    cls = sel.cubesat
+    if not sel.within_limits:
+        idx = [r for r in sel.subsystems if r.selected]
+        lo_mass = sum(min((k.mass_kg or 0.0) for k in [r.selected, *r.alternatives]) for r in idx)
+        lo_vol = sum(min((k.volume_m3 or 0.0) for k in [r.selected, *r.alternatives]) for r in idx)
+        if lo_mass > cls.mass_limit_kg + 1e-9:
+            return f"even the lightest components weigh {lo_mass:.2f} kg > {cls.mass_limit_kg:g} kg"
+        if lo_vol > cls.volume_limit_m3 + 1e-15:
+            return f"even the smallest internal components need {lo_vol:.3e} m³ > {cls.volume_limit_m3:.3e} m³"
+        if dv and select(catalog, cls.units, 1.0, slots=slots, mass_limit_kg=mass_limit).within_limits:
+            return f"no thruster that fits gives {dv:.1f} m/s to the whole satellite"
+        return "the components do not fit together (mass, volume or stack)"
+    return fit["label"] if fit["state"] != "fits" else "fits"
+
+
+def design(catalog: list[Component], requirements: Any, context: dict[str, Any] | None = None, forced_class_u: int | None = None,
+           time_budget_s: float = 2.0) -> tuple[Selection, dict[str, Any]]:
+    """Selezione dei soli sottosistemi richiesti nella classe piu' piccola che li porta (o in quella scelta dall'utente) + il blocco "mission"."""
+    a = analyse(requirements, context)
+    needs: list[Need] = a["needs"]
+    unmet: list[Check] = []
+    slots: list[Slot] = []
+    for nd in needs:
+        allowed, bad = _allowed(catalog, nd)
+        for ck in bad:
+            ck.status = "not_met"
+        unmet += bad
+        slots.append(Slot(nd.slot.id, nd.slot.subsystem, nd.slot.label, allowed))
+    dv = a["dv"]["dv_m_s"] if a["dv"] else None
+    mass_limit = a["mass_limit"]["kg"] if a["mass_limit"] else None
+    classes = [forced_class_u] if forced_class_u else sorted(CLASSES)
+
+    def search(dv_x, ml_x):
+        log, found = [], None
+        for u in classes:
+            sel = select(catalog, u, time_budget_s, slots=slots, dv_m_s=dv_x, mass_limit_kg=ml_x)
+            fit = check_fit(sel)
+            ok = sel.within_limits and all(r.selected for r in sel.subsystems) and fit["state"] in ACCEPTED_FIT
+            log.append({"class_u": u, "ok": ok, "why": "fits" if ok else _class_reason(sel, fit, dv_x, catalog, slots, ml_x),
+                        "mass_kg": round(sel.mass_kg, 3), "volume_m3": sel.volume_m3, "fit": fit["state"]})
+            if ok:
+                found = (u, sel)
+                break
+        return found, log
+
+    found, log = search(dv, mass_limit)
+    relaxed: list[str] = []
+    if found is None and dv:
+        alt_found, _ = search(None, mass_limit)
+        if alt_found:
+            found, relaxed = alt_found, ["dv"]
+    if found is None and mass_limit:
+        alt_found, _ = search(dv if "dv" not in relaxed else None, None)
+        if alt_found:
+            found, relaxed = alt_found, relaxed + ["mass"]
+    if found is None:       # nemmeno la classe piu' grande li porta: si mostra quella, con il motivo
+        u = classes[-1]
+        found = (u, select(catalog, u, time_budget_s, slots=slots, dv_m_s=dv, mass_limit_kg=mass_limit))
+    units, sel = found
+
+    # requisiti del progetto (delta-v, massa) e della classe
+    checks: list[Check] = [ck for nd in needs for ck in nd.checks]
+    prop = next((r for r in sel.subsystems if r.subsystem == "propulsion" and r.selected), None)
+    dv_info = None
+    if a["dv"]:
+        ck = next(c for c in checks if c.key == "dv")
+        given = (total_impulse_ns(prop.selected.comp) or 0.0) / sel.mass_kg if prop and sel.mass_kg > 0 else None
+        dv_info = {"dv_m_s": dv, "why": a["dv"]["why"], "source": a["dv"]["source"], "given_m_s": given,
+                   "requirement": a["dv"]["req"].as_dict() if a["dv"]["req"] else None}
+        if "dv" in relaxed or given is None or given < dv - 1e-9:
+            ck.status = "not_met"
+            if ck not in unmet:
+                unmet.append(ck)
+    if a["mass_limit"]:
+        ml = a["mass_limit"]
+        ck = Check("mass", None, ml["req"], f"satellite mass <= {ml['kg']:g} kg")
+        if "mass" in relaxed or sel.mass_kg > ml["kg"] + 1e-9:
+            ck.status = "not_met"
+            unmet.append(ck)
+        checks.append(ck)
+    for ck in unmet:
+        nd = next((n for n in needs if n.slot.id == ck.slot), None)
+        what = "component"
+        if nd:
+            what = NOUNS.get(nd.slot.subsystem, LABELS[nd.slot.subsystem].lower())
+            if nd.slot.id != nd.slot.subsystem and nd.slot.subsystem in ("comms", "antenna"):
+                what = nd.slot.id.split("_", 1)[1].upper() + " " + what
+        if ck.key == "dv":
+            ck.message = (f"Does not satisfy {ck.req.id if ck.req else 'the delta-v need'} ({ck.what}): no thruster in the database gives "
+                          f"{dv:.1f} m/s to this satellite" + (f" (the selected one gives {dv_info['given_m_s']:.1f} m/s)." if dv_info and dv_info['given_m_s'] else "."))
+        elif ck.key == "mass":
+            ck.message = f"Does not satisfy {ck.req.id} ({ck.what}): the lightest selection that the mission needs weighs {sel.mass_kg:.2f} kg."
+        else:
+            others = [c.what for c in (nd.checks if nd else []) if c is not ck and c.status == "met" and c.test is not None]
+            ck.message = (f"Does not satisfy {ck.req.id if ck.req else 'a requirement'} ({ck.what}): no {what} in the database meets it"
+                          + (f" together with {' and '.join(others)}." if others else "."))
+    for ck in checks:
+        if ck.status == "not_verifiable" and ck not in unmet:
+            unmet.append(ck)
+
+    # schede del progetto: motivo e requisiti verificati sul componente scelto
+    by_slot = {nd.slot.id: nd for nd in needs}
+    per_slot = {}
+    for r in sel.subsystems:
+        nd = by_slot[r.id]
+        rows = []
+        for ck in nd.checks:
+            if ck.test is None or ck.status == "not_verifiable":
+                continue
+            met = bool(ck.test(r.selected.comp)) if r.selected else False
+            val = ck.value(r.selected.comp) if (r.selected and ck.value) else None
+            if ck.key == "dv" and dv_info and dv_info["given_m_s"] is not None:
+                met = dv_info["given_m_s"] >= dv - 1e-9
+                val = f"{dv_info['given_m_s']:.1f} m/s ({val})"
+            rows.append({"requirement": ck.req.id if ck.req else None, "what": ck.what, "value": val, "met": met})
+        per_slot[r.id] = {"why": nd.why, "source": nd.source, "requirement": nd.req.as_dict() if nd.req else None, "checks": rows}
+
+    # sottosistemi non richiesti: miglior componente che entra nella classe e se starebbe insieme al progetto
+    needed = {nd.slot.subsystem for nd in needs}
+    extras = []
+    for sid, _, label in SUBSYSTEMS:
+        if sid in needed:
+            continue
+        if sid in ADCS_PARTS and "adcs" in needed:
+            reason = "contained in the integrated ADCS unit of the design (the catalogue's ADCS units include their sensors and actuators)"
+        elif sid in ADCS_PARTS:
+            reason = "no requirement asks for attitude control"
+        else:
+            reason = NOT_REQUIRED.get(sid, "not required by the mission")
+        trial = select(catalog, units, 1.0, slots=[*[Slot(s.id, s.subsystem, s.label, s.allowed) for s in slots], Slot(sid, sid, label)],
+                       dv_m_s=dv if "dv" not in relaxed else None, mass_limit_kg=mass_limit if "mass" not in relaxed else None)
+        rec = next(r for r in trial.subsystems if r.id == sid)
+        alone = rec.selected if rec.selected is not None else None
+        together = trial.within_limits and rec.selected is not None and check_fit(trial)["state"] in ACCEPTED_FIT
+        extras.append({"id": sid, "subsystem": sid, "label": label, "why_not": reason, "n_database": rec.n_database, "n_fit": rec.n_fit,
+                       "best": None if alone is None else {"id": alone.comp.id, "name": alone.comp.raw["name"], "vendor": alone.comp.raw["vendor"],
+                                                           "mass_kg": alone.mass_kg},
+                       "fits_with_design": together})
+
+    stated = a["stated"]
+    notes = list(a["notes"])
+    if stated and stated["class_u"] != units and not forced_class_u:
+        notes.append(f"{stated['req'].id} states a {stated['class_u']}U CubeSat: the subsystems the mission needs fit a {units}U, the smallest class"
+                     + (f" ({units}U is larger: a smaller class cannot carry them)." if units > stated["class_u"] else "."))
+    if a["dv"] and a["dv"]["source"] == "END-016":
+        notes.append("The disposal delta-v comes from END-016 for the spacecraft mass and drag area END-001 used; a lighter satellite decays differently.")
+    alt = a["altitude"]
+    mission = {
+        "class_search": log,
+        "chosen_class_u": units, "forced_class_u": forced_class_u,
+        "stated_class": None if not stated else {"class_u": stated["class_u"], "requirement": stated["req"].as_dict()},
+        "relaxed": relaxed,
+        "altitude": None if not alt else {"min_km": alt["min_km"], "max_km": alt["max_km"], "source": alt["source"]},
+        "dv": dv_info,
+        "mass_limit": None if not a["mass_limit"] else {"kg": a["mass_limit"]["kg"], "requirement": a["mass_limit"]["req"].as_dict()},
+        "requirements": [{"requirement": ck.req.as_dict() if ck.req else None, "what": ck.what, "slot": ck.slot, "status": ck.status,
+                          "message": ck.message} for ck in checks],
+        "unmet": [ck.message for ck in unmet if ck.message],
+        "subsystems": per_slot,
+        "extras": extras,
+        "notes": notes,
+        "rules": "Bus always; other subsystems only when a requirement asks for them (or END-016 needs a delta-v); one radio and antenna per band; "
+                 "smallest CubeSat class that carries them (mass, volume, stack, envelope fit).",
+    }
+    return sel, mission

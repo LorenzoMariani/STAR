@@ -2,6 +2,17 @@
 
 Data: 2026-10-13. Serve a riprendere il lavoro su un altro computer (e in una nuova conversazione) per integrare il modulo in STAR, aggiungere KPI, renderlo usabile quasi in tempo reale per una demo e disegnare l'interfaccia grafica.
 
+## 0. Modifiche fatte in STAR il 2026-10-15 (progetto per la missione) - da integrare prima della prossima consegna
+
+Su richiesta del responsabile di STAR il selettore progetta il CubeSat che la missione chiede (nuovo `star_selector/mission.py`, 19 test in `tests/test_mission.py`, 144 test in tutto):
+
+1. **Solo i sottosistemi richiesti**, ognuno con il requisito da cui viene: bus sempre (struttura, OBC, EPS, batteria, celle solari, una radio e un'antenna **per ogni banda** nominata: UHF, VHF, S, X); unita' ADCS integrata per stabilizzazione, puntamento o immagini (ruote, magnetorquer, star tracker e sensori solari separati solo se un requisito li nomina, perche' le unita' ADCS del catalogo li contengono); GNSS per posizione, separazione sicura, collisioni o manovre; propulsione solo per manovre o per il delta-v di smaltimento che END-016 calcola nella stessa run; imager; terminale ottico.
+2. **La classe piu' piccola** (1U, 3U, 6U, 12U) in cui stanno insieme (massa, volume, pila, ingombro "Fits" o "Undetermined"); una classe scelta dall'utente prevale, quella scritta nei requisiti e' solo riportata.
+3. **Requisiti verificati con i dati pubblicati**: GSD e swath riportati alla quota dell'orbita (END-001), precisione di puntamento dell'ADCS, tre assi, bande, delta-v (impulso totale / somma delle masse pubblicate), massa. Se nessun componente li soddisfa: "Does not satisfy REQ-xxx (...): no ... in the database meets it".
+4. **Gli altri sottosistemi a parte** ("Not required by this mission"), con il motivo e se entrerebbero insieme al progetto.
+
+Cambiato: `selector.select()` ha i parametri facoltativi `slots` (posti con componenti ammessi, `Slot`), `dv_m_s`, `mass_limit_kg` (senza parametri il risultato e' identico a prima); `SubsystemResult.subsystem`; `layout.stack_feasible` accetta anche [(sottosistema, altezza)] (due radio); `fit.check_fit` usa il sottosistema del posto (`placed[].slot`); `api.SelectorService.design()` e `selection_to_dict(..., mission=)` (campi `mission`, `subsystems[].subsystem`, `subsystems[].design`); la GUI mostra la ricerca della classe, il riquadro "Mission requirements", motivo e verifiche su ogni scheda e la sezione "Not required by this mission" (senza blocco `mission` e' come prima). In STAR: `BackEnd/runners/end019_runner.py` (`mission_context`: quote di END-001 e riepilogo di END-016 della run), `FrontEnd/star_frontend_v3.py` (`component_selector_design` per la GUI dal vivo), registro (classe facoltativa, END-001 ed END-016 a monte facoltativi) e IDD; le copie in `../star_integration/` sono allineate.
+
 ## 1. Come riprendere
 
 1. Copiare l'intera cartella `star_component_selector/` (circa 37 MB, dentro ci sono dati, immagini, test e gli script in `tools/`).

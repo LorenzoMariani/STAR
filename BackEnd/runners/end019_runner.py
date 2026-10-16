@@ -76,6 +76,31 @@ def _approved_inputs(items: list[dict[str, Any]], defaults_only: bool | None = N
     return out
 
 
+def mission_context(modules_output: Path | None) -> dict[str, Any]:
+    """Products of the same run that END-019 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers)
+    and the END-016 space-safety summary (disposal delta-v -> propulsion)."""
+    ctx: dict[str, Any] = {}
+    if not modules_output:
+        return ctx
+    alts = []
+    for p in sorted((modules_output / "END-001" / "output_constellation_optimizer").glob("satellite_*.json")):
+        try:
+            orbit = json.loads(p.read_text(encoding="utf-8")).get("orbit") or {}
+            alts.append((float(orbit["alt_perigee_m"]) + float(orbit["alt_apogee_m"])) / 2000.0)
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    if alts:
+        ctx["altitude_km"] = [min(alts), max(alts)]
+        ctx["altitude_source"] = f"END-001 of this run ({len(alts)} satellite orbits)"
+    e16 = modules_output / "END-016" / "output_collision_avoidance" / "space_safety_summary.json"
+    if e16.is_file():
+        try:
+            ctx["end016"] = json.loads(e16.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+    return ctx
+
+
 def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
                log_callback: Callable[[str, str], Any] | None = None, stop_event: Any = None,
                star_root: str | None = None, run_output_dir: str | None = None,
@@ -119,11 +144,15 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     params.update({k: v for k, v in mapping["params"].items() if v is not None})
     approved = _approved_inputs(payload.get("resolved_inputs") or [], defaults_only=False)
     params.update(approved)
-    params.setdefault("form_factor_u", 6)
-    notes = list(mapping["notes"])
-    if "form_factor_u" not in mapping["params"] and "form_factor_u" not in approved:
-        notes.append(f"CubeSat class not specified in the requirements or edited by the user: {params['form_factor_u']:g}U (first guess) used")
-    log("EXECUTION", f"END-019 parameters: {json.dumps(params, ensure_ascii=False)}")
+    # the CubeSat class: the smallest that carries the subsystems the mission needs (since 2026-10-15); a class the user
+    # chose in the input-resolution step wins; a class written in the requirements is only reported
+    forced = approved.get("form_factor_u")
+    notes = [n for n in mapping["notes"] if "CubeSat class not stated" not in n]
+    if forced:
+        notes.append(f"CubeSat class chosen by the user: {forced}U")
+    context = mission_context(Path(output_dir).resolve().parent)
+    used = [k for k in ("altitude_km", "end016") if k in context]
+    log("EXECUTION", f"END-019 mission design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
 
     service = SelectorService()
     generated: list[str] = []
@@ -139,14 +168,20 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
         result = {"ok": True, "error": None, "within_limits": False, "subsystems": [], "messages": out_of_scope}
         status, evidence = "skipped", "Mission out of scope for the CubeSat selector: " + "; ".join(out_of_scope)
     else:
-        result = service.select({"form_factor_u": int(params["form_factor_u"])}, with_images=True)
+        result = service.design({"requirements": requirements, "context": context, "form_factor_u": forced}, with_images=True)
+        mission = result["mission"]
+        units = result["cubesat"]["class_u"]
+        params["form_factor_u"] = units
+        notes += mission["notes"]
         t = result["totals"]
         uncovered = [s["label"] for s in result["subsystems"] if not s["selected"]]
         status = "completed"
-        evidence = (f"{t['n_covered']} of {t['n_subsystems']} subsystems with a component that fits a {int(params['form_factor_u'])}U; mass {t['mass_kg']:.3f} of "
-                    f"{t['mass_limit_kg']:g} kg, volume {t['volume_m3']:.3e} of {t['volume_limit_m3']:.3e} m3"
+        how = "chosen by the user" if forced else "the smallest class that carries them"
+        evidence = (f"{units}U CubeSat ({how}): {t['n_covered']} of {t['n_subsystems']} subsystems the mission needs; mass {t['mass_kg']:.3f} of "
+                    f"{t['mass_limit_kg']:g} kg, volume {t['volume_m3']:.3e} of {t['volume_limit_m3']:.3e} m3; {len(mission['extras'])} subsystem(s) not required"
                     + ("" if result["within_limits"] else "; the subsystems together exceed the limits of the class")
-                    + (f"; no component fits for: {', '.join(uncovered)}" if uncovered else "") + ".")
+                    + (f"; no component fits for: {', '.join(uncovered)}" if uncovered else "")
+                    + (f"; {len(mission['unmet'])} requirement(s) not met: " + " ".join(mission["unmet"]).rstrip(".") if mission["unmet"] else "; requirements met") + ".")
 
     record = {"schema_version": 2, "module_id": MODULE_ID, "run_id": run_id, "generated_at": started, "status": status, "evidence": evidence,
               "params": params, "notes": notes, "out_of_scope": out_of_scope, "requirements_mapping": mapping, "result": result}

@@ -6,16 +6,18 @@ owner: UNIRM1
 responsible:
   leader: TBD
   co_leader: TBD
-short_description: For a CubeSat class (1U, 3U, 6U, 12U), selects at least one real component per subsystem that fits the CubeSat mass and volume limits, preferring components with the most complete public data.
+short_description: Designs the CubeSat the mission needs - only the subsystems the requirements ask for, in the smallest class (1U, 3U, 6U, 12U) that carries them, with real components checked against the mission requirements; the other subsystems listed apart.
 description: >
-  END-019 takes the CubeSat class (1U, 3U, 6U or 12U) and, for each subsystem (structure, on-board computer, EPS, battery,
-  solar cells, communication radio, antenna, ADCS, magnetorquer, reaction wheel, star tracker, sun sensor, GNSS receiver, GNSS antenna, propulsion,
-  imaging payload, optical terminal), selects at least one component from a catalogue of real products built from public
-  vendor datasheets (232 components, every value with its source). Constraints are only those of the CubeSat Design
-  Specification Rev. 14.1: total mass (1U 2 kg, 3U 6 kg, 6U 12 kg, 12U 24 kg) and the volume of the envelope. Among the
-  components that fit, the ones with the most complete public data are preferred. A value that the vendor does not publish is
-  reported as "Not publicly available" and is never estimated; the module makes no design assumption (no power balance, no
-  duty cycles, no margins).
+  END-019 designs a CubeSat from a catalogue of real products built from public vendor datasheets (232 components, every
+  value with its source). The design holds the bus (structure, on-board computer, EPS, battery, solar cells, a radio and an
+  antenna per band named in the requirements) and only the subsystems the requirements ask for (integrated ADCS unit,
+  GNSS, propulsion when manoeuvres are asked or END-016 of the run needs a disposal delta-v, imaging payload, optical
+  terminal; separate wheels, magnetorquers, star trackers and sun sensors only when named). It searches the smallest class
+  (1U, 3U, 6U, 12U) whose components fit together within the CubeSat Design Specification Rev. 14.1 mass and envelope, and
+  checks the mission requirements with the published data (GSD and swath at the orbit altitude, pointing accuracy, bands,
+  delta-v, mass): a requirement no component of the database meets is reported as not satisfied. The subsystems the mission
+  does not need are listed apart. A value that the vendor does not publish is reported as "Not publicly available" and is
+  never estimated.
 aliases:
   - component selector
   - satellite design
@@ -24,11 +26,11 @@ aliases:
   - bill of materials
   - CubeSat components
 capabilities:
-  - Select, for every subsystem, a real component that fits a 1U, 3U, 6U or 12U CubeSat (mass and volume of the CubeSat Design Specification).
-  - Prefer components whose key data (mass, size and subsystem data) are publicly available.
-  - Report how many components of each subsystem are in the database and how many fit the class.
-  - Sum the published masses, volumes and declared peak powers of the selected components against the class limits.
-  - Produce a bill of materials, a power hand-off with declared values only, and a component gallery with datasheet links.
+  - Decide which subsystems the mission needs from the requirements, citing the requirement of each.
+  - Find the smallest CubeSat class (1U, 3U, 6U, 12U) that carries them (mass, volume, stack and envelope fit).
+  - Check GSD and swath at the orbit altitude, pointing accuracy, radio bands, thruster delta-v and satellite mass with the published data, and report the requirements no component of the database meets.
+  - List the subsystems the mission does not need apart, with the best component that would fit.
+  - Produce a bill of materials, a power hand-off with declared values only, and a component gallery with datasheets.
 domain_of_validity:
   mission_phase:
   - pre_phase_a
@@ -61,7 +63,9 @@ activation_rules:
     - propulsion
     - payload accommodation
   required_upstream_modules: []
-  optional_upstream_modules: []
+  optional_upstream_modules:
+    - END-001
+    - END-016
 planning_guidance: >
   Select END-019 when the mission request asks to design or size a small satellite or CubeSat, to choose its components or
   subsystems, or to check which commercial components can be put inside a 1U, 3U, 6U or 12U CubeSat. END-019 needs no upstream
@@ -70,13 +74,11 @@ planning_guidance: >
 required_inputs:
   - name: form_factor_u
     data_type: number
-    required: true
+    required: false
     unit: U
     allowed_values: [1, 3, 6, 12]
-    description: CubeSat class in units (1U, 3U, 6U or 12U). It fixes the mass limit and the volume limit of the selection.
-    missing_information_reason: The mass limit and the envelope of the CubeSat depend on the class.
-    assumption_allowed: true
-    default_value: 6
+    description: Optional CubeSat class in units (1U, 3U, 6U or 12U) chosen by the user. When it is empty END-019 uses the smallest class that carries the subsystems the mission needs; a class written in the requirements is only reported.
+    assumption_allowed: false
 outputs:
   - name: component_selector_results
     artifact_name: output_component_selector/component_selector_results.json
@@ -107,10 +109,15 @@ execution:
   runner_module: runners.end019_runner
   runner_function: run_end019
   upstream_dependencies: []
+  optional_upstream_dependencies:
+  - END-001
+  - END-016
   downstream_dependencies: []
   estimated_runtime: 2
 interface_notes: >
-  The Python runner reads the module input JSON written by the orchestrator (requirements and resolved inputs), takes the CubeSat
-  class from them, runs the selection and writes the products under modules_output/END-019/output_component_selector and the
-  frontend files under modules_output/END-019/results_component_selector. The runner needs the star_component_selector package;
-  it is found automatically next to the STAR folder or through the STAR_COMPONENT_SELECTOR_ROOT variable.
+  The Python runner reads the module input JSON written by the orchestrator (requirements and resolved inputs) and, when they
+  are in the same run, the END-001 orbits (altitude for the GSD and swath of the imagers) and the END-016 space-safety summary
+  (disposal delta-v). It designs the CubeSat for the mission (star_selector.mission: subsystems the mission needs, smallest
+  class, requirements checked, other subsystems apart) and writes the products under modules_output/END-019/output_component_selector
+  and the frontend files under modules_output/END-019/results_component_selector. The runner needs the star_component_selector
+  package; it is found automatically in STAR/END019-ComponentSelector or through the STAR_COMPONENT_SELECTOR_ROOT variable.

@@ -75,7 +75,13 @@ def serpentine(seq: list[tuple[str, float]], length: float, ncol: int):
     return out
 
 
-def stack_feasible(heights: dict[str, float | None], env) -> bool:
-    """I componenti con altezza nota (per sottosistema) entrano nella pila a serpentina?"""
-    seq = [(sid, heights[sid]) for sid in ORDER if heights.get(sid) is not None]
+def stack_order(items: list[tuple[str, Any]]) -> list[tuple[str, Any]]:
+    """[(sottosistema, x)] nell'ordine della pila ORDER (piu' componenti dello stesso sottosistema, es. due radio, restano vicini); fuori pila esclusi."""
+    return sorted((it for it in items if it[0] in ORDER), key=lambda it: ORDER.index(it[0]))
+
+
+def stack_feasible(heights: dict[str, float | None] | list[tuple[str, float | None]], env) -> bool:
+    """I componenti con altezza nota entrano nella pila a serpentina? heights: {sottosistema: altezza} oppure [(sottosistema, altezza)]."""
+    items = list(heights.items()) if isinstance(heights, dict) else list(heights)
+    seq = [(sid, h) for sid, h in stack_order(items) if h is not None]
     return serpentine(seq, env[2], columns(env)) is not None

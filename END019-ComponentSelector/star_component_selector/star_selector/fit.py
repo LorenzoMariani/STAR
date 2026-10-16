@@ -133,28 +133,28 @@ def _place_external(c, env, taken: set[str]):
 
 
 def stack_arrangement(env, internal):
-    """Pila lungo Z nell'ordine dichiarato di layout.ORDER, a serpentina nelle colonne della classe. Restituisce le stesse tuple di pack() oppure None."""
-    items = {sid: (k, d) for sid, k, d in internal}
-    seq, specs = [], {}
-    for sid in layout.ORDER:
-        if sid in items:
-            st = layout.spec(items[sid][0].comp, sid, env)
-            if st is None or st["perm"] is None:
-                return None
-            specs[sid] = st
-            seq.append((sid, st["height"]))
-    if set(specs) != set(items):
+    """Pila lungo Z nell'ordine dichiarato di layout.ORDER, a serpentina nelle colonne della classe. Restituisce le stesse tuple di pack() oppure None.
+    internal: [(posto, sottosistema, candidato, quote)]; il posto distingue due componenti dello stesso sottosistema (es. due radio)."""
+    items = {slot: (sid, k, d) for slot, sid, k, d in internal}
+    if any(sid not in layout.ORDER for sid, _, _ in items.values()):
         return None                       # un componente interno fuori dall'elenco della pila
-    slots = layout.serpentine(seq, env[2], layout.columns(env))
-    if slots is None:
+    seq, specs = [], {}
+    for sid, slot in layout.stack_order([(sid, slot) for slot, (sid, _, _) in items.items()]):
+        st = layout.spec(items[slot][1].comp, sid, env)
+        if st is None or st["perm"] is None:
+            return None
+        specs[slot] = st
+        seq.append((slot, st["height"]))
+    cells = layout.serpentine(seq, env[2], layout.columns(env))
+    if cells is None:
         return None
     nx, _, cx, cy = layout.grid(env)
     placed = []
-    for sid, col, z_low in slots:
-        perm, d = specs[sid]["perm"], items[sid][1]
+    for slot, col, z_low in cells:
+        perm, d = specs[slot]["perm"], items[slot][2]
         size = tuple(d[perm[a]] for a in range(3))
         x, y = (col % nx) * cx + (cx - size[0]) / 2, (col // nx) * cy + (cy - size[1]) / 2
-        placed.append((sid, x, y, z_low) + size + (perm,))
+        placed.append((slot, x, y, z_low) + size + (perm,))
     return placed
 
 
@@ -164,17 +164,18 @@ def check_fit(sel: Selection) -> dict[str, Any]:
     internal, unknown, external = [], [], []
     for r in sel.subsystems:
         k = r.selected
-        if not k or r.id == "structure":
+        sid = r.subsystem or r.id
+        if not k or sid == "structure":
             continue
-        if r.id in EXTERNAL_SUBSYSTEMS:
-            external.append((r.id, k))
+        if sid in EXTERNAL_SUBSYSTEMS:
+            external.append((r.id, sid, k))
             continue
         d = _full_dims(k.comp)
         if d is None:
             unknown.append(k.comp.id)
         else:
-            internal.append((r.id, k, d))
-    vol = sum(d[0] * d[1] * d[2] for _, _, d in internal) * 1e-9
+            internal.append((r.id, sid, k, d))
+    vol = sum(d[0] * d[1] * d[2] for _, _, _, d in internal) * 1e-9
     out: dict[str, Any] = {"state": None, "label": None, "envelope_mm": list(env), "internal_volume_m3": vol, "volume_limit_m3": cls.volume_limit_m3,
                            "internal_volume_fraction": vol / cls.volume_limit_m3, "unknown_size": unknown, "placed": [], "external": [], "message": ""}
     if unknown:
@@ -187,12 +188,13 @@ def check_fit(sel: Selection) -> dict[str, Any]:
         placed = stack_arrangement(env, internal)
         out["arrangement"] = "stack" if placed else "generic"
         if placed is None:
-            placed = pack(env, [(sid, d) for sid, _, d in internal])
+            placed = pack(env, [(slot, d) for slot, _, _, d in internal])
         if placed:
             out["state"] = "fits"
-            names = {sid: k for sid, k, _ in internal}
-            dims_of = {sid: d for sid, _, d in internal}
-            out["placed"] = [{"subsystem": n, "id": names[n].comp.id, "name": names[n].comp.raw["name"], "pos": [round(x, 3), round(y, 3), round(z, 3)],
+            names = {slot: k for slot, _, k, _ in internal}
+            dims_of = {slot: d for slot, _, _, d in internal}
+            sub_of = {slot: sid for slot, sid, _, _ in internal}
+            out["placed"] = [{"subsystem": sub_of[n], "slot": n, "id": names[n].comp.id, "name": names[n].comp.raw["name"], "pos": [round(x, 3), round(y, 3), round(z, 3)],
                               "size": [round(dx, 3), round(dy, 3), round(dz, 3)], "shape": shape_for(names[n].comp, dims_of[n], perm)}
                              for n, x, y, z, dx, dy, dz, perm in placed]
             how = ("The internal components are stacked along the long axis in the declared order (radio, OBC, GPS, EPS, battery, ADCS, magnetorquer, wheel, star tracker, "
@@ -205,8 +207,8 @@ def check_fit(sel: Selection) -> dict[str, Any]:
                               "it is not proved impossible. Walls and keep-out zones are not known.")
     out["label"] = LABELS[out["state"]]
     taken: set[str] = set()
-    for sid, k in sorted(external, key=lambda e: e[0] != "solar_panel"):     # il pannello solare sceglie prima la faccia
+    for slot, sid, k in sorted(external, key=lambda e: e[1] != "solar_panel"):     # il pannello solare sceglie prima la faccia
         spot = _place_external(k.comp, env, taken)
         if spot:
-            out["external"].append({"subsystem": sid, "id": k.comp.id, "name": k.comp.raw["name"], **spot})
+            out["external"].append({"subsystem": sid, "slot": slot, "id": k.comp.id, "name": k.comp.raw["name"], **spot})
     return out

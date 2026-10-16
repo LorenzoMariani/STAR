@@ -26,7 +26,12 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
 - `END003`, `END004`, `END010` - the other modules.
 - `END019-ComponentSelector/star_component_selector/` - CubeSat component
   selector (Python standard library only; runner `BackEnd/runners/end019_runner.py`,
-  results tab in frontend v3). Its vendor datasheets (PDF) are not in the
+  results tab in frontend v3). Since 2026-10-15 it designs the CubeSat for the
+  mission: only the subsystems the requirements ask for (propulsion only for
+  manoeuvres or the END-016 disposal delta-v), the smallest class that carries
+  them, the mission requirements checked with the published data ("Does not
+  satisfy REQ-xxx" when no component of the database meets one), the other
+  subsystems listed apart. Its vendor datasheets (PDF) are not in the
   repository: without them the selector works and its drawer shows
   "Not available in the database".
 - `requirements.txt` - Python packages.
