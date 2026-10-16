@@ -5815,7 +5815,7 @@ STAR_V3_PARTNER_LOGOS_PATCH = """
     UNIPD: ['unipd', 'Universit\\u00e0 degli Studi di Padova'], UNIPA: ['unipa', 'Universit\\u00e0 degli Studi di Palermo'],
     POLIMI: ['polimi', 'Politecnico di Milano'], POLITO: ['polito', 'Politecnico di Torino'], POLIBA: ['poliba', 'Politecnico di Bari'],
     TASI: ['thales', 'Thales Alenia Space'], THALES: ['thales', 'Thales Alenia Space'], TELESPAZIO: ['tpz', 'Telespazio'], TPZ: ['tpz', 'Telespazio'],
-    INRIM: ['inrim', 'INRiM'], SITAEL: ['sitael', 'Sitael']
+    INRIM: ['inrim', 'INRiM']
   };
   function decorate(card){
     if (card.querySelector('.owner-logos')) return;
