@@ -12959,7 +12959,7 @@
     -20,
     60
    ],
-   "notes": "Per CubeSat da 1U a 3U. Momento +-1.5 mN m s, coppia massima 0.1 mN m, 10000 giri/min, massa 21 g, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V, I2C, -20..+60 C. Potenza: a vuoto 65 mW tipici, 400 mW tipici in regime nominale a 10000 giri/min (630 mW massimi), picco 800 mW: valori di riferimento per il modello RW210.15. Primo volo nel 2017.",
+   "notes": "Per CubeSat da 1U a 3U. Momento +-1.5 mN m s, coppia massima 0.1 mN m, 10000 giri/min, massa 21 g, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V, I2C, -20..+60 C. Potenza: a vuoto 65 mW tipici, 400 mW tipici in regime nominale a 10000 giri/min (630 mW massimi), picco 800 mW: valori di riferimento per il modello RW210.15. Primo volo nel 2017. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 1U-3U.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW210.pdf",
     "document": "AAC Clyde Space RW210 Reaction Wheels datasheet (release 15 novembre 2021)",
@@ -12981,6 +12981,10 @@
     ],
     "data_interfaces": [
      "I2C"
+    ],
+    "form_factor_range_u": [
+     1,
+     3
     ]
    },
    "dimensions": {
@@ -13041,7 +13045,8 @@
     ],
     "data_interfaces": [
      "I2C"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13101,7 +13106,8 @@
     ],
     "data_interfaces": [
      "I2C"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13167,7 +13173,8 @@
     "data_interfaces": [
      "UART",
      "I2C"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13234,7 +13241,8 @@
     "data_interfaces": [
      "UART",
      "I2C"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13292,7 +13300,8 @@
      "CAN",
      "RS-485",
      "UART"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13341,7 +13350,8 @@
     "data_interfaces": [
      "SPI",
      "UART"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13371,7 +13381,7 @@
     -40,
     80
    ],
-   "notes": "Ruota per nano-satelliti 6U, 8U e 12U (la massa e il volume la fanno entrare anche in classi minori): 19 mN m s a 6000 giri/min, coppia continua +-1.5 mN m, massa 180 g, 44 x 44 x 27 mm, inerzia del volano 300 g cm2, alimentazione 5 V, SPI e I2C, -40..+80 C, vita di progetto 3 anni. Potenza non dichiarata direttamente: i valori usati sono DERIVATI da 5 V per la corrente dichiarata (500 mA alla coppia massima = 2.5 W; 130 mA a 4500 giri/min a coppia nulla = 0.65 W). Versione a piramide (4 ruote): 940 g, 95 x 95 x 61.6 mm.",
+   "notes": "Ruota per nano-satelliti 6U, 8U e 12U (la massa e il volume la fanno entrare anche in classi minori): 19 mN m s a 6000 giri/min, coppia continua +-1.5 mN m, massa 180 g, 44 x 44 x 27 mm, inerzia del volano 300 g cm2, alimentazione 5 V, SPI e I2C, -40..+80 C, vita di progetto 3 anni. Potenza non dichiarata direttamente: i valori usati sono DERIVATI da 5 V per la corrente dichiarata (500 mA alla coppia massima = 2.5 W; 130 mA a 4500 giri/min a coppia nulla = 0.65 W). Versione a piramide (4 ruote): 940 g, 95 x 95 x 61.6 mm. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U-12U.",
    "source": {
     "url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanotorque-gsw-600-25-1.pdf",
     "document": "GomSpace NanoTorque GSW-600 datasheet DS 1013128 rev 2.5 (5 novembre 2025)",
@@ -13394,6 +13404,10 @@
     "data_interfaces": [
      "SPI",
      "I2C"
+    ],
+    "form_factor_range_u": [
+     6,
+     12
     ]
    },
    "dimensions": {
@@ -13442,7 +13456,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "shape": {
     "type": "cylinder",
@@ -13474,7 +13489,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "shape": {
     "type": "cylinder",
@@ -13493,7 +13509,7 @@
     -40,
     60
    ],
-   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'.",
+   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U-12U.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
     "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
@@ -13516,6 +13532,10 @@
     "data_interfaces": [
      "I2C",
      "RS-422"
+    ],
+    "form_factor_range_u": [
+     6,
+     12
     ]
    },
    "dimensions": {
@@ -13559,7 +13579,7 @@
     -40,
     60
    ],
-   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'.",
+   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U-12U.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
     "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
@@ -13582,6 +13602,10 @@
     "data_interfaces": [
      "I2C",
      "RS-422"
+    ],
+    "form_factor_range_u": [
+     6,
+     12
     ]
    },
    "dimensions": {
@@ -13626,7 +13650,7 @@
     -40,
     60
    ],
-   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'.",
+   "notes": "Per CubeSat 6U-12U. Momento +-15, +-30 o +-50 mN m s; massa 197 / 210 / 375 g riportata nello stesso ordine dei momenti. Coppia massima +-8 mN m (tabella; le caratteristiche scrivono '>12 mN m in frenata'), 5000 giri/min, precisione di controllo +-1% del regime, 50 x 50 x 27 mm, alimentazione 4.5-5.25 V (5.0 tipica). Potenza: a vuoto <=75 mW, nominale 1000 mW tipici, picco 1900 mW tipici e 15000 mW massimi (valori 'adattabili'); interfacce I2C e RS422 bidirezionale. Radiazioni '>36 krad (Si)' (limite inferiore), -40..+60 C. Controllore interno 'fire-and-forget'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U-12U.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/RW400.pdf",
     "document": "AAC Clyde Space RW400 reaction wheels datasheet (release 15 novembre 2021)",
@@ -13649,6 +13673,10 @@
     "data_interfaces": [
      "I2C",
      "RS-422"
+    ],
+    "form_factor_range_u": [
+     6,
+     12
     ]
    },
    "dimensions": {
@@ -13693,7 +13721,7 @@
     -20,
     60
    ],
-   "notes": "Per CubeSat 1U-3U. Momento +-3.0 o +-6.0 mN m s, coppia massima 2 mN m, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V (3.3 tipica), interfaccia I2C (altre su richiesta), -20..+60 C. Il documento scrive massa 'TBC' e radiazioni 'TBC': non pubblicate. Velocita' massima '10000 / 15000' con unita' 'To be tested': non associata a una versione, lasciata non dichiarata. Primo volo nel 2017.",
+   "notes": "Per CubeSat 1U-3U. Momento +-3.0 o +-6.0 mN m s, coppia massima 2 mN m, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V (3.3 tipica), interfaccia I2C (altre su richiesta), -20..+60 C. Il documento scrive massa 'TBC' e radiazioni 'TBC': non pubblicate. Velocita' massima '10000 / 15000' con unita' 'To be tested': non associata a una versione, lasciata non dichiarata. Primo volo nel 2017. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 1U-3U.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
     "document": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)",
@@ -13715,6 +13743,10 @@
     ],
     "data_interfaces": [
      "I2C"
+    ],
+    "form_factor_range_u": [
+     1,
+     3
     ]
    },
    "dimensions": {
@@ -13757,7 +13789,7 @@
     -20,
     60
    ],
-   "notes": "Per CubeSat 1U-3U. Momento +-3.0 o +-6.0 mN m s, coppia massima 2 mN m, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V (3.3 tipica), interfaccia I2C (altre su richiesta), -20..+60 C. Il documento scrive massa 'TBC' e radiazioni 'TBC': non pubblicate. Velocita' massima '10000 / 15000' con unita' 'To be tested': non associata a una versione, lasciata non dichiarata. Primo volo nel 2017.",
+   "notes": "Per CubeSat 1U-3U. Momento +-3.0 o +-6.0 mN m s, coppia massima 2 mN m, 25 x 25 x 15 mm, alimentazione 3.25-3.5 V (3.3 tipica), interfaccia I2C (altre su richiesta), -20..+60 C. Il documento scrive massa 'TBC' e radiazioni 'TBC': non pubblicate. Velocita' massima '10000 / 15000' con unita' 'To be tested': non associata a una versione, lasciata non dichiarata. Primo volo nel 2017. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 1U-3U.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2023/02/RW222-1.pdf",
     "document": "AAC Clyde Space RW222 reaction wheels datasheet (release 7 febbraio 2023)",
@@ -13779,6 +13811,10 @@
     ],
     "data_interfaces": [
      "I2C"
+    ],
+    "form_factor_range_u": [
+     1,
+     3
     ]
    },
    "dimensions": {
@@ -13837,7 +13873,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13895,7 +13932,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -13953,7 +13991,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14011,7 +14050,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14069,7 +14109,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14127,7 +14168,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14185,7 +14227,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14243,7 +14286,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14301,7 +14345,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14359,7 +14404,8 @@
     "power_w_nominal": null,
     "power_w_peak": null,
     "supply_voltage_ranges_v": null,
-    "data_interfaces": null
+    "data_interfaces": null,
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14429,7 +14475,8 @@
     "data_interfaces": [
      "RS-422",
      "TTL UART"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14495,7 +14542,8 @@
     ],
     "data_interfaces": [
      "RS-422"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14561,7 +14609,8 @@
     ],
     "data_interfaces": [
      "RS-422"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14624,7 +14673,8 @@
      "RS-422",
      "RS-485",
      "CAN"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [
@@ -14685,7 +14735,8 @@
     "data_interfaces": [
      "RS-422",
      "RS-485"
-    ]
+    ],
+    "form_factor_range_u": null
    },
    "dimensions": {
     "mm": [

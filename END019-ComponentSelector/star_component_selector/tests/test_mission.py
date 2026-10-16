@@ -285,6 +285,32 @@ class NeedsTest(unittest.TestCase):
         self.assertTrue(select(CATALOG, 3, slots=slots).within_limits)
         self.assertFalse(select(CATALOG, 3, slots=slots, power_supply_check=True).within_limits)
 
+    def test_reaction_wheels_for_the_mission(self):
+        from star_selector.selector import adcs_tier, wheel_momentum_needed_mnms
+        reqs = [{"id": "R1", "text": "The CubeSat shall be three-axis stabilised with reaction wheels and slew at 2 deg/s."},
+                {"id": "R2", "text": "It shall take multispectral images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}]
+        sel, m = design(CATALOG, reqs)
+        k = slots_of(sel)["reaction_wheel"].selected
+        self.assertEqual(k.quantity, 3)                                                     # one per axis
+        self.assertAlmostEqual(k.mass_kg, 3 * k.comp.mass_kg)
+        self.assertGreaterEqual(k.comp.spec("momentum_mnms"), wheel_momentum_needed_mnms(sel.cubesat, 2.0))
+        self.assertNotEqual(adcs_tier(k.comp, sel.cubesat.units), 2)                         # never declared only for smaller CubeSats
+        self.assertIsNotNone(k.comp.mass_kg)                                                 # published mass before the declared class
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("wheel momentum"))["status"], "met")
+        self.assertIn("3 wheel(s), one per axis", m["subsystems"]["reaction_wheel"]["why"])
+
+    def test_suggested_wheels_follow_the_class(self):
+        sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})       # 12U, wheels inside the integrated ADCS
+        x = next(e for e in m["extras"] if e["id"] == "reaction_wheel")
+        best = BY_ID[x["best"]["id"]]
+        lo, hi = best.spec("form_factor_range_u") or (0, 99)
+        self.assertTrue(lo <= sel.cubesat.units <= hi, best.id)                              # not the 1U-3U RW210.15
+        self.assertEqual(x["best"]["quantity"], 3)
+
+    def test_unreachable_slew(self):
+        _, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall be three-axis stabilised with reaction wheels and slew at 5000 deg/s; UHF link."}])
+        self.assertTrue(any("no reaction wheel in the database" in u for u in m["unmet"]), m["unmet"])
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})

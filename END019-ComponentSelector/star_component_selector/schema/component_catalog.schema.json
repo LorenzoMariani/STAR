@@ -1015,6 +1015,22 @@
                         }
                       ]
                     },
+                    "form_factor_range_u": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "description": "Classi CubeSat per cui il fornitore dichiara la ruota [min, max] in U (tools/add_rw_form_factors.py)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "max_torque_mnm": {
                       "anyOf": [
                         {
@@ -1095,6 +1111,7 @@
                   },
                   "required": [
                     "momentum_mnms",
+                    "form_factor_range_u",
                     "max_torque_mnm",
                     "max_speed_rpm",
                     "power_w_nominal",

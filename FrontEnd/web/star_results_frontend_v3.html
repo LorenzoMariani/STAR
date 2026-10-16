@@ -5087,7 +5087,7 @@ function renderExtras(r) {
   $(&#x27;x-count&#x27;).textContent = `${X.length} subsystem(s)`;
   $(&#x27;xgrid&#x27;).innerHTML = X.map(x =&gt; `&lt;div class=&quot;sub&quot; data-id=&quot;&quot;&gt;&lt;div class=&quot;top&quot;&gt;${iconSvg(x.subsystem || x.id)}&lt;b&gt;${esc(x.label)}&lt;/b&gt;&lt;span class=&quot;cnt&quot;&gt;${x.n_database} in database&lt;br&gt;${x.n_fit} fit a ${r.cubesat.class_u}U&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;body&quot;&gt;
       &lt;p class=&quot;reason&quot;&gt;Not required: ${esc(x.why_not)}&lt;/p&gt;
-      ${x.best ? `&lt;p class=&quot;nm&quot;&gt;${esc(x.best.name)}&lt;/p&gt;&lt;p class=&quot;vd&quot;&gt;${esc(x.best.vendor)} · ${f(x.best.mass_kg)} kg&lt;/p&gt;` : `&lt;p class=&quot;nm&quot;&gt;No component meets the CubeSat ${r.cubesat.class_u}U standard&lt;/p&gt;`}
+      ${x.best ? `&lt;p class=&quot;nm&quot;&gt;${esc(x.best.name)}${x.best.quantity &gt; 1 ? &#x27; × &#x27; + x.best.quantity : &#x27;&#x27;}&lt;/p&gt;&lt;p class=&quot;vd&quot;&gt;${esc(x.best.vendor)} · ${f(x.best.mass_kg)} kg${x.best.quantity &gt; 1 ? &#x27; for &#x27; + x.best.quantity : &#x27;&#x27;}&lt;/p&gt;` : `&lt;p class=&quot;nm&quot;&gt;No component meets the CubeSat ${r.cubesat.class_u}U standard&lt;/p&gt;`}
       &lt;div class=&quot;fitw&quot;&gt;${x.best ? (x.fits_with_design ? &#x27;✓ Would still fit together with the design&#x27; : &#x27;✕ Would not fit together with the design&#x27;) : &#x27;&#x27;}&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
 }
 /* ---------------- Database panel: components, images and datasheets by class ---------------- */
@@ -5144,7 +5144,8 @@ function renderGrid(r) {
   $(&#x27;count&#x27;).textContent = r.mission ? `${r.totals.n_covered} of ${r.totals.n_subsystems} required subsystems · one card per subsystem` : `${r.totals.n_covered} of ${r.totals.n_subsystems} subsystems · one card per subsystem`;
   $(&#x27;grid&#x27;).innerHTML = r.subsystems.map(s =&gt; {
     const k = s.selected, cls = r.cubesat.class_u, D = s.design;
-    const top = `&lt;div class=&quot;top&quot;&gt;${iconSvg(s.subsystem || s.id)}&lt;b&gt;${esc(s.label)}&lt;/b&gt;&lt;span class=&quot;cnt&quot;&gt;${s.n_database} in database&lt;br&gt;${s.n_fit} fit a ${cls}U&lt;/span&gt;&lt;/div&gt;`;
+    const qty = k &amp;&amp; k.quantity &gt; 1 ? ` × ${k.quantity}` : &#x27;&#x27;;
+    const top = `&lt;div class=&quot;top&quot;&gt;${iconSvg(s.subsystem || s.id)}&lt;b&gt;${esc(s.label)}${qty}&lt;/b&gt;&lt;span class=&quot;cnt&quot;&gt;${s.n_database} in database&lt;br&gt;${s.n_fit} fit a ${cls}U&lt;/span&gt;&lt;/div&gt;`;
     const why = D ? `&lt;div class=&quot;why&quot;&gt;&lt;b&gt;${D.source === &#x27;bus&#x27; ? &#x27;Bus&#x27; : &#x27;Required&#x27;}&lt;/b&gt; · ${esc(D.why)}${D.requirement ? ` · &lt;span class=&quot;rq&quot; title=&quot;${esc(D.requirement.text)}&quot;&gt;${esc(D.requirement.id)}&lt;/span&gt;` : &#x27;&#x27;}&lt;/div&gt;` : &#x27;&#x27;;
     const checks = D ? (D.checks || []).map(c =&gt; `&lt;div class=&quot;ck ${c.met ? &#x27;ok&#x27; : &#x27;no&#x27;}&quot;&gt;&lt;span class=&quot;i&quot;&gt;${c.met ? &#x27;✓&#x27; : &#x27;✕&#x27;}&lt;/span&gt;&lt;span&gt;${esc(c.requirement || &#x27;&#x27;)} ${esc(c.what)}${c.value ? &#x27;: &#x27; + esc(c.value) : &#x27;&#x27;}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;) : &#x27;&#x27;;
     if (!k) return `&lt;div class=&quot;sub&quot; data-id=&quot;&quot;&gt;${top}&lt;div class=&quot;nodata&quot;&gt;${why}&lt;b&gt;No component meets the CubeSat ${cls}U standard&lt;/b&gt;${s.note ? `&lt;div class=&quot;hint&quot; style=&quot;margin-top:4px&quot;&gt;${esc(s.note)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;&lt;/div&gt;`;

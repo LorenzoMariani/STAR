@@ -100,7 +100,7 @@ def component_record(c: Component, root: Path = ROOT, with_image: bool = False) 
 def _candidate_record(k: Candidate, root: Path, with_image: bool, full: bool) -> dict[str, Any]:
     rec = component_record(k.comp, root, with_image=with_image) if full else {
         "id": k.comp.id, "vendor": k.comp.raw["vendor"], "name": k.comp.raw["name"], "category": k.comp.category}
-    rec.update({"mass_kg": k.mass_kg, "volume_m3": k.volume_m3, "power_w_declared": k.power_w, "completeness": round(k.completeness, 3),
+    rec.update({"mass_kg": k.mass_kg, "volume_m3": k.volume_m3, "power_w_declared": k.power_w, "completeness": round(k.completeness, 3), "quantity": k.quantity,
                 "external": subsystem_of(k.comp) in EXTERNAL_SUBSYSTEMS})
     if full:
         rec["rows"] = rows_for(k.comp)

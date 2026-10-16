@@ -295,7 +295,7 @@ function renderExtras(r) {
   $('x-count').textContent = `${X.length} subsystem(s)`;
   $('xgrid').innerHTML = X.map(x => `<div class="sub" data-id=""><div class="top">${iconSvg(x.subsystem || x.id)}<b>${esc(x.label)}</b><span class="cnt">${x.n_database} in database<br>${x.n_fit} fit a ${r.cubesat.class_u}U</span></div><div class="body">
       <p class="reason">Not required: ${esc(x.why_not)}</p>
-      ${x.best ? `<p class="nm">${esc(x.best.name)}</p><p class="vd">${esc(x.best.vendor)} · ${f(x.best.mass_kg)} kg</p>` : `<p class="nm">No component meets the CubeSat ${r.cubesat.class_u}U standard</p>`}
+      ${x.best ? `<p class="nm">${esc(x.best.name)}${x.best.quantity > 1 ? ' × ' + x.best.quantity : ''}</p><p class="vd">${esc(x.best.vendor)} · ${f(x.best.mass_kg)} kg${x.best.quantity > 1 ? ' for ' + x.best.quantity : ''}</p>` : `<p class="nm">No component meets the CubeSat ${r.cubesat.class_u}U standard</p>`}
       <div class="fitw">${x.best ? (x.fits_with_design ? '✓ Would still fit together with the design' : '✕ Would not fit together with the design') : ''}</div></div></div>`).join('');
 }
 /* ---------------- Database panel: components, images and datasheets by class ---------------- */
@@ -352,7 +352,8 @@ function renderGrid(r) {
   $('count').textContent = r.mission ? `${r.totals.n_covered} of ${r.totals.n_subsystems} required subsystems · one card per subsystem` : `${r.totals.n_covered} of ${r.totals.n_subsystems} subsystems · one card per subsystem`;
   $('grid').innerHTML = r.subsystems.map(s => {
     const k = s.selected, cls = r.cubesat.class_u, D = s.design;
-    const top = `<div class="top">${iconSvg(s.subsystem || s.id)}<b>${esc(s.label)}</b><span class="cnt">${s.n_database} in database<br>${s.n_fit} fit a ${cls}U</span></div>`;
+    const qty = k && k.quantity > 1 ? ` × ${k.quantity}` : '';
+    const top = `<div class="top">${iconSvg(s.subsystem || s.id)}<b>${esc(s.label)}${qty}</b><span class="cnt">${s.n_database} in database<br>${s.n_fit} fit a ${cls}U</span></div>`;
     const why = D ? `<div class="why"><b>${D.source === 'bus' ? 'Bus' : 'Required'}</b> · ${esc(D.why)}${D.requirement ? ` · <span class="rq" title="${esc(D.requirement.text)}">${esc(D.requirement.id)}</span>` : ''}</div>` : '';
     const checks = D ? (D.checks || []).map(c => `<div class="ck ${c.met ? 'ok' : 'no'}"><span class="i">${c.met ? '✓' : '✕'}</span><span>${esc(c.requirement || '')} ${esc(c.what)}${c.value ? ': ' + esc(c.value) : ''}</span></div>`).join('') : '';
     if (!k) return `<div class="sub" data-id="">${top}<div class="nodata">${why}<b>No component meets the CubeSat ${cls}U standard</b>${s.note ? `<div class="hint" style="margin-top:4px">${esc(s.note)}</div>` : ''}</div></div>`;

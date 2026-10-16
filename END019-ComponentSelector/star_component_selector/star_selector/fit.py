@@ -144,7 +144,7 @@ def stack_arrangement(env, internal):
         if st is None or st["perm"] is None:
             return None
         specs[slot] = st
-        seq.append((slot, st["height"]))
+        seq.append((slot, st["height"] * items[slot][1].quantity))         # q unita' impilate lungo Z
     cells = layout.serpentine(seq, env[2], layout.columns(env))
     if cells is None:
         return None
@@ -172,6 +172,10 @@ def check_fit(sel: Selection) -> dict[str, Any]:
             external.append((r.id, sid, k))
             continue
         d = _full_dims(k.comp)
+        if d is not None and k.quantity > 1:          # q unita' dello stesso prodotto impilate lungo l'asse della pila
+            st = layout.spec(k.comp, sid, env) if sid in layout.ORDER else None
+            h = st["perm"][2] if st and st["perm"] else min(range(3), key=lambda i: d[i])
+            d = tuple(v * k.quantity if i == h else v for i, v in enumerate(d))
         if d is None:
             unknown.append(k.comp.id)
         else:

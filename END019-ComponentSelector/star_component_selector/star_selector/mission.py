@@ -38,7 +38,10 @@ Requisiti verificati con i dati pubblicati:
     esatta); dose totale di radiazione dei requisiti <= quella pubblicata;
   * EPS: classi dichiarate, almeno un ingresso solare, alimenta ogni componente che pubblica le tensioni (uscite regolate o batteria
     integrata), accetta la tensione del pannello e la batteria esterna, potenza massima >= componente piu' esigente (selector,
-    power_supply_check, vincolo nella ricerca esatta).
+    power_supply_check, vincolo nella ricerca esatta);
+  * ruote di reazione (quando nel progetto o suggerite tra i non richiesti): classe dichiarata dal fornitore (come l'ADCS), tre ruote
+    con il controllo su tre assi (una per asse), momento di ciascuna >= inerzia x velocita' di rotazione richiesta (blocco uniforme con la
+    massa limite e l'ingombro della classe, per eccesso).
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -46,14 +49,15 @@ una classe scelta dall'utente prevale. Una classe scritta nei requisiti e' solo 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable
 
 from .fit import check_fit
 from .models import Component
 from .rows import subsystem_of
 from .selector import (CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, battery_ok, eps_rails, firing_power_w, interfaces, is_electric, panel_ok,
-                       panel_on_structure, panel_voltages, powered_by, structure_envelope, supply_ranges, total_impulse_ns)
+                       panel_on_structure, panel_voltages, powered_by, structure_envelope, supply_ranges, total_impulse_ns,
+                       wheel_momentum_needed_mnms)
 from .selector import select as _select
 
 
@@ -429,7 +433,15 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
 
     order = {sid: n for n, (sid, _, _) in enumerate(SUBSYSTEMS)}
     ordered = sorted(needs.values(), key=lambda nd: (order[nd.slot.subsystem], nd.slot.id))
-    return {"reqs": reqs, "needs": ordered, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery,
+    # ruote di reazione: una per asse con il controllo su tre assi (altrimenti una, a momento costante); la velocita' di rotazione richiesta
+    # fissa il momento di ciascuna (selector.wheel_momentum_needed_mnms)
+    slew = _find(reqs, rf"slew(?:ing)?[^.\d]{{0,40}}?{NUM}\s*(?:deg|degrees?|°)\s*(?:/|per )\s*s")
+    wheels = {"quantity": 3 if _find(reqs, r"\b(three-axis|3-axis)\b") else 1,
+              "slew_deg_s": float(slew[1].group(1)) if slew else None, "req": slew[0] if slew else None}
+    if "reaction_wheel" in needs:
+        nd = needs["reaction_wheel"]
+        nd.slot = replace(nd.slot, quantity=wheels["quantity"], slew_rate_deg_s=wheels["slew_deg_s"])
+    return {"reqs": reqs, "needs": ordered, "wheels": wheels, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery,
             "data_radio": data_radio.slot.id if data_radio else None, "data_rate": data_rate, "notes": notes}
 
 
@@ -492,7 +504,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         for ck in bad:
             ck.status = "not_met"
         unmet += bad
-        slots.append(Slot(nd.slot.id, nd.slot.subsystem, nd.slot.label, allowed))
+        slots.append(replace(nd.slot, allowed=allowed))
     dv = a["dv"]["dv_m_s"] if a["dv"] else None
     mass_limit = a["mass_limit"]["kg"] if a["mass_limit"] else None
     classes = [forced_class_u] if forced_class_u else sorted(CLASSES)
@@ -507,7 +519,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                   if subsystem_of(c) == "eps" and c.spec("integrated_battery_wh") and float(c.spec("integrated_battery_wh")) * bat["dod"] >= bat["energy_wh"] - 1e-9}
         if eps_wh:
             ok_eps = frozenset(eps_wh)
-            variants.insert(0, ("eps", [Slot(s.id, s.subsystem, s.label, ok_eps if s.allowed is None else s.allowed & ok_eps) if s.subsystem == "eps" else s
+            variants.insert(0, ("eps", [replace(s, allowed=ok_eps if s.allowed is None else s.allowed & ok_eps) if s.subsystem == "eps" else s
                                         for s in slots if s.subsystem != "battery"]))
 
     def search(slots_x, dv_x, ml_x):
@@ -555,7 +567,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             cands = [c for c in catalog if subsystem_of(c) == "propulsion" and (psl.allowed is None or c.id in psl.allowed) and total_impulse_ns(c)]
             for imp in sorted({total_impulse_ns(c) for c in cands}, reverse=True):
                 keep = frozenset(c.id for c in cands if total_impulse_ns(c) >= imp - 1e-9)
-                trial_slots = [Slot(s.id, s.subsystem, s.label, keep) if s.id == psl.id else s for s in slots]
+                trial_slots = [replace(s, allowed=keep) if s.id == psl.id else s for s in slots]
                 trial = select(catalog, units, time_budget_s, slots=trial_slots, mass_limit_kg=ml_eff)
                 if ok_sel(trial):
                     sel, slots = trial, trial_slots
@@ -577,7 +589,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             if rate <= cur_rate + 1e-9:
                 break
             keep = frozenset(c.id for c in cands if float(c.spec("data_rate_kbps_max")) >= rate - 1e-9)
-            trial_slots = [Slot(s.id, s.subsystem, s.label, keep) if s.id == dr else s for s in slots]
+            trial_slots = [replace(s, allowed=keep) if s.id == dr else s for s in slots]
             trial = select(catalog, units, time_budget_s, slots=trial_slots, dv_m_s=dv_eff, mass_limit_kg=ml_eff)
             if ok_sel(trial):
                 sel, slots = trial, trial_slots
@@ -597,7 +609,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         prev = next((x for x in sel.subsystems if x.id == ant_id), None)
         if prev is None:
             continue
-        trial_slots = [Slot(s.id, s.subsystem, s.label, frozenset({r.selected.comp.id})) if s.id == r.id else s for s in slots if s.id != ant_id]
+        trial_slots = [replace(s, allowed=frozenset({r.selected.comp.id})) if s.id == r.id else s for s in slots if s.id != ant_id]
         trial = select(catalog, units, time_budget_s, slots=trial_slots, dv_m_s=dv_eff, mass_limit_kg=ml_eff)
         if ok_sel(trial):
             name = r.selected.comp.raw["name"]
@@ -643,6 +655,17 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             ck.status = "not_met"
             unmet.append(ck)
         checks.append(ck)
+    if a["wheels"]["slew_deg_s"] and any(s.subsystem == "reaction_wheel" for s in slots):
+        w = a["wheels"]
+        rw = next((r.selected for r in sel.subsystems if r.subsystem == "reaction_wheel" and r.selected), None)
+        need_h = wheel_momentum_needed_mnms(sel.cubesat, w["slew_deg_s"])
+        ck = Check("slew", next(s.id for s in slots if s.subsystem == "reaction_wheel"), w["req"], f"wheel momentum for a slew of {w['slew_deg_s']:g} deg/s")
+        if rw is None or (rw.comp.spec("momentum_mnms") or 0.0) < need_h - 1e-9:
+            ck.status = "not_met"
+            ck.message = (f"Does not satisfy {w['req'].id if w['req'] else 'the slew rate'} ({ck.what}): no reaction wheel in the database that fits "
+                          f"stores {need_h:.2f} mN m s.")
+            unmet.append(ck)
+        checks.append(ck)
     for ck in unmet:
         nd = next((n for n in needs if n.slot.id == ck.slot), None)
         what = "component"
@@ -655,6 +678,8 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                           f"{dv:.1f} m/s to this satellite" + (f" (the selected one gives {dv_info['given_m_s']:.1f} m/s)." if dv_info and dv_info['given_m_s'] else "."))
         elif ck.key == "mass":
             ck.message = f"Does not satisfy {ck.req.id} ({ck.what}): the lightest selection that the mission needs weighs {sel.mass_kg:.2f} kg."
+        elif ck.key == "slew":
+            pass                                                # messaggio gia' scritto (momento richiesto dalla classe)
         else:
             others = [c.what for c in (nd.checks if nd else []) if c is not ck and c.status == "met" and c.test is not None]
             ck.message = (f"Does not satisfy {ck.req.id if ck.req else 'a requirement'} ({ck.what}): no {what} in the database meets it"
@@ -682,6 +707,18 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "reaction_wheel" and r.selected:      # una ruota per asse; classe dichiarata; momento per la rotazione richiesta
+            rw = r.selected.comp
+            rng = rw.spec("form_factor_range_u")
+            why += f"; {r.selected.quantity} wheel(s)" + (", one per axis" if r.selected.quantity == 3 else "")
+            why += (f"; declared by its vendor for {rng[0]:g}U-{rng[1]:g}U CubeSats" if rng else "; CubeSat class not declared by its vendor")
+            w = a["wheels"]
+            if w["slew_deg_s"]:
+                need_h = wheel_momentum_needed_mnms(sel.cubesat, w["slew_deg_s"])
+                have = rw.spec("momentum_mnms")
+                rows.append({"requirement": w["req"].id if w["req"] else None, "what": f"momentum for a slew of {w['slew_deg_s']:g} deg/s",
+                             "value": f"{have:g} of {need_h:.2f} mN m s needed" if have is not None else None,
+                             "met": have is not None and have >= need_h - 1e-9})
         if r.subsystem == "structure" and r.selected:      # selector.structure_envelope: la pila usa le quote della struttura scelta
             env = structure_envelope(r.selected.comp, sel.cubesat)
             faces = r.selected.comp.raw["specs"].get("panel_faces") or {}
@@ -768,14 +805,15 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             reason = "no requirement asks for attitude control"
         else:
             reason = NOT_REQUIRED.get(sid, "not required by the mission")
-        trial = select(catalog, units, 1.0, slots=[*[Slot(s.id, s.subsystem, s.label, s.allowed) for s in slots], Slot(sid, sid, label)],
+        extra_slot = Slot(sid, sid, label, quantity=a["wheels"]["quantity"], slew_rate_deg_s=a["wheels"]["slew_deg_s"]) if sid == "reaction_wheel" else Slot(sid, sid, label)
+        trial = select(catalog, units, 1.0, slots=[*slots, extra_slot],
                        dv_m_s=dv if "dv" not in relaxed else None, mass_limit_kg=mass_limit if "mass" not in relaxed else None)
         rec = next(r for r in trial.subsystems if r.id == sid)
         alone = rec.selected if rec.selected is not None else None
         together = trial.within_limits and rec.selected is not None and check_fit(trial)["state"] in ACCEPTED_FIT
         extras.append({"id": sid, "subsystem": sid, "label": label, "why_not": reason, "n_database": rec.n_database, "n_fit": rec.n_fit,
                        "best": None if alone is None else {"id": alone.comp.id, "name": alone.comp.raw["name"], "vendor": alone.comp.raw["vendor"],
-                                                           "mass_kg": alone.mass_kg},
+                                                           "mass_kg": alone.mass_kg, "quantity": alone.quantity},
                        "fits_with_design": together})
     extras += dropped          # antenne comprese nella radio scelta
 

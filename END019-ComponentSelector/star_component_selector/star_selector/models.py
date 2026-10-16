@@ -104,6 +104,7 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
     # Ruota di reazione. Momento e coppia sono quelli dichiarati dal fornitore (a quale regime e' scritto nelle note).
     "reaction_wheel": {
         "momentum_mnms": ("num", "Momento angolare immagazzinato [mN m s]", False),
+        "form_factor_range_u": ("range", "Classi CubeSat per cui il fornitore dichiara la ruota [min, max] in U (tools/add_rw_form_factors.py)", False),
         "max_torque_mnm": ("num", "Coppia massima [mN m]", False),
         "max_speed_rpm": ("num", "Velocita' massima [giri/min]", False),
         "power_w_nominal": ("num", "Potenza in regime nominale dichiarata [W]", False),

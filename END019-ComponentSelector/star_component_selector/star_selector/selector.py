@@ -15,6 +15,7 @@ soddisfano, il delta-v, la massa massima) arrivano da mission.py attraverso i pa
 from __future__ import annotations
 
 import itertools
+import math
 import time
 from dataclasses import dataclass, field, replace
 
@@ -88,6 +89,17 @@ def panel_for_class(c: Component, units: int) -> bool:
 # non ne ha, quelle dichiarate per classi piu' grandi o senza dichiarazione (piu' momento del necessario, o da verificare); mai quelle
 # dichiarate solo per classi piu' piccole (ruote con meno momento e coppia di quanto serve). A pari livello i prodotti non piu' in vendita
 # (status "nla") solo se non c'e' altro.
+CLASS_RANGE_SUBSYSTEMS = ("adcs", "reaction_wheel")      # stessa regola per le ruote di reazione (tools/add_rw_form_factors.py)
+
+
+def wheel_momentum_needed_mnms(cls: CubeSatClass, slew_rate_deg_s: float) -> float:
+    """Momento di una ruota per ruotare il satellite a slew_rate attorno all'asse di inerzia massima: inerzia di un blocco uniforme con la
+    massa limite e l'ingombro della classe (regola dichiarata, per eccesso: il satellite reale pesa meno o uguale) x velocita' angolare."""
+    b, c = sorted(cls.envelope_mm)[1:]
+    inertia = cls.mass_limit_kg * ((b / 1000.0) ** 2 + (c / 1000.0) ** 2) / 12.0
+    return inertia * math.radians(slew_rate_deg_s) * 1000.0
+
+
 def adcs_tier(c: Component, units: int) -> int:
     """0 = dichiarata per la classe, 1 = per classi piu' grandi o non dichiarata, 2 = solo per classi piu' piccole (esclusa)."""
     r = c.spec("form_factor_range_u")
@@ -242,6 +254,7 @@ class Candidate:
     power_w: float | None
     completeness: float
     height_mm: float | None = None      # altezza lungo l'asse della pila (layout.py); None se le quote non sono tutte pubblicate o non e' un componente della pila
+    quantity: int = 1                   # unita' dello stesso prodotto nel posto (es. tre ruote, una per asse): massa, volume, potenza e altezza sono gia' moltiplicati
 
 
 @dataclass
@@ -260,11 +273,15 @@ class SubsystemResult:
 
 @dataclass(frozen=True)
 class Slot:
-    """Un posto del progetto: un componente del sottosistema `subsystem`, scelto tra `allowed` (id del catalogo; None = tutti)."""
+    """Un posto del progetto: un componente del sottosistema `subsystem`, scelto tra `allowed` (id del catalogo; None = tutti), in `quantity`
+    unita' dello stesso prodotto (impilate lungo l'asse della pila); slew_rate_deg_s: velocita' di rotazione che ciascuna ruota di reazione deve
+    dare al satellite (momento >= inerzia x velocita', inerzia di un blocco uniforme con la massa limite e l'ingombro della classe)."""
     id: str
     subsystem: str
     label: str
     allowed: frozenset[str] | None = None
+    quantity: int = 1
+    slew_rate_deg_s: float | None = None
 
 
 def default_slots() -> list[Slot]:
@@ -297,6 +314,14 @@ def _candidate(c: Component, env) -> Candidate:
     vol = None if c.category == "structure" or sid in EXTERNAL_SUBSYSTEMS else volume_m3(c)
     st = layout.spec(c, sid, env) if sid in layout.ORDER else None
     return Candidate(c, c.mass_kg, vol, declared_power_w(c), completeness(c), st["height"] if st else None)
+
+
+def _times(k: Candidate, q: int) -> Candidate:
+    """q unita' dello stesso prodotto nel posto: massa, volume, potenza e altezza nella pila moltiplicate."""
+    if q <= 1:
+        return k
+    mul = lambda v: None if v is None else v * q      # noqa: E731
+    return replace(k, mass_kg=mul(k.mass_kg), volume_m3=mul(k.volume_m3), power_w=mul(k.power_w), height_mm=mul(k.height_mm), quantity=q)
 
 
 def _admissible(c: Component, sid: str, cls: CubeSatClass) -> bool:
@@ -375,15 +400,20 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         if sid == "eps":                                                                # classi dichiarate, almeno un ingresso solare
             fitting = [c for c in fitting if eps_class_ok(c, units)]
             fitting = [c for c in fitting if c.raw["specs"].get("pv_channels") != 0] or fitting
+        if sid == "reaction_wheel" and sl.slew_rate_deg_s:                              # momento di ciascuna ruota per la rotazione richiesta
+            h_req = wheel_momentum_needed_mnms(cls, sl.slew_rate_deg_s)
+            fitting = [c for c in fitting if (c.spec("momentum_mnms") or 0.0) >= h_req - 1e-12]
         adcs_small_only = False
-        if sid == "adcs" and fitting:                                                   # l'unita' ADCS dichiarata per la classe
+        if sid in CLASS_RANGE_SUBSYSTEMS and fitting:                                   # l'unita' ADCS o la ruota dichiarata per la classe
+            # la regola "senza massa pubblicata solo se non c'e' altro" viene prima della classe dichiarata
+            fitting = [c for c in fitting if c.mass_kg is not None] or fitting
             tiers = [adcs_tier(c, units) for c in fitting]
             best = min((t for t in tiers if t < 2), default=None)
             adcs_small_only = best is None
             fitting = [] if best is None else [c for c, t in zip(fitting, tiers) if t == best]
         fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting          # i prodotti non piu' in vendita solo se non c'e' altro
-        known = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is not None]
-        unknown = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is None]
+        known = [_times(_candidate(c, cls.envelope_mm), sl.quantity) for c in fitting if c.mass_kg is not None]
+        unknown = [_times(_candidate(c, cls.envelope_mm), sl.quantity) for c in fitting if c.mass_kg is None]
         pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
         if sid in layout.ORDER and any(k.height_mm is not None for k in pool):
             pool = [k for k in pool if k.height_mm is not None]    # idem senza quote: non si scavalca il vincolo della pila con un componente di cui non si conosce l'altezza
@@ -395,7 +425,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         elif larger_only:
             note = f"The components of this subsystem that fit a {units}U are declared by their vendors for larger CubeSats only."
         elif adcs_small_only:
-            note = f"The ADCS units that fit a {units}U are declared by their vendors for smaller CubeSats only (less momentum and torque than needed)."
+            note = f"The components of this subsystem that fit a {units}U are declared by their vendors for smaller CubeSats only (less momentum and torque than needed)."
         elif not fitting:
             note = f"No component of this subsystem in the database fits a {units}U" + (" and publishes its total impulse." if dv and sid == "propulsion" else ".")
         elif not known:
