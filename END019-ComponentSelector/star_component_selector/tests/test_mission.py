@@ -86,8 +86,8 @@ class NeedsTest(unittest.TestCase):
 
     def test_solar_panel_of_the_class_and_deployable_when_asked(self):
         sel, _ = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
-        self.assertEqual(sel.cubesat.units, 6)
-        self.assertEqual(slots_of(sel)["solar_panel"].selected.comp.raw["specs"]["face"], "6U")
+        self.assertEqual(sel.cubesat.units, 12)
+        self.assertEqual(slots_of(sel)["solar_panel"].selected.comp.raw["specs"]["face"], "6U")      # a 12U uses the 6U panels
         sel, m = design(CATALOG, V6 + [{"id": "REQ-099", "text": "Each satellite shall have two deployable solar panels."}],
                         {"altitude_km": [641.6, 641.6], "end016": END016})
         panel = slots_of(sel)["solar_panel"].selected.comp
@@ -156,11 +156,11 @@ class NeedsTest(unittest.TestCase):
     def test_adcs_declared_for_the_class_of_the_design(self):
         sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
         adcs = slots_of(sel)["adcs"].selected.comp
-        self.assertEqual(sel.cubesat.units, 6)
+        u = sel.cubesat.units
         lo, hi = adcs.spec("form_factor_range_u")
-        self.assertTrue(lo <= 6 <= hi, adcs.id)                     # e.g. XACT-50, not the 3U XACT-15
+        self.assertTrue(lo <= u <= hi, adcs.id)                     # declared for the class of the design (not the 3U XACT-15)
         self.assertLessEqual(adcs.spec("pointing_accuracy_deg"), 0.1)
-        self.assertIn("declared by its vendor for 6U", m["subsystems"]["adcs"]["why"])
+        self.assertIn("declared by its vendor for", m["subsystems"]["adcs"]["why"])
         sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall point at nadir and relay messages through UHF."}])
         self.assertEqual(sel.cubesat.units, 1)
         self.assertIn("none is declared for a 1U", m["subsystems"]["adcs"]["why"])
@@ -200,6 +200,35 @@ class NeedsTest(unittest.TestCase):
         self.assertIn("dv", m["relaxed"])
         self.assertTrue(any("no thruster in the database gives 1000.0 m/s" in u for u in m["unmet"]))
 
+    def test_imager_declared_for_the_class_and_of_the_right_kind(self):
+        sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        img = slots_of(sel)["payload_imager"].selected.comp
+        self.assertLessEqual(img.spec("min_form_factor_u") or 0, sel.cubesat.units)        # vendor minimum class
+        self.assertIn("PAN", img.spec("spectral_bands"))                                      # panchromatic, visible
+        self.assertNotIn("snapshot", img.raw["name"].lower())                                 # push-broom
+        rows = {r["what"]: r["status"] for r in m["requirements"]}
+        self.assertEqual(rows["panchromatic channel"], "met")
+        self.assertEqual(rows["push-broom camera (not a snapshot camera)"], "met")
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The satellite shall take multispectral images with a GSD of 40 m at 500 km of altitude."}])
+        self.assertIn("MS", slots_of(sel)["payload_imager"].selected.comp.spec("spectral_bands"))
+
+    def test_image_kind_that_no_camera_gives(self):
+        _, m = design(CATALOG, [{"id": "R1", "text": "The satellite shall take thermal infrared images of wildfires."}])
+        self.assertIn("Does not satisfy R1 (thermal infrared): no payload imager in the database meets it.", m["unmet"])
+
+    def test_optical_terminal_for_the_link(self):
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The satellites shall exchange data through an inter-satellite optical link at 1 Gbps."}])
+        term = slots_of(sel)["payload_optical"].selected.comp
+        self.assertIn(term.spec("link_type"), ("inter_satellite", "both"))
+        self.assertGreaterEqual(term.spec("link_data_rate_mbps"), 1000)
+        self.assertLessEqual(term.spec("min_form_factor_u") or 0, sel.cubesat.units)
+
+    def test_products_no_longer_sold_only_when_nothing_else(self):
+        for units in CLASSES:
+            for r in select(CATALOG, units).subsystems:
+                if r.selected and r.selected.comp.raw.get("status") == "nla":
+                    self.assertTrue(all(k.comp.raw.get("status") == "nla" for k in r.alternatives), (units, r.id))
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})
@@ -216,10 +245,13 @@ class ClassTest(unittest.TestCase):
             self.assertTrue(next(x for x in m["class_search"] if x["class_u"] == u)["ok"])
 
     def test_stated_class_is_only_reported(self):
-        sel, m = design(CATALOG, V6)      # v6 without END-016: the subsystems fit a 3U although REQ-006 says 6U
-        self.assertEqual(sel.cubesat.units, 3)
+        sel, m = design(CATALOG, V6)      # v6: the only camera with GSD <= 4 m is declared for 12U, although REQ-006 says 6U
+        self.assertEqual(sel.cubesat.units, 12)
         self.assertEqual(m["stated_class"]["class_u"], 6)
-        self.assertTrue(any("REQ-006 states a 6U" in n for n in m["notes"]))
+        self.assertTrue(any("REQ-006 states a 6U" in n and "12U is larger" in n for n in m["notes"]))
+        sel, m = design(CATALOG, [{"id": "R1", "text": "Each satellite shall be a 6U CubeSat relaying messages through UHF."}])
+        self.assertEqual(sel.cubesat.units, 1)                        # smaller than stated: reported, not imposed
+        self.assertTrue(any("R1 states a 6U" in n for n in m["notes"]))
 
     def test_user_class_wins(self):
         sel, m = design(CATALOG, V6, forced_class_u=12)
@@ -291,7 +323,7 @@ class SelectorExtensionsTest(unittest.TestCase):
 
     def test_service_design(self):
         out = SelectorService().design({"requirements": V6, "context": {"altitude_km": [641.6, 641.6], "end016": END016}})
-        self.assertEqual(out["cubesat"]["class_u"], 6)
+        self.assertEqual(out["cubesat"]["class_u"], 12)
         self.assertTrue(all(s["design"] for s in out["subsystems"]))
         self.assertTrue(out["mission"]["extras"])
         self.assertEqual({s["subsystem"] for s in out["subsystems"]} & {"reaction_wheel", "star_tracker"}, set())

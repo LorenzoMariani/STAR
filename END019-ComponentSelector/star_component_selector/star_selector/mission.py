@@ -30,7 +30,10 @@ Requisiti verificati con i dati pubblicati:
     una radio che comprende la sua antenna ("+ ANT..." nel nome del prodotto) non ha l'antenna separata della sua banda;
   * propulsore: delta-v (impulso totale / massa), classe minima dichiarata dal fornitore, un propulsore elettrico deve funzionare con la
     potenza di picco del pannello solare scelto (selector, electric_power_check), propellente non tossico se richiesto; se nessuno da' il
-    delta-v, quello con l'impulso piu' alto che entra nella classe scelta.
+    delta-v, quello con l'impulso piu' alto che entra nella classe scelta;
+  * payload: classe minima dichiarata dal fornitore (selector), tipo di immagine (bande spettrali pubblicate: pancromatico, visibile,
+    multi/iperspettrale, SWIR, infrarosso termico, RGB, video; push-broom = non "snapshot" nel nome), poi GSD e swath; terminale ottico:
+    tipo di collegamento (verso terra o tra satelliti) e velocita'.
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -80,6 +83,17 @@ RULES: dict[str, tuple[str, str]] = {   # sottosistema -> (espressione sul testo
     "star_tracker": (r"\bstar trackers?\b", "named in the requirements"),
     "sun_sensor": (r"\bsun sensors?\b", "named in the requirements"),
 }
+# tipo di immagine chiesto dai requisiti -> bande spettrali pubblicate che lo danno (specs.spectral_bands del catalogo)
+IMAGE_TYPES = (
+    (r"\bpanchromatic\b", {"PAN", "MONO"}, "panchromatic channel"),
+    (r"\bvisible\b", {"PAN", "RGB", "VNIR", "MONO", "MS", "HS"}, "visible spectrum"),
+    (r"\bmulti-?spectral\b", {"MS"}, "multispectral bands"),
+    (r"\bhyper-?spectral\b", {"HS"}, "hyperspectral bands"),
+    (r"\bswir\b|\bshort-?wave infra-?red\b", {"SWIR"}, "short-wave infrared"),
+    (r"\bthermal infra-?red\b|\btir\b|\blwir\b|\blong-?wave infra-?red\b", {"TIR", "LWIR"}, "thermal infrared"),
+    (r"\brgb\b|\bcolou?r (images?|camera)\b", {"RGB"}, "colour (RGB)"),
+    (r"\bvideo\b", {"VIDEO"}, "video"),
+)
 NOUNS = {"payload_imager": "payload imager", "payload_optical": "optical terminal", "comms": "radio", "antenna": "antenna", "adcs": "ADCS unit",
          "propulsion": "thruster", "gps": "GNSS receiver", "gnss_antenna": "GNSS antenna", "solar_panel": "solar panel"}
 NOT_REQUIRED = {
@@ -291,6 +305,17 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     # requisiti verificabili dei posti
     if "payload_imager" in needs:
         img = needs["payload_imager"]
+        # tipo di immagine prima del GSD e dello swath (se nessuna camera li soddisfa tutti, conta prima il tipo): bande spettrali
+        # pubblicate, push-broom (una camera "snapshot" nel nome del prodotto non lo e')
+        for rx, bands, what in IMAGE_TYPES:
+            if (hit := _find(reqs, rx)):
+                img.checks.append(Check("bands", img.slot.id, hit[0], what,
+                                        lambda c, b=bands: None if not c.spec("spectral_bands") else bool({str(x).upper() for x in c.spec("spectral_bands")} & b),
+                                        lambda c: ", ".join(c.spec("spectral_bands") or []) or None))
+        if (hit := _find(reqs, r"\bpush-?broom\b")):
+            img.checks.append(Check("pushbroom", img.slot.id, hit[0], "push-broom camera (not a snapshot camera)",
+                                    lambda c: "snapshot" not in str(c.raw.get("name", "")).lower(),
+                                    lambda c: "snapshot camera" if "snapshot" in str(c.raw.get("name", "")).lower() else "not a snapshot camera"))
         if (hit := _find(reqs, rf"(?:ground sample distance|gsd)[^.\d]{{0,40}}?{NUM}\s*m\b")):
             g = float(hit[1].group(1))
             if alt:
@@ -311,6 +336,21 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             else:
                 img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km", status="not_verifiable",
                                         message=f"{hit[0].id}: swath {s:g} km not verifiable: the orbit altitude is not known."))
+    if "payload_optical" in needs:      # terminale ottico: tipo di collegamento e velocita' pubblicati
+        op = needs["payload_optical"]
+        if (hit := _find(reqs, r"\binter-?satellite\b|\bcross-?links?\b|\bsatellite-to-satellite\b")):
+            op.checks.append(Check("link", op.slot.id, hit[0], "inter-satellite optical link",
+                                   lambda c: None if not c.spec("link_type") else c.spec("link_type") in ("inter_satellite", "both"),
+                                   lambda c: str(c.spec("link_type") or "").replace("_", " ") or None))
+        elif (hit := _find(reqs, r"(optical|laser)[^.]*\b(downlink|to the ground|ground station)")):
+            op.checks.append(Check("link", op.slot.id, hit[0], "optical link to the ground",
+                                   lambda c: None if not c.spec("link_type") else c.spec("link_type") in ("space_to_ground", "both"),
+                                   lambda c: str(c.spec("link_type") or "").replace("_", " ") or None))
+        if (hit := _find(reqs, rf"(?:optical|laser)[^.]*?{NUM}\s*(gbps|gbit/s|mbps|mbit/s)")):
+            mbps = float(hit[1].group(1)) * (1e3 if hit[1].group(2).startswith("g") else 1.0)
+            op.checks.append(Check("optical_rate", op.slot.id, hit[0], f"optical link rate >= {mbps:g} Mbps",
+                                   lambda c, r=mbps: None if c.spec("link_data_rate_mbps") is None else float(c.spec("link_data_rate_mbps")) >= r - 1e-9,
+                                   lambda c: None if c.spec("link_data_rate_mbps") is None else f"{float(c.spec('link_data_rate_mbps')):g} Mbps"))
     if "adcs" in needs:
         ad = needs["adcs"]
         if (hit := _find(reqs, rf"pointing accuracy[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)")):
@@ -403,9 +443,12 @@ def _allowed(catalog: list[Component], nd: Need) -> tuple[frozenset[str] | None,
 
 
 def _class_reason(sel: Selection, fit: dict[str, Any], dv: float | None, catalog, slots, mass_limit) -> str:
-    missing = [r.label for r in sel.subsystems if r.selected is None]
+    missing = [r for r in sel.subsystems if r.selected is None]
     if missing:
-        return "no component fits for " + ", ".join(missing)
+        larger = [r.label for r in missing if r.note and "for larger CubeSats" in r.note]
+        other = [r.label for r in missing if r.label not in larger]
+        return "; ".join(filter(None, [f"{', '.join(larger)} declared by the vendor for larger CubeSats only" if larger else "",
+                                       f"no component fits for {', '.join(other)}" if other else ""]))
     cls = sel.cubesat
     if not sel.within_limits:
         idx = [r for r in sel.subsystems if r.selected]

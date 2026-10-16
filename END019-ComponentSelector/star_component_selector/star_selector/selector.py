@@ -114,6 +114,11 @@ def firing_power_w(c: Component) -> float | None:
     return float(v) if v is not None else None
 
 
+# sottosistemi in cui il catalogo pubblica la classe minima dichiarata dal fornitore (specs.min_form_factor_u): propulsori, imager e
+# terminali ottici (2026-10-16). Inoltre, per ogni sottosistema, i prodotti non piu' in vendita (status "nla") solo se non c'e' altro.
+MIN_CLASS_SUBSYSTEMS = ("propulsion", "payload_imager", "payload_optical")
+
+
 def min_class_ok(c: Component, units: int) -> bool:
     v = c.raw["specs"].get("min_form_factor_u")
     return v is None or float(v) <= units + 1e-9
@@ -260,8 +265,10 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             fitting = [c for c in allowed if c.spec("form_factor_u") == units]
         else:
             fitting = [c for c in allowed if _admissible(c, sid, cls)]
-        if sid == "propulsion":
-            fitting = [c for c in fitting if min_class_ok(c, units)]    # classe minima dichiarata dal fornitore
+        larger_only = False
+        if sid in MIN_CLASS_SUBSYSTEMS and fitting:                     # classe minima dichiarata dal fornitore
+            larger_only = not any(min_class_ok(c, units) for c in fitting)
+            fitting = [c for c in fitting if min_class_ok(c, units)]
         if dv and sid == "propulsion":
             fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
         if sid == "solar_panel":
@@ -272,7 +279,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             best = min((t for t in tiers if t < 2), default=None)
             adcs_small_only = best is None
             fitting = [] if best is None else [c for c, t in zip(fitting, tiers) if t == best]
-            fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting
+        fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting          # i prodotti non piu' in vendita solo se non c'e' altro
         known = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is not None]
         unknown = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is None]
         pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
@@ -283,6 +290,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             note = "No component of this subsystem is in the database."
         elif not allowed:
             note = "No component of this subsystem in the database meets the mission requirements."
+        elif larger_only:
+            note = f"The components of this subsystem that fit a {units}U are declared by their vendors for larger CubeSats only."
         elif adcs_small_only:
             note = f"The ADCS units that fit a {units}U are declared by their vendors for smaller CubeSats only (less momentum and torque than needed)."
         elif not fitting:
