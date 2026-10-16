@@ -33,7 +33,9 @@ Requisiti verificati con i dati pubblicati:
     delta-v, quello con l'impulso piu' alto che entra nella classe scelta;
   * payload: classe minima dichiarata dal fornitore (selector), tipo di immagine (bande spettrali pubblicate: pancromatico, visibile,
     multi/iperspettrale, SWIR, infrarosso termico, RGB, video; push-broom = non "snapshot" nel nome), poi GSD e swath; terminale ottico:
-    tipo di collegamento (verso terra o tra satelliti) e velocita'.
+    tipo di collegamento (verso terra o tra satelliti) e velocita';
+  * OBC: almeno un'interfaccia dati in comune con ogni componente che pubblica le sue (selector, interface_check, vincolo nella ricerca
+    esatta); dose totale di radiazione dei requisiti <= quella pubblicata.
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -47,13 +49,15 @@ from typing import Any, Callable
 from .fit import check_fit
 from .models import Component
 from .rows import subsystem_of
-from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, firing_power_w, is_electric, total_impulse_ns
+from .selector import CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, firing_power_w, interfaces, is_electric, total_impulse_ns
 from .selector import select as _select
 
 
 def select(*args: Any, **kwargs: Any) -> Selection:
-    """La selezione del progetto per la missione: un propulsore elettrico deve funzionare con la potenza del pannello solare scelto."""
+    """La selezione del progetto per la missione: un propulsore elettrico deve funzionare con la potenza del pannello solare scelto e l'OBC
+    deve avere un'interfaccia dati in comune con ogni componente che pubblica le sue."""
     kwargs.setdefault("electric_power_check", True)
+    kwargs.setdefault("interface_check", True)
     return _select(*args, **kwargs)
 
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
@@ -336,6 +340,13 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             else:
                 img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km", status="not_verifiable",
                                         message=f"{hit[0].id}: swath {s:g} km not verifiable: the orbit altitude is not known."))
+    # OBC: dose totale di radiazione dei requisiti <= quella pubblicata (tid_krad)
+    if (hit := _find(reqs, rf"(?:total ionizing dose|total ionising dose|\btid\b|radiation)[^.\d]{{0,40}}?{NUM}\s*krad")):
+        krad = float(hit[1].group(1))
+        ob = needs["obc"]
+        ob.checks.append(Check("tid", ob.slot.id, hit[0], f"radiation tolerance >= {krad:g} krad (TID)",
+                               lambda c, k=krad: None if c.raw.get("tid_krad") is None else float(c.raw["tid_krad"]) >= k - 1e-9,
+                               lambda c: None if c.raw.get("tid_krad") is None else f"{c.raw['tid_krad']:g} krad"))
     if "payload_optical" in needs:      # terminale ottico: tipo di collegamento e velocita' pubblicati
         op = needs["payload_optical"]
         if (hit := _find(reqs, r"\binter-?satellite\b|\bcross-?links?\b|\bsatellite-to-satellite\b")):
@@ -666,6 +677,18 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "obc" and r.selected:      # selector.interfaces: l'OBC parla con ogni componente che pubblica le sue interfacce
+            oi = interfaces(r.selected.comp) or frozenset()
+            others = [x for x in sel.subsystems if x.selected and x.id != r.id]
+            used = sorted({i for x in others for i in ((interfaces(x.selected.comp) or frozenset()) & oi)})
+            missing = [x.label for x in others if interfaces(x.selected.comp) and not (interfaces(x.selected.comp) & oi)]
+            unknown = [x.label for x in others if x.subsystem not in ("structure", "battery", "solar_panel", "antenna", "gnss_antenna")
+                       and not interfaces(x.selected.comp)]
+            rows.append({"requirement": None, "what": "data interfaces in common with every component that publishes them",
+                         "value": ", ".join(used) if not missing else "none with " + ", ".join(missing), "met": not missing})
+            why += f"; it talks to the other components through {', '.join(used)}" if used and not missing else ""
+            if unknown:
+                why += f" (interfaces not published: {', '.join(unknown)})"
         if r.subsystem == "propulsion" and r.selected:      # selector: propulsori elettrici alimentati dal pannello solare
             thr = r.selected.comp
             if is_electric(thr):

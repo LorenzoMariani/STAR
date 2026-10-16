@@ -229,6 +229,31 @@ class NeedsTest(unittest.TestCase):
                 if r.selected and r.selected.comp.raw.get("status") == "nla":
                     self.assertTrue(all(k.comp.raw.get("status") == "nla" for k in r.alternatives), (units, r.id))
 
+    def test_obc_talks_to_every_component(self):
+        from star_selector.selector import interfaces
+        for reqs, ctx in ((V6, {"altitude_km": [641.6, 641.6], "end016": END016}),
+                          ([{"id": "R1", "text": "The satellite shall take multispectral images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}], {})):
+            sel, m = design(CATALOG, reqs, ctx)
+            obc = slots_of(sel)["obc"].selected.comp
+            for r in sel.subsystems:
+                ci = interfaces(r.selected.comp) if r.selected else None
+                if r.subsystem != "obc" and ci:
+                    self.assertTrue(ci & interfaces(obc), (r.id, r.selected.comp.id, obc.id))
+            self.assertTrue(next(c for c in m["subsystems"]["obc"]["checks"] if c["what"].startswith("data interfaces"))["met"])
+        sel, _ = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        self.assertIn("RS-422", interfaces(slots_of(sel)["obc"].selected.comp))               # the XACT ADCS speaks RS-422 only
+
+    def test_interface_check_in_the_selector(self):
+        xact, nanomind = BY_ID["bct-xact-15"], next(c for c in CATALOG if c.raw["name"] == "NanoMind A3200")
+        slots = [Slot("obc", "obc", "OBC", frozenset({nanomind.id})), Slot("adcs", "adcs", "ADCS", frozenset({xact.id}))]
+        self.assertTrue(select(CATALOG, 3, slots=slots).within_limits)
+        self.assertFalse(select(CATALOG, 3, slots=slots, interface_check=True).within_limits)
+
+    def test_radiation_requirement_on_the_obc(self):
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall relay messages through UHF; its computer shall tolerate a total ionizing dose of 30 krad."}])
+        self.assertGreaterEqual(slots_of(sel)["obc"].selected.comp.raw["tid_krad"], 30)
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("radiation"))["status"], "met")
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})

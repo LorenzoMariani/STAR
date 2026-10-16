@@ -114,6 +114,20 @@ def firing_power_w(c: Component) -> float | None:
     return float(v) if v is not None else None
 
 
+# Interfacce dati (regola dichiarata, 2026-10-16): con interface_check l'OBC deve avere almeno un'interfaccia in comune con ogni componente
+# del progetto che pubblica le sue (specs.data_interfaces); un componente che non le pubblica non si puo' verificare e non blocca la scelta.
+IFACE_ALIASES = {"RS422": "RS-422", "RS485": "RS-485", "RS232": "RS-232", "I²C": "I2C", "RS-422 UART": "RS-422", "RS-485 UART": "RS-485",
+                 "TTL UART": "UART", "ANALOGUE": "ADC", "ANALOG": "ADC"}
+
+
+def interfaces(c: Component) -> frozenset[str] | None:
+    """Interfacce dati pubblicate, con i nomi normalizzati (None = non pubblicate)."""
+    v = c.raw["specs"].get("data_interfaces")
+    if not v:
+        return None
+    return frozenset(IFACE_ALIASES.get(str(x).strip().upper(), str(x).strip().upper()) for x in v)
+
+
 # sottosistemi in cui il catalogo pubblica la classe minima dichiarata dal fornitore (specs.min_form_factor_u): propulsori, imager e
 # terminali ottici (2026-10-16). Inoltre, per ogni sottosistema, i prodotti non piu' in vendita (status "nla") solo se non c'e' altro.
 MIN_CLASS_SUBSYSTEMS = ("propulsion", "payload_imager", "payload_optical")
@@ -225,7 +239,14 @@ def _order(cands: list[Candidate]) -> list[Candidate]:
     return sorted(cands, key=lambda k: (-k.completeness, k.mass_kg if k.mass_kg is not None else 1e9, k.comp.id))
 
 
-def _pareto(pool: list[Candidate], extra=None) -> list[Candidate]:
+def _covers_interfaces(b: Candidate, a: Candidate) -> bool:
+    """b e' compatibile con l'OBC (o, per un OBC, con i componenti) ogni volta che lo e' a: interfacce non pubblicate (non si verifica) oppure
+    un insieme che contiene quello di a."""
+    ib, ia = interfaces(b.comp), interfaces(a.comp)
+    return ib is None or (ia is not None and ib >= ia)
+
+
+def _pareto(pool: list[Candidate], extra=None, covers=None) -> list[Candidate]:
     """Per la ricerca esatta: toglie i candidati battuti da un altro con completezza >= e massa, volume e altezza <= (non servono mai per l'ottimo).
     extra(k) aggiunge le grandezze dei vincoli attivi (piu' piccolo = meglio): con il delta-v l'impulso totale (cambiato di segno), con la
     potenza dei propulsori elettrici la potenza in accensione del propulsore e la potenza di picco del pannello (cambiata di segno)."""
@@ -233,7 +254,8 @@ def _pareto(pool: list[Candidate], extra=None) -> list[Candidate]:
         return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0) + (tuple(extra(k)) if extra else ())
     keep: list[Candidate] = []
     for a in pool:      # il pool e' ordinato per completezza decrescente, poi massa
-        if not any(b.completeness >= a.completeness - 1e-12 and all(x <= y + 1e-15 for x, y in zip(key(b), key(a))) for b in keep):
+        if not any(b.completeness >= a.completeness - 1e-12 and all(x <= y + 1e-15 for x, y in zip(key(b), key(a))) and (covers is None or covers(b, a))
+                   for b in keep):
             keep.append(a)
     return keep
 
@@ -242,12 +264,14 @@ CATEGORY_OF = {sid: cat for sid, cat, _ in SUBSYSTEMS}
 
 
 def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
-           dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False) -> Selection:
+           dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False,
+           interface_check: bool = False) -> Selection:
     """Selezione per la classe `units`. Senza parametri facoltativi: un posto per ciascuno dei 17 sottosistemi, tutti i componenti, limiti CDS.
     slots: i posti del progetto (mission.py: solo i sottosistemi che la missione chiede, una radio per banda, i componenti che soddisfano i requisiti);
     dv_m_s: il propulsore scelto deve dare questo delta-v al satellite intero (impulso totale pubblicato / somma delle masse pubblicate);
     mass_limit_kg: massa massima chiesta dalla missione, se sotto il limite CDS della classe;
-    electric_power_check: un propulsore elettrico deve funzionare con la potenza di picco del pannello solare scelto (mission.py lo attiva)."""
+    electric_power_check: un propulsore elettrico deve funzionare con la potenza di picco del pannello solare scelto (mission.py lo attiva);
+    interface_check: l'OBC ha almeno un'interfaccia dati in comune con ogni componente che pubblica le sue (mission.py lo attiva)."""
     if units not in CLASSES:
         raise ValueError(f"unsupported CubeSat class {units}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
     cls = CLASSES[units]
@@ -323,7 +347,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         if sid == "solar_panel" and jp is not None:
             parts.append(lambda k: -float(k.comp.spec("peak_power_w") or 0.0))
         return (lambda k: [f(k) for f in parts]) if parts else None
-    spools = {i: _pareto(pools[i], extra_of(i)) for i in idx}
+    jo = next((j for j, i in enumerate(idx) if results[i].subsystem == "obc"), None) if interface_check else None
+    spools = {i: _pareto(pools[i], extra_of(i), _covers_interfaces if jo is not None else None) for i in idx}
     min_mass = [min((k.mass_kg or 0.0) for k in spools[i]) for i in idx]
     min_vol = [min((k.volume_m3 or 0.0) for k in spools[i]) for i in idx]
     max_score = [max(k.completeness for k in spools[i]) for i in idx]
@@ -348,6 +373,15 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         fire = firing_power_w(cands[jp].comp)
         peak = cands[js].comp.spec("peak_power_w") if js is not None else None
         return fire is not None and peak is not None and fire <= float(peak) + 1e-9
+
+    def iface_ok(cands) -> bool:
+        """L'OBC ha almeno un'interfaccia dati in comune con ogni altro componente che pubblica le sue."""
+        if jo is None:
+            return True
+        oi = interfaces(cands[jo].comp)
+        if oi is None:
+            return True
+        return all(not (ci := interfaces(k.comp)) or (ci & oi) for j, k in enumerate(cands) if j != jo)
     suffix_score = [sum(max_score[j:]) for j in range(len(idx) + 1)]
     best: dict = {"key": None, "pick": None}
     deadline = time.monotonic() + time_budget_s
@@ -364,7 +398,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if j == len(idx):
             cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
-            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands):
+            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands):
                 return
             key = (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
@@ -372,7 +406,11 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if best["key"] is not None and (round(score + suffix_score[j], 9), -(mass + suffix_mass[j])) <= best["key"]:
             return
+        # con l'OBC gia' scelto (livello jo) i componenti senza interfacce in comune con lui si scartano subito
+        oi = interfaces(spools[idx[jo]][pick[jo]].comp) if jo is not None and j > jo else None
         for n, k in enumerate(spools[idx[j]]):
+            if oi is not None and (ci := interfaces(k.comp)) and not (ci & oi):
+                continue
             pick.append(n)
             rec(j + 1, mass + (k.mass_kg or 0.0), vol + (k.volume_m3 or 0.0), score + k.completeness, pick, hsum + (k.height_mm or 0.0))
             pick.pop()
@@ -381,7 +419,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     greedy = [pools[i][0] for i in idx]
     g_mass = sum((k.mass_kg or 0.0) for k in greedy)
     g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy):
+    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy):
         chosen = greedy
     else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
         rec(0, 0.0, 0.0, 0.0, [])
