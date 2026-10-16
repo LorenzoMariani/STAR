@@ -76,6 +76,7 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
     },
     "adcs": {
         "pointing_accuracy_deg": ("num", "Accuratezza di puntamento", False),
+        "form_factor_range_u": ("range", "Classi CubeSat per cui il fornitore dichiara l'unita' [min, max] in U (tools/add_adcs_form_factors.py)", False),
         "data_interfaces": ("strs", "Interfacce dati verso OBC", False),
         "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
     },

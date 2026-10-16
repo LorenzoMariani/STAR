@@ -136,11 +136,25 @@ class TestRealCatalogueInvariants(unittest.TestCase):
                     self.assertTrue(fits_envelope(k.comp, cls.envelope_mm) or k.comp.category == "structure")
 
     def test_what_fits_a_smaller_class_fits_a_larger_one(self):
-        # struttura e pannello solare sono quelli fatti per la classe (classe della struttura, faccia del pannello): non crescono con la classe
-        fit = {u: {r.id: r.n_fit for r in select(CATALOG, u).subsystems if r.id not in ("structure", "solar_panel")} for u in CLASSES}
+        # struttura, pannello solare e ADCS sono quelli fatti per la classe (classe della struttura, faccia del pannello, classe dichiarata
+        # dell'unita' ADCS): non crescono con la classe
+        fit = {u: {r.id: r.n_fit for r in select(CATALOG, u).subsystems if r.id not in ("structure", "solar_panel", "adcs")} for u in CLASSES}
         for small, big in ((1, 3), (3, 6), (6, 12)):
             for sid, n in fit[small].items():
                 self.assertLessEqual(n, fit[big][sid], (small, big, sid))
+
+    def test_the_adcs_is_declared_for_the_class_and_never_undersized(self):
+        from star_selector.selector import adcs_tier
+        for units in CLASSES:
+            r = next(r for r in select(CATALOG, units).subsystems if r.id == "adcs")
+            pool = [r.selected, *r.alternatives]
+            tiers = {adcs_tier(k.comp, units) for k in pool}
+            self.assertEqual(len(tiers), 1, units)                         # un solo livello: quello migliore disponibile
+            self.assertNotIn(2, tiers, units)                              # mai un'unita' dichiarata solo per CubeSat piu' piccoli
+            self.assertNotEqual(r.selected.comp.raw.get("status"), "nla", units)
+            if units > 1:
+                lo, hi = r.selected.comp.spec("form_factor_range_u")
+                self.assertTrue(lo <= units <= hi, (units, r.selected.comp.id))
 
     def test_the_solar_panel_is_made_for_the_face_of_the_class(self):
         from star_selector.selector import CLASS_PANEL_FACES

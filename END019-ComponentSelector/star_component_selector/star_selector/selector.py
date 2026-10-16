@@ -84,6 +84,19 @@ def panel_for_class(c: Component, units: int) -> bool:
     return str(c.raw["specs"].get("face")) in CLASS_PANEL_FACES.get(units, ())
 
 
+# Regola dichiarata (2026-10-16): l'unita' ADCS e' quella che il fornitore dichiara per la classe (specs.form_factor_range_u). Se la classe
+# non ne ha, quelle dichiarate per classi piu' grandi o senza dichiarazione (piu' momento del necessario, o da verificare); mai quelle
+# dichiarate solo per classi piu' piccole (ruote con meno momento e coppia di quanto serve). A pari livello i prodotti non piu' in vendita
+# (status "nla") solo se non c'e' altro.
+def adcs_tier(c: Component, units: int) -> int:
+    """0 = dichiarata per la classe, 1 = per classi piu' grandi o non dichiarata, 2 = solo per classi piu' piccole (esclusa)."""
+    r = c.spec("form_factor_range_u")
+    if not r:
+        return 1
+    lo, hi = r
+    return 0 if lo <= units <= hi else (1 if lo > units else 2)
+
+
 def panel_face(c: Component) -> tuple[float, float] | None:
     """Impronta (mm) di un pannello solare senza tutte e tre le quote: le due quote pubblicate se ci sono (lo spessore manca), altrimenti la faccia dichiarata."""
     if c.category != "solar_panel":
@@ -227,6 +240,13 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
         if sid == "solar_panel":
             fitting = [c for c in fitting if panel_for_class(c, units)] or fitting     # il pannello fatto per la faccia della classe
+        adcs_small_only = False
+        if sid == "adcs" and fitting:                                                   # l'unita' ADCS dichiarata per la classe
+            tiers = [adcs_tier(c, units) for c in fitting]
+            best = min((t for t in tiers if t < 2), default=None)
+            adcs_small_only = best is None
+            fitting = [] if best is None else [c for c, t in zip(fitting, tiers) if t == best]
+            fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting
         known = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is not None]
         unknown = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is None]
         pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
@@ -237,6 +257,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             note = "No component of this subsystem is in the database."
         elif not allowed:
             note = "No component of this subsystem in the database meets the mission requirements."
+        elif adcs_small_only:
+            note = f"The ADCS units that fit a {units}U are declared by their vendors for smaller CubeSats only (less momentum and torque than needed)."
         elif not fitting:
             note = f"No component of this subsystem in the database fits a {units}U" + (" and publishes its total impulse." if dv and sid == "propulsion" else ".")
         elif not known:

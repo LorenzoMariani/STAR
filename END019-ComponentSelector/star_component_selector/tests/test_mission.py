@@ -153,6 +153,18 @@ class NeedsTest(unittest.TestCase):
         self.assertEqual([e["id"] for e in ant], ["antenna_s"])
         self.assertIn("included in the radio", ant[0]["why_not"])
 
+    def test_adcs_declared_for_the_class_of_the_design(self):
+        sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        adcs = slots_of(sel)["adcs"].selected.comp
+        self.assertEqual(sel.cubesat.units, 6)
+        lo, hi = adcs.spec("form_factor_range_u")
+        self.assertTrue(lo <= 6 <= hi, adcs.id)                     # e.g. XACT-50, not the 3U XACT-15
+        self.assertLessEqual(adcs.spec("pointing_accuracy_deg"), 0.1)
+        self.assertIn("declared by its vendor for 6U", m["subsystems"]["adcs"]["why"])
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall point at nadir and relay messages through UHF."}])
+        self.assertEqual(sel.cubesat.units, 1)
+        self.assertIn("none is declared for a 1U", m["subsystems"]["adcs"]["why"])
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})

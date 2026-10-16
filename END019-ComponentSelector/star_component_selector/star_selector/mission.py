@@ -596,6 +596,10 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "adcs" and r.selected:      # selector.adcs_tier: l'unita' dichiarata per la classe del progetto
+            rng = r.selected.comp.spec("form_factor_range_u")
+            why += ("; declared by its vendor for " + (f"{rng[0]:g}U" if rng[0] == rng[1] else f"{rng[0]:g}U-{rng[1]:g}U") + " CubeSats"
+                    + ("" if rng[0] <= units <= rng[1] else f" (none is declared for a {units}U)")) if rng else "; CubeSat class not declared by its vendor"
         if radio_info and r.id == radio_info["slot"] and radio_info.get("data_rate_kbps"):
             why = f"{nd.why}; highest published data rate that fits the design ({float(radio_info['data_rate_kbps']) / 1e3:g} Mbps)"
         if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:

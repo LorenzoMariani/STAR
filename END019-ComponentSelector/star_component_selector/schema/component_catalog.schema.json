@@ -719,6 +719,22 @@
                         }
                       ]
                     },
+                    "form_factor_range_u": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "description": "Classi CubeSat per cui il fornitore dichiara l'unita' [min, max] in U (tools/add_adcs_form_factors.py)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "data_interfaces": {
                       "anyOf": [
                         {
@@ -755,6 +771,7 @@
                   },
                   "required": [
                     "pointing_accuracy_deg",
+                    "form_factor_range_u",
                     "data_interfaces",
                     "supply_voltage_ranges_v"
                   ],
