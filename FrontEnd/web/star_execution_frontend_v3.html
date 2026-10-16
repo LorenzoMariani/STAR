@@ -640,5 +640,44 @@
 })();
 </script>
 
+<style id="star-v3-partner-logos-style">
+.module-card .owner-logos{position:absolute;right:5px;top:21px;width:52px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;z-index:2;pointer-events:none}
+.module-card .owner-logos .tile{height:30px;max-width:52px;background:#fff;border-radius:5px;padding:2px 3px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(148,163,184,.35);box-sizing:border-box}
+.module-card .owner-logos.two .tile{height:16px;width:52px;padding:1px 3px}
+.module-card .owner-logos img{max-height:100%;max-width:100%;width:auto;height:auto;display:block;object-fit:contain}
+</style>
+<script id="star-v3-partner-logos-script">
+(function(){
+  'use strict';
+  const PARTNERS = {
+    UNIRM1: ['sapienza', 'Sapienza Universit\u00e0 di Roma'], SAPIENZA: ['sapienza', 'Sapienza Universit\u00e0 di Roma'],
+    UNIPD: ['unipd', 'Universit\u00e0 degli Studi di Padova'], UNIPA: ['unipa', 'Universit\u00e0 degli Studi di Palermo'],
+    POLIMI: ['polimi', 'Politecnico di Milano'], POLITO: ['polito', 'Politecnico di Torino'], POLIBA: ['poliba', 'Politecnico di Bari'],
+    TASI: ['thales', 'Thales Alenia Space'], THALES: ['thales', 'Thales Alenia Space'], TELESPAZIO: ['tpz', 'Telespazio'], TPZ: ['tpz', 'Telespazio'],
+    INRIM: ['inrim', 'INRiM'], SITAEL: ['sitael', 'Sitael']
+  };
+  function decorate(card){
+    if (card.querySelector('.owner-logos')) return;
+    const ownerEl = card.querySelector('.module-owner-small');
+    const owner = ownerEl ? ownerEl.textContent.trim().toUpperCase() : '';
+    const found = owner.split(/[^A-Z0-9]+/).map(t => PARTNERS[t]).filter(Boolean);
+    if (!found.length) return;
+    const box = document.createElement('div');
+    box.className = 'owner-logos' + (found.length > 1 ? ' two' : '');
+    box.innerHTML = found.map(([file, name]) => '<span class="tile" title="' + name + '"><img src="assets/logos/' + file + '.png" alt="' + name + '"></span>').join('');
+    card.appendChild(box);
+  }
+  function decorateAll(){ document.querySelectorAll('#module-grid .module-card').forEach(decorate); }
+  function watch(){
+    const grid = document.getElementById('module-grid');
+    if (!grid) return false;
+    new MutationObserver(decorateAll).observe(grid, {childList: true});
+    decorateAll();
+    return true;
+  }
+  if (!watch()) document.addEventListener('DOMContentLoaded', watch);
+})();
+</script>
+
 </body>
 </html>

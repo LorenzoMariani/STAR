@@ -106,7 +106,7 @@ CANONICAL_MODULE_CATALOG = [
     {"module_id": "END-015", "module_name": "Flexible Components Health Monitorying", "owner": "UNIRM1"},
     {"module_id": "END-016", "module_name": "Collision Avoidance", "owner": "UNIRM1"},
     {"module_id": "END-017", "module_name": "Clock Anomalies Detection", "owner": "INRIM"},
-    {"module_id": "END-018", "module_name": "Components Thermal Analysis", "owner": "TBD"},   # was "ABEP" (SITAEL) until 2026-10-15
+    {"module_id": "END-018", "module_name": "Components Thermal Analysis", "owner": "UNIRM1"},   # Sapienza (user, 2026-10-16); "ABEP" (SITAEL) until 2026-10-15, then TBD
     {"module_id": "END-019", "module_name": "Satellite Design Component Selector", "owner": "UNIRM1"},
 ]
 
@@ -5797,6 +5797,50 @@ STAR_V3_RUN_MODE_PATCH = """
 </script>
 """
 
+# Logo of the partner that owns each module, under the status pill of its card (v3 only). The partner comes from the
+# "owner" field of the module registry: every token of the owner (e.g. TASI-POLIBA -> TASI, POLIBA) is looked up here.
+# Logos are reduced copies of the files in SIU/logos (FrontEnd/web/assets/logos).
+STAR_V3_PARTNER_LOGOS_PATCH = """
+<style id="star-v3-partner-logos-style">
+.module-card .owner-logos{position:absolute;right:5px;top:21px;width:52px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;z-index:2;pointer-events:none}
+.module-card .owner-logos .tile{height:30px;max-width:52px;background:#fff;border-radius:5px;padding:2px 3px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(148,163,184,.35);box-sizing:border-box}
+.module-card .owner-logos.two .tile{height:16px;width:52px;padding:1px 3px}
+.module-card .owner-logos img{max-height:100%;max-width:100%;width:auto;height:auto;display:block;object-fit:contain}
+</style>
+<script id="star-v3-partner-logos-script">
+(function(){
+  'use strict';
+  const PARTNERS = {
+    UNIRM1: ['sapienza', 'Sapienza Universit\\u00e0 di Roma'], SAPIENZA: ['sapienza', 'Sapienza Universit\\u00e0 di Roma'],
+    UNIPD: ['unipd', 'Universit\\u00e0 degli Studi di Padova'], UNIPA: ['unipa', 'Universit\\u00e0 degli Studi di Palermo'],
+    POLIMI: ['polimi', 'Politecnico di Milano'], POLITO: ['polito', 'Politecnico di Torino'], POLIBA: ['poliba', 'Politecnico di Bari'],
+    TASI: ['thales', 'Thales Alenia Space'], THALES: ['thales', 'Thales Alenia Space'], TELESPAZIO: ['tpz', 'Telespazio'], TPZ: ['tpz', 'Telespazio'],
+    INRIM: ['inrim', 'INRiM'], SITAEL: ['sitael', 'Sitael']
+  };
+  function decorate(card){
+    if (card.querySelector('.owner-logos')) return;
+    const ownerEl = card.querySelector('.module-owner-small');
+    const owner = ownerEl ? ownerEl.textContent.trim().toUpperCase() : '';
+    const found = owner.split(/[^A-Z0-9]+/).map(t => PARTNERS[t]).filter(Boolean);
+    if (!found.length) return;
+    const box = document.createElement('div');
+    box.className = 'owner-logos' + (found.length > 1 ? ' two' : '');
+    box.innerHTML = found.map(([file, name]) => '<span class="tile" title="' + name + '"><img src="assets/logos/' + file + '.png" alt="' + name + '"></span>').join('');
+    card.appendChild(box);
+  }
+  function decorateAll(){ document.querySelectorAll('#module-grid .module-card').forEach(decorate); }
+  function watch(){
+    const grid = document.getElementById('module-grid');
+    if (!grid) return false;
+    new MutationObserver(decorateAll).observe(grid, {childList: true});
+    decorateAll();
+    return true;
+  }
+  if (!watch()) document.addEventListener('DOMContentLoaded', watch);
+})();
+</script>
+"""
+
 
 def write_execution_frontend_v3(web_dir: Path) -> Path | None:
     """Create a non-destructive patched copy of web/index.html for the execution tab."""
@@ -5813,6 +5857,7 @@ def write_execution_frontend_v3(web_dir: Path) -> Path | None:
     html = html.replace(STAR_EXECUTION_FRONTEND_PATCH_CSS, "")
     html = html.replace(STAR_EXECUTION_FRONTEND_PATCH_JS, "")
     html = html.replace(STAR_V3_RUN_MODE_PATCH, "")
+    html = html.replace(STAR_V3_PARTNER_LOGOS_PATCH, "")
 
     if "</head>" in html:
         html = html.replace("</head>", STAR_EXECUTION_FRONTEND_PATCH_CSS + "\n</head>", 1)
@@ -5820,9 +5865,9 @@ def write_execution_frontend_v3(web_dir: Path) -> Path | None:
         html = STAR_EXECUTION_FRONTEND_PATCH_CSS + "\n" + html
 
     if "</body>" in html:
-        html = html.replace("</body>", STAR_EXECUTION_FRONTEND_PATCH_JS + STAR_V3_RUN_MODE_PATCH + "\n</body>", 1)
+        html = html.replace("</body>", STAR_EXECUTION_FRONTEND_PATCH_JS + STAR_V3_RUN_MODE_PATCH + STAR_V3_PARTNER_LOGOS_PATCH + "\n</body>", 1)
     else:
-        html = html + "\n" + STAR_EXECUTION_FRONTEND_PATCH_JS + STAR_V3_RUN_MODE_PATCH
+        html = html + "\n" + STAR_EXECUTION_FRONTEND_PATCH_JS + STAR_V3_RUN_MODE_PATCH + STAR_V3_PARTNER_LOGOS_PATCH
 
     target_path.write_text(html, encoding="utf-8")
     return target_path
@@ -5859,7 +5904,14 @@ STAR_V3_SHELL_MODE_CSS = """
 .run-level-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;position:relative;z-index:2;width:16px;height:16px;border-radius:50%;background:var(--text-strong);border:3px solid var(--accent-2);box-shadow:0 0 0 3px var(--panel-muted)}
 .run-level-range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--accent)}
 @media(min-width:1200px){.header-actions{flex:0 0 auto;flex-wrap:nowrap}}
+.header-title{display:flex;align-items:center;gap:14px;min-width:0}
+.header-logo-star{height:56px;width:56px;flex:0 0 auto;display:block}
+.header-logo-siu{height:56px;flex:0 0 auto;background:#fff;border-radius:12px;padding:4px 8px;display:flex;align-items:center;border:1px solid var(--border)}
+.header-logo-siu img{height:100%;width:auto;display:block}
 """
+# STAR logo at the top left of the window, Space It Up! logo at the top right (v3; reduced copies of SIU/logos in web/assets/logos).
+STAR_V3_SHELL_LOGO_LEFT = '<img class="header-logo-star" src="assets/logos/star.png" alt="STAR" title="Space mission Twin for Architecture Representation" />'
+STAR_V3_SHELL_LOGO_RIGHT = '      <span class="header-logo-siu" title="Space It Up!"><img src="assets/logos/siu.png" alt="Space It Up!" /></span>\n'
 STAR_V3_SHELL_MODE_JS = """<script id="star-v3-run-mode-buttons">
 (() => {
   'use strict';
@@ -5930,6 +5982,12 @@ def star_v3_shell_html() -> str:
     """STAR_UNIFIED_SHELL_HTML with the Test / Full buttons and the Full accuracy bar next to the theme switch."""
     html = STAR_UNIFIED_SHELL_HTML
     html = html.replace('<div class="header-actions">\n', '<div class="header-actions">\n' + STAR_V3_SHELL_MODE_HTML, 1)
+    title = '  <header class="header">\n    <div>\n      <h1>'
+    assert html.count(title) == 1, "STAR v3 shell: header title not found"
+    html = html.replace(title, '  <header class="header">\n    <div class="header-title">' + STAR_V3_SHELL_LOGO_LEFT + '\n      <h1>', 1)
+    actions_end = '        </span>\n      </label>\n    </div>\n  </header>'
+    assert html.count(actions_end) == 1, "STAR v3 shell: end of the header actions not found"
+    html = html.replace(actions_end, '        </span>\n      </label>\n' + STAR_V3_SHELL_LOGO_RIGHT + '    </div>\n  </header>', 1)
     html = html.replace("</style>", STAR_V3_SHELL_MODE_CSS + "</style>", 1)
     return html.replace("</body>", STAR_V3_SHELL_MODE_JS + "</body>", 1)
 

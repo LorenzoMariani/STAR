@@ -2,7 +2,7 @@ module_type: digital_twin_module
 module_version: 1.0.0
 module_id: END-018
 module_name: Components Thermal Analysis
-owner: TBD
+owner: UNIRM1
 responsible:
   leader: TBD
   co_leader: TBD
