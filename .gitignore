@@ -15,7 +15,25 @@ _old*/
 # Files over 50 MB and builds: copied by hand
 /END010-ReflectanceDetermination/lib/data/DE440.mat
 /END010-ReflectanceDetermination/lib/BuildAqua/
+/END010-ReflectanceDetermination/lib/BuildCubeSat/
 /END019-ComponentSelector.zip
+
+# END-010 Unity project (STAR copy of unityLightCurveInversion): only the sources;
+# Unity regenerates these folders when it opens or builds the project
+/END010-ReflectanceDetermination/unity_project/Library/
+/END010-ReflectanceDetermination/unity_project/Temp/
+/END010-ReflectanceDetermination/unity_project/Logs/
+/END010-ReflectanceDetermination/unity_project/obj/
+/END010-ReflectanceDetermination/unity_project/UserSettings/
+/END010-ReflectanceDetermination/unity_project/.vs/
+/END010-ReflectanceDetermination/unity_project/*.csproj
+/END010-ReflectanceDetermination/unity_project/*.sln
+
+# CubeSat 3D models: only the NASA-style CDS models are used (user, 2026-10-16);
+# the other groups stay on this machine (see Input/cubesat_3d_models/README.md)
+/Input/cubesat_3d_models/cds_envelope_boxes/
+/Input/cubesat_3d_models/nasa/
+/Input/cubesat_3d_models/pumpkin_cubesat_kit/
 
 # Credentials (space-track.org login): stay on this machine only
 /END016-CollisionAvoidance/lib/loginSpaceTrack.m
