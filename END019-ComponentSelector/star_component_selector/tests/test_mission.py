@@ -379,15 +379,59 @@ class ClassTest(unittest.TestCase):
         sel, m = design(CATALOG, V6)      # v6: the only camera with GSD <= 4 m is declared for 12U, although REQ-006 says 6U
         self.assertEqual(sel.cubesat.units, 12)
         self.assertEqual(m["stated_class"]["class_u"], 6)
-        self.assertTrue(any("REQ-006 states a 6U" in n and "12U is larger" in n for n in m["notes"]))
+        note = next(n for n in m["notes"] if "REQ-006 states a 6U" in n)
+        self.assertIn("follows from the performance", note)
+        self.assertIn("declared by the vendor for larger CubeSats only", note)        # why a 6U cannot meet them
         sel, m = design(CATALOG, [{"id": "R1", "text": "Each satellite shall be a 6U CubeSat relaying messages through UHF."}])
         self.assertEqual(sel.cubesat.units, 1)                        # smaller than stated: reported, not imposed
         self.assertTrue(any("R1 states a 6U" in n for n in m["notes"]))
+
+    def test_class_follows_the_performance(self):
+        relaxed = [dict(r, text=r["text"].replace("4.0 m", "6.2 m")) if r["id"] == "REQ-009" else r for r in V6]
+        sel, m = design(CATALOG, relaxed, {"altitude_km": [641.6, 641.6]})
+        self.assertEqual(sel.cubesat.units, 6)                        # a 6U camera gives 6.1 m at 642 km
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("GSD"))["status"], "met")
+        sel, _ = design(CATALOG, V6, {"altitude_km": [641.6, 641.6]})
+        self.assertEqual(sel.cubesat.units, 12)                       # 4 m needs the 12U camera
+
+    def test_least_launch_mass_in_the_class(self):
+        from dataclasses import replace
+        from star_selector.fit import check_fit
+        from star_selector.mission import select as mission_select
+        sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall relay messages from ground sensors through a UHF link."}])
+        fixed = {r.id: r.selected.comp.id for r in sel.subsystems}
+        slots = [Slot(r.id, r.subsystem, r.label) for r in sel.subsystems]
+        for r in sel.subsystems:      # no lighter alternative in any slot gives a complete design that fits (least launch mass)
+            for k in r.alternatives:
+                if k.mass_kg is None or k.mass_kg >= r.selected.mass_kg - 1e-12:
+                    continue
+                trial = mission_select(CATALOG, sel.cubesat.units, 1.0,
+                                       slots=[replace(s, allowed=frozenset({k.comp.id if s.id == r.id else fixed[s.id]})) for s in slots])
+                ok = trial.within_limits and all(x.selected for x in trial.subsystems) and check_fit(trial)["state"] in ("fits", "undetermined")
+                self.assertFalse(ok and trial.mass_kg < sel.mass_kg - 1e-9, (r.id, k.comp.id))
 
     def test_user_class_wins(self):
         sel, m = design(CATALOG, V6, forced_class_u=12)
         self.assertEqual(sel.cubesat.units, 12)
         self.assertEqual(m["forced_class_u"], 12)
+
+    def test_user_class_takes_the_closest_component(self):
+        sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6]}, forced_class_u=6)
+        img = slots_of(sel)["payload_imager"].selected
+        self.assertIsNotNone(img)                                      # it used to be left without a camera
+        self.assertEqual(img.comp.id, "simera-multiscape100")          # the closest GSD that fits a 6U (6.1 m at 642 km)
+        msg = next(u for u in m["unmet"] if "GSD" in u)
+        self.assertIn("6U chosen by the user", msg)
+        self.assertIn("in a 12U", msg)
+
+    def test_extras_keep_the_design(self):
+        sel, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        base = {r.id: r.selected.comp.id for r in sel.subsystems if r.selected}
+        for x in m["extras"]:
+            if x.get("best") and x["fits_with_design"]:
+                self.assertTrue(x["best"]["mass_kg"] is None or sel.mass_kg + x["best"]["mass_kg"] <= sel.cubesat.mass_limit_kg + 1e-9, x["id"])
+        sel2, _ = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        self.assertEqual(base, {r.id: r.selected.comp.id for r in sel2.subsystems if r.selected})      # repeatable
 
     def test_mass_requirement_limits_the_class(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The satellite shall take images; its mass shall not exceed 1.5 kg."}])

@@ -271,6 +271,32 @@ class TestBudgetSearch(unittest.TestCase):
         self.assertIn("without a published mass", sub.note)
         self.assertIn("obc-unknown", res.mass_unknown)
 
+    def test_mass_objective_takes_the_lightest_complete_selection(self):
+        a = synthetic("obc-a", "obc", 0.3, [60, 60, 10], data_interfaces=["I2C"], supply_voltage_ranges_v=[[3, 5]])
+        a.raw["power_w"] = 1.0
+        b = synthetic("obc-b", "obc", 0.05, [60, 60, 10], data_interfaces=["I2C"])
+        res = select([structure_1u(), a, b], 1, objective="mass")      # the default keeps obc-a (more published data)
+        self.assertEqual({r.id: r.selected.comp.id for r in res.subsystems if r.selected}["obc"], "obc-b")
+        with self.assertRaises(ValueError):
+            select([structure_1u(), a], 1, objective="cost")
+
+    def test_mass_objective_on_the_catalogue_is_never_heavier(self):
+        cat = load_catalog(CATALOG)
+        flags = dict(electric_power_check=True, interface_check=True, power_supply_check=True)
+        for u in (3, 6, 12):
+            by_data = select(cat, u, 5.0, **flags)
+            by_mass = select(cat, u, 5.0, objective="mass", **flags)
+            self.assertTrue(by_mass.within_limits and not by_mass.truncated, u)
+            self.assertLessEqual(by_mass.mass_kg, by_data.mass_kg + 1e-9, u)
+
+    def test_require_all_skips_a_class_with_an_empty_slot(self):
+        from star_selector.selector import Slot
+        obc = synthetic("obc-a", "obc", 0.05, [60, 60, 10])
+        res = select([structure_1u(), obc], 1, slots=[Slot("structure", "structure", "STRUCTURE"), Slot("obc", "obc", "OBC"),
+                                                         Slot("eps", "eps", "EPS")], require_all=True)
+        self.assertFalse(res.within_limits)
+        self.assertIsNone({r.id: r for r in res.subsystems}["eps"].selected)
+
     def test_components_larger_than_the_envelope_are_not_candidates(self):
         big = synthetic("obc-big", "obc", 0.1, [200, 100, 100], data_interfaces=["I2C"])
         small = synthetic("obc-small", "obc", 0.1, [60, 60, 10])

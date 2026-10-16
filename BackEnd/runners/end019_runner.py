@@ -178,7 +178,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
         t = result["totals"]
         uncovered = [s["label"] for s in result["subsystems"] if not s["selected"]]
         status = "completed"
-        how = "chosen by the user" if forced else "the smallest class that carries them"
+        how = "chosen by the user" if forced else "the smallest class that meets the performance the mission asks for"
         evidence = (f"{units}U CubeSat ({how}): {t['n_covered']} of {t['n_subsystems']} subsystems the mission needs; mass {t['mass_kg']:.3f} of "
                     f"{t['mass_limit_kg']:g} kg, volume {t['volume_m3']:.3e} of {t['volume_limit_m3']:.3e} m3; {len(mission['extras'])} subsystem(s) not required"
                     + ("" if result["within_limits"] else "; the subsystems together exceed the limits of the class")

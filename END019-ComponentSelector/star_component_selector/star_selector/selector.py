@@ -336,7 +336,9 @@ def _admissible(c: Component, sid: str, cls: CubeSatClass) -> bool:
     return fits_envelope(c, cls.envelope_mm)
 
 
-def _order(cands: list[Candidate]) -> list[Candidate]:
+def _order(cands: list[Candidate], mass_first: bool = False) -> list[Candidate]:
+    if mass_first:      # objective "mass": il piu' leggero prima, a parita' di massa quello con piu' dati pubblicati
+        return sorted(cands, key=lambda k: (k.mass_kg if k.mass_kg is not None else 1e9, -k.completeness, k.comp.id))
     return sorted(cands, key=lambda k: (-k.completeness, k.mass_kg if k.mass_kg is not None else 1e9, k.comp.id))
 
 
@@ -347,15 +349,19 @@ def _covers_interfaces(b: Candidate, a: Candidate) -> bool:
     return ib is None or (ia is not None and ib >= ia)
 
 
-def _pareto(pool: list[Candidate], extra=None, covers=None) -> list[Candidate]:
+def _pareto(pool: list[Candidate], extra=None, covers=None, mass_first: bool = False) -> list[Candidate]:
     """Per la ricerca esatta: toglie i candidati battuti da un altro con completezza >= e massa, volume e altezza <= (non servono mai per l'ottimo).
     extra(k) aggiunge le grandezze dei vincoli attivi (piu' piccolo = meglio): con il delta-v l'impulso totale (cambiato di segno), con la
     potenza dei propulsori elettrici la potenza in accensione del propulsore e la potenza di picco del pannello (cambiata di segno)."""
     def key(k):
         return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0) + (tuple(extra(k)) if extra else ())
+
+    def better_or_equal(b, a) -> bool:
+        # con objective "mass" la completezza conta solo a parita' di massa: un candidato piu' leggero (e non peggiore sui vincoli) basta
+        return b.completeness >= a.completeness - 1e-12 or (mass_first and (b.mass_kg or 0.0) < (a.mass_kg or 0.0) - 1e-12)
     keep: list[Candidate] = []
-    for a in pool:      # il pool e' ordinato per completezza decrescente, poi massa
-        if not any(b.completeness >= a.completeness - 1e-12 and all(x <= y + 1e-15 for x, y in zip(key(b), key(a))) and (covers is None or covers(b, a))
+    for a in pool:      # il pool e' ordinato per completezza decrescente, poi massa (con objective "mass": massa, poi completezza)
+        if not any(better_or_equal(b, a) and all(x <= y + 1e-15 for x, y in zip(key(b), key(a))) and (covers is None or covers(b, a))
                    for b in keep):
             keep.append(a)
     return keep
@@ -364,16 +370,78 @@ def _pareto(pool: list[Candidate], extra=None, covers=None) -> list[Candidate]:
 CATEGORY_OF = {sid: cat for sid, cat, _ in SUBSYSTEMS}
 
 
+def _slot_pool(catalog: list[Component], sl: Slot, units: int, cls: CubeSatClass, dv: float | None, mass_first: bool = False):
+    """I candidati di un posto nella classe, con le regole di select: (membri del sottosistema, ammessi dai requisiti, che entrano nella classe,
+    solo per classi piu' grandi, solo per classi piu' piccole, candidati con massa pubblicata, senza, candidati considerati dalla ricerca)."""
+    sid = sl.subsystem
+    members = [c for c in catalog if subsystem_of(c) == sid]
+    allowed = [c for c in members if sl.allowed is None or c.id in sl.allowed]
+    if sid == "structure":
+        fitting = [c for c in allowed if c.spec("form_factor_u") == units]
+    else:
+        fitting = [c for c in allowed if _admissible(c, sid, cls)]
+    larger_only = False
+    if sid in MIN_CLASS_SUBSYSTEMS and fitting:                     # classe minima dichiarata dal fornitore
+        larger_only = not any(min_class_ok(c, units) for c in fitting)
+        fitting = [c for c in fitting if min_class_ok(c, units)]
+    if dv and sid == "propulsion":
+        fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
+    if sid == "solar_panel":
+        fitting = [c for c in fitting if panel_for_class(c, units)] or fitting     # il pannello fatto per la faccia della classe
+    if sid == "eps":                                                                # classi dichiarate, almeno un ingresso solare
+        fitting = [c for c in fitting if eps_class_ok(c, units)]
+        fitting = [c for c in fitting if c.raw["specs"].get("pv_channels") != 0] or fitting
+    if sid == "reaction_wheel" and sl.slew_rate_deg_s:                              # momento di ciascuna ruota per la rotazione richiesta
+        h_req = wheel_momentum_needed_mnms(cls, sl.slew_rate_deg_s)
+        fitting = [c for c in fitting if (c.spec("momentum_mnms") or 0.0) >= h_req - 1e-12]
+    adcs_small_only = False
+    if sid in CLASS_RANGE_SUBSYSTEMS and fitting:                                   # l'unita' ADCS o la ruota dichiarata per la classe
+        # la regola "senza massa pubblicata solo se non c'e' altro" viene prima della classe dichiarata
+        fitting = [c for c in fitting if c.mass_kg is not None] or fitting
+        tiers = [adcs_tier(c, units) for c in fitting]
+        best = min((t for t in tiers if t < 2), default=None)
+        adcs_small_only = best is None
+        fitting = [] if best is None else [c for c, t in zip(fitting, tiers) if t == best]
+    fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting          # i prodotti non piu' in vendita solo se non c'e' altro
+
+    def units_of(c: Component) -> int:
+        """Unita' del prodotto nel posto: per i magnetorquer quante ne servono per coprire gli assi richiesti."""
+        if sl.subsystem == "magnetorquer" and sl.axes_needed:
+            return max(1, math.ceil(sl.axes_needed / max(1, int(c.spec("axes") or 1))))
+        return sl.quantity
+    known = [_times(_candidate(c, cls.envelope_mm), units_of(c)) for c in fitting if c.mass_kg is not None]
+    unknown = [_times(_candidate(c, cls.envelope_mm), units_of(c)) for c in fitting if c.mass_kg is None]
+    pool = _order(known, mass_first) or _order(unknown, mass_first)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
+    if sid in layout.ORDER and any(k.height_mm is not None for k in pool):
+        pool = [k for k in pool if k.height_mm is not None]    # idem senza quote: non si scavalca il vincolo della pila con un componente di cui non si conosce l'altezza
+    return members, allowed, fitting, larger_only, adcs_small_only, known, unknown, pool
+
+
+def admitted(catalog: list[Component], slot: Slot, units: int, mass_limit_kg: float | None = None, dv_m_s: float | None = None) -> list[Component]:
+    """I componenti che select considera per il posto nella classe `units` (stesse regole: ingombro, classe dichiarata, massa pubblicata...)."""
+    cls = CLASSES[units]
+    if mass_limit_kg is not None and mass_limit_kg < cls.mass_limit_kg:
+        cls = replace(cls, mass_limit_kg=float(mass_limit_kg))
+    return [k.comp for k in _slot_pool(catalog, slot, units, cls, float(dv_m_s) if dv_m_s else None)[-1]]
+
+
 def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
            dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False,
-           interface_check: bool = False, power_supply_check: bool = False) -> Selection:
+           interface_check: bool = False, power_supply_check: bool = False, objective: str = "completeness", require_all: bool = False) -> Selection:
     """Selezione per la classe `units`. Senza parametri facoltativi: un posto per ciascuno dei 17 sottosistemi, tutti i componenti, limiti CDS.
     slots: i posti del progetto (mission.py: solo i sottosistemi che la missione chiede, una radio per banda, i componenti che soddisfano i requisiti);
     dv_m_s: il propulsore scelto deve dare questo delta-v al satellite intero (impulso totale pubblicato / somma delle masse pubblicate);
     mass_limit_kg: massa massima chiesta dalla missione, se sotto il limite CDS della classe;
     electric_power_check: un propulsore elettrico deve funzionare con la potenza di picco del pannello solare scelto (mission.py lo attiva);
     interface_check: l'OBC ha almeno un'interfaccia dati in comune con ogni componente che pubblica le sue (mission.py lo attiva);
-    power_supply_check: l'EPS alimenta ogni componente, accetta il pannello e la batteria e ne copre la potenza (mission.py lo attiva)."""
+    power_supply_check: l'EPS alimenta ogni componente, accetta il pannello e la batteria e ne copre la potenza (mission.py lo attiva);
+    objective: "completeness" (predefinito: massima completezza dei dati pubblicati, poi massa minima) oppure "mass" (massa minima al lancio,
+    poi completezza: mission.py, filosofia dell'utente 2026-10-16: meno massa e volume lanciati, meno costi);
+    require_all: un posto senza candidati nella classe rende il progetto incompleto (mission.py): la ricerca esatta non si fa e ogni scheda
+    mostra il componente che entra da solo (within_limits False)."""
+    if objective not in ("completeness", "mass"):
+        raise ValueError(f"unsupported objective {objective!r} (allowed: completeness, mass)")
+    mass_first = objective == "mass"
     if units not in CLASSES:
         raise ValueError(f"unsupported CubeSat class {units}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
     cls = CLASSES[units]
@@ -385,45 +453,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     pools: list[list[Candidate]] = []
     for sl in slots:
         sid = sl.subsystem
-        members = [c for c in catalog if subsystem_of(c) == sid]
-        allowed = [c for c in members if sl.allowed is None or c.id in sl.allowed]
-        if sid == "structure":
-            fitting = [c for c in allowed if c.spec("form_factor_u") == units]
-        else:
-            fitting = [c for c in allowed if _admissible(c, sid, cls)]
-        larger_only = False
-        if sid in MIN_CLASS_SUBSYSTEMS and fitting:                     # classe minima dichiarata dal fornitore
-            larger_only = not any(min_class_ok(c, units) for c in fitting)
-            fitting = [c for c in fitting if min_class_ok(c, units)]
-        if dv and sid == "propulsion":
-            fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
-        if sid == "solar_panel":
-            fitting = [c for c in fitting if panel_for_class(c, units)] or fitting     # il pannello fatto per la faccia della classe
-        if sid == "eps":                                                                # classi dichiarate, almeno un ingresso solare
-            fitting = [c for c in fitting if eps_class_ok(c, units)]
-            fitting = [c for c in fitting if c.raw["specs"].get("pv_channels") != 0] or fitting
-        if sid == "reaction_wheel" and sl.slew_rate_deg_s:                              # momento di ciascuna ruota per la rotazione richiesta
-            h_req = wheel_momentum_needed_mnms(cls, sl.slew_rate_deg_s)
-            fitting = [c for c in fitting if (c.spec("momentum_mnms") or 0.0) >= h_req - 1e-12]
-        adcs_small_only = False
-        if sid in CLASS_RANGE_SUBSYSTEMS and fitting:                                   # l'unita' ADCS o la ruota dichiarata per la classe
-            # la regola "senza massa pubblicata solo se non c'e' altro" viene prima della classe dichiarata
-            fitting = [c for c in fitting if c.mass_kg is not None] or fitting
-            tiers = [adcs_tier(c, units) for c in fitting]
-            best = min((t for t in tiers if t < 2), default=None)
-            adcs_small_only = best is None
-            fitting = [] if best is None else [c for c, t in zip(fitting, tiers) if t == best]
-        fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting          # i prodotti non piu' in vendita solo se non c'e' altro
-        def units_of(c: Component, sl=sl) -> int:
-            """Unita' del prodotto nel posto: per i magnetorquer quante ne servono per coprire gli assi richiesti."""
-            if sl.subsystem == "magnetorquer" and sl.axes_needed:
-                return max(1, math.ceil(sl.axes_needed / max(1, int(c.spec("axes") or 1))))
-            return sl.quantity
-        known = [_times(_candidate(c, cls.envelope_mm), units_of(c)) for c in fitting if c.mass_kg is not None]
-        unknown = [_times(_candidate(c, cls.envelope_mm), units_of(c)) for c in fitting if c.mass_kg is None]
-        pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
-        if sid in layout.ORDER and any(k.height_mm is not None for k in pool):
-            pool = [k for k in pool if k.height_mm is not None]    # idem senza quote: non si scavalca il vincolo della pila con un componente di cui non si conosce l'altezza
+        members, allowed, fitting, larger_only, adcs_small_only, known, unknown, pool = _slot_pool(catalog, sl, units, cls, dv, mass_first)
         note = None
         if not members:
             note = "No component of this subsystem is in the database."
@@ -491,7 +521,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         if jx is not None:
             fs.append(_covers_supply)
         return (lambda b, a: all(f(b, a) for f in fs)) if fs else None
-    spools = {i: _pareto(pools[i], extra_of(i), covers_of(i)) for i in idx}
+    spools = {i: _pareto(pools[i], extra_of(i), covers_of(i), mass_first) for i in idx}
 
     def fits_eps(k: Candidate, eps: Component) -> bool:
         """Il componente funziona con questo EPS: batteria (tensione, famiglia), pannello (ingresso solare), altrimenti tensione di alimentazione."""
@@ -501,6 +531,21 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         if sid == "solar_panel":
             return panel_ok(k.comp, eps)
         return powered_by(k.comp, eps)
+
+    # la ricerca esatta chiede le stesse coppie milioni di volte: interfacce e compatibilita' con l'EPS calcolate una volta per componente
+    eps_memo: dict[tuple[str, str], bool] = {}
+    iface_memo: dict[str, frozenset[str] | None] = {}
+
+    def fits_eps_memo(k: Candidate, eps: Component) -> bool:
+        key = (k.comp.id, eps.id)
+        if key not in eps_memo:
+            eps_memo[key] = fits_eps(k, eps)
+        return eps_memo[key]
+
+    def iface_of(c: Component) -> frozenset[str] | None:
+        if c.id not in iface_memo:
+            iface_memo[c.id] = interfaces(c)
+        return iface_memo[c.id]
     min_mass = [min((k.mass_kg or 0.0) for k in spools[i]) for i in idx]
     min_vol = [min((k.volume_m3 or 0.0) for k in spools[i]) for i in idx]
     max_score = [max(k.completeness for k in spools[i]) for i in idx]
@@ -539,24 +584,43 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         """L'OBC ha almeno un'interfaccia dati in comune con ogni altro componente che pubblica le sue."""
         if jo is None:
             return True
-        oi = interfaces(cands[jo].comp)
+        oi = iface_of(cands[jo].comp)
         if oi is None:
             return True
-        return all(not (ci := interfaces(k.comp)) or (ci & oi) for j, k in enumerate(cands) if j != jo)
+        return all(not (ci := iface_of(k.comp)) or (ci & oi) for j, k in enumerate(cands) if j != jo)
 
     def supply_ok(cands) -> bool:
         """L'EPS alimenta ogni componente, accetta pannello e batteria e la sua potenza massima copre il componente piu' esigente."""
         if jx is None:
             return True
         eps = cands[jx].comp
-        if not all(fits_eps(k, eps) for j, k in enumerate(cands) if j != jx):
+        if not all(fits_eps_memo(k, eps) for j, k in enumerate(cands) if j != jx):
             return False
         pmax = eps.raw["specs"].get("output_power_w_max")
         return pmax is None or max((k.power_w or 0.0 for j, k in enumerate(cands) if j != jx), default=0.0) <= float(pmax) + 1e-9
     suffix_score = [sum(max_score[j:]) for j in range(len(idx) + 1)]
     best: dict = {"key": None, "pick": None}
+    mode = {"mass": mass_first}             # chiave dell'ottimo: (completezza, -massa) oppure (-massa, completezza)
     deadline = time.monotonic() + time_budget_s
     truncated = False
+
+    # objective "mass": scelti l'OBC e l'EPS (primi livelli), il limite inferiore della massa che resta usa solo i candidati che comunicano
+    # con quell'OBC e che quell'EPS alimenta (stessi filtri della ricerca): molto piu' stretto della somma dei minimi di tutti i candidati
+    j_pair = max((x for x in (jo, jx) if x is not None), default=None)
+    pair_suffix: dict = {}
+
+    def suffix_for(pick: list[int]) -> list[float]:
+        key = (pick[jo] if jo is not None else None, pick[jx] if jx is not None else None)
+        if key not in pair_suffix:
+            oi = iface_of(spools[idx[jo]][key[0]].comp) if jo is not None else None
+            eps = spools[idx[jx]][key[1]].comp if jx is not None else None
+            mins = []
+            for t, i in enumerate(idx):
+                ok = [k for k in spools[i] if (t == jo or oi is None or not (ci := iface_of(k.comp)) or (ci & oi))
+                      and (t == jx or eps is None or fits_eps_memo(k, eps))]
+                mins.append(min(((k.mass_kg or 0.0) for k in ok), default=math.inf))
+            pair_suffix[key] = [sum(mins[s:]) for s in range(len(idx) + 1)]
+        return pair_suffix[key]
 
     def rec(j: int, mass: float, vol: float, score: float, pick: list[int], hsum: float = 0.0) -> None:
         nonlocal truncated
@@ -571,31 +635,49 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
             if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands) or not supply_ok(cands) or not faces_ok(cands) or not dump_ok(cands):
                 return
-            key = (round(score, 9), -mass)
+            key = (-round(mass, 9), round(score, 9)) if mode["mass"] else (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
                 best["key"], best["pick"] = key, list(pick)
             return
-        if best["key"] is not None and (round(score + suffix_score[j], 9), -(mass + suffix_mass[j])) <= best["key"]:
+        if mode["mass"] and j_pair is not None and j > j_pair:
+            rest = suffix_for(pick)[j]
+            if mass + rest > cls.mass_limit_kg + 1e-12:
+                return      # anche i candidati compatibili piu' leggeri superano il limite (o un livello non ha candidati compatibili)
+        else:
+            rest = suffix_mass[j]
+        bound = ((-round(mass + rest, 9), round(score + suffix_score[j], 9)) if mode["mass"]
+                 else (round(score + suffix_score[j], 9), -(mass + suffix_mass[j])))
+        if best["key"] is not None and bound <= best["key"]:
             return
         # con l'OBC o l'EPS gia' scelti (livelli jo, jx) i componenti che non comunicano con l'OBC o che l'EPS non alimenta si scartano subito
-        oi = interfaces(spools[idx[jo]][pick[jo]].comp) if jo is not None and j > jo else None
+        oi = iface_of(spools[idx[jo]][pick[jo]].comp) if jo is not None and j > jo else None
         eps = spools[idx[jx]][pick[jx]].comp if jx is not None and j > jx else None
         for n, k in enumerate(spools[idx[j]]):
-            if oi is not None and (ci := interfaces(k.comp)) and not (ci & oi):
+            if oi is not None and (ci := iface_of(k.comp)) and not (ci & oi):
                 continue
-            if eps is not None and not fits_eps(k, eps):
+            if eps is not None and not fits_eps_memo(k, eps):
                 continue
             pick.append(n)
             rec(j + 1, mass + (k.mass_kg or 0.0), vol + (k.volume_m3 or 0.0), score + k.completeness, pick, hsum + (k.height_mm or 0.0))
             pick.pop()
 
-    # prima prova: il miglior candidato di ogni sottosistema (piu' dati pubblicati, poi il piu' leggero); se rientra nei limiti e' la scelta
+    # prima prova: il miglior candidato di ogni sottosistema (piu' dati pubblicati, poi il piu' leggero; con objective "mass" il piu' leggero,
+    # poi piu' dati pubblicati); se rientra nei limiti e' la scelta
     greedy = [pools[i][0] for i in idx]
     g_mass = sum((k.mass_kg or 0.0) for k in greedy)
     g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy) and faces_ok(greedy) and dump_ok(greedy):
+    if require_all and len(idx) < len(pools):
+        chosen = None       # un posto senza candidati: nessun progetto completo in questa classe
+    elif g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy) and faces_ok(greedy) and dump_ok(greedy):
         chosen = greedy
-    else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
+    else:   # altrimenti la ricerca esatta: massima completezza totale (con objective "mass": massa minima) con masse e volumi entro i limiti
+        if mass_first:      # prima l'ottimo di completezza (il taglio sul punteggio e' rapido), poi la massa minima con quello come limite
+            mode["mass"] = False
+            rec(0, 0.0, 0.0, 0.0, [])
+            if best["pick"] is not None:
+                start = [spools[i][best["pick"][j]] for j, i in enumerate(idx)]
+                best["key"] = (-round(sum((k.mass_kg or 0.0) for k in start), 9), round(sum(k.completeness for k in start), 9))
+            mode["mass"] = True
         rec(0, 0.0, 0.0, 0.0, [])
         chosen = None if best["pick"] is None else [spools[i][best["pick"][j]] for j, i in enumerate(idx)]
     messages: list[str] = []

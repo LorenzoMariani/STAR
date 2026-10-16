@@ -5005,14 +5005,14 @@ function renderInputs(r) {
     &lt;div class=&quot;kv&quot;&gt;&lt;span class=&quot;lab&quot;&gt;Mass limit&lt;/span&gt;&lt;b&gt;${f(c.mass_limit_kg)} kg&lt;/b&gt;&lt;/div&gt;
     &lt;div class=&quot;kv&quot;&gt;&lt;span class=&quot;lab&quot;&gt;Volume limit&lt;/span&gt;&lt;b&gt;${sci(c.volume_limit_m3)} m³&lt;/b&gt;&lt;/div&gt;
     &lt;div class=&quot;kv&quot;&gt;&lt;span class=&quot;lab&quot;&gt;Envelope&lt;/span&gt;&lt;b&gt;${esc(env)} mm&lt;/b&gt;&lt;/div&gt;
-    &lt;div class=&quot;ro&quot;&gt;${r.mission ? (r.mission.forced_class_u ? &#x27;Class chosen by the user&#x27; : &#x27;Smallest CubeSat class that carries the subsystems the mission needs&#x27;) + &#x27; · &#x27; : &#x27;&#x27;}${S.mode === &#x27;viewer&#x27; ? &#x27;Results of a STAR run&#x27; : &#x27;Inputs come from STAR&#x27;}, read-only&lt;/div&gt;`;
+    &lt;div class=&quot;ro&quot;&gt;${r.mission ? (r.mission.forced_class_u ? &#x27;Class chosen by the user&#x27; : &#x27;Smallest CubeSat class that meets the performance the mission asks for (least launch mass and volume)&#x27;) + &#x27; · &#x27; : &#x27;&#x27;}${S.mode === &#x27;viewer&#x27; ? &#x27;Results of a STAR run&#x27; : &#x27;Inputs come from STAR&#x27;}, read-only&lt;/div&gt;`;
   $(&#x27;std&#x27;).textContent = c.standard;
   const M = r.mission;
   if (!M) { $(&#x27;search&#x27;).innerHTML = &#x27;&#x27;; return; }
   const tried = M.class_search || [];
-  $(&#x27;search&#x27;).innerHTML = tried.map(x =&gt; `&lt;span class=&quot;st ${x.class_u === c.class_u ? &#x27;ok&#x27; : (x.ok ? &#x27;&#x27; : &#x27;no&#x27;)}&quot; title=&quot;Mass ${f(x.mass_kg)} kg · internal volume ${sci(x.volume_m3)} m³ · envelope ${esc(x.fit)}&quot;&gt;&lt;b&gt;${x.class_u}U&lt;/b&gt; ${x.class_u === c.class_u ? (M.forced_class_u ? &#x27;✓ chosen by the user&#x27; : &#x27;✓ smallest class that carries them&#x27;) : &#x27;✕ &#x27; + esc(x.why)}&lt;/span&gt;`).join(&#x27;&#x27;)
+  $(&#x27;search&#x27;).innerHTML = tried.map(x =&gt; `&lt;span class=&quot;st ${x.class_u === c.class_u ? &#x27;ok&#x27; : (x.ok ? &#x27;&#x27; : &#x27;no&#x27;)}&quot; title=&quot;Mass ${f(x.mass_kg)} kg · internal volume ${sci(x.volume_m3)} m³ · envelope ${esc(x.fit)}&quot;&gt;&lt;b&gt;${x.class_u}U&lt;/b&gt; ${x.class_u === c.class_u ? (M.forced_class_u ? &#x27;✓ chosen by the user&#x27; : &#x27;✓ smallest class that meets the requirements&#x27;) : &#x27;✕ &#x27; + esc(x.why)}&lt;/span&gt;`).join(&#x27;&#x27;)
     + [1, 3, 6, 12].filter(u =&gt; u &gt; c.class_u &amp;&amp; !tried.some(x =&gt; x.class_u === u)).map(u =&gt; `&lt;span class=&quot;st skip&quot;&gt;&lt;b&gt;${u}U&lt;/b&gt; not needed: a smaller class carries them&lt;/span&gt;`).join(&#x27;&#x27;)
-    + (M.stated_class ? `&lt;span class=&quot;st&quot; title=&quot;${esc(M.stated_class.requirement.text)}&quot;&gt;Requirements state &lt;b&gt;${M.stated_class.class_u}U&lt;/b&gt; (${esc(M.stated_class.requirement.id)})&lt;/span&gt;` : &#x27;&#x27;);
+    + (M.stated_class ? `&lt;span class=&quot;st&quot; title=&quot;${esc(M.stated_class.requirement.text)}&quot;&gt;Requirements state &lt;b&gt;${M.stated_class.class_u}U&lt;/b&gt; (${esc(M.stated_class.requirement.id)}): not used, the class follows from the performance&lt;/span&gt;` : &#x27;&#x27;);
 }
 /* ---------------- Mission requirements: what the design meets, what no component of the database can meet ---------------- */
 function renderRequirements(r) {

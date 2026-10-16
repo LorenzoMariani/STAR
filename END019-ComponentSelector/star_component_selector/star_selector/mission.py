@@ -49,8 +49,12 @@ Requisiti verificati con i dati pubblicati:
     aggiornamento se richiesta, due se i requisiti li vogliono ridondanti.
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
-Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
-una classe scelta dall'utente prevale. Una classe scritta nei requisiti e' solo riportata."""
+Classe (priorita' alla dimensione piccola, 2026-10-16): prima i requisiti di tipo (che cosa e' il componente: banda, tipo di immagine,
+push-broom, ricevitore, tre assi...), poi la classe piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti di quel tipo stanno insieme (massa,
+volume, pila, ingombro "Fits" o "Undetermined"), poi le prestazioni (PERFORMANCE: GSD, swath, velocita' dei dati, puntamento, accuratezza
+dello star tracker, dose di radiazione, delta-v): nella classe scelta il componente che piu' si avvicina; un requisito di prestazione che
+solo una classe piu' grande soddisferebbe e' segnalato con quella classe. Una classe scelta dall'utente prevale; una classe scritta nei
+requisiti e' solo riportata."""
 from __future__ import annotations
 
 import math
@@ -61,7 +65,7 @@ from typing import Any, Callable
 from .fit import check_fit
 from .models import Component
 from .rows import subsystem_of
-from .selector import (CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, battery_ok, eps_rails, firing_power_w, interfaces, is_electric, panel_ok,
+from .selector import (CLASSES, LABELS, SUBSYSTEMS, Selection, Slot, admitted, battery_ok, eps_rails, firing_power_w, interfaces, is_electric, panel_ok,
                        panel_on_structure, panel_voltages, powered_by, structure_envelope, supply_ranges, total_impulse_ns,
                        wheel_momentum_needed_mnms)
 from .selector import select as _select
@@ -69,10 +73,13 @@ from .selector import select as _select
 
 def select(*args: Any, **kwargs: Any) -> Selection:
     """La selezione del progetto per la missione: un propulsore elettrico deve funzionare con la potenza del pannello solare scelto e l'OBC
-    deve avere un'interfaccia dati in comune con ogni componente che pubblica le sue."""
+    deve avere un'interfaccia dati in comune con ogni componente che pubblica le sue; nella classe la massa minima al lancio viene prima
+    della completezza dei dati pubblicati (objective "mass": meno massa e volume lanciati, meno costi di lancio)."""
     kwargs.setdefault("electric_power_check", True)
     kwargs.setdefault("interface_check", True)
     kwargs.setdefault("power_supply_check", True)
+    kwargs.setdefault("objective", "mass")
+    kwargs.setdefault("require_all", True)      # ogni posto del progetto deve avere un componente: senza candidati la classe non va
     return _select(*args, **kwargs)
 
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
@@ -148,6 +155,7 @@ class Check:
     value: Callable[[Component], str | None] | None = None
     status: str = "met"            # met | not_met | not_verifiable
     message: str = ""
+    metric: Callable[[Component], float | None] | None = None     # requisiti di prestazione: valore numerico, piu' alto = meglio
 
 
 @dataclass
@@ -307,7 +315,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             data_rate = {"kbps": kbps, "req": hit[0]}
             data_radio.checks.append(Check("data_rate", data_radio.slot.id, hit[0], f"data rate >= {kbps / 1e3:g} Mbps",
                                            lambda c, k=kbps: None if c.spec("data_rate_kbps_max") is None else float(c.spec("data_rate_kbps_max")) >= k - 1e-9,
-                                           lambda c: None if c.spec("data_rate_kbps_max") is None else f"{float(c.spec('data_rate_kbps_max')) / 1e3:g} Mbps"))
+                                           lambda c: None if c.spec("data_rate_kbps_max") is None else f"{float(c.spec('data_rate_kbps_max')) / 1e3:g} Mbps",
+                                           metric=lambda c: None if c.spec("data_rate_kbps_max") is None else float(c.spec("data_rate_kbps_max"))))
         data_radio.why += "; it downlinks the images"
 
     # delta-v: scritto nei requisiti, oppure calcolato da END-016 per la scadenza di smaltimento dei requisiti
@@ -365,7 +374,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
                 h = alt["max_km"]
                 img.checks.append(Check("gsd", img.slot.id, hit[0], f"GSD <= {g:g} m at {h:.0f} km",
                                         lambda c, h=h, g=g: None if (v := _scaled(c, "gsd_m_at_ref", h)) is None else v <= g + 1e-9,
-                                        lambda c, h=h: None if (v := _scaled(c, "gsd_m_at_ref", h)) is None else f"{v:.2f} m at {h:.0f} km"))
+                                        lambda c, h=h: None if (v := _scaled(c, "gsd_m_at_ref", h)) is None else f"{v:.2f} m at {h:.0f} km",
+                                        metric=lambda c, h=h: None if (v := _scaled(c, "gsd_m_at_ref", h)) is None else -v))
             else:
                 img.checks.append(Check("gsd", img.slot.id, hit[0], f"GSD <= {g:g} m", status="not_verifiable",
                                         message=f"{hit[0].id}: GSD {g:g} m not verifiable: the orbit altitude is not known (no END-001 orbits, no altitude in the requirements)."))
@@ -375,7 +385,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
                 h = alt["min_km"]
                 img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km at {h:.0f} km",
                                         lambda c, h=h, s=s: None if (v := _scaled(c, "swath_km_at_ref", h)) is None else v >= s - 1e-9,
-                                        lambda c, h=h: None if (v := _scaled(c, "swath_km_at_ref", h)) is None else f"{v:.1f} km at {h:.0f} km"))
+                                        lambda c, h=h: None if (v := _scaled(c, "swath_km_at_ref", h)) is None else f"{v:.1f} km at {h:.0f} km",
+                                        metric=lambda c, h=h: _scaled(c, "swath_km_at_ref", h)))
             else:
                 img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km", status="not_verifiable",
                                         message=f"{hit[0].id}: swath {s:g} km not verifiable: the orbit altitude is not known."))
@@ -385,7 +396,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         ob = needs["obc"]
         ob.checks.append(Check("tid", ob.slot.id, hit[0], f"radiation tolerance >= {krad:g} krad (TID)",
                                lambda c, k=krad: None if c.raw.get("tid_krad") is None else float(c.raw["tid_krad"]) >= k - 1e-9,
-                               lambda c: None if c.raw.get("tid_krad") is None else f"{c.raw['tid_krad']:g} krad"))
+                               lambda c: None if c.raw.get("tid_krad") is None else f"{c.raw['tid_krad']:g} krad",
+                               metric=lambda c: None if c.raw.get("tid_krad") is None else float(c.raw["tid_krad"])))
     if "payload_optical" in needs:      # terminale ottico: tipo di collegamento e velocita' pubblicati
         op = needs["payload_optical"]
         if (hit := _find(reqs, r"\binter-?satellite\b|\bcross-?links?\b|\bsatellite-to-satellite\b")):
@@ -400,7 +412,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             mbps = float(hit[1].group(1)) * (1e3 if hit[1].group(2).startswith("g") else 1.0)
             op.checks.append(Check("optical_rate", op.slot.id, hit[0], f"optical link rate >= {mbps:g} Mbps",
                                    lambda c, r=mbps: None if c.spec("link_data_rate_mbps") is None else float(c.spec("link_data_rate_mbps")) >= r - 1e-9,
-                                   lambda c: None if c.spec("link_data_rate_mbps") is None else f"{float(c.spec('link_data_rate_mbps')):g} Mbps"))
+                                   lambda c: None if c.spec("link_data_rate_mbps") is None else f"{float(c.spec('link_data_rate_mbps')):g} Mbps",
+                                   metric=lambda c: None if c.spec("link_data_rate_mbps") is None else float(c.spec("link_data_rate_mbps"))))
     # star tracker (nel progetto se nominato, altrimenti suggerito tra i non richiesti con le stesse verifiche): accuratezza a 3 sigma
     # sull'asse peggiore <= puntamento e conoscenza d'assetto richiesti; una testa ottica senza la sua elettronica solo se non c'e' altro;
     # frequenza di aggiornamento richiesta; due se i requisiti li vogliono ridondanti
@@ -411,7 +424,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             arcsec = float(hit[1].group(1)) * (1.0 if hit[1].group(2).startswith("arc") else 3600.0)
             stk_checks.append(Check("stk_accuracy", "star_tracker", hit[0], f"attitude accuracy (3-sigma, worst axis) <= {arcsec:g} arcsec ({what})",
                                     lambda c, a=arcsec: None if (v := tracker_accuracy_3sigma_arcsec(c)) is None else v <= a + 1e-9,
-                                    lambda c: None if (v := tracker_accuracy_3sigma_arcsec(c)) is None else f"{v:g} arcsec (3-sigma)"))
+                                    lambda c: None if (v := tracker_accuracy_3sigma_arcsec(c)) is None else f"{v:g} arcsec (3-sigma)",
+                                    metric=lambda c: None if (v := tracker_accuracy_3sigma_arcsec(c)) is None else -v))
     stk_checks.append(Check("stk_complete", "star_tracker", None, "complete star tracker (not an optical head without its electronics)",
                             lambda c: "optical head" not in str(c.raw.get("name", "")).lower(),
                             lambda c: "optical head only" if "optical head" in str(c.raw.get("name", "")).lower() else "complete unit"))
@@ -419,7 +433,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         hz = float(next(g for g in hit[1].groups() if g))
         stk_checks.append(Check("stk_rate", "star_tracker", hit[0], f"update rate >= {hz:g} Hz",
                                 lambda c, h=hz: None if c.spec("update_rate_hz") is None else float(c.spec("update_rate_hz")) >= h - 1e-9,
-                                lambda c: None if c.spec("update_rate_hz") is None else f"{c.spec('update_rate_hz'):g} Hz"))
+                                lambda c: None if c.spec("update_rate_hz") is None else f"{c.spec('update_rate_hz'):g} Hz",
+                                metric=lambda c: None if c.spec("update_rate_hz") is None else float(c.spec("update_rate_hz"))))
     stk_quantity = 2 if _find(reqs, r"\b(two|2|dual|redundant)\s+star\s+trackers?\b") else 1
     if "star_tracker" in needs:
         needs["star_tracker"].checks.extend(stk_checks)
@@ -430,7 +445,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             acc = float(hit[1].group(1)) / (3600.0 if hit[1].group(2).startswith("arc") else 1.0)
             ad.checks.append(Check("pointing", ad.slot.id, hit[0], f"pointing accuracy <= {acc:g} deg",
                                    lambda c, a=acc: None if c.spec("pointing_accuracy_deg") is None else float(c.spec("pointing_accuracy_deg")) <= a + 1e-12,
-                                   lambda c: None if c.spec("pointing_accuracy_deg") is None else f"{c.spec('pointing_accuracy_deg'):g} deg"))
+                                   lambda c: None if c.spec("pointing_accuracy_deg") is None else f"{c.spec('pointing_accuracy_deg'):g} deg",
+                                   metric=lambda c: None if c.spec("pointing_accuracy_deg") is None else -float(c.spec("pointing_accuracy_deg"))))
         if (hit := _find(reqs, r"\b(three-axis|3-axis)\b")):
             ad.checks.append(Check("three_axis", ad.slot.id, hit[0], "three-axis control",
                                    lambda c: "y-momentum" not in str(c.raw.get("name", "")).lower(),
@@ -531,6 +547,37 @@ def _allowed(catalog: list[Component], nd: Need) -> tuple[frozenset[str] | None,
     return frozenset(c.id for s, c in scored if s == best), unmet
 
 
+# requisiti di prestazione (quanto rende il componente): vengono dopo la classe, nella classe scelta si prende il componente che piu' si avvicina.
+# Gli altri requisiti verificabili dicono che cosa e' il componente (banda, tipo di immagine, push-broom, ricevitore, tre assi, pannello
+# dispiegabile, propellente, tipo di link, star tracker completo) e vengono prima della classe (regola dell'utente, 2026-10-16).
+PERFORMANCE = ("gsd", "swath", "data_rate", "optical_rate", "pointing", "stk_accuracy", "stk_rate", "tid")
+
+
+def _tests(nd: Need) -> list[Check]:
+    return [ck for ck in nd.checks if ck.test is not None and ck.status != "not_verifiable"]
+
+
+def _perf_key(c: Component, perf: list[Check]) -> tuple:
+    """Ordine lessicografico dei requisiti di prestazione (nell'ordine in cui sono elencati): soddisfatto prima di non soddisfatto; tra i non
+    soddisfatti il valore piu' vicino (metric, piu' alto = meglio); tra i soddisfatti nessuna preferenza (la ricerca sceglie poi per massa)."""
+    out: list[float] = []
+    for ck in perf:
+        if ck.test(c):
+            out += [1.0, 0.0]
+        else:
+            m = ck.metric(c) if ck.metric else None
+            out += [0.0, m if m is not None else -math.inf]
+    return tuple(out)
+
+
+def _perf_levels(comps: list[Component], perf: list[Check]) -> list[frozenset[str]]:
+    """I componenti raggruppati per prestazione, dal gruppo migliore."""
+    groups: dict[tuple, set[str]] = {}
+    for c in comps:
+        groups.setdefault(_perf_key(c, perf), set()).add(c.id)
+    return [frozenset(groups[k]) for k in sorted(groups, reverse=True)]
+
+
 # --------------------------------------------------------------------------- progetto
 
 
@@ -558,17 +605,29 @@ def _class_reason(sel: Selection, fit: dict[str, Any], dv: float | None, catalog
 
 def design(catalog: list[Component], requirements: Any, context: dict[str, Any] | None = None, forced_class_u: int | None = None,
            time_budget_s: float = 2.0) -> tuple[Selection, dict[str, Any]]:
-    """Selezione dei soli sottosistemi richiesti nella classe piu' piccola che li porta (o in quella scelta dall'utente) + il blocco "mission"."""
+    """Selezione dei soli sottosistemi richiesti nella classe piu' piccola che li porta (o in quella scelta dall'utente) + il blocco "mission".
+    La classe si stima dalle prestazioni richieste (filosofia dell'utente 2026-10-16: meno massa e volume lanciati, meno costi di lancio; una
+    classe scritta nei requisiti e' solo riportata): la piu' piccola in cui i componenti che soddisfano i requisiti stanno insieme. Se nessuna
+    classe li porta, o la classe e' scelta dall'utente, nella classe i componenti del tipo richiesto che piu' si avvicinano alle prestazioni."""
     a = analyse(requirements, context)
     needs: list[Need] = a["needs"]
     unmet: list[Check] = []
-    slots: list[Slot] = []
+    slots: list[Slot] = []          # componenti che soddisfano i requisiti (tipo e prestazioni): la classe segue da questi
+    kind_slots: list[Slot] = []     # solo i requisiti di tipo: per la classe scelta dall'utente e quando nessuna classe porta i primi
+    perf: dict[str, list[Check]] = {}
+    kind_allowed: dict[str, frozenset[str] | None] = {}
     for nd in needs:
-        allowed, bad = _allowed(catalog, nd)
-        for ck in bad:
+        tests = _tests(nd)
+        kind = [ck for ck in tests if ck.key not in PERFORMANCE]
+        perf[nd.slot.id] = [ck for ck in tests if ck.key in PERFORMANCE]
+        allowed, _ = _allowed(catalog, replace(nd, checks=kind + perf[nd.slot.id]))      # il tipo prima delle prestazioni
+        k_allowed, k_bad = _allowed(catalog, replace(nd, checks=kind))
+        for ck in k_bad:
             ck.status = "not_met"
-        unmet += bad
+        unmet += k_bad              # le prestazioni si verificano sul componente scelto, dopo la selezione
+        kind_allowed[nd.slot.id] = k_allowed
         slots.append(replace(nd.slot, allowed=allowed))
+        kind_slots.append(replace(nd.slot, allowed=k_allowed))
     dv = a["dv"]["dv_m_s"] if a["dv"] else None
     mass_limit = a["mass_limit"]["kg"] if a["mass_limit"] else None
     classes = [forced_class_u] if forced_class_u else sorted(CLASSES)
@@ -576,53 +635,102 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     # batteria: con il fabbisogno di END-004 si prova anche il progetto senza batteria separata, con un EPS la cui batteria integrata basta
     # (un componente in meno: preferito a parita' di classe)
     bat = a["battery"]
-    variants: list[tuple[str, list[Slot]]] = [("separate", slots)]
     eps_wh: dict[str, float] = {}
     if bat:
         eps_wh = {c.id: float(c.spec("integrated_battery_wh")) for c in catalog
                   if subsystem_of(c) == "eps" and c.spec("integrated_battery_wh") and float(c.spec("integrated_battery_wh")) * bat["dod"] >= bat["energy_wh"] - 1e-9}
+
+    def variants_of(sl_list: list[Slot]) -> list[tuple[str, list[Slot]]]:
+        out = [("separate", sl_list)]
         if eps_wh:
             ok_eps = frozenset(eps_wh)
-            variants.insert(0, ("eps", [replace(s, allowed=ok_eps if s.allowed is None else s.allowed & ok_eps) if s.subsystem == "eps" else s
-                                        for s in slots if s.subsystem != "battery"]))
-
-    def search(slots_x, dv_x, ml_x):
-        log, found = [], None
-        for u in classes:
-            sel = select(catalog, u, time_budget_s, slots=slots_x, dv_m_s=dv_x, mass_limit_kg=ml_x)
-            fit = check_fit(sel)
-            ok = sel.within_limits and all(r.selected for r in sel.subsystems) and fit["state"] in ACCEPTED_FIT
-            log.append({"class_u": u, "ok": ok, "why": "fits" if ok else _class_reason(sel, fit, dv_x, catalog, slots_x, ml_x),
-                        "mass_kg": round(sel.mass_kg, 3), "volume_m3": sel.volume_m3, "fit": fit["state"]})
-            if ok:
-                found = (u, sel)
-                break
-        return found, log
-
-    tried = [(n, name, sl, *search(sl, dv, mass_limit)) for n, (name, sl) in enumerate(variants)]
-    good = [t for t in tried if t[3] is not None]
-    if good:
-        _, battery_variant, slots, found, log = min(good, key=lambda t: (t[3][0], t[0]))    # classe piu' piccola, poi meno componenti
-    else:
-        _, battery_variant, slots, found, log = tried[-1]                                     # il progetto con la batteria separata
-    relaxed: list[str] = []
-    if found is None and dv:
-        alt_found, _ = search(slots, None, mass_limit)
-        if alt_found:
-            found, relaxed = alt_found, ["dv"]
-    if found is None and mass_limit:
-        alt_found, _ = search(slots, dv if "dv" not in relaxed else None, None)
-        if alt_found:
-            found, relaxed = alt_found, relaxed + ["mass"]
-    if found is None:       # nemmeno la classe piu' grande li porta: si mostra quella, con il motivo
-        u = classes[-1]
-        found = (u, select(catalog, u, time_budget_s, slots=slots, dv_m_s=dv, mass_limit_kg=mass_limit))
-    units, sel = found
-    dv_eff = dv if "dv" not in relaxed else None
-    ml_eff = mass_limit if "mass" not in relaxed else None
+            out.insert(0, ("eps", [replace(s, allowed=ok_eps if s.allowed is None else s.allowed & ok_eps) if s.subsystem == "eps" else s
+                                   for s in sl_list if s.subsystem != "battery"]))
+        return out
 
     def ok_sel(s: Selection) -> bool:
         return s.within_limits and all(r.selected for r in s.subsystems) and check_fit(s)["state"] in ACCEPTED_FIT
+
+    def fit_class(u, slots_x, dv_x, ml_x):
+        """La selezione nella classe u. Per ogni posto con requisiti di prestazione: i componenti del tipo richiesto che entrano nella classe
+        e piu' si avvicinano ai requisiti; se insieme non stanno nella classe, si parte da tutti quelli del tipo richiesto e si risale posto
+        per posto al gruppo migliore che sta nel progetto. Restituisce (selezione, posti usati)."""
+        levels = {}
+        for s in slots_x:
+            if perf.get(s.id):
+                # ogni componente del tipo richiesto che la ricerca prenderebbe nella classe se fosse il solo ammesso: le preferenze della
+                # ricerca (massa e quote pubblicate, prodotti in vendita) valgono poi dentro il gruppo di prestazione, come prima
+                adm = [c for c in catalog if subsystem_of(c) == s.subsystem and (s.allowed is None or c.id in s.allowed)
+                       and admitted(catalog, replace(s, allowed=frozenset({c.id})), u, mass_limit_kg=ml_x, dv_m_s=dv_x)]
+                if adm:
+                    levels[s.id] = _perf_levels(adm, perf[s.id])
+        best = [replace(s, allowed=levels[s.id][0]) if s.id in levels else s for s in slots_x]
+        sel_b = select(catalog, u, time_budget_s, slots=best, dv_m_s=dv_x, mass_limit_kg=ml_x)
+        if ok_sel(sel_b) or not levels:
+            return sel_b, best
+        cur_slots = [replace(s, allowed=frozenset().union(*levels[s.id])) if s.id in levels else s for s in slots_x]
+        cur = select(catalog, u, time_budget_s, slots=cur_slots, dv_m_s=dv_x, mass_limit_kg=ml_x)
+        if not ok_sel(cur):
+            return cur, cur_slots
+        for sid, lv_list in levels.items():
+            for lv in lv_list:
+                trial_slots = [replace(s, allowed=lv) if s.id == sid else s for s in cur_slots]
+                trial = select(catalog, u, time_budget_s, slots=trial_slots, dv_m_s=dv_x, mass_limit_kg=ml_x)
+                if ok_sel(trial):
+                    cur_slots, cur = trial_slots, trial
+                    break
+        return cur, cur_slots
+
+    def search(slots_x, dv_x, ml_x, closest=False):
+        """La classe piu' piccola in cui i componenti ammessi stanno insieme. closest: i componenti del tipo richiesto che nella classe piu' si
+        avvicinano alle prestazioni (fit_class), anche senza il delta-v. Restituisce ((classe, selezione, posti, delta-v non raggiunto) o None, log)."""
+        log, found = [], None
+        for u in classes:
+            for dv_try in ([dv_x, None] if dv_x and closest else [dv_x]):
+                sel_u, sl_u = fit_class(u, slots_x, dv_try, ml_x) if closest else (select(catalog, u, time_budget_s, slots=slots_x, dv_m_s=dv_try,
+                                                                                            mass_limit_kg=ml_x), slots_x)
+                if ok_sel(sel_u):
+                    break
+            ok = ok_sel(sel_u)
+            fit = check_fit(sel_u)
+            dv_short = ok and bool(dv_x) and dv_try is None
+            log.append({"class_u": u, "ok": ok, "why": (f"fits (no thruster that fits gives {dv_x:.1f} m/s)" if dv_short else "fits") if ok
+                        else _class_reason(sel_u, fit, dv_try, catalog, sl_u, ml_x), "mass_kg": round(sel_u.mass_kg, 3), "volume_m3": sel_u.volume_m3,
+                        "fit": fit["state"]})
+            if ok:
+                found = (u, sel_u, sl_u, dv_short)
+                break
+        return found, log
+
+    def best_variant(sl_list, dv_x, ml_x, closest=False):
+        """(variante della batteria, posti, trovato, log): la classe piu' piccola, poi meno componenti (batteria integrata nell'EPS)."""
+        tried = [(n, name, sl, *search(sl, dv_x, ml_x, closest)) for n, (name, sl) in enumerate(variants_of(sl_list))]
+        good = [t for t in tried if t[3] is not None]
+        _, name, sl, found_x, log_x = min(good, key=lambda t: (t[3][0], t[0])) if good else tried[-1]
+        return name, sl, found_x, log_x
+
+    relaxed: list[str] = []
+    if forced_class_u:          # classe dell'utente: nella classe i componenti del tipo richiesto che piu' si avvicinano alle prestazioni
+        battery_variant, base_slots, found, log = best_variant(kind_slots, dv, mass_limit, closest=True)
+    else:                       # la classe segue dalle prestazioni: la piu' piccola che porta i componenti che soddisfano i requisiti
+        battery_variant, base_slots, found, log = best_variant(slots, dv, mass_limit)
+        if found is None and dv:
+            battery_variant, base_slots, found, _ = best_variant(slots, None, mass_limit)
+            relaxed = ["dv"] if found else []
+        if found is None and mass_limit:
+            battery_variant, base_slots, found, _ = best_variant(slots, dv if "dv" not in relaxed else None, None)
+            relaxed = relaxed + ["mass"] if found else []
+        if found is None:       # nessuna classe porta i componenti che soddisfano i requisiti: quelli che piu' si avvicinano
+            relaxed = []
+            battery_variant, base_slots, found, log = best_variant(kind_slots, dv, mass_limit, closest=True)
+    if found is None:           # nemmeno cosi': si mostra la classe piu' grande, con il motivo
+        u = classes[-1]
+        found = (u, *fit_class(u, variants_of(kind_slots)[-1][1], dv, mass_limit), False)
+    units, sel, slots, dv_short = found
+    if dv_short:
+        relaxed.insert(0, "dv")
+    dv_eff = dv if "dv" not in relaxed else None
+    ml_eff = mass_limit if "mass" not in relaxed else None
 
     # delta-v che nessun propulsore da': nella classe scelta il propulsore con l'impulso totale piu' alto che entra (quello che piu' si avvicina)
     if "dv" in relaxed:
@@ -730,6 +838,35 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                           f"stores {need_h:.2f} mN m s.")
             unmet.append(ck)
         checks.append(ck)
+    # requisiti di prestazione: verificati sul componente scelto nella classe (la classe piu' piccola viene prima)
+    chosen = {r.id: r.selected for r in sel.subsystems}
+    for nd in needs:
+        for ck in perf.get(nd.slot.id, []):
+            k = chosen.get(nd.slot.id)
+            ck.status = "met" if k is not None and ck.test(k.comp) else "not_met"
+            if ck.status == "not_met" and ck not in unmet:
+                unmet.append(ck)
+    larger_would: dict[int, list[str]] = {}          # classe -> requisiti di prestazione che una classe piu' grande soddisferebbe
+
+    def larger_class_for(ck: Check, nd: Need) -> tuple[int, list[str]] | None:
+        """La classe piu' piccola (oltre quella scelta) in cui un componente del tipo richiesto soddisfa il requisito, con i nomi."""
+        found_in: dict[int, list[str]] = {}
+        allowed_k = kind_allowed.get(nd.slot.id)
+        k = chosen.get(nd.slot.id)
+        keep = [p for p in perf.get(nd.slot.id, []) if k is not None and p.test(k.comp)]      # senza perdere quello che il componente scelto soddisfa
+        for c in catalog:
+            if subsystem_of(c) != nd.slot.subsystem or (allowed_k is not None and c.id not in allowed_k) or not ck.test(c) \
+                    or not all(p.test(c) for p in keep):
+                continue
+            one = replace(nd.slot, allowed=frozenset({c.id}))
+            v = next((u2 for u2 in sorted(CLASSES) if u2 > units and admitted(catalog, one, u2, mass_limit_kg=ml_eff)), None)
+            if v:
+                found_in.setdefault(v, []).append(c.raw["name"])
+        if not found_in:
+            return None
+        v0 = min(found_in)
+        return v0, sorted(found_in[v0])
+
     for ck in unmet:
         nd = next((n for n in needs if n.slot.id == ck.slot), None)
         what = "component"
@@ -744,6 +881,14 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             ck.message = f"Does not satisfy {ck.req.id} ({ck.what}): the lightest selection that the mission needs weighs {sel.mass_kg:.2f} kg."
         elif ck.key == "slew":
             pass                                                # messaggio gia' scritto (momento richiesto dalla classe)
+        elif ck.key in PERFORMANCE and nd and (bigger := larger_class_for(ck, nd)):
+            v0, names = bigger
+            larger_would.setdefault(v0, []).append(ck.req.id if ck.req else ck.what)
+            k = chosen.get(nd.slot.id)
+            got = ck.value(k.comp) if (k is not None and ck.value) else None
+            ck.message = (f"Does not satisfy {ck.req.id if ck.req else 'a requirement'} ({ck.what}): no {what} that fits "
+                          + (f"the {units}U chosen by the user" if forced_class_u else f"a {units}U") + " meets it"
+                          + (f" (the selected one: {got})" if got else "") + f"; {', '.join(names[:3])} would, in a {v0}U CubeSat.")
         else:
             others = [c.what for c in (nd.checks if nd else []) if c is not ck and c.status == "met" and c.test is not None]
             ck.message = (f"Does not satisfy {ck.req.id if ck.req else 'a requirement'} ({ck.what}): no {what} in the database meets it"
@@ -892,8 +1037,10 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             extra_slot = Slot(sid, sid, label, ex_allowed, quantity=ex_qty)
         else:
             extra_slot = Slot(sid, sid, label)
-        trial = select(catalog, units, 1.0, slots=[*slots, extra_slot],
-                       dv_m_s=dv if "dv" not in relaxed else None, mass_limit_kg=mass_limit if "mass" not in relaxed else None)
+        # i componenti del progetto restano quelli scelti: si cerca solo il componente in piu' che sta insieme a questo progetto
+        fixed = [replace(s, allowed=frozenset({chosen[s.id].comp.id})) if chosen.get(s.id) else s for s in slots]
+        trial = select(catalog, units, 1.0, slots=[*fixed, extra_slot],
+                       dv_m_s=dv if "dv" not in relaxed else None, mass_limit_kg=mass_limit if "mass" not in relaxed else None, require_all=False)
         rec = next(r for r in trial.subsystems if r.id == sid)
         alone = rec.selected if rec.selected is not None else None
         together = trial.within_limits and rec.selected is not None and check_fit(trial)["state"] in ACCEPTED_FIT
@@ -906,8 +1053,13 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     stated = a["stated"]
     notes = list(a["notes"])
     if stated and stated["class_u"] != units and not forced_class_u:
-        notes.append(f"{stated['req'].id} states a {stated['class_u']}U CubeSat: the subsystems the mission needs fit a {units}U, the smallest class"
-                     + (f" ({units}U is larger: a smaller class cannot carry them)." if units > stated["class_u"] else "."))
+        why_not = next((c["why"] for c in log if c["class_u"] == stated["class_u"] and not c["ok"]), None)
+        notes.append(f"{stated['req'].id} states a {stated['class_u']}U CubeSat: the class is not taken from the requirements, it follows from the "
+                     f"performance they ask for with the least launch mass and volume: {units}U"
+                     + (f" (a {stated['class_u']}U: {why_not})." if units > stated["class_u"] and why_not else "."))
+    for v, ids in sorted(larger_would.items()):
+        notes.append((f"In the {units}U chosen by the user " if forced_class_u else f"In the {units}U ")
+                     + f"{', '.join(dict.fromkeys(ids))} cannot be met: a {v}U CubeSat would meet it with the rest of the design not verified.")
     if a["dv"] and a["dv"]["source"] == "END-016":
         notes.append("The disposal delta-v comes from END-016 for the spacecraft mass and drag area END-001 used; a lighter satellite decays differently.")
     alt = a["altitude"]
@@ -928,6 +1080,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         "extras": extras,
         "notes": notes,
         "rules": "Bus always; other subsystems only when a requirement asks for them (or END-016 needs a delta-v); one radio and antenna per band; "
-                 "smallest CubeSat class that carries them (mass, volume, stack, envelope fit).",
+                 "the class follows from the performance the requirements ask for: the smallest CubeSat class that carries components meeting them "
+                 "(mass, volume, stack, envelope fit), the least launch mass in that class; a class written in the requirements is only reported.",
     }
     return sel, mission
