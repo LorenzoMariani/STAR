@@ -43,7 +43,10 @@ Requisiti verificati con i dati pubblicati:
     con il controllo su tre assi (una per asse), momento di ciascuna >= inerzia x velocita' di rotazione richiesta (blocco uniforme con la
     massa limite e l'ingombro della classe, per eccesso);
   * magnetorquer (quando nel progetto o suggeriti tra i non richiesti): tre assi (una scheda a tre assi o tre barre a un asse); con
-    ruote separate e la quota nota, il dipolo scarica in un'orbita il momento di una ruota (dipolo >= H / (B x T), dump_dipole_per_nms).
+    ruote separate e la quota nota, il dipolo scarica in un'orbita il momento di una ruota (dipolo >= H / (B x T), dump_dipole_per_nms);
+  * star tracker (quando nel progetto o suggeriti tra i non richiesti): accuratezza a 3 sigma sull'asse peggiore (tracker_accuracy_3sigma_arcsec)
+    <= puntamento e conoscenza d'assetto richiesti, unita' completa (una testa ottica senza elettronica solo se non c'e' altro), frequenza di
+    aggiornamento se richiesta, due se i requisiti li vogliono ridondanti.
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -194,6 +197,16 @@ def _scaled(c: Component, key: str, h_km: float) -> float | None:
 EARTH_RADIUS_KM = 6378.137
 MU_EARTH_KM3_S2 = 398600.4418
 B_EQUATOR_SURFACE_T = 3.12e-5      # campo del dipolo terrestre all'equatore magnetico, in superficie
+
+
+def tracker_accuracy_3sigma_arcsec(c: Component) -> float | None:
+    """Accuratezza d'assetto di uno star tracker a 3 sigma sull'asse peggiore (di solito il rollio): un valore 3-sigma resta com'e', 1-sigma
+    e RMS (trattato come 1-sigma, come dicono le note del catalogo) x 3; base non pubblicata: trattata come 1-sigma (per eccesso)."""
+    vals = [float(v) for v in (c.spec("accuracy_cross_arcsec"), c.spec("accuracy_roll_arcsec")) if v is not None]
+    if not vals:
+        return None
+    basis = str(c.spec("accuracy_basis") or "").lower()
+    return max(vals) * (1.0 if basis.startswith("3") else 3.0)
 
 
 def dump_dipole_per_nms(altitude_km: float) -> float:
@@ -388,6 +401,29 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             op.checks.append(Check("optical_rate", op.slot.id, hit[0], f"optical link rate >= {mbps:g} Mbps",
                                    lambda c, r=mbps: None if c.spec("link_data_rate_mbps") is None else float(c.spec("link_data_rate_mbps")) >= r - 1e-9,
                                    lambda c: None if c.spec("link_data_rate_mbps") is None else f"{float(c.spec('link_data_rate_mbps')):g} Mbps"))
+    # star tracker (nel progetto se nominato, altrimenti suggerito tra i non richiesti con le stesse verifiche): accuratezza a 3 sigma
+    # sull'asse peggiore <= puntamento e conoscenza d'assetto richiesti; una testa ottica senza la sua elettronica solo se non c'e' altro;
+    # frequenza di aggiornamento richiesta; due se i requisiti li vogliono ridondanti
+    stk_checks: list[Check] = []
+    for rx, what in ((rf"pointing accuracy[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)", "pointing"),
+                     (rf"(?:attitude )?knowledge[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)", "attitude knowledge")):
+        if (hit := _find(reqs, rx)):
+            arcsec = float(hit[1].group(1)) * (1.0 if hit[1].group(2).startswith("arc") else 3600.0)
+            stk_checks.append(Check("stk_accuracy", "star_tracker", hit[0], f"attitude accuracy (3-sigma, worst axis) <= {arcsec:g} arcsec ({what})",
+                                    lambda c, a=arcsec: None if (v := tracker_accuracy_3sigma_arcsec(c)) is None else v <= a + 1e-9,
+                                    lambda c: None if (v := tracker_accuracy_3sigma_arcsec(c)) is None else f"{v:g} arcsec (3-sigma)"))
+    stk_checks.append(Check("stk_complete", "star_tracker", None, "complete star tracker (not an optical head without its electronics)",
+                            lambda c: "optical head" not in str(c.raw.get("name", "")).lower(),
+                            lambda c: "optical head only" if "optical head" in str(c.raw.get("name", "")).lower() else "complete unit"))
+    if (hit := _find(reqs, rf"(?:attitude|star tracker)[^.]*?update rate[^.\d]{{0,20}}?{NUM}\s*hz|update rate[^.\d]{{0,20}}?{NUM}\s*hz[^.]*star tracker")):
+        hz = float(next(g for g in hit[1].groups() if g))
+        stk_checks.append(Check("stk_rate", "star_tracker", hit[0], f"update rate >= {hz:g} Hz",
+                                lambda c, h=hz: None if c.spec("update_rate_hz") is None else float(c.spec("update_rate_hz")) >= h - 1e-9,
+                                lambda c: None if c.spec("update_rate_hz") is None else f"{c.spec('update_rate_hz'):g} Hz"))
+    stk_quantity = 2 if _find(reqs, r"\b(two|2|dual|redundant)\s+star\s+trackers?\b") else 1
+    if "star_tracker" in needs:
+        needs["star_tracker"].checks.extend(stk_checks)
+        needs["star_tracker"].slot = replace(needs["star_tracker"].slot, quantity=stk_quantity)
     if "adcs" in needs:
         ad = needs["adcs"]
         if (hit := _find(reqs, rf"pointing accuracy[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)")):
@@ -469,7 +505,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         nd = needs["magnetorquer"]
         nd.slot = replace(nd.slot, axes_needed=3, dump_am2_per_nms=mtq["dump_am2_per_nms"])
     return {"reqs": reqs, "needs": ordered, "wheels": wheels, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery,
-            "data_radio": data_radio.slot.id if data_radio else None, "data_rate": data_rate, "notes": notes}
+            "data_radio": data_radio.slot.id if data_radio else None, "data_rate": data_rate, "notes": notes,
+            "extra_checks": {"star_tracker": (stk_checks, stk_quantity)}}
 
 
 # --------------------------------------------------------------------------- componenti ammessi per posto
@@ -849,6 +886,10 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             extra_slot = Slot(sid, sid, label, quantity=a["wheels"]["quantity"], slew_rate_deg_s=a["wheels"]["slew_deg_s"])
         elif sid == "magnetorquer":
             extra_slot = Slot(sid, sid, label, axes_needed=3, dump_am2_per_nms=a["wheels"]["magnetorquer"]["dump_am2_per_nms"])
+        elif sid in a["extra_checks"]:             # stesse verifiche del posto nel progetto (es. accuratezza dello star tracker)
+            ex_checks, ex_qty = a["extra_checks"][sid]
+            ex_allowed, _ = _allowed(catalog, Need(Slot(sid, sid, label), "", None, "", list(ex_checks)))
+            extra_slot = Slot(sid, sid, label, ex_allowed, quantity=ex_qty)
         else:
             extra_slot = Slot(sid, sid, label)
         trial = select(catalog, units, 1.0, slots=[*slots, extra_slot],

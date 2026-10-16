@@ -336,6 +336,34 @@ class NeedsTest(unittest.TestCase):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})
 
+    def test_star_tracker_accuracy_at_three_sigma(self):
+        from star_selector.mission import tracker_accuracy_3sigma_arcsec
+        self.assertAlmostEqual(tracker_accuracy_3sigma_arcsec(BY_ID["cubespace-cubestar"]), 216.0)   # 1-sigma roll x 3
+        self.assertAlmostEqual(tracker_accuracy_3sigma_arcsec(BY_ID["bct-nst-mid"]), 30.0)           # already 3-sigma
+        sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker with an attitude knowledge of 55 arcsec; UHF link."}])
+        k = slots_of(sel)["star_tracker"].selected
+        self.assertLessEqual(tracker_accuracy_3sigma_arcsec(k.comp), 55.0)
+        self.assertNotEqual(k.comp.id, "sodern-auriga-oh")                                  # 51 arcsec, but an optical head without electronics
+        self.assertEqual(k.quantity, 1)
+        self.assertEqual(next(r for r in m["requirements"] if r["what"].startswith("attitude accuracy"))["status"], "met")
+
+    def test_redundant_star_trackers(self):
+        sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry two star trackers for redundancy; UHF link."}])
+        k = slots_of(sel)["star_tracker"].selected
+        self.assertEqual(k.quantity, 2)
+        self.assertAlmostEqual(k.mass_kg, 2 * k.comp.mass_kg)
+
+    def test_suggested_star_tracker_meets_the_pointing(self):
+        from star_selector.mission import tracker_accuracy_3sigma_arcsec
+        _, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})            # trackers inside the integrated ADCS
+        x = next(e for e in m["extras"] if e["id"] == "star_tracker")
+        self.assertLessEqual(tracker_accuracy_3sigma_arcsec(BY_ID[x["best"]["id"]]), 360.0)      # 0.1 deg of REQ-008
+        self.assertNotIn("star_tracker", m["subsystems"])
+
+    def test_star_tracker_accuracy_no_product_gives(self):
+        _, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker with an attitude knowledge of 1 arcsec; UHF link."}])
+        self.assertTrue(any("no star tracker in the database" in u for u in m["unmet"]), m["unmet"])
+
 
 class ClassTest(unittest.TestCase):
     def test_smallest_class(self):
