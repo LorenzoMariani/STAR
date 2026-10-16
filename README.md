@@ -107,7 +107,9 @@ python FrontEnd/star_smoke_test.py --mode full --level 1 --with-end007
 | `END007-SyntheticDataGeneration/` | own repository, 16 GB | copy it next to the other modules |
 | `STAR-ORCHESTRATOR/OllamaModels/` | local LLM models, 4.4 GB | copy them, or pull the models with Ollama |
 | `END010-ReflectanceDetermination/lib/data/DE440.mat` (94 MB) | JPL DE440 ephemeris | copy it into `lib/data/` |
-| `END010-ReflectanceDetermination/lib/BuildAqua/` (97 MB) | Unity build | copy the build into `lib/` |
+| `END010-ReflectanceDetermination/lib/BuildCubeSat/` (99 MB) | Unity build of the CubeSat light curve | build it from `END010-ReflectanceDetermination/unity_project` (`README_STAR.md`), or copy it into `lib/` |
+| `END010-ReflectanceDetermination/lib/BuildAqua/` (97 MB) | previous Unity build (Aqua), used only if `BuildCubeSat` is missing | copy the build into `lib/` |
+| `Input/cubesat_3d_models/` except `cds_nasa_style_1U_2U_3U_6U_12U/` (CDS boxes, NASA and Pumpkin models) | only the NASA-style CDS models are used | - |
 | `END016-CollisionAvoidance/lib/loginSpaceTrack.m` | space-track.org credentials | keep your own copy locally |
 | `Documentation/`, presentations and documents (`*.pptx`, `*.pdf`, `*.docx`, ...; the sample mission requests in `Input/` stay), `DEMO_WorkshopASI.pptx`, `folder_tree.py`, `struttura_cartelle.txt`, `.claude/`, `.vscode/` | not needed to run STAR | - |
 | documentation and example results of the CARA tools in `END016-CollisionAvoidance/CARA_Analysis_Tools/` | not needed to run STAR | - |

@@ -15,6 +15,9 @@ function [status, cmdout] = runUnity(exePath, opts)
     addNumeric('-exposure',           'exposure');
     addNumeric('-focalLength',        'focalLength');
     addNumeric('-camSize',            'camSize');
+    % STAR CubeSat build (unity_project): scale of the csv positions (km) and class of the NASA-style CDS model (1, 2, 3, 6, 12)
+    addNumeric('-sceneScale',         'sceneScale');
+    addNumeric('-cubesatClass',       'cubesatClass');
     
     % Key (unity) - Value (matlab) input encoding (presence == true)
     addBool('-drawAxis',              'drawAxis');

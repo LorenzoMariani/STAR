@@ -1,6 +1,6 @@
 {
   "paths": {
-    "unityExe": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\BuildAqua\\UnityLightCurveInversion.exe",
+    "unityExe": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\BuildCubeSat\\UnityLightCurveInversion.exe",
     "inputCsv": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\Output\\output_attitude_propagation\\output_attitude_propagation.csv",
     "eopFile": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\EOP.txt",
     "tleFile": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\TLE_AQUA27052026.txt",
@@ -32,7 +32,7 @@
     "maxFrameToSave": 10000,
     "camWidth": 512,
     "camHeight": 512,
-    "camSize": 20,
+    "camSize": 0.2431,
     "enableView": false,
     "saveFrames": true,
     "sumFlux": true,
@@ -42,6 +42,8 @@
     "UseRadiometricModel": false,
     "UseFacetSum": false,
     "lightCurveFilename": "flux.csv",
-    "logFile": "unityLog.log"
+    "logFile": "unityLog.log",
+    "sceneScale": 100,
+    "cubesatClass": 6
   }
 }

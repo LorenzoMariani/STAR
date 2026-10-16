@@ -374,6 +374,33 @@ class StarApi:
         upstream_dependencies = module.get("execution", {}).get("upstream_dependencies", []) or []
         return 100 + len(upstream_dependencies) * 10
 
+    def order_by_dependencies(self, modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """END order, except that a module runs after the modules of the same workflow it depends on: upstream_dependencies and
+        optional_upstream_dependencies of the registry (2026-10-16: END-010 renders the CubeSat class chosen by END-019, so it runs after it).
+        A dependency cycle keeps the END order for the modules involved."""
+        ordered = sorted(modules, key=self.get_module_order_score)
+        ids = [str(m.get("module_id", "")).upper() for m in ordered]
+        present = set(ids)
+        deps: dict[str, set[str]] = {}
+        for module, module_id in zip(ordered, ids):
+            execution = module.get("execution", {}) or {}
+            wanted = list(execution.get("upstream_dependencies") or []) + list(execution.get("optional_upstream_dependencies") or [])
+            deps[module_id] = {str(d).upper() for d in wanted} & present - {module_id}
+        result: list[dict[str, Any]] = []
+        done: set[str] = set()
+        remaining = list(zip(ordered, ids))
+        while remaining:
+            for k, (module, module_id) in enumerate(remaining):
+                if deps[module_id] <= done:
+                    result.append(module)
+                    done.add(module_id)
+                    remaining.pop(k)
+                    break
+            else:
+                result.extend(module for module, _ in remaining)
+                break
+        return result
+
     def apply_canonical_module_catalog(self, loaded_modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Force the Module Bay to use the official END-001 ... END-018 order.
@@ -1918,6 +1945,9 @@ Return only valid JSON:
         normalized.sort(
             key=lambda row: self.get_module_order_score(self.get_module_by_name(row["module"]) or {})
         )
+        rank = {id(m): k for k, m in enumerate(self.order_by_dependencies([self.get_module_by_name(r["module"]) or {} for r in normalized]))}
+        order_of = {r["module"]: rank.get(id(self.get_module_by_name(r["module"]) or {}), k) for k, r in enumerate(normalized)}
+        normalized.sort(key=lambda row: order_of.get(row["module"], 0))
 
         for index, row in enumerate(normalized, start=1):
             row["step"] = index
@@ -2024,7 +2054,7 @@ Return only valid JSON:
         if not candidate_modules:
             return []
 
-        ordered_modules = sorted(candidate_modules, key=self.get_module_order_score)
+        ordered_modules = self.order_by_dependencies(candidate_modules)
 
         workflow: list[dict[str, Any]] = []
 
@@ -3997,7 +4027,9 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
                 continue
             seen_ids.add(module_id)
             deduplicated.append(step)
-        deduplicated.sort(key=lambda step: self.get_module_order_score(module_by_id.get(str(step.get("module_id")), step)))
+        modules_of_steps = [module_by_id.get(str(step.get("module_id")), step) for step in deduplicated]
+        rank = {id(m): k for k, m in enumerate(self.order_by_dependencies(modules_of_steps))}
+        deduplicated = [step for _, step in sorted(zip(modules_of_steps, deduplicated), key=lambda pair: rank[id(pair[0])])]
         for index, step in enumerate(deduplicated, start=1):
             step["step"] = index
         return deduplicated
@@ -4153,7 +4185,7 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
                 ordered_modules.append(module)
 
         workflow: list[dict[str, Any]] = []
-        for index, module in enumerate(sorted(ordered_modules, key=self.get_module_order_score), start=1):
+        for index, module in enumerate(self.order_by_dependencies(ordered_modules), start=1):
             workflow.append(
                 {
                     "step": index,

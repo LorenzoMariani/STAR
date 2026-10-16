@@ -1055,7 +1055,14 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
     # star_root rather than trusted verbatim from a packaged/template JSON,
     # which may have been captured on a different machine or STAR install path.
     data_dir = star_root / "END010-ReflectanceDetermination" / "lib" / "data"
-    cfg["paths"]["unityExe"] = str(star_root / "END010-ReflectanceDetermination" / "lib" / "BuildAqua" / "UnityLightCurveInversion.exe")
+    # Unity player: the CubeSat build (unity_project, StarCubeSatBuild) renders the NASA-style CDS model of the class END-019 chose;
+    # the old Aqua build is used only if the CubeSat build is not on this machine
+    cubesat_exe = star_root / "END010-ReflectanceDetermination" / "lib" / "BuildCubeSat" / "UnityLightCurveInversion.exe"
+    aqua_exe = star_root / "END010-ReflectanceDetermination" / "lib" / "BuildAqua" / "UnityLightCurveInversion.exe"
+    cfg["paths"]["unityExe"] = str(cubesat_exe if cubesat_exe.exists() or not aqua_exe.exists() else aqua_exe)
+    cubesat = end010_cubesat_options(star_payload, product_dir) if cubesat_exe.exists() or not aqua_exe.exists() else None
+    if cubesat:
+        cfg.setdefault("unityOpts", {}).update(cubesat["unityOpts"])
     cfg["paths"]["eopFile"] = str(data_dir / "EOP.txt")
     cfg["paths"]["tleFile"] = str(data_dir / "TLE_AQUA27052026.txt")
     cfg["paths"]["stationsJson"] = str(data_dir / "stations.json")
@@ -1098,8 +1105,45 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
         "end003_output_csv": str(end003_csv) if end003_csv else None,
         "lightcurve_pass_csv": str(lightcurve_csv) if lightcurve_csv else None,
         "lightcurve_pass": {k: v for k, v in lightcurve_pass.items() if k != "orbit"} if lightcurve_pass else None,
+        "cubesat_model": None if not cubesat else {k: v for k, v in cubesat.items() if k != "unityOpts"},
     })
     return cfg
+
+
+# END-010 CubeSat model (2026-10-16): CDS Rev. 14.1 envelope of the NASA-style models in Input/cubesat_3d_models (X x Y x Z, mm)
+CUBESAT_ENVELOPE_MM = {1: (100.0, 100.0, 113.5), 2: (100.0, 100.0, 227.0), 3: (100.0, 100.0, 340.5), 6: (226.3, 100.0, 366.0), 12: (226.3, 226.3, 366.0)}
+END010_DEFAULT_CLASS_U = 6
+END010_SCENE_SCALE = 100.0      # STAR csv positions are in km: divided by 100 the camera stays thousands of units from a 0.1-0.4 m model
+
+
+def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> dict[str, Any]:
+    """Unity options for the CubeSat of the run: the class chosen by END-019 when it ran before END-010 (registry: optional upstream),
+    otherwise END010_DEFAULT_CLASS_U. camSize (orthographic half-height, m) = half the diagonal of the class envelope x 1.1, so the
+    model stays in the frame whatever its attitude; sceneScale divides the km positions of the csv."""
+    class_u, source = None, None
+    found = find_upstream_artifact(star_payload, ["component_selector_results.json"], [".json"])
+    candidates = [found] if found else []
+    # modules_output/<END-010>/output_... -> modules_output/END-019/output_component_selector/component_selector_results.json
+    for parent in Path(product_dir).resolve().parents:
+        if parent.name == "modules_output":
+            candidates.append(parent / "END-019" / "output_component_selector" / "component_selector_results.json")
+            break
+    for path in candidates:
+        try:
+            data = load_json(Path(path))
+            u = int(((data.get("result") or {}).get("cubesat") or {}).get("class_u"))
+        except Exception:
+            continue
+        if u in CUBESAT_ENVELOPE_MM:
+            class_u, source = u, f"END-019 of this run ({Path(path).name})"
+            break
+    if class_u is None:
+        class_u, source = END010_DEFAULT_CLASS_U, f"default {END010_DEFAULT_CLASS_U}U (END-019 is not in this run)"
+    x, y, z = CUBESAT_ENVELOPE_MM[class_u]
+    half_diagonal_m = 0.5 * math.sqrt(x * x + y * y + z * z) / 1000.0
+    cam_size = round(1.1 * half_diagonal_m, 4)
+    return {"class_u": class_u, "source": source, "model": f"CDS_{class_u}U_nasa_style", "envelope_mm": [x, y, z],
+            "unityOpts": {"cubesatClass": class_u, "camSize": cam_size, "sceneScale": END010_SCENE_SCALE}}
 
 
 # ---------------------------------------------------------------------------
