@@ -311,6 +311,27 @@ class NeedsTest(unittest.TestCase):
         _, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall be three-axis stabilised with reaction wheels and slew at 5000 deg/s; UHF link."}])
         self.assertTrue(any("no reaction wheel in the database" in u for u in m["unmet"]), m["unmet"])
 
+    def test_magnetorquers_cover_three_axes_and_dump_the_wheels(self):
+        from star_selector.mission import dump_dipole_per_nms
+        self.assertTrue(6.5 < dump_dipole_per_nms(500) < 8.0)                                  # about 7 A m2 per N m s in LEO
+        reqs = [{"id": "R1", "text": "Each satellite shall be a 12U CubeSat, three-axis stabilised with reaction wheels and magnetorquers, slewing at 10 deg/s."},
+                {"id": "R2", "text": "It shall fly at an altitude of 600 km and take images with a GSD of 2 m, downlinked in X-band."}]
+        sel, m = design(CATALOG, reqs)
+        s = slots_of(sel)
+        mq, rw = s["magnetorquer"].selected, s["reaction_wheel"].selected
+        self.assertGreaterEqual(mq.quantity * int(mq.comp.spec("axes") or 1), 3)               # three axes: one board or three rods
+        need = rw.comp.spec("momentum_mnms") / 1000.0 * dump_dipole_per_nms(600)
+        self.assertGreaterEqual(mq.comp.spec("magnetic_moment_am2"), need)                      # dumps a wheel in one orbit
+        self.assertNotEqual(mq.comp.id, "gomspace-nanotorque-gst-600-mk2")                      # 0.4 A m2 is not enough for 100 mN m s wheels
+        self.assertTrue(all(c["met"] for c in m["subsystems"]["magnetorquer"]["checks"]))
+        if mq.quantity == 3:
+            self.assertAlmostEqual(mq.mass_kg, 3 * mq.comp.mass_kg)
+
+    def test_suggested_magnetorquer_covers_three_axes(self):
+        _, m = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        x = next(e for e in m["extras"] if e["id"] == "magnetorquer")
+        self.assertGreaterEqual(x["best"]["quantity"] * int(BY_ID[x["best"]["id"]].spec("axes") or 1), 3)
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})

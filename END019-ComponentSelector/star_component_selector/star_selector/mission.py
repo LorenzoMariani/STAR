@@ -41,13 +41,16 @@ Requisiti verificati con i dati pubblicati:
     power_supply_check, vincolo nella ricerca esatta);
   * ruote di reazione (quando nel progetto o suggerite tra i non richiesti): classe dichiarata dal fornitore (come l'ADCS), tre ruote
     con il controllo su tre assi (una per asse), momento di ciascuna >= inerzia x velocita' di rotazione richiesta (blocco uniforme con la
-    massa limite e l'ingombro della classe, per eccesso).
+    massa limite e l'ingombro della classe, per eccesso);
+  * magnetorquer (quando nel progetto o suggeriti tra i non richiesti): tre assi (una scheda a tre assi o tre barre a un asse); con
+    ruote separate e la quota nota, il dipolo scarica in un'orbita il momento di una ruota (dipolo >= H / (B x T), dump_dipole_per_nms).
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
 una classe scelta dall'utente prevale. Una classe scritta nei requisiti e' solo riportata."""
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable
@@ -186,6 +189,20 @@ def _scaled(c: Component, key: str, h_km: float) -> float | None:
     if v is None or not ref:
         return None
     return float(v) * h_km / float(ref)
+
+
+EARTH_RADIUS_KM = 6378.137
+MU_EARTH_KM3_S2 = 398600.4418
+B_EQUATOR_SURFACE_T = 3.12e-5      # campo del dipolo terrestre all'equatore magnetico, in superficie
+
+
+def dump_dipole_per_nms(altitude_km: float) -> float:
+    """Dipolo [A m2] per scaricare 1 N m s in un'orbita circolare alla quota data: 1 / (B x T), con B il campo minimo lungo l'orbita
+    (dipolo terrestre all'equatore magnetico, B0 (Re/r)^3) e T il periodo orbitale. Regola fisica dichiarata, non un dato dei fornitori."""
+    r = EARTH_RADIUS_KM + altitude_km
+    b = B_EQUATOR_SURFACE_T * (EARTH_RADIUS_KM / r) ** 3
+    period = 2.0 * math.pi * math.sqrt(r ** 3 / MU_EARTH_KM3_S2)
+    return 1.0 / (b * period)
 
 
 def altitude_from_requirements(reqs: list[Req]) -> tuple[float, float, Req] | None:
@@ -441,6 +458,16 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     if "reaction_wheel" in needs:
         nd = needs["reaction_wheel"]
         nd.slot = replace(nd.slot, quantity=wheels["quantity"], slew_rate_deg_s=wheels["slew_deg_s"])
+    # magnetorquer: tre assi (una scheda a tre assi o tre barre); con le ruote nel progetto e la quota nota, il dipolo scarica in un'orbita il
+    # momento di una ruota: dipolo >= H / (B x T), B = campo minimo alla quota (dipolo terrestre all'equatore magnetico), T = periodo orbitale
+    mtq = {"axes": 3, "dump_am2_per_nms": None, "altitude_km": None}
+    if alt:
+        mtq["altitude_km"] = alt["max_km"]
+        mtq["dump_am2_per_nms"] = dump_dipole_per_nms(alt["max_km"])
+    wheels["magnetorquer"] = mtq
+    if "magnetorquer" in needs:
+        nd = needs["magnetorquer"]
+        nd.slot = replace(nd.slot, axes_needed=3, dump_am2_per_nms=mtq["dump_am2_per_nms"])
     return {"reqs": reqs, "needs": ordered, "wheels": wheels, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery,
             "data_radio": data_radio.slot.id if data_radio else None, "data_rate": data_rate, "notes": notes}
 
@@ -707,6 +734,19 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
+        if r.subsystem == "magnetorquer" and r.selected:      # tre assi; scarico in un'orbita del momento di una ruota del progetto
+            mq = r.selected.comp
+            axes = int(mq.spec("axes") or 1)
+            rows.append({"requirement": None, "what": "dipoles on three axes (detumbling, momentum dumping)",
+                         "value": (f"one {axes}-axis {mq.spec('magnetorquer_type') or 'unit'}" if r.selected.quantity == 1
+                                   else f"{r.selected.quantity} single-axis {mq.spec('magnetorquer_type') or 'unit'}s"), "met": r.selected.quantity * axes >= 3})
+            wheel = next((x.selected.comp for x in sel.subsystems if x.subsystem == "reaction_wheel" and x.selected), None)
+            m_info = a["wheels"]["magnetorquer"]
+            if wheel is not None and m_info["dump_am2_per_nms"] and wheel.spec("momentum_mnms") is not None:
+                need = float(wheel.spec("momentum_mnms")) / 1000.0 * m_info["dump_am2_per_nms"]
+                dip = mq.spec("magnetic_moment_am2")
+                rows.append({"requirement": None, "what": f"dumps a wheel's {wheel.spec('momentum_mnms'):g} mN m s in one orbit at {m_info['altitude_km']:.0f} km",
+                             "value": f"{dip:g} of {need:.3f} A m2 needed" if dip is not None else None, "met": dip is not None and dip >= need - 1e-12})
         if r.subsystem == "reaction_wheel" and r.selected:      # una ruota per asse; classe dichiarata; momento per la rotazione richiesta
             rw = r.selected.comp
             rng = rw.spec("form_factor_range_u")
@@ -805,7 +845,12 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             reason = "no requirement asks for attitude control"
         else:
             reason = NOT_REQUIRED.get(sid, "not required by the mission")
-        extra_slot = Slot(sid, sid, label, quantity=a["wheels"]["quantity"], slew_rate_deg_s=a["wheels"]["slew_deg_s"]) if sid == "reaction_wheel" else Slot(sid, sid, label)
+        if sid == "reaction_wheel":
+            extra_slot = Slot(sid, sid, label, quantity=a["wheels"]["quantity"], slew_rate_deg_s=a["wheels"]["slew_deg_s"])
+        elif sid == "magnetorquer":
+            extra_slot = Slot(sid, sid, label, axes_needed=3, dump_am2_per_nms=a["wheels"]["magnetorquer"]["dump_am2_per_nms"])
+        else:
+            extra_slot = Slot(sid, sid, label)
         trial = select(catalog, units, 1.0, slots=[*slots, extra_slot],
                        dv_m_s=dv if "dv" not in relaxed else None, mass_limit_kg=mass_limit if "mass" not in relaxed else None)
         rec = next(r for r in trial.subsystems if r.id == sid)

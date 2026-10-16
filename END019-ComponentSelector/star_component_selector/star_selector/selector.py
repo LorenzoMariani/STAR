@@ -282,6 +282,8 @@ class Slot:
     allowed: frozenset[str] | None = None
     quantity: int = 1
     slew_rate_deg_s: float | None = None
+    axes_needed: int | None = None          # magnetorquer: assi da coprire (3): una scheda a tre assi oppure tre barre a un asse
+    dump_am2_per_nms: float | None = None   # magnetorquer: dipolo per scaricare 1 N m s di una ruota in un'orbita, 1 / (B x T)
 
 
 def default_slots() -> list[Slot]:
@@ -412,8 +414,13 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             adcs_small_only = best is None
             fitting = [] if best is None else [c for c, t in zip(fitting, tiers) if t == best]
         fitting = [c for c in fitting if c.raw.get("status") != "nla"] or fitting          # i prodotti non piu' in vendita solo se non c'e' altro
-        known = [_times(_candidate(c, cls.envelope_mm), sl.quantity) for c in fitting if c.mass_kg is not None]
-        unknown = [_times(_candidate(c, cls.envelope_mm), sl.quantity) for c in fitting if c.mass_kg is None]
+        def units_of(c: Component, sl=sl) -> int:
+            """Unita' del prodotto nel posto: per i magnetorquer quante ne servono per coprire gli assi richiesti."""
+            if sl.subsystem == "magnetorquer" and sl.axes_needed:
+                return max(1, math.ceil(sl.axes_needed / max(1, int(c.spec("axes") or 1))))
+            return sl.quantity
+        known = [_times(_candidate(c, cls.envelope_mm), units_of(c)) for c in fitting if c.mass_kg is not None]
+        unknown = [_times(_candidate(c, cls.envelope_mm), units_of(c)) for c in fitting if c.mass_kg is None]
         pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio
         if sid in layout.ORDER and any(k.height_mm is not None for k in pool):
             pool = [k for k in pool if k.height_mm is not None]    # idem senza quote: non si scavalca il vincolo della pila con un componente di cui non si conosce l'altezza
@@ -445,9 +452,24 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
         p = firing_power_w(k.comp)
         return p if p is not None else 1e9
 
+    # scarico delle ruote: il dipolo del magnetorquer scarica in un'orbita il momento di una ruota (dump_am2_per_nms del posto del magnetorquer)
+    jm = next((j for j, i in enumerate(idx) if results[i].subsystem == "magnetorquer"), None)
+    jr = next((j for j, i in enumerate(idx) if results[i].subsystem == "reaction_wheel"), None)
+    dump = slots[idx[jm]].dump_am2_per_nms if jm is not None and jr is not None else None
+
+    def dump_ok(cands) -> bool:
+        if not dump:
+            return True
+        dip, h = cands[jm].comp.spec("magnetic_moment_am2"), cands[jr].comp.spec("momentum_mnms")
+        return h is None or (dip is not None and float(dip) >= float(h) / 1000.0 * dump - 1e-12)
+
     def extra_of(i: int):
         sid = results[i].subsystem
         parts = []
+        if sid == "magnetorquer" and dump:
+            parts.append(lambda k: -float(k.comp.spec("magnetic_moment_am2") or 0.0))
+        if sid == "reaction_wheel" and dump:
+            parts.append(lambda k: float(k.comp.spec("momentum_mnms") or 0.0))
         if sid == "propulsion" and prop:
             parts.append(lambda k: -(total_impulse_ns(k.comp) or 0.0))
         if sid == "propulsion" and jp is not None:
@@ -547,7 +569,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             return
         if j == len(idx):
             cands = [spools[idx[t]][pick[t]] for t in range(len(idx))]
-            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands) or not supply_ok(cands) or not faces_ok(cands):
+            if not stack_ok(cands) or (prop and not dv_ok(cands, mass)) or not power_ok(cands) or not iface_ok(cands) or not supply_ok(cands) or not faces_ok(cands) or not dump_ok(cands):
                 return
             key = (round(score, 9), -mass)
             if best["key"] is None or key > best["key"]:
@@ -571,7 +593,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     greedy = [pools[i][0] for i in idx]
     g_mass = sum((k.mass_kg or 0.0) for k in greedy)
     g_vol = sum((k.volume_m3 or 0.0) for k in greedy)
-    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy) and faces_ok(greedy):
+    if g_mass <= cls.mass_limit_kg + 1e-12 and g_vol <= cls.volume_limit_m3 + 1e-15 and stack_ok(greedy) and (not prop or dv_ok(greedy, g_mass)) and power_ok(greedy) and iface_ok(greedy) and supply_ok(greedy) and faces_ok(greedy) and dump_ok(greedy):
         chosen = greedy
     else:   # altrimenti la ricerca esatta: massima completezza totale con somma delle masse e dei volumi entro i limiti
         rec(0, 0.0, 0.0, 0.0, [])
