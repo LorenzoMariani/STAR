@@ -74,6 +74,17 @@ class NeedsTest(unittest.TestCase):
             self.assertNotIn(part, subs)
             self.assertIn("integrated ADCS", next(e for e in m["extras"] if e["id"] == part)["why_not"])
 
+    def test_solar_panel_of_the_class_and_deployable_when_asked(self):
+        sel, _ = design(CATALOG, V6, {"altitude_km": [641.6, 641.6], "end016": END016})
+        self.assertEqual(sel.cubesat.units, 6)
+        self.assertEqual(slots_of(sel)["solar_panel"].selected.comp.raw["specs"]["face"], "6U")
+        sel, m = design(CATALOG, V6 + [{"id": "REQ-099", "text": "Each satellite shall have two deployable solar panels."}],
+                        {"altitude_km": [641.6, 641.6], "end016": END016})
+        panel = slots_of(sel)["solar_panel"].selected.comp
+        self.assertIn("deployable", panel.raw["name"].lower())
+        self.assertEqual(panel.raw["specs"]["face"], f"{sel.cubesat.units}U" if sel.cubesat.units != 12 else "6U")
+        self.assertEqual(next(r for r in m["requirements"] if r["what"] == "deployable solar panel")["status"], "met")
+
     def test_named_part_is_required(self):
         sel, _ = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall carry a star tracker."}])
         self.assertIn("star_tracker", {r.subsystem for r in sel.subsystems})

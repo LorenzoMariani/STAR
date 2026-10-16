@@ -74,6 +74,16 @@ NO_POWER_SUBSYSTEMS = ("structure", "battery", "solar_panel", "antenna")   # non
 FACE_MM = {"1U": (100.0, 113.5), "1U Z": (100.0, 100.0), "2U": (100.0, 227.0), "3U": (100.0, 340.5), "6U": (226.3, 340.5)}   # "1U Z" = faccia superiore o inferiore
 
 
+# Regola dichiarata (2026-10-15): il pannello solare e' quello fatto per la faccia della classe (campo `face` del catalogo): 1U -> "1U" o
+# "1U Z", 3U -> "3U", 6U -> "6U", 12U -> "6U" (le facce lunghe di un 12U, 226.3 x 366 mm, sono quelle grandi di un 6U). I pannelli per facce
+# piu' piccole che pure entrano si usano solo se la classe non ne ha uno suo.
+CLASS_PANEL_FACES = {1: ("1U", "1U Z"), 3: ("3U",), 6: ("6U",), 12: ("6U",)}
+
+
+def panel_for_class(c: Component, units: int) -> bool:
+    return str(c.raw["specs"].get("face")) in CLASS_PANEL_FACES.get(units, ())
+
+
 def panel_face(c: Component) -> tuple[float, float] | None:
     """Impronta (mm) di un pannello solare senza tutte e tre le quote: le due quote pubblicate se ci sono (lo spessore manca), altrimenti la faccia dichiarata."""
     if c.category != "solar_panel":
@@ -215,6 +225,8 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             fitting = [c for c in allowed if _admissible(c, sid, cls)]
         if dv and sid == "propulsion":
             fitting = [c for c in fitting if total_impulse_ns(c)]      # senza impulso totale pubblicato il delta-v non si puo' mostrare
+        if sid == "solar_panel":
+            fitting = [c for c in fitting if panel_for_class(c, units)] or fitting     # il pannello fatto per la faccia della classe
         known = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is not None]
         unknown = [_candidate(c, cls.envelope_mm) for c in fitting if c.mass_kg is None]
         pool = _order(known) or _order(unknown)    # senza massa pubblicata un componente e' ammesso solo se non c'e' di meglio

@@ -19,7 +19,9 @@ Requisiti verificati con i dati pubblicati:
   * GSD e swath dell'imager alla quota dell'orbita (al nadir sono proporzionali alla quota): quote di END-001 se ci sono, altrimenti la quota
     peggiore dell'intervallo dei requisiti (la piu' alta per il GSD, la piu' bassa per lo swath);
   * precisione di puntamento pubblicata dell'unita' ADCS; tre assi (escluse le unita' a ruota singola "Y-Momentum");
-  * banda della radio e dell'antenna; delta-v del propulsore (impulso totale / somma delle masse pubblicate); massa massima del satellite.
+  * banda della radio e dell'antenna; delta-v del propulsore (impulso totale / somma delle masse pubblicate); massa massima del satellite;
+  * pannello solare dispiegabile se i requisiti lo chiedono (nome del prodotto); la faccia del pannello segue sempre la classe
+    (selector.CLASS_PANEL_FACES).
   Se nessun componente del catalogo soddisfa tutti i requisiti di un posto si tengono quelli che ne soddisfano di piu' (nell'ordine in cui
   sono elencati: per l'imager il GSD prima dello swath) e il requisito mancato e' segnalato.
 Classe: la piu' piccola tra 1U, 3U, 6U e 12U in cui i componenti richiesti stanno insieme (massa, volume, pila) e l'ingombro risulta "Fits";
@@ -281,6 +283,11 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             ad.checks.append(Check("three_axis", ad.slot.id, hit[0], "three-axis control",
                                    lambda c: "y-momentum" not in str(c.raw.get("name", "")).lower(),
                                    lambda c: "single-wheel momentum bias" if "y-momentum" in str(c.raw.get("name", "")).lower() else "three-axis"))
+    if (hit := _find(reqs, r"deployable (solar )?(panel|array)s?|solar (panel|array)s?[^.]{0,40}deployable")):
+        sp = needs["solar_panel"]       # il pannello e' gia' quello della faccia della classe (selector.CLASS_PANEL_FACES); qui: dispiegabile
+        sp.checks.append(Check("deployable", sp.slot.id, hit[0], "deployable solar panel",
+                               lambda c: "deployable" in str(c.raw.get("name", "")).lower(),
+                               lambda c: "deployable" if "deployable" in str(c.raw.get("name", "")).lower() else "body-mounted"))
     if dv is not None:
         needs["propulsion"].checks.append(Check("dv", "propulsion", dv["req"], f"delta-v >= {dv['dv_m_s']:.1f} m/s",
                                                 lambda c: None if total_impulse_ns(c) is None else True,

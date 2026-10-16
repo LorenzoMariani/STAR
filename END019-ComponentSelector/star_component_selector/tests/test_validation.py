@@ -136,10 +136,19 @@ class TestRealCatalogueInvariants(unittest.TestCase):
                     self.assertTrue(fits_envelope(k.comp, cls.envelope_mm) or k.comp.category == "structure")
 
     def test_what_fits_a_smaller_class_fits_a_larger_one(self):
-        fit = {u: {r.id: r.n_fit for r in select(CATALOG, u).subsystems if r.id != "structure"} for u in CLASSES}
+        # struttura e pannello solare sono quelli fatti per la classe (classe della struttura, faccia del pannello): non crescono con la classe
+        fit = {u: {r.id: r.n_fit for r in select(CATALOG, u).subsystems if r.id not in ("structure", "solar_panel")} for u in CLASSES}
         for small, big in ((1, 3), (3, 6), (6, 12)):
             for sid, n in fit[small].items():
                 self.assertLessEqual(n, fit[big][sid], (small, big, sid))
+
+    def test_the_solar_panel_is_made_for_the_face_of_the_class(self):
+        from star_selector.selector import CLASS_PANEL_FACES
+        for units in CLASSES:
+            r = next(r for r in select(CATALOG, units).subsystems if r.id == "solar_panel")
+            for k in [r.selected, *r.alternatives]:
+                self.assertIn(k.comp.raw["specs"]["face"], CLASS_PANEL_FACES[units], (units, k.comp.id))
+        self.assertEqual(next(r for r in select(CATALOG, 6).subsystems if r.id == "solar_panel").selected.comp.raw["specs"]["face"], "6U")
 
     def test_every_subsystem_has_a_card_even_without_a_fitting_component(self):
         res = select(CATALOG, 1)

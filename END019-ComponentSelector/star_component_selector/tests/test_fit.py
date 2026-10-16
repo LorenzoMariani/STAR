@@ -158,7 +158,7 @@ class TestExternalParts(unittest.TestCase):
                         self.assertLessEqual(e["pos"][k] + e["size"][k], env[k] + 0.11)
 
     def test_published_sizes_are_kept_and_unpublished_thickness_is_flagged(self):
-        f = SERVICE.select({"form_factor_u": 6})["fit"]
+        f = SERVICE.select({"form_factor_u": 3})["fit"]       # il pannello 3U scelto pubblica le tre quote (quello 6U no)
         panel = next(e for e in f["external"] if e["subsystem"] == "solar_panel")
         c = next(c for c in SERVICE.catalog if c.id == panel["id"])
         self.assertEqual(sorted(panel["size"], reverse=True), sorted(c.dimensions_mm, reverse=True))      # le quote del catalogo, non altre
@@ -200,11 +200,14 @@ class TestShapes(unittest.TestCase):
                 self.assertEqual((c.raw["shape"]["type"], d[c.raw["shape"]["axis"]]), ("cylinder", min(d)), c.id)
 
     def test_placed_shapes_follow_the_orientation_found_by_the_arrangement(self):
+        from star_selector.fit import VISUAL_THICKNESS_MM
         by_id = {c.id: c for c in SERVICE.catalog}
-        for u in (6, 12):
+        for u in (3, 6, 12):
             f = SERVICE.select({"form_factor_u": u})["fit"]
             for p in f["placed"] + f["external"]:
                 c, sh, dims = by_id[p["id"]], p["shape"], by_id[p["id"]].dimensions_mm
+                if not dims or None in dims:
+                    continue                       # pannello senza quote pubblicate: disegnato sulla faccia dichiarata (sotto)
                 local = c.raw["shape"]["axis"]
                 if sh["axis"] is not None:
                     self.assertAlmostEqual(p["size"][sh["axis"]], dims[local], places=1, msg=p["id"])     # l'asse segue la quota giusta dopo la rotazione
@@ -212,7 +215,9 @@ class TestShapes(unittest.TestCase):
                     self.assertAlmostEqual(p["size"][sh["normal"]], min(dims), places=1, msg=p["id"])     # la normale e' la quota piu' piccola
             panel = next(e for e in f["external"] if e["subsystem"] == "solar_panel")
             self.assertEqual(panel["shape"]["type"], "panel")
-            self.assertAlmostEqual(panel["size"][panel["shape"]["normal"]], 2.5)
+            dims = by_id[panel["id"]].dimensions_mm
+            thickness = min(dims) if dims and None not in dims else VISUAL_THICKNESS_MM     # spessore pubblicato, altrimenti quello nominale del disegno
+            self.assertAlmostEqual(panel["size"][panel["shape"]["normal"]], thickness)
 
 
 if __name__ == "__main__":
