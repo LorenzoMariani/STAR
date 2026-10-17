@@ -84,3 +84,11 @@ initial design (template entries of the subsystems it selected with the declared
 declared power added), its battery, and the solar generation = panel peak power x mean cosine of the Sun incidence on the panel
 faces (END-003 illumination) x sunlight time (beginning of life, no losses). Values the user gave or edited in STAR win.
 Decisions in star_runtime.end004_inputs.
+
+**Duty cycles (2026-10-17).** From END-001 operations_summary.json (constellation mean): payload duty in sunlight = seconds of
+acquisition per payload orbit / sunlight minutes; transmitters (S-band and UHF) on during the contacts, sunlit and eclipse
+parts, in the contact orbits and in the payload orbits that also have a contact; OBC, EPS, UHF receiver, ADCS and GNSS always
+on; S-band receiver dropped when the radio has no receiver; published idle / transmit powers of the radios used when known;
+beacon and heaters keep the template duty. Mode orbits per day: payload = orbits with acquisitions, contact mode
+(tx_sband, or tx_uhf without an S-band radio) = orbits with a contact and no acquisition, idle = the rest. A daily mode
+allocation the user gives in STAR wins. Decisions in star_runtime.end004_inputs.duty_cycles.

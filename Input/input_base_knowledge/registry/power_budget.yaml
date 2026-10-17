@@ -134,6 +134,11 @@ execution:
   downstream_dependencies: []
   estimated_runtime: 30
 interface_notes: >
+  Duty cycles (2026-10-17) from END-001 operations_summary.json: payload on while the AOI is in the footprint,
+  transmitters on during the ground-station contacts (sunlit and eclipse parts), receivers, computers, ADCS and GNSS always
+  on, receiver entries dropped for transmit-only radios, published idle/transmit powers of the selected radios; orbits per
+  day: payload = orbits with acquisitions, contact mode = orbits with a contact and no acquisition, idle = the rest. Beacon
+  and heaters keep the template duty.
   Since 2026-10-17: orbit period from the END-001 altitude of the satellite END-003 selected and eclipse from the END-003 shadow
   fraction (KPI-14), orbits per day from the period (the template values are only a fallback); loads, battery and solar generation of
   the END-019 initial design (spacecraft_definition.json): the template entries of the subsystems it selected with their declared

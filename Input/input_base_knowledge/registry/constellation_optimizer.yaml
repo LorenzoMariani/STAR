@@ -460,6 +460,17 @@ outputs:
     imaging_candidates. Times in seconds from the ephemeris epoch and UTC.
 
     '
+- name: operations_summary
+  kind: result
+  artifact_name: operations_summary.json
+  data_type: json
+  description: 'Daily operations of each satellite and constellation mean (2026-10-17, END-004 duty cycles):
+    acquisitions while an AOI point is in the sensor footprint (full FOV angles of PBS/CON/RECT, SAR
+    look angles; daylight for an optical sensor with the Sun constraint), contacts with the END-001 ground
+    stations above their mask (sunlit and eclipse parts), orbits per day with acquisitions, contacts or
+    both. Upper bound: acquisitions whenever possible, transmitters on for the whole contact.
+
+    '
 execution:
   estimated_runtime: 2
   execution_mode: sequential_or_optimization_loop

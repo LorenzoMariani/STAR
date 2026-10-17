@@ -125,6 +125,97 @@ def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, An
     return out, notes
 
 
+def _operations(star_payload: dict[str, Any]) -> dict[str, Any] | None:
+    """Daily operations END-001 computed on the ephemerides (operations_summary.json): acquisitions over the AOI and
+    ground-station contacts, constellation mean."""
+    path = find_upstream_artifact(star_payload, ["operations_summary.json"], [".json"])
+    if path and Path(path).exists():
+        data = load_json(Path(path)) or {}
+        if isinstance(data.get("constellation_mean"), dict):
+            return data
+    return None
+
+
+def _clamp01(x: float) -> float:
+    return max(0.0, min(1.0, float(x)))
+
+
+def _apply_duty_cycles(runtime_data: dict[str, Any], ops: dict[str, Any] | None, sat: dict[str, Any], report: dict[str, Any]) -> None:
+    """Duty cycles and daily mode allocation from the operations of the run (2026-10-17): payload on while the AOI is in the
+    footprint (END-001), transmitters on during the ground-station contacts (sunlit and eclipse parts), receivers, computers,
+    ADCS and GNSS always on; beacon and heaters keep the template duty. Orbits per day: payload = orbits with acquisitions,
+    contact mode = orbits with a contact and no acquisition, idle = the rest."""
+    subs = runtime_data.get("subsystems") or []
+    orbit = runtime_data.get("orbit") or {}
+    if not ops or not subs or not orbit.get("sunlight_min") or not orbit.get("eclipse_min"):
+        report["duty_cycles"] = {"source": "template (END-001 operations_summary.json not available)"}
+        return
+    m = ops["constellation_mean"]
+    sun_min, ecl_min, daily = float(orbit["sunlight_min"]), float(orbit["eclipse_min"]), float(orbit.get("daily_orbits") or 0)
+    img_orb = float(m.get("imaging_orbits_per_day") or 0.0)
+    img_s = float(m.get("imaging_s_per_imaging_orbit") or 0.0) if img_orb > 0 else 0.0
+    con_orb = float(m.get("contact_orbits_per_day") or 0.0)
+    c_sun = float(m.get("contact_s_sunlit_per_contact_orbit") or 0.0)
+    c_ecl = float(m.get("contact_s_eclipse_per_contact_orbit") or 0.0)
+    both = min(float(m.get("orbits_with_imaging_and_contact_per_day") or 0.0), img_orb, con_orb)
+    radios = sat.get("radios") or {}
+    contact_mode = "tx_sband" if "comms_s" in (sat.get("components") or {}) else "tx_uhf"
+    cam = {"sun": round(_clamp01(img_s / 60.0 / sun_min), 5), "eclipse": 0.0}
+    tx = {"sun": round(_clamp01(c_sun / 60.0 / sun_min), 5), "eclipse": round(_clamp01(c_ecl / 60.0 / ecl_min), 5)}
+    share = both / img_orb if img_orb > 0 else 0.0               # payload orbits that also have a contact
+    tx_in_payload = {"sun": round(tx["sun"] * share, 5), "eclipse": round(tx["eclipse"] * share, 5)}
+    off = {"sun": 0.0, "eclipse": 0.0}
+    on = {"sun": 1.0, "eclipse": 1.0}
+    modes = list(MODE_KEYS)
+
+    def duty(payload: dict[str, float], contact: dict[str, float], other: dict[str, float]) -> dict[str, dict[str, float]]:
+        return {k: dict(payload if k == "payload" else contact if k == contact_mode else other) for k in modes}
+
+    out, rules = [], {}
+    for s in subs:
+        name = str(s.get("name"))
+        rule = None
+        if name in ("OBDH", "EPS", "ADCS", "GPS", "GNSS ANTENNA", "RX UHF"):
+            s["duty"] = duty(on, on, on); rule = "always on"
+        elif name == "RX S BAND":
+            if (radios.get("comms_s") or {}).get("has_receiver") is False:
+                rules[name] = f"dropped: {radios['comms_s'].get('component')} is a transmitter only"
+                continue
+            s["duty"] = duty(on, on, on); rule = "always on (receiver)"
+        elif name in ("TX S BAND", "TX UHF") or name.startswith("COMMS"):
+            s["duty"] = duty(tx_in_payload, tx, off); rule = "on during the ground-station contacts"
+        elif name == "CAMERAS" or name.startswith("PAYLOAD"):
+            s["duty"] = duty(cam, off, off); rule = "on while the AOI is in the footprint (payload orbits)"
+        elif name == "PROPULSION":
+            s["duty"] = duty(off, off, off); rule = "off (fires only for manoeuvres)"
+        else:
+            rule = "template duty (" + ("periodic beacon" if "BEACON" in name else "heaters" if name == "THERMAL" else "not modelled") + ")"
+        # published idle / transmit powers of the selected radios replace the template powers
+        for slot, entry in (("comms_s", "RX S BAND"), ("comms_uhf", "RX UHF")):
+            if name == entry and (radios.get(slot) or {}).get("power_w_idle") is not None:
+                s["powerW"] = float(radios[slot]["power_w_idle"]); s["source"] = f"END-019 {radios[slot]['component']} (published receive/idle power)"
+        for slot, entry in (("comms_s", "TX S BAND"), ("comms_uhf", "TX UHF")):
+            if name == entry and (radios.get(slot) or {}).get("power_w_tx") is not None:
+                s["powerW"] = float(radios[slot]["power_w_tx"]); s["source"] = f"END-019 {radios[slot]['component']} (published transmit power)"
+        rules[name] = rule
+        out.append(s)
+    runtime_data["subsystems"] = out
+    ops_alloc = {"payload": round(img_orb, 3), contact_mode: round(max(0.0, con_orb - both), 3)}
+    alloc = runtime_data.setdefault("operations", {}).setdefault("mode_orbits_per_day", {})
+    for k in modes:
+        alloc[k] = ops_alloc.get(k, 0.0)
+    alloc["idle"] = round(max(0.0, daily - sum(v for k, v in alloc.items() if k != "idle")), 3)
+    report["duty_cycles"] = {
+        "source": "END-001 operations_summary.json (constellation mean over the ephemeris window)",
+        "rules": rules,
+        "payload_duty_sun": cam["sun"], "contact_duty": tx, "payload_orbits_with_contact_fraction": round(share, 3),
+        "mode_orbits_per_day": dict(alloc),
+        "inputs": {"imaging_orbits_per_day": img_orb, "imaging_s_per_imaging_orbit": img_s, "contact_orbits_per_day": con_orb,
+                   "contact_s_sunlit_per_contact_orbit": c_sun, "contact_s_eclipse_per_contact_orbit": c_ecl,
+                   "orbits_with_imaging_and_contact_per_day": both},
+        "note": "upper bound: payload on whenever the AOI is in the footprint, transmitters on for the whole contact (no data-volume model)"}
+
+
 def _illumination(star_payload: dict[str, Any]) -> dict[str, float] | None:
     summary = find_upstream_artifact(star_payload, ["attitude_summary.json"], [".json"])
     if summary and Path(summary).exists():
@@ -146,6 +237,7 @@ def _apply_satellite(runtime_data: dict[str, Any], star_payload: dict[str, Any],
     if sat.get("battery_wh"):
         runtime_data.setdefault("battery", {})["capacity_Wh"] = float(sat["battery_wh"])
         report["battery_capacity_Wh"] = {"value": float(sat["battery_wh"]), "source": "END-019 initial design (battery / EPS integrated battery)"}
+    _apply_duty_cycles(runtime_data, _operations(star_payload), sat, report)
     panels = sat.get("solar_panels") or {}
     illum = _illumination(star_payload)
     orbit = runtime_data.get("orbit") or {}

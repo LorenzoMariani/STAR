@@ -127,6 +127,11 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
                          "total_peak_w": (float(peak) * n_panels) if peak is not None and n_panels else None},
         "battery_wh": battery,
         "consumers_declared_peak_w": (result.get("breakdown") or {}).get("power_w") or {},
+        "radios": {k: {"component": v.get("id"), "band": (v.get("specs") or {}).get("band"),
+                       "has_receiver": (v.get("specs") or {}).get("has_receiver"),
+                       "power_w_idle": (v.get("specs") or {}).get("power_w_idle"),
+                       "power_w_tx": (v.get("specs") or {}).get("power_w_tx")}
+                   for k, v in chosen.items() if str(k).startswith("comms")},
         "power_unknown": totals.get("power_unknown") or [],
         "components": {k: v.get("id") for k, v in chosen.items()},
         "conventions": "body frame: +Z payload boresight (nadir), long axis of the envelope along Z; envelope X x Y x Z; "

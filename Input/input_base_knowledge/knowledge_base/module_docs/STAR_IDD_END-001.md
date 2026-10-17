@@ -294,3 +294,10 @@ The following matrix describes the file access maps, including specific read/wri
   observatory (PassSelection.LightCurve: observer Sun <= -12 deg, relaxed to -6 / 0 only without windows, satellite sunlit,
   elevation >= 10 + 1 deg, >= 120 s). The observatory is the STAR input `observatory` (an END-010 station name or city, "lat, lon"
   or an object; default Matera, SPADE telescope).
+
+- **Operations for the power budget** (2026-10-17): lib/FUNCTIONS/downstream_operations.m writes operations_summary.json:
+  per satellite and as constellation mean, the seconds per day an AOI point is in the sensor footprint (PBS/CON/RECT full FOV
+  angles, SAR look angles, daylight for an optical sensor with the Sun constraint; points on the far side of the Earth
+  excluded), the orbits per day with acquisitions, the contacts with the END-001 ground stations (seconds per day, orbits per
+  day, sunlit and eclipse seconds per contact orbit) and the orbits with both. Upper bound of the operations (no tasking, no
+  data-volume model); per-day values over the ephemeris window (48 h).
