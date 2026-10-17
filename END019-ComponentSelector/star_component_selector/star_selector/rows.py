@@ -38,14 +38,14 @@ def volume_m3(c: Component) -> float | None:
     d = c.dimensions_mm
     if not d or any(x is None for x in d):
         return None
-    return d[0] * d[1] * d[2] * 1e-9
+    return (d[0] * d[1] * d[2] + sum(b[0] * b[1] * b[2] for b in c.extra_boxes_mm)) * 1e-9     # con le altre scatole del prodotto
 
 
 def size_text(c: Component) -> str | None:
     d = c.dimensions_mm
     if not d or any(x is None for x in d):
         return None
-    return " × ".join(f"{x:g}" for x in d)
+    return " + ".join(" × ".join(f"{x:g}" for x in box) for box in [d, *c.extra_boxes_mm])      # con le altre scatole del prodotto
 
 
 def declared_power_w(c: Component) -> float | None:

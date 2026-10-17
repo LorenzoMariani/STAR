@@ -255,10 +255,10 @@
     "retrieved": "2026-10-13"
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -318,10 +318,10 @@
     "bytes": 2357779
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -384,10 +384,10 @@
     "bytes": 2357779
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -838,10 +838,10 @@
     "note": "Scheda satsearch (89 x 95 x 23.2 mm, aggiornata il 2026-07-14): non e' sul sito EnduroSat, dove le quote sono dietro modulo CAD/datasheet."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -882,10 +882,10 @@
     "retrieved": "2026-10-13"
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -937,10 +937,10 @@
     "note": "Scheda satsearch (95.9 x 90.2 x 23.3 mm): attenzione, la scheda riporta 270 g come il catalogo EnduroSat 2022, mentre la pagina attuale ne dichiara 396: le quote potrebbero riferirsi a una revisione precedente."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1001,10 +1001,10 @@
     "bytes": 9715146
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1326,10 +1326,10 @@
     "bytes": 1702529
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1417,10 +1417,10 @@
     "bytes": 3789919
    },
    "shape": {
-    "type": "box",
+    "type": "stack",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1477,10 +1477,10 @@
     "bytes": 1122266
    },
    "shape": {
-    "type": "box",
+    "type": "cells",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1537,10 +1537,10 @@
     "bytes": 1122266
    },
    "shape": {
-    "type": "box",
+    "type": "cells",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1596,10 +1596,10 @@
     "bytes": 1443844
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -1710,10 +1710,10 @@
     "bytes": 803501
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2260,10 +2260,10 @@
     "bytes": 292434
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2339,10 +2339,10 @@
     "bytes": 292434
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2393,10 +2393,10 @@
     "bytes": 196663
    },
    "shape": {
-    "type": "board",
+    "type": "board_cells",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2458,10 +2458,10 @@
     "bytes": 745663
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2523,10 +2523,10 @@
     "bytes": 745488
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2617,10 +2617,10 @@
     "retrieved": "2026-10-13"
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2682,10 +2682,10 @@
     "note": "La pagina dichiara lo standard PC/104 senza quote: ingombro in pianta normato, altezza non dichiarata."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2811,10 +2811,10 @@
     "note": "Pagina NanoAvionics SatCOM UHF."
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2878,10 +2878,10 @@
     "bytes": 627211
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -2945,10 +2945,10 @@
     "bytes": 836345
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3011,10 +3011,10 @@
     "bytes": 2100844
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3077,10 +3077,10 @@
     "bytes": 1480289
    },
    "shape": {
-    "type": "box",
+    "type": "adcs_box",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3143,10 +3143,10 @@
     "bytes": 1480289
    },
    "shape": {
-    "type": "box",
+    "type": "adcs_box",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3209,10 +3209,10 @@
     "bytes": 1480289
    },
    "shape": {
-    "type": "box",
+    "type": "adcs_box",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3263,10 +3263,10 @@
     "bytes": 916233
    },
    "shape": {
-    "type": "box",
+    "type": "cells",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3317,10 +3317,10 @@
     "bytes": 916233
    },
    "shape": {
-    "type": "box",
+    "type": "cells",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3490,10 +3490,10 @@
     "note": "Pagina Spacemind GEMINI."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3759,10 +3759,10 @@
     "note": "La pagina dichiara il formato PC104 senza quote: ingombro in pianta normato, altezza non dichiarata."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -3828,10 +3828,10 @@
     "bytes": 562696
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4201,10 +4201,10 @@
     "note": "Datasheet AAC SIRIUS-OBC."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4391,10 +4391,10 @@
     "note": "Datasheet AAC PULSAR-UTRX."
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4453,10 +4453,10 @@
     "note": "Datasheet AAC PULSAR-VUTRX."
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4504,10 +4504,10 @@
     "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: aac-pulsar-hstx"
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4564,10 +4564,10 @@
     "note": "Datasheet AAC PULSAR-HSTX."
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4619,10 +4619,10 @@
     "note": "Datasheet AAC TRX-U."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4673,10 +4673,10 @@
     "note": "Datasheet AAC QUASAR."
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4743,10 +4743,10 @@
     "retrieved": "2026-10-13"
    },
    "shape": {
-    "type": "box",
+    "type": "stack",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -4825,10 +4825,10 @@
     "bytes": 863029
    },
    "shape": {
-    "type": "board",
+    "type": "board_cells",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5038,10 +5038,10 @@
     "retrieved": "2026-10-13"
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5088,10 +5088,10 @@
     "retrieved": "2026-10-13"
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5153,10 +5153,10 @@
     "bytes": 1299582
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5226,10 +5226,10 @@
     "bytes": 17040489
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5299,10 +5299,10 @@
     "bytes": 17040489
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5376,10 +5376,10 @@
     "bytes": 17040489
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5805,10 +5805,10 @@
     "note": "Pagina Dragonfly Aerospace Gecko."
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5887,10 +5887,10 @@
     "note": "Pagina Dragonfly Aerospace: stessa taglia della versione standard."
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -5968,10 +5968,10 @@
     "note": "Pagina Dragonfly Aerospace Mantis."
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -6050,10 +6050,10 @@
     "note": "Pagina Dragonfly Aerospace: stessa taglia di tutte le versioni Mantis."
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -6132,10 +6132,10 @@
     "note": "Pagina Dragonfly Aerospace: stessa taglia di tutte le versioni Mantis."
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -7357,13 +7357,13 @@
    "vendor": "Satlantis",
    "name": "iSIM-90 telescope/camera",
    "mass_kg": 4.0,
-   "notes": "Fonte: pagina del fornitore letta il 2026-10-13 (consumi, dimensioni, interfacce e prezzo non pubblicati). Massa 'sotto 4 kg' (usato 4.0), per CubeSat 12U e 16U, convalidato in orbita nel Q4 2021. GSD 2 m in PAN e VNIR a 500 km con swath 13-23.5 km (usato 13 km); la versione SWIR ha GSD 5 m e swath 8.2 km (non modellata). Esiste anche la versione iSIM-170 per microsatelliti (circa 15 kg), non inclusa. Altri cataloghi riportano 25 W medi e masse fino a 6 kg: non verificati sulle pagine del fornitore.",
+   "notes": "Fonti: datasheet Satlantis SATL-MKT-T-005-0 (scaricato da satsearch il 2026-10-16) e pagina del fornitore (2026-10-13). Configurazione a canale singolo: massa < 4 kg (usato 4.0); ottica 308 x 114 x 100 mm (~3U) e scatola dell'elettronica 209 x 96 x 46 mm (~2U; schede CPU 201 x 88 mm e TCS 105 x 88 mm impilate), contate entrambe nel volume e nella disposizione; potenza 25.3 W durante l'acquisizione, senza riscaldatori; alimentazione 9-34 V; interfacce CAN, UART e GigE (RS-422/RS-485, SpaceWire e LVDS opzionali); rivelatore CMOS 4096 x 3072 pixel da 5.5 um, 8/10/12 bit, 26 fps; memoria 500 GB; controllo termico attivo configurabile. Risoluzione 1.65 m a 500 km dopo l'elaborazione (super-risoluzione) secondo il datasheet, 2 m secondo la pagina del fornitore: usato 2 m. Swath 13 km a 500 km. Per CubeSat 12U e 16U, convalidato in orbita nel Q4 2021. Versione a doppio canale (< 6 kg, ottica 308 x 216 x 115 mm ~6U, swath fino a 26 km, 30.5 W) e versione SWIR non modellate; la iSIM-170 per microsatelliti non e' inclusa.",
    "source": {
-    "url": "https://www.satlantis.com/jet-popup/main-features-isim-90/",
-    "document": "Pagina 'Main Features iSIM 90' di Satlantis",
-    "retrieved": "2026-10-13",
+    "url": "https://satsearch.co/products/satlantis-isim-90",
+    "document": "Datasheet Satlantis 'iSIM-90' SATL-MKT-T-005-0 (da satsearch); pagina 'Main Features iSIM 90' di Satlantis",
+    "retrieved": "2026-10-16",
     "verified": false,
-    "method": "trascritto da documento pubblico del fornitore; da controllare manualmente"
+    "method": "trascritto dal datasheet del fornitore distribuito da satsearch; da controllare manualmente"
    },
    "specs": {
     "spectral_bands": [
@@ -7375,12 +7375,21 @@
     "swath_km_at_ref": 13.0,
     "focal_length_mm": null,
     "aperture_mm": null,
-    "pixel_pitch_um": null,
+    "pixel_pitch_um": 5.5,
     "across_track_pixels": null,
     "min_form_factor_u": 12,
-    "data_interfaces": null,
-    "supply_voltage_ranges_v": null,
-    "storage_gb": null,
+    "data_interfaces": [
+     "CAN",
+     "UART",
+     "GigE"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      9.0,
+      34.0
+     ]
+    ],
+    "storage_gb": 500.0,
     "payload_type": "imager",
     "link_type": null,
     "link_data_rate_mbps": null,
@@ -7398,10 +7407,36 @@
     "note": "Foto condivisa con altre varianti/componenti della stessa famiglia: satlantis-isim-90-swir"
    },
    "shape": {
-    "type": "box",
-    "axis": null,
+    "type": "lens_box",
+    "axis": 0,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
+   },
+   "power_w": 25.3,
+   "volume_u": 5.0,
+   "dimensions": {
+    "mm": [
+     308.0,
+     114.0,
+     100.0
+    ],
+    "basis": "declared",
+    "note": "Datasheet SATL-MKT-T-005-0: ottica a canale singolo 308 x 114 x 100 mm3; extra_mm = scatola dell'elettronica.",
+    "extra_mm": [
+     [
+      209.0,
+      96.0,
+      46.0
+     ]
+    ],
+    "extra_note": "electronics box"
+   },
+   "datasheet": {
+    "file": "datasheets/Satlantis__iSIM-90_datasheet_SATL-MKT-T-005-0.pdf",
+    "document": "Satlantis iSIM-90 datasheet SATL-MKT-T-005-0",
+    "source_url": "https://satsearch.co/products/satlantis-isim-90",
+    "retrieved": "2026-10-16",
+    "bytes": 373292
    }
   },
   {
@@ -7758,10 +7793,10 @@
     "bytes": 793519
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 1,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -7841,10 +7876,10 @@
     "bytes": 793519
    },
    "shape": {
-    "type": "lens_box",
+    "type": "board_lens",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9419,10 +9454,10 @@
     "bytes": 1905080
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9489,10 +9524,10 @@
     "bytes": 585165
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9559,10 +9594,10 @@
     "bytes": 585165
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9621,10 +9656,10 @@
     "retrieved": "2026-10-14"
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9694,10 +9729,10 @@
     "bytes": 782215
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9773,10 +9808,10 @@
     "bytes": 1392360
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9846,10 +9881,10 @@
     "bytes": 617780
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -9919,10 +9954,10 @@
     "bytes": 617780
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10059,10 +10094,10 @@
     "bytes": 1751653
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10121,10 +10156,10 @@
     "bytes": 1751653
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10183,10 +10218,10 @@
     "bytes": 1751653
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10245,10 +10280,10 @@
     "bytes": 1751653
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10369,10 +10404,10 @@
     "bytes": 347590
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10431,10 +10466,10 @@
     "bytes": 347590
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10493,10 +10528,10 @@
     "bytes": 347590
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10566,10 +10601,10 @@
     "bytes": 1626682
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10640,10 +10675,10 @@
     "bytes": 1626682
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10694,10 +10729,10 @@
     "bytes": 1521200
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10756,10 +10791,10 @@
     "bytes": 402712
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10810,10 +10845,10 @@
     "bytes": 402712
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10864,10 +10899,10 @@
     "bytes": 402712
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10910,10 +10945,10 @@
     "bytes": 142478
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -10956,10 +10991,10 @@
     "bytes": 142478
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -11002,10 +11037,10 @@
     "bytes": 142478
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -11072,10 +11107,11 @@
     "bytes": 981825
    },
    "shape": {
-    "type": "box",
+    "type": "thruster",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16",
+    "nozzles": 4
    }
   },
   {
@@ -11875,10 +11911,10 @@
     "bytes": 1245655
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -11948,10 +11984,10 @@
     "bytes": 1245655
    },
    "shape": {
-    "type": "box",
+    "type": "enclosure",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12020,10 +12056,10 @@
     "bytes": 1224383
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12091,10 +12127,10 @@
     "bytes": 1240526
    },
    "shape": {
-    "type": "board",
+    "type": "board_shield",
     "axis": null,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12740,10 +12776,10 @@
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "rod",
     "axis": 0,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12780,10 +12816,10 @@
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "rod",
     "axis": 0,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12820,10 +12856,10 @@
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "rod",
     "axis": 0,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12860,10 +12896,10 @@
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "rod",
     "axis": 0,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12900,10 +12936,10 @@
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "rod",
     "axis": 0,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -12940,10 +12976,10 @@
     "note": "Pagina prodotto CubeSatShop (lunghezza x larghezza x altezza)."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "rod",
     "axis": 0,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13004,10 +13040,10 @@
     "bytes": 1418276
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13065,10 +13101,10 @@
     "bytes": 1418276
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13126,10 +13162,10 @@
     "bytes": 1418276
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13193,10 +13229,10 @@
     "bytes": 190685
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13261,10 +13297,10 @@
     "bytes": 452863
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13313,10 +13349,10 @@
     "note": "Pagina prodotto CubeSatShop."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13363,10 +13399,10 @@
     "note": "Pagina prodotto NanoAvionics/satsearch."
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13427,10 +13463,10 @@
     "bytes": 951472
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13460,10 +13496,10 @@
     "form_factor_range_u": null
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": null,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13493,10 +13529,10 @@
     "form_factor_range_u": null
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": null,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    }
   },
   {
@@ -13555,10 +13591,10 @@
     "bytes": 1424224
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 36.0,
    "image": {
@@ -13625,10 +13661,10 @@
     "bytes": 1424224
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 36.0,
    "image": {
@@ -13696,10 +13732,10 @@
     "bytes": 1424224
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 36.0,
    "image": {
@@ -13766,10 +13802,10 @@
     "bytes": 1421253
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/AAC-RW222.png",
@@ -13834,10 +13870,10 @@
     "bytes": 1421253
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_cube",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/AAC-RW222.png",
@@ -13893,10 +13929,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -13952,10 +13988,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14011,10 +14047,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14070,10 +14106,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14129,10 +14165,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14188,10 +14224,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14247,10 +14283,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14306,10 +14342,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14365,10 +14401,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14424,10 +14460,10 @@
     "bytes": 107600
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_disc",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "image": {
     "file": "images/ASTROFEIN-RW.png",
@@ -14495,10 +14531,10 @@
     "bytes": 981148
    },
    "shape": {
-    "type": "cylinder",
-    "axis": 0,
+    "type": "wheel_can",
+    "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 10.0,
    "image": {
@@ -14562,10 +14598,10 @@
     "bytes": 981148
    },
    "shape": {
-    "type": "cylinder",
-    "axis": 0,
+    "type": "wheel_can",
+    "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 10.0,
    "image": {
@@ -14629,10 +14665,10 @@
     "bytes": 981148
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_can",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 10.0,
    "image": {
@@ -14693,10 +14729,10 @@
     "bytes": 176334
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_can",
     "axis": 2,
     "basis": "image",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 20.0,
    "image": {
@@ -14755,10 +14791,10 @@
     "bytes": 101766
    },
    "shape": {
-    "type": "cylinder",
+    "type": "wheel_can",
     "axis": 2,
     "basis": "subsystem",
-    "set": "2026-10-15"
+    "set": "2026-10-16"
    },
    "tid_krad": 20.0
   }

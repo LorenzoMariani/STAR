@@ -91,7 +91,7 @@
           },
           "dimensions": {
             "type": "object",
-            "description": "Ingombro esterno {mm: [a, b, c], basis, note}: mm nell'ordine della fonte (per le schede: ingombro in pianta poi altezza), un valore null se non dichiarato; basis = declared (numeri del fornitore), standard (formato normato, es. PC/104, con altezza dichiarata o passo del modulo) o derived (da taglia nominale, es. 1U); assente se non pubblicato"
+            "description": "Ingombro esterno {mm: [a, b, c], basis, note}: mm nell'ordine della fonte (per le schede: ingombro in pianta poi altezza), un valore null se non dichiarato; basis = declared (numeri del fornitore), standard (formato normato, es. PC/104, con altezza dichiarata o passo del modulo) o derived (da taglia nominale, es. 1U); assente se non pubblicato; extra_mm = altre scatole dello stesso prodotto [[a, b, c], ...] (es. l'elettronica separata dall'ottica di un payload), contate nel volume e nella disposizione, extra_note = il loro nome"
           },
           "image": {
             "type": "object",

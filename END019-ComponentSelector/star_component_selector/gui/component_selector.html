@@ -76,7 +76,8 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .dblegend b.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .dblegend strong{color:var(--text-strong)}
 .plwrap{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;padding:10px 12px 8px;align-items:start}
-.plview{border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-muted)}.plview svg{display:block;width:100%;height:auto;max-height:540px}
+.plview{position:relative;border:1px solid var(--border-soft);border-radius:12px;background:var(--panel-muted)}.plview svg{display:block;width:100%;height:auto;max-height:540px;cursor:grab;touch-action:none;user-select:none}
+.plview svg:active{cursor:grabbing}.plreset{position:absolute;top:8px;right:8px;z-index:1;font:inherit;font-size:10.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--muted-2);cursor:pointer}.plreset:hover{border-color:var(--accent-2);color:var(--text-strong)}
 .pleg{display:flex;flex-direction:column;gap:3px}
 .pleg .it{display:flex;align-items:center;gap:7px;border:1px solid var(--border-soft);border-radius:9px;padding:3px 8px;cursor:pointer;min-width:0;background:var(--panel)}
 .pleg .it:hover,.pleg .it.sel{border-color:var(--accent-2)}
@@ -375,11 +376,14 @@ function select(id) {
   S.sel = s && !(S.sel && S.sel.id === id) ? s.selected : null; render();
 }
 
-/* ---------------- placement view: simplified boxes of the chosen components inside the CubeSat (fixed view) ---------------- */
-const VIEW = {yaw: 215 * Math.PI / 180, pitch: 24 * Math.PI / 180, light: [-0.4, -0.6, 0.7]};
+/* ---------------- placement view: simplified shapes of the chosen components inside the CubeSat (drag to rotate) ---------------- */
+const VIEW0 = {yaw: 215 * Math.PI / 180, pitch: 24 * Math.PI / 180};
+const VIEW = {yaw: VIEW0.yaw, pitch: VIEW0.pitch, light: [-0.4, -0.6, 0.7]};
 /* simplified shapes, always drawn INSIDE the published bounding box (the fit check keeps using the box) */
-function shapePrims(p, C) {
+function shapePrims(p, C, E = [1e9, 1e9, 1e9]) {     // E: half sizes of the envelope (outward-facing nozzles and apertures)
   const S = p.size, sh = p.shape || {type: 'box'}, T = sh.type;
+  const cylW = (c, k, r, L, shade = 0, r2) => ({k: 'cyl', c, ax: 'xyz'[k], r, r2, L, n: 16, shade});    // absolute sizes, world axis k
+  const sideOut = () => { const k = Math.abs(C[0]) / (E[0] || 1) >= Math.abs(C[1]) / (E[1] || 1) ? 0 : 1; return [k, C[k] >= 0 ? 1 : -1]; };
   const frame = w => { const o = [0, 1, 2].filter(k => k !== w); return [o[0], o[1], w]; };     // [u, v, w]: w is the normal / the axis
   const box = (ax, f, g, shade = 0) => { const c = [...C], s2 = [0, 0, 0]; for (let k = 0; k < 3; k++) { c[ax[k]] += f[k] * S[ax[k]]; s2[ax[k]] = Math.max(g[k] * S[ax[k]], 0.05); } return {k: 'box', c, s: s2, shade}; };
   const cyl = (ax, f, rFrac, lFrac, along, shade = 0) => {    // cylinder whose axis is ax[along]; radius = rFrac x half of the smaller of the other two sizes
@@ -388,7 +392,53 @@ function shapePrims(p, C) {
   };
   const n = sh.normal, a = sh.axis;
   switch (T) {
-    case 'board': if (n == null) break; { const ax = frame(n); return [box(ax, [0, 0, -0.41], [1, 1, 0.18]), box(ax, [-0.2, 0.08, -0.01], [0.34, 0.4, 0.62]), box(ax, [0.28, -0.25, -0.14], [0.22, 0.22, 0.36]), box(ax, [0, 0.45, -0.07], [0.8, 0.08, 0.5], 10)]; }
+    case 'board': if (n == null) break; { const ax = frame(n), o = [box(ax, [0, 0, -0.42], [1, 1, 0.16])];     // PC/104 card
+      o.push(box(ax, [0, 0.42, -0.1], [0.86, 0.1, 0.5], -18));                                              // stack header along one edge
+      o.push(box(ax, [-0.18, -0.05, -0.2], [0.3, 0.3, 0.28], 6), box(ax, [0.22, -0.2, -0.24], [0.22, 0.2, 0.2], 4), box(ax, [0.26, 0.14, -0.27], [0.14, 0.12, 0.14], 2));
+      for (const a1 of [-0.45, 0.45]) for (const b1 of [-0.45, 0.45]) o.push(cyl(ax, [a1, b1, 0], 0.05, 1, 2, 10));   // standoffs
+      return o; }
+    case 'board_shield': if (n == null) break; { const ax = frame(n), o = [box(ax, [0, 0, -0.42], [1, 1, 0.16])];   // card + RF shield can
+      o.push(box(ax, [0.12, -0.08, -0.04], [0.62, 0.62, 0.6], 14), box(ax, [-0.08, 0.43, -0.12], [0.78, 0.09, 0.46], -18));
+      o.push(cyl(ax, [-0.47, -0.32, -0.2], 0.16, 0.08, 0, 16));                                              // SMA connector on an edge
+      for (const a1 of [-0.45, 0.45]) for (const b1 of [-0.45, 0.45]) o.push(cyl(ax, [a1, b1, 0], 0.05, 1, 2, 10));
+      return o; }
+    case 'enclosure': if (n == null) break; { const ax = frame(n), o = [box(ax, [0, 0, -0.44], [1, 1, 0.12], -6), box(ax, [0, 0, 0.06], [0.94, 0.94, 0.88])];
+      o.push(box(ax, [0, 0.485, 0.04], [0.44, 0.04, 0.36], -22));                                            // connector on a side
+      for (const a1 of [-0.47, 0.47]) for (const b1 of [-0.47, 0.47]) o.push(box(ax, [a1, b1, -0.32], [0.06, 0.06, 0.16], 8));
+      return o; }
+    case 'cells': case 'board_cells': if (n == null) break; {     // 18650-like cells: axis along the shorter side of the plane, in rows
+      const ax = frame(n), o = [], onBoard = T === 'board_cells', w0 = onBoard ? 0.16 : 0;
+      const su = S[ax[0]], sv = S[ax[1]], sw = S[ax[2]], lg = su >= sv ? 0 : 1, sh2 = 1 - lg;
+      if (onBoard) o.push(box(ax, [0, 0, -0.42], [1, 1, 0.16]));
+      for (const e of [-0.47, 0.47]) { const f2 = [0, 0, w0 / 2], g2 = [1, 1, 1 - w0]; f2[sh2] = e; g2[sh2] = 0.06; o.push(box(ax, f2, g2, -8)); }   // end plates
+      const availW = sw * (1 - w0) * 0.95, rows = Math.max(1, Math.floor(availW / 18.5)), d = Math.min(18.5, availW / rows);
+      const long = [su, sv][lg], count = Math.max(1, Math.floor(long * 0.92 / (d * 1.08))), cellL = 0.84 * [su, sv][sh2];
+      for (let i = 0; i < count; i++) for (let j = 0; j < rows; j++) {
+        const c = [...C]; c[ax[lg]] += ((i + 0.5) / count - 0.5) * long * 0.92; c[ax[2]] += -sw / 2 + w0 * sw + (j + 0.5) * (sw * (1 - w0)) / rows;
+        o.push(cylW(c, ax[sh2], d / 2 * 0.96, cellL, 12));
+      }
+      return o; }
+    case 'wheel_disc': if (a == null) break; { const ax = frame(a); return [box(ax, [0, 0, -0.42], [1, 1, 0.16], -8), cyl(ax, [0, 0, 0.05], 0.96, 0.62, 2), cyl(ax, [0, 0, 0.43], 0.32, 0.14, 2, 10)]; }
+    case 'wheel_can': if (a == null) break; { const ax = frame(a); return [box(ax, [0, 0, -0.45], [1, 1, 0.1], -8), cyl(ax, [0, 0, 0.04], 0.84, 0.82, 2), cyl(ax, [0, 0, 0.47], 0.6, 0.06, 2, 10)]; }
+    case 'wheel_cube': if (a == null) break; { const ax = frame(a), o = [box(ax, [0, 0, -0.1], [0.96, 0.96, 0.8]), box(ax, [0, 0, 0.4], [1, 1, 0.2], 8)];
+      for (const s2 of [-1, 1]) { o.push(box(ax, [s2 * 0.485, 0, -0.1], [0.04, 0.5, 0.46], -24)); o.push(box(ax, [0, s2 * 0.485, -0.1], [0.5, 0.04, 0.46], -24)); }   // windows on the rotor
+      return o; }
+    case 'rod': if (a == null) break; { const ax = frame(a); return [cyl(ax, [0, 0, 0], 0.55, 0.88, 2), cyl(ax, [0, 0, -0.47], 1, 0.06, 2, 8), cyl(ax, [0, 0, 0.47], 1, 0.06, 2, 8)]; }
+    case 'thruster': {      // propulsion module: the nozzles on the side that faces the nearest outer face of the CubeSat
+      const [k, s] = sideOut(), o2 = [0, 1, 2].filter(i => i !== k), m = Math.min(S[o2[0]], S[o2[1]]), nN = sh.nozzles || 1;
+      const c0 = [...C], s0 = [...S]; c0[k] -= s * S[k] * 0.05; s0[k] = S[k] * 0.9; const o = [{k: 'box', c: c0, s: s0, shade: 0}];
+      const spots = nN >= 4 ? [[-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22]] : [[0, 0]];
+      const rE = (nN >= 4 ? 0.1 : 0.17) * m, rT = rE * 0.45;
+      for (const [a1, b1] of spots) { const c = [...C]; c[k] += s * S[k] * 0.45; c[o2[0]] += a1 * S[o2[0]]; c[o2[1]] += b1 * S[o2[1]];
+        o.push(cylW(c, k, s > 0 ? rT : rE, S[k] * 0.1, -20, s > 0 ? rE : rT)); }
+      return o; }
+    case 'adcs_box': {      // integrated ADCS: the star-tracker aperture on the side that faces the nearest outer face
+      const [k, s] = sideOut(), o2 = [0, 1, 2].filter(i => i !== k), m = Math.min(S[o2[0]], S[o2[1]]), o = [{k: 'box', c: [...C], s: [...S], shade: 0}];
+      const c = [...C]; c[k] += s * S[k] * 0.49; if (k !== 2) c[2] += 0.16 * S[2];
+      o.push(cylW(c, k, 0.3 * m, S[k] * 0.03, 10), cylW(c.map((v, i) => i === k ? v + s * S[k] * 0.006 : v), k, 0.21 * m, S[k] * 0.03, -28));
+      return o; }
+    case 'board_lens': if (a == null) break; { const ax = frame(a), s = sh.facing === -1 ? -1 : 1;     // camera on a card: card at the back
+      return [box(ax, [0, 0, -0.44 * s], [1, 1, 0.12]), box(ax, [0, 0, -0.28 * s], [0.62, 0.62, 0.22], 6), cyl(ax, [0, 0, 0.12 * s], 0.62, 0.58, 2, -10), cyl(ax, [0, 0, 0.44 * s], 0.7, 0.1, 2, -18)]; }
     case 'stack': if (n == null) break; { const ax = frame(n), o = [box(ax, [0, 0, -0.43], [1, 1, 0.14]), box(ax, [0, 0, 0], [1, 1, 0.14]), box(ax, [0, 0, 0.43], [1, 1, 0.14])];
       for (const a1 of [-0.42, 0.42]) for (const b1 of [-0.42, 0.42]) o.push(cyl(ax, [a1, b1, 0], 0.1, 0.86, 2, 8)); return o; }
     case 'panel': if (n == null) break; { const ax = frame(n), o = [box(ax, [0, 0, 0], [1, 1, 1])], su = S[ax[0]], sv = S[ax[1]], cols = Math.min(su, sv) / Math.max(su, sv) > 0.5 ? 3 : 2;
@@ -396,9 +446,13 @@ function shapePrims(p, C) {
       for (let i = 0; i < cols; i++) for (let j = 0; j < nMajor; j++) { const f = [0, 0, 0.3], g = [1, 1, 0.4]; f[minor] = (i + 0.5) / cols - 0.5; g[minor] = 0.84 / cols; f[major] = (j + 0.5) / nMajor - 0.5; g[major] = 0.86 / nMajor; o.push(box(ax, f, g, -16)); }
       return o; }
     case 'patch': if (n == null) break; { const ax = frame(n); return [box(ax, [0, 0, 0], [1, 1, 1]), box(ax, [0, 0, 0.3], [0.45, 0.45, 0.4], 16)]; }
-    case 'cylinder': if (a == null) break; return [cyl(frame(a), [0, 0, 0], 1, 1, 2)];
-    case 'lens_box': if (a == null) break; { const ax = frame(a); return [box(ax, [0, 0, -0.2], [1, 1, 0.6]), cyl(ax, [0, 0, 0.3], 0.8, 0.4, 2, -12)]; }
-    case 'baffle_box': if (a == null) break; { const ax = frame(a); return [box(ax, [0, 0, -0.275], [1, 1, 0.45]), box(ax, [0, 0, 0.225], [0.82, 0.82, 0.55], -10)]; }
+    case 'cylinder': if (a == null) break; { const ax = frame(a);
+      if (sh.facing === 1 || sh.facing === -1) return [cyl(ax, [0, 0, -0.04 * sh.facing], 0.92, 0.92, 2), cyl(ax, [0, 0, 0.46 * sh.facing], 1, 0.08, 2, -16)];   // tube with its lens hood
+      return [cyl(ax, [0, 0, 0], 1, 1, 2)]; }
+    case 'lens_box': if (a == null) break; { const ax = frame(a), s = sh.facing === -1 ? -1 : 1;     // facing -1: the lens looks out of -Z
+      return [box(ax, [0, 0, -0.2 * s], [1, 1, 0.6]), cyl(ax, [0, 0, 0.3 * s], 0.8, 0.4, 2, -12)]; }
+    case 'baffle_box': if (a == null) break; { const ax = frame(a), s = sh.facing === -1 ? -1 : 1;
+      return [box(ax, [0, 0, -0.275 * s], [1, 1, 0.45]), box(ax, [0, 0, 0.225 * s], [0.82, 0.82, 0.55], -10)]; }
     case 'coil_board': if (n == null || a == null || a === n) break; { const ax = frame(n), along = ax.indexOf(a), across = 1 - along, o = [box(ax, [0, 0, -0.4], [1, 1, 0.2])];
       for (const side of [-0.22, 0.22]) { const f = [0, 0, 0]; f[across] = side; o.push(cyl(ax, f, 0.6, 0.85, along, 12)); } return o; }
   }
@@ -410,8 +464,8 @@ function renderPlacement(r) {
   // a proof of fit is drawn as it is; otherwise the preview (published sizes only, stack extended if needed): something is always drawn
   const proof = F.state === 'fits', PV = proof ? null : (F.preview || {placed: [], free: [], not_drawn: [], message: ''});
   $('pl-sum').textContent = proof
-    ? `${F.label} · internal volume ${Math.round(100 * F.internal_volume_fraction)}% of the envelope · simplified shapes, fixed view`
-    : `${F.label} · preview, not a proof of fit · simplified shapes, fixed view`;
+    ? `${F.label} · internal volume ${Math.round(100 * F.internal_volume_fraction)}% of the envelope · simplified shapes · drag to rotate`
+    : `${F.label} · preview, not a proof of fit · simplified shapes · drag to rotate`;
   const env = F.envelope_mm, ctr = env.map(v => v / 2);
   const parts = [...(proof ? F.placed : PV.placed).map(p => ({...p, ext: false})), ...F.external.map(p => ({...p, ext: true}))];
   const free = proof ? [] : (PV.free || []).map(b => ({...b, free: true}));
@@ -419,12 +473,12 @@ function renderPlacement(r) {
   const toC = p => p.pos.map((v, i) => v + p.size[i] / 2 - ctr[i]);
   const proj = v => { const q = rotate(v, VIEW.yaw, VIEW.pitch); return {x: q[0], y: -q[2], d: q[1]}; };
   const corner = (a, b, c) => [(a ? 1 : -1) * env[0] / 2, (b ? 1 : -1) * env[1] / 2, (c ? 1 : -1) * env[2] / 2];
-  const all = [];
-  for (const p of parts) for (const fc of facesOf({k: 'box', c: toC(p), s: p.size})) for (const q of fc.pts) all.push(proj(q));
-  for (let m = 0; m < 8; m++) all.push(proj(corner(m & 1, m & 2, m & 4)));
-  const x0 = Math.min(...all.map(q => q.x)), x1 = Math.max(...all.map(q => q.x)), y0 = Math.min(...all.map(q => q.y)), y1 = Math.max(...all.map(q => q.y));
-  const W = 560, H = 520, pad = 18, sc = Math.min((W - 2 * pad) / (x1 - x0), (H - 2 * pad) / (y1 - y0));
-  const px = v => { const q = proj(v); return [pad + (W - 2 * pad - (x1 - x0) * sc) / 2 + (q.x - x0) * sc, pad + (H - 2 * pad - (y1 - y0) * sc) / 2 + (q.y - y0) * sc]; };
+  // scale from the sphere that holds every part and the envelope: the drawing keeps its size whatever the rotation
+  let R = 0;
+  for (const p of parts) for (const fc of facesOf({k: 'box', c: toC(p), s: p.size})) for (const q of fc.pts) R = Math.max(R, Math.hypot(...q));
+  for (let m = 0; m < 8; m++) R = Math.max(R, Math.hypot(...corner(m & 1, m & 2, m & 4)));
+  const W = 560, H = 520, pad = 14, sc = (Math.min(W, H) / 2 - pad) / (R || 1);
+  const px = v => { const q = proj(v); return [W / 2 + q.x * sc, H / 2 + q.y * sc]; };
   const pts = a => a.map(v => px(v).map(n => n.toFixed(1)).join(',')).join(' ');
   const visible = (axis, sign) => { const n = [0, 0, 0]; n[axis] = sign; return rotate(n, VIEW.yaw, VIEW.pitch)[1] <= 0.0001; };
   // envelope: back faces filled, edges drawn behind or in front of the parts
@@ -445,7 +499,7 @@ function renderPlacement(r) {
   const ln = Math.hypot(...VIEW.light);
   const partPolys = p => {    // visible faces of every primitive of a part, far to near, lit like the subsystem drawings
     const out = [];
-    for (const pr of shapePrims(p, toC(p))) for (const fc of facesOf(pr)) {
+    for (const pr of shapePrims(p, toC(p), ctr)) for (const fc of facesOf(pr)) {
       const rn = rotate(fc.n, VIEW.yaw, VIEW.pitch); if (rn[1] > 0.0001) continue;
       const light = Math.max(0, -(rn[0] * VIEW.light[0] + rn[1] * VIEW.light[1] + rn[2] * VIEW.light[2]) / ln) + 0.25;
       out.push({pts: fc.pts, l: 34 + 34 * Math.min(1, light) + (pr.shade || 0), d: fc.pts.reduce((t, q) => t + proj(q).d, 0) / fc.pts.length, op: p.ext && p.subsystem === 'solar_panel' ? 0.62 : 1});
@@ -462,16 +516,37 @@ function renderPlacement(r) {
   const L = {}; for (const c of (r.library && r.library.classes) || []) L[c.id] = c;
   const sizeTxt = p => p.ext && !p.size_published
     ? (p.published_mm && p.published_mm.length ? `${p.published_mm.map(v => f(v, 1)).join(' × ')} mm · thickness: ${NA}` : `Size: ${NA}`)
-    : p.size.map(v => f(v, 1)).sort((a, b) => b - a).join(' × ') + ' mm';
+    : p.size.map(v => f(v, 1)).sort((a, b) => b - a).join(' × ') + ' mm' + (p.aperture === '-Z' ? ' · looks out of −Z (nadir), nothing in front' : '');
   const acr = sid => esc((L[sid] || {}).acronym || sid);
   const leg = parts.map(p => `<div class="it ${sel === p.id ? 'sel' : ''}" data-id="${esc(p.id)}" title="${esc(p.name)}"><b class="sw" style="background:${catColor(p.subsystem)}"></b><span class="ac">${acr(p.subsystem)}${p.shape && p.shape.basis === 'subsystem' ? '<sup title="Shape chosen from the subsystem: no usable product image">*</sup>' : ''}</span><span class="nm">${esc(p.name)}</span><span class="sz">${esc(sizeTxt(p))}${p.ext ? ' · external' : ''}${p.outside ? ' · <b class="out">outside the envelope</b>' : ''}</span></div>`).join('')
     + notDrawn.map(p => `<div class="it nd ${sel === p.id ? 'sel' : ''}" data-id="${esc(p.id)}" title="${esc(p.name)}: no published size, not drawn"><b class="sw" style="border-color:${catColor(p.subsystem)}"></b><span class="ac">${acr(p.subsystem)}</span><span class="nm">${esc(p.name)}${p.quantity > 1 ? ` × ${p.quantity}` : ''}</span><span class="sz">Size: ${NA} · not drawn</span></div>`).join('')
     + (free.length ? `<div class="it fr" title="Space left below the stack in the columns of the class"><b class="sw"></b><span class="ac">FREE</span><span class="nm">Free space</span><span class="sz">${f(PV.free_volume_l, 2)} L · dashed</span></div>` : '');
   const banner = proof ? '' : `<div class="plmsg plbanner"><span class="st ${F.state === 'does_not_fit' ? 'bad' : 'warn'}">${esc(F.label)}</span><div class="hint">${esc(F.message)}</div><div class="hint">${esc(PV.message)}</div></div>`;
-  $('pl').innerHTML = `${banner}<div class="plwrap"><div class="plview"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Isometric view of the chosen components inside the ${r.cubesat.class_u}U CubeSat"><title>${r.cubesat.class_u}U CubeSat, components placed inside${proof ? '' : ' (preview)'}</title>${back}${behind}${body}${front}</svg></div><div class="pleg">${leg}</div></div>
+  $('pl').innerHTML = `${banner}<div class="plwrap"><div class="plview"><button type="button" class="plreset" id="pl-reset" title="Back to the initial view">Reset view</button><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Isometric view of the chosen components inside the ${r.cubesat.class_u}U CubeSat"><title>${r.cubesat.class_u}U CubeSat, components placed inside${proof ? '' : ' (preview)'}</title>${back}${behind}${body}${front}</svg></div><div class="pleg">${leg}</div></div>
     <div class="plnote">${proof ? esc(F.message) + ' ' : ''}Sizes are the published ones; the arrangement is not an engineering layout. External parts (solar panel, antenna, sun sensor, GNSS antenna) sit on a face of the frame (declared rule). Shapes are simplified from the product images and drawn inside the published sizes; <sup>*</sup> marks a shape chosen from the subsystem because there is no usable product image.</div>`;
 }
-$('pl').onclick = e => { const el = e.target.closest('[data-id]'); if (el && el.dataset.id) select(el.dataset.id); };
+// drag to rotate (yaw around the long axis of the drawing, pitch up and down); a drag does not select the part under the pointer
+let plDrag = null, plDragged = false, plFrame = 0;
+const plRedraw = () => { if (!plFrame) plFrame = requestAnimationFrame(() => { plFrame = 0; if (S.result) renderPlacement(S.result); }); };
+$('pl').addEventListener('pointerdown', e => {
+  if (!e.target.closest('svg') || e.button !== 0) return;
+  plDrag = {x: e.clientX, y: e.clientY, yaw: VIEW.yaw, pitch: VIEW.pitch, moved: false};
+  e.preventDefault();
+});
+window.addEventListener('pointermove', e => {
+  if (!plDrag) return;
+  const dx = e.clientX - plDrag.x, dy = e.clientY - plDrag.y;
+  if (Math.abs(dx) + Math.abs(dy) > 3) plDrag.moved = true;
+  VIEW.yaw = plDrag.yaw + dx * 0.01;
+  VIEW.pitch = clamp(plDrag.pitch + dy * 0.01, -1.5, 1.5);
+  plRedraw();
+});
+window.addEventListener('pointerup', () => { if (plDrag) { plDragged = plDrag.moved; plDrag = null; } });
+$('pl').onclick = e => {
+  if (e.target.closest('#pl-reset')) { VIEW.yaw = VIEW0.yaw; VIEW.pitch = VIEW0.pitch; plRedraw(); return; }
+  if (plDragged) { plDragged = false; return; }
+  const el = e.target.closest('[data-id]'); if (el && el.dataset.id) select(el.dataset.id);
+};
 
 /* ---------------- component drawer (read only) ---------------- */
 function renderDrawer() {

@@ -197,7 +197,7 @@ class TestIceps2(unittest.TestCase):
             c = CAT[i]
             self.assertIn("contraddizione", c.raw["notes"])
             self.assertTrue(c.raw["datasheet"]["file"] and c.raw["image"]["file"], i)
-            self.assertEqual(c.raw["shape"]["type"], "board", i)
+            self.assertIn(c.raw["shape"]["type"], ("board", "board_cells"), i)       # type A carries the battery pack on the card (image)
         self.assertEqual(len({CAT[i].raw["datasheet"]["file"] for i in self.IDS}), 1)
 
 
@@ -256,10 +256,10 @@ class TestIsisObcAndTrxuv(unittest.TestCase):
         self.assertIn("TRXVU", c.raw["notes"])
 
     def test_both_have_documents_and_board_shape(self):
-        for i in ("isis-iobc", "isis-trxuv"):
+        for i, shape in (("isis-iobc", "board"), ("isis-trxuv", "board_shield")):         # the transceiver card has an RF shield (image)
             c = CAT[i]
             self.assertTrue(c.raw["datasheet"]["file"] and c.raw["image"]["file"], i)
-            self.assertEqual(c.raw["shape"]["type"], "board", i)
+            self.assertEqual(c.raw["shape"]["type"], shape, i)
 
 
 class TestMorePropulsion(unittest.TestCase):

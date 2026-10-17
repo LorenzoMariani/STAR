@@ -44,8 +44,9 @@ def _orients(d):
     return sorted(seen.items())
 
 
-def pack(env: tuple[float, float, float], boxes: list[tuple[str, tuple[float, float, float]]], shuffles: int = SHUFFLES):
-    """Euristica a punti estremi con le sei orientazioni. Restituisce [(id, x, y, z, dx, dy, dz, perm)] oppure None se non trova una disposizione."""
+def pack(env: tuple[float, float, float], boxes: list[tuple[str, tuple[float, float, float]]], shuffles: int = SHUFFLES, accept=None):
+    """Euristica a punti estremi con le sei orientazioni. Restituisce [(id, x, y, z, dx, dy, dz, perm)] oppure None se non trova una disposizione.
+    accept(disposizione) -> bool: una disposizione che non lo soddisfa non vale (es. un payload ottico con l'obiettivo coperto)."""
 
     def attempt(seq):
         placed: list[tuple] = []
@@ -62,7 +63,7 @@ def pack(env: tuple[float, float, float], boxes: list[tuple[str, tuple[float, fl
                     break
             else:
                 return None
-        return placed
+        return placed if accept is None or accept(placed) else None
 
     base = sorted(boxes, key=lambda b: (-b[1][0] * b[1][1] * b[1][2], b[0]))
     found = attempt(base)
@@ -76,7 +77,7 @@ def pack(env: tuple[float, float, float], boxes: list[tuple[str, tuple[float, fl
     return found
 
 
-PLANAR = ("board", "stack", "panel", "patch", "coil_board")     # hanno una normale: la quota piu' piccola
+PLANAR = ("board", "stack", "panel", "patch", "coil_board", "board_shield", "enclosure", "cells", "board_cells")     # una normale: la quota piu' piccola
 
 
 def shape_for(c, dims, perm) -> dict[str, Any]:
@@ -147,17 +148,23 @@ def stack_arrangement(env, internal):
         if st is None or st["perm"] is None:
             return None
         specs[slot] = st
-        seq.append((slot, st["height"] * items[slot][1].quantity))         # q unita' impilate lungo Z
-    cells = layout.serpentine(seq, env[2], layout.columns(env))
+        seq.append((slot, st["height"] * items[slot][1].quantity, st["span"],          # q unita' impilate lungo Z
+                    sid in layout.APERTURE_SUBSYSTEMS and not isinstance(items[slot][1], _BoxPart)))
+    cells = layout.arrange(seq, env)
     if cells is None:
         return None
-    nx, _, cx, cy = layout.grid(env)
+    return _cells_to_boxes(env, cells, {slot: st["perm"] for slot, st in specs.items()}, {slot: items[slot][2] for slot in items})
+
+
+def _cells_to_boxes(env, cells, perm_of, dims_of, dz: float = 0.0):
+    """Celle di layout.arrange -> tuple come pack(): ogni pezzo centrato nel suo blocco di colonne."""
+    _, _, cx, cy = layout.grid(env)
     placed = []
-    for slot, col, z_low in cells:
-        perm, d = specs[slot]["perm"], items[slot][2]
+    for slot, (x0, y0, sx, sy), z_low in cells:
+        perm, d = perm_of[slot], dims_of[slot]
         size = tuple(d[perm[a]] for a in range(3))
-        x, y = (col % nx) * cx + (cx - size[0]) / 2, (col // nx) * cy + (cy - size[1]) / 2
-        placed.append((slot, x, y, z_low) + size + (perm,))
+        x, y = x0 * cx + (sx * cx - size[0]) / 2, y0 * cy + (sy * cy - size[1]) / 2
+        placed.append((slot, x, y, z_low - dz) + size + (perm,))
     return placed
 
 
@@ -171,13 +178,14 @@ def _stack_specs(env, internal):
     for sid, slot in ordered:
         _, k, d = items[slot]
         st = layout.spec(k.comp, sid, env)
+        span = (1, 1)
         if st is not None and st["perm"] is not None:
-            perm = st["perm"]
+            perm, span = st["perm"], st["span"]
         else:
             h = layout.height_index(k.comp, sid, d) if layout.full_dims(k.comp) else min(range(3), key=lambda i: d[i])
             a, b = sorted((i for i in range(3) if i != h), key=lambda i: -d[i])
             perm = (a, b, h)
-        out.append((slot, d[perm[2]], perm))
+        out.append((slot, d[perm[2]], perm, span, sid in layout.APERTURE_SUBSYSTEMS and not isinstance(k, _BoxPart)))
     return out
 
 
@@ -188,25 +196,23 @@ def extended_stack(env, internal):
     specs = _stack_specs(env, internal)
     if not specs:
         return [], env[2]
-    seq = [(slot, h) for slot, h, _ in specs]
-    ncol = layout.columns(env)
-    lo, hi = max(env[2], max(h for _, h in seq)), max(env[2], sum(h for _, h in seq))
-    if layout.serpentine(seq, lo, ncol) is None:
+    seq = [(slot, h, span, ap) for slot, h, _, span, ap in specs]
+
+    def fits(length):
+        return layout.arrange(seq, (env[0], env[1], length))
+
+    lo, hi = max(env[2], max(h for _, h, _, _ in seq)), max(env[2], sum(h for _, h, _, _ in seq))
+    if fits(lo) is None:
         while hi - lo > 0.1:
             mid = (lo + hi) / 2
-            lo, hi = (lo, mid) if layout.serpentine(seq, mid, ncol) is not None else (mid, hi)
+            lo, hi = (lo, mid) if fits(mid) is not None else (mid, hi)
         lo = hi
-    cells = layout.serpentine(seq, lo, ncol)
-    perm_of = {slot: perm for slot, _, perm in specs}
-    dims_of = {slot: d for slot, _, _, d in internal}
-    nx, _, cx, cy = layout.grid(env)
-    placed = []
-    for slot, col, z_low in cells:
-        perm, d = perm_of[slot], dims_of[slot]
-        size = tuple(d[perm[a]] for a in range(3))
-        x, y = (col % nx) * cx + (cx - size[0]) / 2, (col // nx) * cy + (cy - size[1]) / 2
-        placed.append((slot, x, y, z_low - (lo - env[2])) + size + (perm,))
-    return placed, lo
+    cells = fits(lo)
+    if cells is None:       # nessuna lunghezza basta con le aperture (es. due camere in una colonna): la pila senza il vincolo, per disegnarla
+        seq = [(slot, h, span, False) for slot, h, span, _ in seq]
+        lo = max(env[2], sum(h for _, h, _, _ in seq))
+        cells = fits(lo)
+    return _cells_to_boxes(env, cells, {slot: perm for slot, _, perm, _, _ in specs}, {slot: d for slot, _, _, d in internal}, lo - env[2]), lo
 
 
 def _free_columns(env, placed):
@@ -215,10 +221,14 @@ def _free_columns(env, placed):
     free = []
     for col in range(layout.columns(env)):
         x0, y0 = (col % nx) * cx, (col // nx) * cy
-        inside = [p for p in placed if x0 - EPS <= p[1] + p[4] / 2 <= x0 + cx + EPS and y0 - EPS <= p[2] + p[5] / 2 <= y0 + cy + EPS]
-        bottom = min((p[3] for p in inside), default=env[2])
-        if bottom > 1.0:
-            free.append({"pos": [round(x0, 1), round(y0, 1), 0.0], "size": [round(cx, 1), round(cy, 1), round(bottom, 1)]})
+        # i pezzi che toccano la colonna (anche quelli su piu' colonne); lo spazio libero sono i tratti di Z che nessuno occupa
+        spans = sorted((p[3], p[3] + p[6]) for p in placed
+                       if p[1] < x0 + cx - 1.0 and p[1] + p[4] > x0 + 1.0 and p[2] < y0 + cy - 1.0 and p[2] + p[5] > y0 + 1.0)
+        z = 0.0
+        for lo, hi in spans + [(env[2], env[2])]:
+            if lo - z > 1.0:
+                free.append({"pos": [round(x0, 1), round(y0, 1), round(z, 1)], "size": [round(cx, 1), round(cy, 1), round(lo - z, 1)]})
+            z = max(z, hi)
     return free
 
 
@@ -231,7 +241,7 @@ def _preview(env, internal, state):
         placed = stack_arrangement(env, internal)
         if placed is not None:
             return placed, {"kind": "stack", "free": _free_columns(env, placed), "stack_length_mm": None}
-        placed = pack(env, [(slot, d) for slot, _, _, d in internal])
+        placed = pack(env, [(slot, d) for slot, _, _, d in internal], accept=_aperture_check(internal))
         if placed:
             return placed, {"kind": "generic", "free": [], "stack_length_mm": None}
     placed, length = extended_stack(env, internal)
@@ -240,6 +250,33 @@ def _preview(env, internal, state):
 
 def _outside(env, x, y, z, dx, dy, dz) -> bool:
     return x < -0.05 or y < -0.05 or z < -0.05 or x + dx > env[0] + 0.05 or y + dy > env[1] + 0.05 or z + dz > env[2] + 0.05
+
+
+def _aperture_check(internal):
+    """accept() per pack(): ogni payload ottico tocca la faccia -Z (niente davanti all'obiettivo) e, se la forma ha un asse ottico, lo tiene lungo Z."""
+    slots = {slot: k for slot, sid, k, _ in internal if sid in layout.APERTURE_SUBSYSTEMS and not isinstance(k, _BoxPart)}
+    if not slots:
+        return None
+
+    def ok(placed):
+        for name, x, y, z, dx, dy, dz, perm in placed:
+            if name in slots:
+                axis = (slots[name].comp.raw.get("shape") or {}).get("axis")
+                if z > 0.05 or (axis is not None and perm[2] != axis):
+                    return False
+        return True
+    return ok
+
+
+class _BoxPart:
+    """Un'altra scatola dello stesso prodotto (dimensions.extra_mm) vista come un pezzo interno: stesso id (il clic apre il prodotto), nome con il
+    numero della scatola, forma "box"."""
+    quantity = 1
+
+    def __init__(self, comp, box, n):
+        note = (comp.raw.get("dimensions") or {}).get("extra_note") or f"box {n}"
+        raw = {**comp.raw, "name": f"{comp.raw['name']} ({note})", "dimensions": {"mm": list(box), "basis": "declared"}, "shape": {"type": "box"}}
+        self.comp = type(comp)(raw)
 
 
 def check_fit(sel: Selection) -> dict[str, Any]:
@@ -265,6 +302,9 @@ def check_fit(sel: Selection) -> dict[str, Any]:
             missing.append((r.id, sid, k))
         else:
             internal.append((r.id, sid, k, d))
+            for n, box in enumerate(k.comp.extra_boxes_mm, start=2):      # altre scatole del prodotto (es. l'elettronica del payload)
+                part = _BoxPart(k.comp, box, n)
+                internal.append((f"{r.id}#{n}", sid, part, tuple(float(v) for v in box)))
     vol = sum(d[0] * d[1] * d[2] for _, _, _, d in internal) * 1e-9
     vlim = env[0] * env[1] * env[2] * 1e-9          # volume dell'ingombro della struttura scelta (<= quello della classe)
     out: dict[str, Any] = {"state": None, "label": None, "envelope_mm": list(env), "internal_volume_m3": vol, "volume_limit_m3": vlim,
@@ -275,9 +315,16 @@ def check_fit(sel: Selection) -> dict[str, Any]:
     sub_of = {slot: sid for slot, sid, _, _ in internal}
 
     def entries(placed):
-        return [{"subsystem": sub_of[n], "slot": n, "id": names[n].comp.id, "name": names[n].comp.raw["name"], "pos": [round(x, 3), round(y, 3), round(z, 3)],
-                 "size": [round(dx, 3), round(dy, 3), round(dz, 3)], "shape": shape_for(names[n].comp, dims_of[n], perm)}
-                for n, x, y, z, dx, dy, dz, perm in placed]
+        out_e = []
+        for n, x, y, z, dx, dy, dz, perm in placed:
+            sh = shape_for(names[n].comp, dims_of[n], perm)
+            aperture = sub_of[n] in layout.APERTURE_SUBSYSTEMS and not isinstance(names[n], _BoxPart)
+            if aperture:        # l'obiettivo guarda la faccia -Z quando il pezzo e' sul fondo con l'asse lungo Z
+                sh["facing"] = -1 if z <= 0.05 and sh.get("axis") in (None, 2) else 1
+            out_e.append({"subsystem": sub_of[n], "slot": n, "id": names[n].comp.id, "name": names[n].comp.raw["name"],
+                          "pos": [round(x, 3), round(y, 3), round(z, 3)], "size": [round(dx, 3), round(dy, 3), round(dz, 3)], "shape": sh,
+                          "aperture": "-Z" if aperture and z <= 0.05 and sh.get("axis") in (None, 2) else (None if not aperture else "blocked")})
+        return out_e
     if unknown:
         out["state"] = "undetermined"
         out["message"] = "The size is not publicly available for: " + ", ".join(unknown) + ". The fit cannot be verified."
@@ -288,7 +335,7 @@ def check_fit(sel: Selection) -> dict[str, Any]:
         placed = stack_arrangement(env, internal)
         out["arrangement"] = "stack" if placed else "generic"
         if placed is None:
-            placed = pack(env, [(slot, d) for slot, _, _, d in internal])
+            placed = pack(env, [(slot, d) for slot, _, _, d in internal], accept=_aperture_check(internal))
         if placed:
             out["state"] = "fits"
             out["placed"] = entries(placed)

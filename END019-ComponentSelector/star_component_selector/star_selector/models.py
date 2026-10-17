@@ -23,8 +23,13 @@ CATEGORIES = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "ant
 #   range ([min, max]), ranges (lista di [min, max]), faces (faccia -> n. pannelli)
 # Terzo elemento: True se il valore non puo' essere null.
 DIMENSION_BASES = ("declared", "standard", "derived")
-SHAPE_TYPES = ("board", "box", "cylinder", "lens_box", "baffle_box", "stack", "panel", "patch", "coil_board", "frame")
-AXIS_SHAPES = ("cylinder", "lens_box", "baffle_box", "coil_board")     # richiedono l'asse (lato lungo o corto)
+# forme semplificate (2026-10-16, dalle immagini dei prodotti): scheda PC/104, scheda con schermo RF, scatola lavorata, celle di batteria (in un
+# telaio o su una scheda), ruote (disco su flangia, cilindro su piastra, scatola), barra di magnetorquer, propulsore (ugelli), ADCS con star
+# tracker, camera su scheda
+SHAPE_TYPES = ("board", "box", "cylinder", "lens_box", "baffle_box", "stack", "panel", "patch", "coil_board", "frame",
+               "board_shield", "enclosure", "cells", "board_cells", "wheel_disc", "wheel_can", "wheel_cube", "rod", "thruster", "adcs_box",
+               "board_lens")
+AXIS_SHAPES = ("cylinder", "lens_box", "baffle_box", "coil_board", "wheel_disc", "wheel_can", "wheel_cube", "rod", "board_lens")     # richiedono l'asse
 SHAPE_BASES = ("image", "subsystem")
 SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
     "structure": {
@@ -228,7 +233,9 @@ COMMON_FIELDS: dict[str, tuple[str, bool, str]] = {
     "notes": ("str", False, "Valori non modellati, discrepanze tra fonti, campi derivati"),
     "dimensions": ("obj", False, "Ingombro esterno {mm: [a, b, c], basis, note}: mm nell'ordine della fonte (per le schede: ingombro in pianta poi altezza), "
                                  "un valore null se non dichiarato; basis = declared (numeri del fornitore), standard (formato normato, es. PC/104, con altezza dichiarata "
-                                 "o passo del modulo) o derived (da taglia nominale, es. 1U); assente se non pubblicato"),
+                                 "o passo del modulo) o derived (da taglia nominale, es. 1U); assente se non pubblicato; extra_mm = altre scatole dello stesso prodotto "
+                                 "[[a, b, c], ...] (es. l'elettronica separata dall'ottica di un payload), contate nel volume e nella disposizione, extra_note = "
+                                 "il loro nome"),
     "image": ("obj", False, "Immagine del prodotto: {file, image_url, page_url, type, retrieved, note}; assente se non trovata"),
     "datasheet": ("obj", False, "Copia locale del documento della fonte (datasheet o brochure PDF): {file, document, source_url, retrieved, bytes}; assente se la fonte non e' un PDF scaricabile"),
     "shape": ("obj", False, "Forma semplificata per la vista Placement, disegnata dentro la scatola delle quote pubblicate: {type, axis, basis, set}; type in SHAPE_TYPES, axis = indice (0-2) della quota lungo l'asse "
@@ -370,6 +377,13 @@ class Component:
     def dimensions_mm(self) -> list[float | None] | None:
         d = self.raw.get("dimensions")
         return None if not d else list(d["mm"])
+
+    @property
+    def extra_boxes_mm(self) -> list[list[float]]:
+        """Altre scatole dello stesso prodotto (dimensions.extra_mm), es. l'elettronica separata dall'ottica di un payload: contano nel volume
+        interno e nella disposizione."""
+        d = self.raw.get("dimensions") or {}
+        return [list(b) for b in (d.get("extra_mm") or []) if b and all(x is not None for x in b)]
 
     @property
     def verified(self) -> bool:

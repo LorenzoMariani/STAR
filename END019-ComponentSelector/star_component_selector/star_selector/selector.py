@@ -255,6 +255,9 @@ class Candidate:
     completeness: float
     height_mm: float | None = None      # altezza lungo l'asse della pila (layout.py); None se le quote non sono tutte pubblicate o non e' un componente della pila
     quantity: int = 1                   # unita' dello stesso prodotto nel posto (es. tre ruote, una per asse): massa, volume, potenza e altezza sono gia' moltiplicati
+    span: tuple = (1, 1)                # colonne della pila occupate (in X, in Y): piu' di una se l'impronta supera la sezione di una colonna
+    parts: tuple = ()                   # altre scatole del prodotto nella pila: ((altezza, span), ...), es. l'elettronica separata dall'ottica
+    column_mm: float | None = None      # lunghezza di colonna occupata in tutto: altezza x colonne + altre scatole (limite della ricerca esatta)
 
 
 @dataclass
@@ -315,7 +318,14 @@ def _candidate(c: Component, env) -> Candidate:
     sid = subsystem_of(c)
     vol = None if c.category == "structure" or sid in EXTERNAL_SUBSYSTEMS else volume_m3(c)
     st = layout.spec(c, sid, env) if sid in layout.ORDER else None
-    return Candidate(c, c.mass_kg, vol, declared_power_w(c), completeness(c), st["height"] if st else None)
+    parts: tuple = ()
+    if st and c.extra_boxes_mm:
+        specs = [layout.dims_spec(b, sid, {}, env) for b in c.extra_boxes_mm]
+        parts = tuple((s["height"], s["span"]) for s in specs if s and s["perm"] is not None)
+    h = st["height"] if st else None
+    span = tuple(st.get("span") or (1, 1)) if st else (1, 1)
+    column = None if h is None else h * span[0] * span[1] + sum(ph * ps[0] * ps[1] for ph, ps in parts)
+    return Candidate(c, c.mass_kg, vol, declared_power_w(c), completeness(c), h, span=span, parts=parts, column_mm=column)
 
 
 def _times(k: Candidate, q: int) -> Candidate:
@@ -323,7 +333,8 @@ def _times(k: Candidate, q: int) -> Candidate:
     if q <= 1:
         return k
     mul = lambda v: None if v is None else v * q      # noqa: E731
-    return replace(k, mass_kg=mul(k.mass_kg), volume_m3=mul(k.volume_m3), power_w=mul(k.power_w), height_mm=mul(k.height_mm), quantity=q)
+    return replace(k, mass_kg=mul(k.mass_kg), volume_m3=mul(k.volume_m3), power_w=mul(k.power_w), height_mm=mul(k.height_mm), quantity=q,
+                   parts=k.parts * q, column_mm=mul(k.column_mm))
 
 
 def _admissible(c: Component, sid: str, cls: CubeSatClass) -> bool:
@@ -332,7 +343,9 @@ def _admissible(c: Component, sid: str, cls: CubeSatClass) -> bool:
         return False
     if sid in layout.ORDER:
         st = layout.spec(c, sid, cls.envelope_mm)
-        return st is None or st["perm"] is not None       # senza quote complete non si puo' escludere
+        if st is not None and st["perm"] is None:          # senza quote complete non si puo' escludere
+            return False
+        return all((s := layout.dims_spec(b, sid, {}, cls.envelope_mm)) is not None and s["perm"] is not None for b in c.extra_boxes_mm)
     return fits_envelope(c, cls.envelope_mm)
 
 
@@ -354,7 +367,8 @@ def _pareto(pool: list[Candidate], extra=None, covers=None, mass_first: bool = F
     extra(k) aggiunge le grandezze dei vincoli attivi (piu' piccolo = meglio): con il delta-v l'impulso totale (cambiato di segno), con la
     potenza dei propulsori elettrici la potenza in accensione del propulsore e la potenza di picco del pannello (cambiata di segno)."""
     def key(k):
-        return (k.mass_kg or 0.0, k.volume_m3 or 0.0, k.height_mm or 0.0) + (tuple(extra(k)) if extra else ())
+        return ((k.mass_kg or 0.0, k.volume_m3 or 0.0, k.column_mm or 0.0, k.span[0], k.span[1], len(k.parts))
+                + (tuple(extra(k)) if extra else ()))
 
     def better_or_equal(b, a) -> bool:
         # con objective "mass" la completezza conta solo a parita' di massa: un candidato piu' leggero (e non peggiore sui vincoli) basta
@@ -551,7 +565,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     max_score = [max(k.completeness for k in spools[i]) for i in idx]
     suffix_mass = [sum(min_mass[j:]) for j in range(len(idx) + 1)]
     suffix_vol = [sum(min_vol[j:]) for j in range(len(idx) + 1)]
-    min_h = [min((k.height_mm or 0.0) for k in spools[i]) for i in idx]
+    min_h = [min((k.column_mm or 0.0) for k in spools[i]) for i in idx]
     suffix_h = [sum(min_h[j:]) for j in range(len(idx) + 1)]
     stack_room = layout.columns(cls.envelope_mm) * cls.envelope_mm[2]       # somma delle altezze al piu' colonne x lunghezza (condizione necessaria)
     sids = [results[i].subsystem for i in idx]
@@ -562,7 +576,9 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     def stack_ok(cands) -> bool:
         """La pila dei componenti interni entra nella struttura scelta (le sue quote pubblicate, entro l'ingombro della classe)."""
         env = structure_envelope(cands[jst].comp, cls) if jst is not None else cls.envelope_mm
-        return layout.stack_feasible([(sid, k.height_mm) for sid, k in zip(sids, cands)], env)
+        # i payload ottici sul fondo, obiettivo verso la faccia -Z senza componenti davanti; le altre scatole del prodotto no
+        return layout.stack_feasible([(sid, k.height_mm, k.span, sid in layout.APERTURE_SUBSYSTEMS) for sid, k in zip(sids, cands)]
+                                     + [(sid, ph, ps, False) for sid, k in zip(sids, cands) for ph, ps in k.parts], env)
 
     def faces_ok(cands) -> bool:
         """Il pannello solare si monta su una faccia che la struttura offre."""
@@ -658,7 +674,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             if eps is not None and not fits_eps_memo(k, eps):
                 continue
             pick.append(n)
-            rec(j + 1, mass + (k.mass_kg or 0.0), vol + (k.volume_m3 or 0.0), score + k.completeness, pick, hsum + (k.height_mm or 0.0))
+            rec(j + 1, mass + (k.mass_kg or 0.0), vol + (k.volume_m3 or 0.0), score + k.completeness, pick, hsum + (k.column_mm or 0.0))
             pick.pop()
 
     # prima prova: il miglior candidato di ogni sottosistema (piu' dati pubblicati, poi il piu' leggero; con objective "mass" il piu' leggero,

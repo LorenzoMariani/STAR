@@ -3,12 +3,14 @@ import random
 import unittest
 
 from star_selector.api import SelectorService
+from star_selector import fit
 from star_selector.fit import LABELS, check_fit, pack
 from star_selector.rows import volume_m3
 from star_selector.selector import CLASSES, EXTERNAL_SUBSYSTEMS, select
 from tests.test_selector import structure_1u, synthetic
 
 SERVICE = SelectorService()
+BY_ID = SERVICE.by_id
 EPS = 1e-6
 
 
@@ -120,18 +122,38 @@ class TestPreview(unittest.TestCase):
         self.assertIn("not drawn", pv["message"])
 
     def test_v6_design_without_the_imager_size(self):
+        import copy
         import json
         from pathlib import Path
         from star_selector.mission import design
+        from star_selector.models import Component
         from tests.test_mission import CATALOG
         v6 = json.loads((Path(__file__).resolve().parents[3] / "Input/input_base_knowledge/sample_inputs/Mission_Proposal_v6_requirements.json").read_text(encoding="utf-8"))["requirements"]
-        f = check_fit(design(CATALOG, v6, {"altitude_km": [641.6, 641.6]})[0])
+        no_size = [Component({k: v for k, v in copy.deepcopy(c.raw).items() if k != "dimensions"}) if c.id == "satlantis-isim-90" else c for c in CATALOG]
+        f = check_fit(design(no_size, v6, {"altitude_km": [641.6, 641.6]})[0])     # the camera as it was before its datasheet (no size)
         pv = f["preview"]
         self.assertEqual(f["state"], "undetermined")
         self.assertEqual(pv["kind"], "stack")
         self.assertIn("satlantis-isim-90", [p["id"] for p in pv["not_drawn"]])
         self.assertTrue(pv["placed"] and not any(p["outside"] for p in pv["placed"]))
         self.assertGreater(pv["free_volume_l"], 1.0)
+
+    def test_v6_design_with_the_imager_datasheet(self):
+        import json
+        from pathlib import Path
+        from star_selector.mission import design
+        from tests.test_mission import CATALOG
+        v6 = json.loads((Path(__file__).resolve().parents[3] / "Input/input_base_knowledge/sample_inputs/Mission_Proposal_v6_requirements.json").read_text(encoding="utf-8"))["requirements"]
+        f = check_fit(design(CATALOG, v6, {"altitude_km": [641.6, 641.6]})[0])
+        self.assertEqual((f["state"], f["arrangement"]), ("fits", "stack"))
+        parts = {p["name"]: p for p in f["placed"] if p["id"] == "satlantis-isim-90"}
+        self.assertEqual(len(parts), 2)                                            # optics and electronics box
+        optics = next(p for n, p in parts.items() if "electronics" not in n)
+        self.assertAlmostEqual(optics["size"][2], 308.0)                           # the telescope along the long axis
+        self.assertGreater(max(optics["size"][:2]), f["envelope_mm"][0] / 2)        # wider than one column of a 12U
+        placed = [(p["id"] + p["name"], *p["pos"], *p["size"]) for p in f["placed"]]
+        self.assertTrue(valid_witness(f["envelope_mm"], placed))
+        self.assertGreater(f["internal_volume_m3"], (308 * 114 * 100 + 209 * 96 * 46) * 1e-9)
 
     def test_does_not_fit_shows_the_extended_stack(self):
         f = SERVICE.select({"form_factor_u": 1})["fit"]
@@ -157,6 +179,55 @@ class TestPreview(unittest.TestCase):
         self.assertTrue(no_overlap(placed))
 
 
+class TestWideParts(unittest.TestCase):
+    """Componenti piu' larghi di una colonna e prodotti con piu' scatole (2026-10-16, datasheet della iSIM-90)."""
+
+    def test_arrange_puts_wide_parts_at_the_bottom_of_adjacent_columns(self):
+        from star_selector import layout
+        env = (226.3, 226.3, 340.5)                                                 # 12U: 2 x 2 columns
+        cells = layout.arrange([("a", 50.0), ("wide", 300.0, (2, 1)), ("b", 30.0), ("box", 46.0, (2, 1))], env)
+        by = {k: (block, z) for k, block, z in cells}
+        self.assertEqual(by["wide"], ((0, 0, 2, 1), 0.0))
+        self.assertEqual(by["box"], ((0, 1, 2, 1), 0.0))
+        self.assertEqual(by["a"][0][2:], (1, 1))
+        self.assertAlmostEqual(by["a"][1], 340.5 - 50.0)                          # narrow parts from the top
+        self.assertIsNone(layout.arrange([("w", 300.0, (2, 2)), ("x", 50.0)], env))      # no room left above a full-section block
+        self.assertEqual(layout.arrange([("a", 50.0), ("b", 30.0)], env),
+                         [(k, (c % 2, c // 2, 1, 1), z) for k, c, z in layout.serpentine([("a", 50.0), ("b", 30.0)], 340.5, 4)])   # same as before
+
+    def test_spec_spans_columns_only_when_needed(self):
+        from star_selector import layout
+        isim = BY_ID["satlantis-isim-90"]
+        st = layout.spec(isim, "payload_imager", CLASSES[12].envelope_mm)
+        self.assertEqual((st["height"], st["span"]), (308.0, (2, 1)))
+        box = layout.dims_spec(isim.extra_boxes_mm[0], "payload_imager", {}, CLASSES[12].envelope_mm)
+        self.assertEqual((box["height"], box["span"]), (46.0, (2, 1)))             # lying on two columns, not 209 mm standing
+        self.assertIsNone(layout.spec(isim, "payload_imager", CLASSES[3].envelope_mm)["perm"])       # does not fit a 3U at all
+        obc = synthetic("obc-s", "obc", 0.05, [90, 90, 10])
+        self.assertEqual(layout.spec(obc, "obc", CLASSES[12].envelope_mm)["span"], (1, 1))
+
+    def test_nothing_in_front_of_the_camera(self):
+        from star_selector import layout
+        env = (100.0, 100.0, 340.5)                                                 # 3U: one column
+        cells = {k: (b, z) for k, b, z in layout.arrange([("radio", 20.0), ("cam", 100.0, (1, 1), True), ("prop", 90.0)], env)}
+        self.assertEqual(cells["cam"][1], 0.0)                                      # on the -Z face, the rest above it
+        self.assertGreater(cells["prop"][1], 100.0 - 1e-9)
+        self.assertIsNone(layout.arrange([("cam", 100.0, (1, 1), True), ("cam2", 100.0, (1, 1), True)], env))   # one bottom only
+        cells = {k: (b, z) for k, b, z in layout.arrange([("wide", 60.0, (2, 1)), ("cam", 200.0, (2, 1), True)], (226.3, 226.3, 340.5))}
+        self.assertEqual(cells["cam"][1], 0.0)                                      # the camera first, then the other wide parts
+        self.assertEqual(cells["wide"][1], 0.0)
+        self.assertNotEqual(cells["wide"][0][:2], cells["cam"][0][:2])
+        # the generic search accepts only arrangements with the camera on the -Z face
+        cam = type("C", (), {"raw": {"shape": {"type": "lens_box", "axis": 2}}})()          # optical axis along its third size
+        accept = fit._aperture_check([("payload_imager", "payload_imager", type("K", (), {"comp": cam, "quantity": 1})(), (90.0, 90.0, 120.0))])
+        self.assertTrue(accept([("payload_imager", 0.0, 0.0, 0.0, 90.0, 90.0, 120.0, (0, 1, 2))]))
+        self.assertFalse(accept([("payload_imager", 0.0, 0.0, 50.0, 90.0, 90.0, 120.0, (0, 1, 2))]))
+
+    def test_extra_boxes_count_in_the_volume(self):
+        isim = BY_ID["satlantis-isim-90"]
+        self.assertAlmostEqual(volume_m3(isim), (308 * 114 * 100 + 209 * 96 * 46) * 1e-9)
+
+
 class TestStack(unittest.TestCase):
     """Pila lungo l'asse lungo (layout.py): ordine, colonne, schede orizzontali, nessuna sovrapposizione."""
 
@@ -180,8 +251,13 @@ class TestStack(unittest.TestCase):
             for c in cols.values():
                 tops = [q["pos"][2] + q["size"][2] for q in c]
                 self.assertEqual(tops, sorted(tops, reverse=True))                  # dall'alto verso il basso
-                for a, b in zip(c, c[1:]):
+                stack = [q for q in c if q["subsystem"] not in layout.APERTURE_SUBSYSTEMS]
+                for a, b in zip(stack, stack[1:]):
                     self.assertAlmostEqual(a["pos"][2], b["pos"][2] + b["size"][2], places=2)     # strati contigui
+            for p in f["placed"]:
+                if p["subsystem"] in layout.APERTURE_SUBSYSTEMS:                    # la camera sul fondo, obiettivo sulla faccia -Z
+                    self.assertAlmostEqual(p["pos"][2], 0.0, places=3)
+                    self.assertEqual(p["aperture"], "-Z", u)
 
     def test_boards_lie_flat_and_tubes_stand_along_the_stack(self):
         f = SERVICE.select({"form_factor_u": 6})["fit"]
@@ -257,9 +333,12 @@ class TestShapes(unittest.TestCase):
         for c in SERVICE.catalog:
             d = c.dimensions_mm
             if c.category == "magnetorquer" and c.spec("magnetorquer_type") == "rod":
-                self.assertEqual((c.raw["shape"]["type"], d[c.raw["shape"]["axis"]]), ("cylinder", max(d)), c.id)
-            if c.category == "reaction_wheel" and d and all(v is not None for v in d):
-                self.assertEqual((c.raw["shape"]["type"], d[c.raw["shape"]["axis"]]), ("cylinder", min(d)), c.id)
+                self.assertEqual((c.raw["shape"]["type"], d[c.raw["shape"]["axis"]]), ("rod", max(d)), c.id)
+            if c.category == "reaction_wheel" and d and all(v is not None for v in d):         # disc, can or cube: rotation axis = smallest size
+                self.assertIn(c.raw["shape"]["type"], ("wheel_disc", "wheel_can", "wheel_cube"), c.id)
+                ax = c.raw["shape"]["axis"]
+                base = [d[k] for k in range(3) if k != ax]
+                self.assertTrue(d[ax] == min(d) or abs(base[0] - base[1]) < 1e-9, c.id)      # or the axis across a square base (tall can)
 
     def test_placed_shapes_follow_the_orientation_found_by_the_arrangement(self):
         from star_selector.fit import VISUAL_THICKNESS_MM
