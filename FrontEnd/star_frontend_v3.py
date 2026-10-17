@@ -4979,8 +4979,41 @@ Return only valid JSON:
             self.get_module_output_layout(str(workflow_step.get("module_id", "UNKNOWN")))
 
         workflow_stopped = False
+        initial_failed = False
 
-        for workflow_step in self.workflow_steps:
+        # END-019 initial design (2026-10-17): the satellite every module of the workflow uses
+        # (modules_output/END-019/output_component_selector/spacecraft_definition.json), run as step 0
+        # before the other modules; the END-019 step of the workflow, the last one, is the final design
+        # made with their results.
+        end019_step = next((s for s in self.workflow_steps if str(s.get("module_id", "")).upper() == "END-019"), None)
+        if end019_step is not None and not self.execution_stop_event.is_set():
+            initial_step = {**end019_step, "step": 0, "phase": "initial"}
+            name019 = end019_step.get("module")
+            self.add_log("EXECUTION", f"Starting step 0: {name019} (END-019) initial design, the satellite the other modules use.")
+            for module in self.modules:
+                if module.get("module_name") == name019:
+                    module["status"] = "Running"
+            started_perf = time.perf_counter()
+            try:
+                result = self.execute_workflow_step(initial_step)
+            except Exception as exc:
+                result = {"step": 0, "module": name019, "module_id": "END-019", "status": "failed",
+                          "evidence": f"END-019 initial design failed: {exc}", "generated_artifacts": "",
+                          "started_at": datetime.now().isoformat(), "completed_at": datetime.now().isoformat(), "reviewed_by_user": False}
+            duration = time.perf_counter() - started_perf
+            result.update({"phase": "initial", "module": f"{name019} (initial design)",
+                           "duration_seconds": round(duration, 3), "duration_human": self.format_duration(duration)})
+            execution_results.append(result)
+            self.execution_results = execution_results
+            for module in self.modules:
+                if module.get("module_name") == name019:
+                    module["status"] = "Ready"
+            self.add_log("EXECUTION", f"Finished step 0: END-019 initial design -> {result.get('status')} ({self.format_duration(duration)}).")
+            if result.get("status") in ("failed", "stopped") or self.execution_stop_event.is_set():
+                initial_failed = True
+                self.add_log("ERROR", "Workflow aborted: without the END-019 initial design the modules would not share the same satellite.")
+
+        for workflow_step in ([] if initial_failed else self.workflow_steps):
             module_name = workflow_step.get("module")
             module_id = workflow_step.get("module_id", "unknown")
 

@@ -43,3 +43,8 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 - CubeSats only (1U-12U); calibrated on a 3U; preliminary fidelity.
 - The internal payload node is a SAR payload; other payloads are not modelled as a separate node.
 - Integration test case (author's report): SAT-01 of the STAR example, 3U, deployable panels, 3 nodes, SAR 200 W with 30% duty: maximum SAR about 217 degC, central body 172 degC, battery 103 degC, solar panels 192 degC (+-3 degC), battery limit flag active. Reproduced exactly by star_thermal.exe (the delivered version): 216.5 / 172.3 / 103.2 / 192.2 degC; the corrected sources (periodic start, real orbit phase) give 217.8 / 173.1 / 103.3 / 193.3 degC, within the +-3 degC of the report.
+
+1. ## **Satellite of the run (2026-10-17)**
+
+The CubeSat class is the one of the END-019 initial design (spacecraft_definition.json), shared by all the modules of the
+workflow; a class written in the requirements is only reported when it differs.

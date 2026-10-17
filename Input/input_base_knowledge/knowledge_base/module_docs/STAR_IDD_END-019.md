@@ -49,3 +49,12 @@ Status: `completed` when the design ran (unmet requirements are listed in the ev
 ## Known limits
 
 The rules that decide which subsystems are needed are keyword rules on the requirement texts (declared, listed above). Checked against published data only: GSD, swath, pointing accuracy, three-axis, bands, delta-v (total impulse over the sum of the published masses: harness and structure margins are not included) and mass. Not checked: power balance and number of solar panels, electrical and interface compatibility, link budget and data volume, thermal limits, an engineering layout. The envelope fit check ignores walls and keep-out zones. All data are `verified: false` until checked by a person. 82 of the 232 components have no local datasheet and 24 have no image.
+
+1. ## **Initial and final design in a STAR workflow (2026-10-17)**
+
+- Step 0 (before the other modules): initial design from the requirements; spacecraft_definition.json is the satellite every module
+  uses (END-001, END-003, END-004, END-010, END-016, END-018); products *_initial.json / .csv and component_selector_data_initial.js
+  (window.componentSelectorDataInitial).
+- Last step: final design with the results of the modules (altitude, energy per orbit, delta-v); usual products,
+  spacecraft_definition_final.json and design_changes (class, mass, components, battery). The modules are not re-run.
+- The results page shows the two designs as tabs of the same panel ("Initial design", "Final design") with the changes.

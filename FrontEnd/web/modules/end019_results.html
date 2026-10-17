@@ -108,6 +108,11 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .rq-row.not_verifiable .i,.rq-row.not_verifiable .m{color:var(--warn)}.rq-row .id{color:var(--text-strong);font-weight:700}.rq-row .t{color:var(--muted-2)}
 .xgrid .sub{opacity:.8;border-style:dashed}.xgrid .reason{color:var(--warn);font-size:10.5px;margin:0 0 6px}
 .xgrid .fitw{font-size:10.5px;color:var(--muted-2);border-top:1px solid var(--border-soft);padding-top:5px;margin-top:6px}
+.dtabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px 2px}
+.dtabs button{border:1px solid var(--border);background:var(--panel-muted);color:var(--text);border-radius:999px;padding:6px 14px;font-size:11.5px;cursor:pointer}
+.dtabs button.on{border-color:var(--accent);color:var(--text-strong);background:var(--panel-strong);font-weight:700}
+.dtabs button:disabled{opacity:.45;cursor:default}
+.dchg{padding:2px 12px 6px;font-size:11px;color:var(--muted-2)}.dchg.diff{color:var(--warn)}.dchg b{color:var(--text-strong)}
 @media(max-width:900px){.plwrap{grid-template-columns:1fr}.dual{grid-template-columns:1fr}body{overflow:auto}.app,.app.drawer-open{grid-template-columns:1fr;height:auto}}
 @media print{body{overflow:visible;background:#fff;color:#000}.drawer{display:none!important}.app{display:block}.card{box-shadow:none;border:1px solid #999}}
 </style>
@@ -116,6 +121,7 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 <div class="app" id="app">
   <section class="main">
     <div class="card"><div class="hd"><h2>Component Selector</h2><span class="pill" id="mode-pill">—</span></div>
+      <div class="dtabs" id="dtabs" style="display:none"></div><div class="dchg" id="dchg" style="display:none"></div>
       <div class="inputs" id="inputs"></div><div class="search" id="search"></div></div>
     <div class="card" id="db-card"><div class="hd"><h3>Database</h3><span class="hint" id="db-sum"></span></div><div id="db"></div></div>
     <div class="card"><div class="hd"><h3>Indicators</h3><span class="hint" id="std"></span></div>
@@ -143,7 +149,7 @@ const sci = (v, d = 3) => { if (v == null) return NA; if (v === 0) return '0'; c
 const f = (v, d = 3) => v == null ? NA : (+v.toFixed(d)).toString();
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const store = {get(k){try{return localStorage.getItem(k)}catch(_){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
-const S = {mode:'viewer', base:'', result:null, sel:null, params:{form_factor_u: 6}, imgs:{}};
+const S = {mode:'viewer', base:'', result:null, sel:null, params:{form_factor_u: 6}, imgs:{}, designs:{initial:null, final:null}, design:null};
 
 /* ---------------- transport: HTTP server, pywebview (STAR) or view-only ---------------- */
 function findPywebview() {
@@ -253,7 +259,35 @@ function iconSvg(id) {
 }
 
 /* ---------------- rendering ---------------- */
+/* ---------------- STAR run: initial design (used by the other modules) and final design (after them) ---------------- */
+function designLabel(p) {
+  const r = p && (p.result || p); const sc = p && p.spacecraft;
+  if (!r || !r.cubesat) return '';
+  const m = sc ? sc.mass_kg : (r.totals || {}).mass_kg;
+  return `${r.cubesat.class_u}U${m != null ? ', ' + f(m, 2) + ' kg' : ''}`;
+}
+function renderDesignTabs() {
+  const D = S.designs, has = D.initial || D.final;
+  $('dtabs').style.display = has && D.initial ? '' : 'none';
+  $('dchg').style.display = has && D.initial ? '' : 'none';
+  if (!(has && D.initial)) return;
+  const tab = (key, title, sub) => `<button type="button" data-d="${key}" class="${S.design === key ? 'on' : ''}" ${D[key] ? '' : 'disabled'}>${title}${D[key] ? ' · ' + esc(designLabel(D[key])) : ''}${sub ? ' <span class="hint">' + sub + '</span>' : ''}</button>`;
+  $('dtabs').innerHTML = tab('initial', 'Initial design', 'used by the modules of the run') + tab('final', 'Final design', D.final ? 'with their results' : 'not run');
+  const ch = D.final && Array.isArray(D.final.design_changes) ? D.final.design_changes : null;
+  const el = $('dchg');
+  el.className = 'dchg' + (ch && ch.length ? ' diff' : '');
+  el.innerHTML = !D.final ? 'The final design was not made in this run.'
+    : (ch && ch.length ? '<b>The final design differs from the initial one the modules used:</b> ' + ch.map(esc).join(' · ')
+       : 'The final design is the same satellite as the initial one the modules used.');
+  $('dtabs').querySelectorAll('button[data-d]').forEach(b => b.onclick = () => { if (S.designs[b.dataset.d]) { S.design = b.dataset.d; loadResult(S.designs[S.design]); } });
+}
+function loadDesigns(initial, final) {
+  S.designs = {initial: initial || null, final: final || null};
+  S.design = final ? 'final' : (initial ? 'initial' : null);
+  if (S.design) loadResult(S.designs[S.design]); else render();
+}
 function render() {
+  renderDesignTabs();
   const r = S.result;
   $('mode-pill').textContent = S.mode === 'http' ? 'live (server)' : S.mode === 'star' ? 'live (STAR)' : 'view only (RUN results)';
   $('app').classList.toggle('drawer-open', !!S.sel);
@@ -611,14 +645,15 @@ function loadResult(payload) {
 async function readRunFile(files, re) {
   const fl = Array.from(files || []).find(x => re.test(x.name)); if (!fl) return null;
   const txt = await fl.text();
-  const m = /componentSelectorData\s*=\s*([\s\S]*?)\s*;?\s*$/.exec(txt);
+  const m = /componentSelectorData(?:Initial)?\s*=\s*([\s\S]*?)\s*;?\s*$/.exec(txt);
   return JSON.parse(m && /\.js$/i.test(fl.name) ? m[1] : txt);
 }
 window.receiveComponentSelectorFilesFromParent = async function (payload = {}) {
   try {
     const files = [...(payload.productFiles || []), ...(payload.resultFiles || [])];
     const data = await readRunFile(files, /component_selector_data\.js$/i) || await readRunFile(files, /component_selector_results\.json$/i);
-    if (data) loadResult(data);
+    const initial = await readRunFile(files, /component_selector_data_initial\.js$/i) || await readRunFile(files, /component_selector_results_initial\.json$/i);
+    if (data || initial) loadDesigns(initial, data);
   } catch (e) { console.warn('component selector: unable to read run files', e); }
 };
 window.receiveComponentSelectorDataFromParent = data => loadResult(data);
@@ -644,7 +679,7 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
 (async function boot() {
   setTheme(store.get('star-unified-theme') || store.get('star-cs-theme') || (document.documentElement.dataset.theme || 'dark'));
   await API.detect();
-  if (S.mode === 'viewer' && window.componentSelectorData) { loadResult(window.componentSelectorData); return; }
+  if (S.mode === 'viewer' && window.componentSelectorData) { loadDesigns(window.componentSelectorDataInitial || null, window.componentSelectorData); return; }
   const fromUrl = new URLSearchParams(location.search).get('form_factor_u');
   if (fromUrl) S.params.form_factor_u = +fromUrl;
   else if (S.mode === 'star') await classFromStar();

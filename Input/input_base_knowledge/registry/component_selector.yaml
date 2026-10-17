@@ -117,6 +117,12 @@ execution:
   downstream_dependencies: []
   estimated_runtime: 2
 interface_notes: >
+  Two runs per STAR workflow (2026-10-17): the orchestrator runs END-019 first, as step 0, for the INITIAL design (requirements
+  only): it writes output_component_selector/spacecraft_definition.json (class, envelope, mass, uniform-box inertia, face and mean
+  projected areas, Cd/Cr, solar panels and the body faces they cover, battery, declared powers), the satellite END-001, END-003,
+  END-004, END-010, END-016 and END-018 use, plus the *_initial products. The END-019 step of the workflow, the last one, is the
+  FINAL design made with their results (END-001 altitude, END-004 energy, END-016 delta-v); it writes the usual products,
+  spacecraft_definition_final.json and the changes with respect to the initial design (the modules are not re-run).
   The Python runner reads the module input JSON written by the orchestrator (requirements and resolved inputs) and, when they
   are in the same run, the END-001 orbits (altitude for the GSD and swath of the imagers), the END-004 power budget (energy per orbit
   for the battery capacity) and the END-016 space-safety summary

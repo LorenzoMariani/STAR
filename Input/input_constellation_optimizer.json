@@ -86,5 +86,14 @@
         "Launch": 1,
         "EndOfLife": 1,
         "AvgGSAccessTime": 7
+    },
+    "PassSelection": {
+        "Imaging": {"ElevationThreshold_deg": 10, "SunConstraint": true, "SunConstraintMode": "day", "SunElevationThreshold_deg": 0, "PreferredSunElevation_deg": 20},
+        "LightCurve": {
+            "Enabled": true,
+            "Observer": {"name": "Matera (SPADE)", "lat_deg": 40.6492, "lon_deg": 16.7039, "alt_m": 400},
+            "ElevationThreshold_deg": 10, "ElevationMargin_deg": 1, "ObserverSunElevationMax_deg": -12,
+            "RequireSatelliteSunlit": true, "MinDuration_s": 120, "EdgeMargin_s": 10
+        }
     }
 }

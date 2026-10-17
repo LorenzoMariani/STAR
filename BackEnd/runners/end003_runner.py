@@ -23,6 +23,7 @@ from runners.star_runner_io import (
     load_end001_constellation,
     load_json,
     load_selected_passes,
+    load_spacecraft_definition,
     merge_pass_selection_defaults,
     normalize_direct_module_outputs,
     write_json,
@@ -30,21 +31,12 @@ from runners.star_runner_io import (
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END003_DIR = STAR_ROOT / "END003-AttitudePropagation"
-END001_FUNCTIONS_DIR = STAR_ROOT / "END001-ConstellationOptimizer" / "lib" / "FUNCTIONS"
 # STAR version of END-003 (2026-10-17): orbit from the END-001 ephemerides, no
 # orbit propagation. star_attitude_propagation.m (internal propagation) is kept
 # unchanged in the module folder for standalone use.
 STAR_SCRIPT_NAME = "star_attitude_propagation_star.m"
 ATTITUDE_MODES = ("nadir", "follow_site", "dynamics")
-# Named sites accepted as STAR target_site text (otherwise numbers "lat, lon").
-KNOWN_SITES = {
-    "etna": ("Mount Etna", 37.748, 14.999),
-    "matera": ("Matera", 40.6492, 16.7039),
-    "genova": ("Genova", 44.4056, 8.9463),
-    "genoa": ("Genova", 44.4056, 8.9463),
-    "roma": ("Roma", 41.9028, 12.4964),
-    "rome": ("Roma", 41.9028, 12.4964),
-}
+SPACECRAFT_NOTE = "uniform box of the class envelope, mean projected area as reference area"
 LogCallback = Callable[[str, str], Any]
 
 
@@ -94,41 +86,7 @@ def _end001_ephemerides(end001_csv: Path | None) -> list[dict[str, Any]]:
     return sorted(found, key=lambda item: item["satellite_index"])
 
 
-def _parse_sites(value: Any) -> list[dict[str, Any]]:
-    """Target sites from a STAR input value: {lat, lon}, [lat, lon], "lat, lon", a known name or a list of them."""
-    if value is None:
-        return []
-    if isinstance(value, dict):
-        lat = next((value.get(k) for k in ("lat", "latitude", "site_lat_deg", "lat_deg") if value.get(k) is not None), None)
-        lon = next((value.get(k) for k in ("lon", "longitude", "site_lon_deg", "lon_deg") if value.get(k) is not None), None)
-        try:
-            return [{"name": str(value.get("name") or "Target site"), "lat_deg": float(lat), "lon_deg": float(lon),
-                     "alt_m": float(value.get("alt_m", value.get("alt", 0.0)) or 0.0)}]
-        except (TypeError, ValueError):
-            return _parse_sites(value.get("sites"))
-    if isinstance(value, (list, tuple)):
-        if len(value) == 2 and all(isinstance(v, (int, float)) for v in value):
-            return [{"name": "Target site", "lat_deg": float(value[0]), "lon_deg": float(value[1]), "alt_m": 0.0}]
-        sites: list[dict[str, Any]] = []
-        for item in value:
-            sites.extend(_parse_sites(item))
-        return sites
-    text = str(value).strip()
-    if not text or text.lower().startswith("tbd"):
-        return []
-    nums = re.findall(r"[-+]?\d+(?:\.\d+)?", text)
-    if len(nums) >= 2:
-        lat, lon = float(nums[0]), float(nums[1])
-        if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 360.0:
-            return [{"name": text[:60], "lat_deg": lat, "lon_deg": lon, "alt_m": 0.0}]
-    low = text.lower()
-    for key, (name, lat, lon) in KNOWN_SITES.items():
-        if key in low:
-            return [{"name": name, "lat_deg": lat, "lon_deg": lon, "alt_m": 0.0}]
-    return []
-
-
-def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any], end001_csv: Path | None) -> dict[str, Any]:
+def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> dict[str, Any]:
     """STAR inputs over the native template; returns the decisions (star_runtime.end003_inputs)."""
     report: dict[str, Any] = {}
     sat = config.setdefault("sat", {})
@@ -159,30 +117,24 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any], end
     if hours > 0:
         config["sim_hours"] = hours
         report["simulation_duration_hours"] = {"value": hours, "source": "STAR input (limited to the END-001 ephemeris span)"}
-
-    # Imaging target: STAR target input, otherwise the END-001 area of interest, otherwise the template site.
-    sites: list[dict[str, Any]] = []
-    for key in ("target_site", "target_area", "points_or_areas_of_interest"):
-        sites = _parse_sites(input_value(star_payload, key, None))
-        if sites:
-            break
-    selection: dict[str, Any] = {"source": "template"}
-    if sites:
-        selection = {"source": "star_input", "sites": sites}
-    elif end001_csv:
-        runtime = Path(end001_csv).parent.parent / "end001_runtime_input.json"
-        region = None
-        try:
-            region = load_json(runtime).get("RegionSettings") if runtime.exists() else None
-        except Exception:
-            region = None
-        if isinstance(region, dict) and region.get("AreaofInterest") and END001_FUNCTIONS_DIR.exists():
-            selection = {"source": "end001_aoi", "end001_region_settings": region,
-                         "end001_runtime_input": str(runtime), "end001_functions_dir": str(END001_FUNCTIONS_DIR)}
-    config["target_selection"] = selection
-    report["target_site"] = {"source": selection["source"],
-                             "value": sites or (selection.get("end001_region_settings") or {}).get("AreaofInterest")
-                             or [config.get("target", {}).get("site_lat_deg"), config.get("target", {}).get("site_lon_deg")]}
+    # mass, inertia and areas: the STAR input, otherwise the END-019 initial design (the satellite of every module)
+    props = input_value(star_payload, "spacecraft_physical_properties", None)
+    sat_def = load_spacecraft_definition(star_payload)
+    if isinstance(props, dict) and props:
+        for key in ("m", "A_ref", "Cr", "Cd", "Ix", "Iy", "Iz"):
+            if props.get(key) is not None:
+                sat[key] = coerce_float(props[key], float(sat.get(key, 0.0)))
+        if isinstance(props.get("r_cp"), list) and len(props["r_cp"]) == 3:
+            sat["r_cp"] = [float(v) for v in props["r_cp"]]
+        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Cr", "Cd", "Ix", "Iy", "Iz", "r_cp")}, "source": "STAR input"}
+    elif sat_def:
+        ix, iy, iz = sat_def["inertia_kg_m2"]
+        sat.update({"m": sat_def["mass_kg"], "Ix": ix, "Iy": iy, "Iz": iz, "A_ref": sat_def["area_mean_projected_m2"],
+                    "Cd": sat_def.get("cd", sat.get("Cd")), "Cr": sat_def.get("cr", sat.get("Cr"))})
+        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Cr", "Cd", "Ix", "Iy", "Iz")},
+                                "source": f"END-019 initial design ({sat_def.get('form_factor')}, {SPACECRAFT_NOTE})"}
+    else:
+        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Ix", "Iy", "Iz")}, "source": "template (no END-019 in the workflow)"}
     return report
 
 
@@ -282,19 +234,30 @@ def run_end003(
         write_json(process_info_path, {"run_id": run_id, "status": "failed", "reason": reason})
         return {"status": "failed", "evidence": reason, "generated_artifacts": _collect(output_path)}
     config["end001_ephemeris"] = ephemerides
+    # The passes are chosen by END-001 (2026-10-17): imaging pass over the AOI and
+    # first night pass from the observatory; END-003 computes the attitude on them.
+    pass_selection = Path(end001_csv).parent / "pass_selection.json"
+    if not pass_selection.exists():
+        reason = (f"END-003 needs the passes selected by END-001 ({pass_selection.name} next to the END-001 ephemerides, "
+                  "written by END-001 since 2026-10-17): run END-001 in the same workflow first.")
+        _emit(log_callback, "ERROR", reason)
+        write_json(process_info_path, {"run_id": run_id, "status": "failed", "reason": reason})
+        return {"status": "failed", "evidence": reason, "generated_artifacts": _collect(output_path)}
+    config["end001_pass_selection"] = str(pass_selection)
+    config.pop("target_selection", None)
     if constellation:
         first = constellation[0]
         config["orbit"] = {k: first[k] for k in ("alt_perigee_m", "alt_apogee_m", "inclination_deg", "raan_deg", "omega_deg", "nu_deg")}
     config.setdefault("env", {})["Re"] = 6378137.0          # reference of the END-001 altitudes (WGS84)
-    decisions = _apply_star_inputs(config, star_payload, end001_csv)
+    decisions = _apply_star_inputs(config, star_payload)
     config.setdefault("star_runtime", {})["end003_inputs"] = decisions
     config["star_runtime"]["orbit_source"] = "END-001 ephemeris (no orbit propagation in END-003)"
     config["pass_selection"] = merge_pass_selection_defaults(config.get("pass_selection"))
     config_path = output_path / "end003_runtime_input.json"
     write_json(config_path, config)
     _emit(log_callback, "EXECUTION", f"END-003: orbits from {len(ephemerides)} END-001 ephemeris file(s); attitude mode "
-          f"{config['sat'].get('attitude_mode')} ({decisions['attitude_mode']['source']}); imaging target from "
-          f"{decisions['target_site']['source']}.")
+          f"{config['sat'].get('attitude_mode')} ({decisions['attitude_mode']['source']}); passes selected by END-001 "
+          f"({pass_selection.name}).")
 
     folder = _find_dir()
     script = _find_script(folder)

@@ -76,6 +76,83 @@ def _approved_inputs(items: list[dict[str, Any]], defaults_only: bool | None = N
     return out
 
 
+# Satellite shared by the STAR modules (2026-10-17): END-019 runs first (initial design, step 0 of the
+# workflow) and writes spacecraft_definition.json, which END-001, END-003, END-004, END-010, END-016 and
+# END-018 use; at the end of the workflow it runs again with their results (final design).
+SPACECRAFT_FILE = "spacecraft_definition.json"
+PANEL_FACE_MM = {"1U": (100.0, 100.0), "2U": (100.0, 227.0), "3U": (100.0, 340.5), "6U": (226.3, 366.0), "12U": (226.3, 366.0)}
+CD_DEFAULT, CR_DEFAULT = 2.2, 1.2
+
+
+def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None) -> dict[str, Any]:
+    """The satellite of the design for the other modules: class and envelope, mass, inertia and areas of the uniform box,
+    solar panels on the body faces, battery, declared powers of the subsystems."""
+    cs = result.get("cubesat") or {}
+    env = [float(v) for v in (cs.get("envelope_mm") or (100.0, 100.0, 340.5))]
+    a, b, c = (v / 1000.0 for v in env)
+    totals = result.get("totals") or {}
+    mass = float(totals.get("mass_kg") or 0.0)
+    # by design slot (comms_s, comms_uhf, antenna_s, ...): the keys of breakdown.power_w
+    chosen = {s.get("id") or s.get("subsystem"): s["selected"] for s in result.get("subsystems", []) if s.get("selected")}
+    faces = {"+X": (b, c), "-X": (b, c), "+Y": (a, c), "-Y": (a, c), "+Z": (a, b), "-Z": (a, b)}
+    panel = chosen.get("solar_panel") or {}
+    pspecs = panel.get("specs") or {}
+    face_type = str(pspecs.get("face") or "")
+    n_panels = int((((chosen.get("structure") or {}).get("specs") or {}).get("panel_faces") or {}).get(face_type, 0) or 0)
+    body_faces: list[str] = []
+    if face_type in PANEL_FACE_MM and n_panels:
+        pw, ph = PANEL_FACE_MM[face_type]
+        def mismatch(dims: tuple[float, float]) -> float:
+            s = sorted(d * 1000.0 for d in dims)
+            return abs(s[0] - pw) / pw + abs(s[1] - ph) / ph
+        order = ["+X", "-X", "+Y", "-Y", "+Z", "-Z"]
+        body_faces = sorted(faces, key=lambda k: (round(mismatch(faces[k]), 3), order.index(k)))[:n_panels]
+    peak = pspecs.get("peak_power_w")
+    battery = ((result.get("mission") or {}).get("battery") or {}).get("integrated_wh")
+    if battery is None:
+        battery = ((chosen.get("battery") or {}).get("specs") or {}).get("capacity_wh")
+    if battery is None:
+        battery = ((chosen.get("eps") or {}).get("specs") or {}).get("integrated_battery_wh")
+    return {
+        "schema_version": 1, "module_id": MODULE_ID, "phase": phase, "run_id": run_id, "generated_at": datetime.now().isoformat(),
+        "class_u": cs.get("class_u"), "form_factor": f"{cs.get('class_u')}U", "envelope_mm": env, "dims_m": [a, b, c],
+        "mass_kg": mass,
+        "inertia_kg_m2": [mass / 12.0 * (b * b + c * c), mass / 12.0 * (a * a + c * c), mass / 12.0 * (a * a + b * b)],
+        "inertia_model": "uniform box of the class envelope with the mass of the selected components",
+        "face_areas_m2": {"x": b * c, "y": a * c, "z": a * b},
+        "area_mean_projected_m2": (a * b + b * c + c * a) / 2.0,
+        "cd": CD_DEFAULT, "cr": CR_DEFAULT,
+        "solar_panels": {"component": panel.get("id"), "name": panel.get("name"), "face_type": face_type or None,
+                         "peak_power_w_per_panel": peak, "n_panels": n_panels, "body_faces": body_faces,
+                         "total_peak_w": (float(peak) * n_panels) if peak is not None and n_panels else None},
+        "battery_wh": battery,
+        "consumers_declared_peak_w": (result.get("breakdown") or {}).get("power_w") or {},
+        "power_unknown": totals.get("power_unknown") or [],
+        "components": {k: v.get("id") for k, v in chosen.items()},
+        "conventions": "body frame: +Z payload boresight (nadir), long axis of the envelope along Z; envelope X x Y x Z; "
+                       "Cd and Cr are STAR defaults; area_mean_projected = surface / 4 (orientation average)",
+    }
+
+
+def design_changes(initial: dict[str, Any] | None, final: dict[str, Any]) -> list[str]:
+    """What the final design changes with respect to the initial one the modules used."""
+    if not initial:
+        return []
+    out = []
+    if initial.get("class_u") != final.get("class_u"):
+        out.append(f"class {initial.get('class_u')}U -> {final.get('class_u')}U")
+    mi, mf = float(initial.get("mass_kg") or 0), float(final.get("mass_kg") or 0)
+    if abs(mf - mi) > 1e-6:
+        out.append(f"mass {mi:.3f} -> {mf:.3f} kg")
+    ci, cf = initial.get("components") or {}, final.get("components") or {}
+    for sub in sorted(set(ci) | set(cf)):
+        if ci.get(sub) != cf.get(sub):
+            out.append(f"{sub}: {ci.get(sub) or 'none'} -> {cf.get(sub) or 'none'}")
+    if initial.get("battery_wh") != final.get("battery_wh"):
+        out.append(f"battery {initial.get('battery_wh')} -> {final.get('battery_wh')} Wh")
+    return out
+
+
 def mission_context(modules_output: Path | None) -> dict[str, Any]:
     """Products of the same run that END-019 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers),
     the END-004 power budget (energy the battery gives in an orbit -> battery capacity) and the END-016 space-safety summary
@@ -125,6 +202,9 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
 
     payload = json.loads(Path(input_file).read_text(encoding="utf-8"))
     requirements = payload.get("requirements") or []
+    # initial design (step 0, before the other modules) or final design (end of the workflow, with their results)
+    phase = "initial" if str((payload.get("workflow_step") or {}).get("phase") or "").lower() == "initial" else "final"
+    sfx = "_initial" if phase == "initial" else ""
 
     # 1. defaults of the module; 2. requirements; 3. approved inputs (first guesses never override the requirements)
     defaults_path = None
@@ -152,9 +232,9 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     notes = [n for n in mapping["notes"] if "CubeSat class not stated" not in n]
     if forced:
         notes.append(f"CubeSat class chosen by the user: {forced}U")
-    context = mission_context(Path(output_dir).resolve().parent)
+    context = mission_context(Path(output_dir).resolve().parent) if phase == "final" else {}
     used = [k for k in ("altitude_km", "end004", "end016") if k in context]
-    log("EXECUTION", f"END-019 mission design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
+    log("EXECUTION", f"END-019 {phase} design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
 
     service = SelectorService()
     generated: list[str] = []
@@ -186,26 +266,49 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
                     + (f"; {len(mission['unmet'])} requirement(s) not met: " + " ".join(mission["unmet"]).rstrip(".") if mission["unmet"] else "; requirements met") + ".")
 
     record = {"schema_version": 2, "module_id": MODULE_ID, "run_id": run_id, "generated_at": started, "status": status, "evidence": evidence,
-              "params": params, "notes": notes, "out_of_scope": out_of_scope, "requirements_mapping": mapping, "result": result}
-    write(product_dir / "component_selector_results.json", dumps(record))
-    write(product_dir / "component_selector_requirements_mapping.json", dumps({"requirements": requirements, **mapping, "approved_inputs": approved}))
+              "phase": phase, "params": params, "notes": notes, "out_of_scope": out_of_scope, "requirements_mapping": mapping, "result": result}
+    if status == "completed":
+        sc = spacecraft_definition(result, phase, run_id)
+        record["spacecraft"] = sc
+        if phase == "initial":
+            # the satellite every module of the workflow uses
+            write(product_dir / SPACECRAFT_FILE, dumps(sc))
+            record["evidence"] = evidence = "Initial design, used by the other modules: " + evidence
+        else:
+            initial_path = product_dir / SPACECRAFT_FILE
+            initial = json.loads(initial_path.read_text(encoding="utf-8")) if initial_path.is_file() else None
+            changes = design_changes(initial, sc)
+            record["initial_spacecraft"] = initial
+            record["design_changes"] = changes
+            write(product_dir / "spacecraft_definition_final.json", dumps({**sc, "changes_from_initial": changes}))
+            if initial is None:
+                note = "no initial design in this run: the other modules did not use an END-019 satellite"
+            elif changes:
+                note = "the final design differs from the initial one the modules used: " + "; ".join(changes)
+            else:
+                note = "same satellite as the initial design the modules used"
+            record["evidence"] = evidence = f"Final design ({note}): " + evidence
+    write(product_dir / f"component_selector_results{sfx}.json", dumps(record))
+    write(product_dir / f"component_selector_requirements_mapping{sfx}.json", dumps({"requirements": requirements, **mapping, "approved_inputs": approved}))
     if status == "completed":
         rows = bom_rows(result)
         if rows:
-            with (product_dir / "component_selector_bom.csv").open("w", newline="", encoding="utf-8-sig") as fh:
+            with (product_dir / f"component_selector_bom{sfx}.csv").open("w", newline="", encoding="utf-8-sig") as fh:
                 writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
                 writer.writeheader()
                 writer.writerows(rows)
-            generated.append(str(product_dir / "component_selector_bom.csv"))
-        write(product_dir / "component_selector_power_handoff.json", dumps(power_handoff(result)))
+            generated.append(str(product_dir / f"component_selector_bom{sfx}.csv"))
+        write(product_dir / f"component_selector_power_handoff{sfx}.json", dumps(power_handoff(result)))
 
-    # frontend payload and self-contained report (the GUI in view-only mode reads window.componentSelectorData)
+    # frontend payload and self-contained report (the GUI in view-only mode reads window.componentSelectorData;
+    # the initial design goes to window.componentSelectorDataInitial, shown in the "Initial design" tab)
+    var = "componentSelectorDataInitial" if phase == "initial" else "componentSelectorData"
     data = {**record}
-    write(results_dir / "component_selector_data.js", "window.componentSelectorData = " + dumps(data) + ";\n")
+    write(results_dir / f"component_selector_data{sfx}.js", f"window.{var} = " + dumps(data) + ";\n")
     gui_html = selector_root / "gui" / "component_selector.html"
     if gui_html.is_file():
         page = gui_html.read_text(encoding="utf-8")
         embedded = "<script>window.componentSelectorData = " + dumps(data).replace("</", "<\\/") + ";</script>\n"
-        write(results_dir / "component_selector_report.html", page.replace("<script>\n(() => {", embedded + "<script>\n(() => {", 1))
+        write(results_dir / f"component_selector_report{sfx}.html", page.replace("<script>\n(() => {", embedded + "<script>\n(() => {", 1))
     log("EXECUTION", f"END-019 {status}: {evidence}")
     return {"status": status, "generated_artifacts": generated, "evidence": evidence}

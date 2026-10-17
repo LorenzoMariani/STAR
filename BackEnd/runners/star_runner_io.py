@@ -48,9 +48,13 @@ def star_run_level(star_payload: dict[str, Any] | None = None) -> int:
 MODULE_OUTPUT_LAYOUT: dict[str, tuple[str, str]] = {
     "END-001": ("output_constellation_optimizer", "results_constellation_optimizer"),
     "END-003": ("output_attitude_propagation", "results_attitude_propagator"),
+    "END-004": ("output_power_budget", "results_power_budget"),
     "END-007": ("output_synthetic_data_generation", "results_synthetic_data_generation"),
     "END-010": ("output_reflectance_determination", "results_reflectance_determination"),
-}
+    "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
+    "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
+    "END-019": ("output_component_selector", "results_component_selector"),
+}   # same names as StarApi.get_module_output_layout (FrontEnd/star_frontend_v3.py)
 
 RESULT_SUFFIXES = {
     ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".gif",
@@ -1063,6 +1067,10 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
     cubesat = end010_cubesat_options(star_payload, product_dir) if cubesat_exe.exists() or not aqua_exe.exists() else None
     if cubesat:
         cfg.setdefault("unityOpts", {}).update(cubesat["unityOpts"])
+    # reference area of the magnitude estimate: the mean projected area of the satellite of the run (END-019)
+    sat = load_spacecraft_definition(star_payload, next((p for p in Path(product_dir).resolve().parents if p.name == "modules_output"), None))
+    if sat and sat.get("area_mean_projected_m2"):
+        cfg.setdefault("sat", {})["A_ref"] = round(float(sat["area_mean_projected_m2"]), 6)
     cfg["paths"]["eopFile"] = str(data_dir / "EOP.txt")
     cfg["paths"]["tleFile"] = str(data_dir / "TLE_AQUA27052026.txt")
     cfg["paths"]["stationsJson"] = str(data_dir / "stations.json")
@@ -1121,14 +1129,19 @@ def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> d
     otherwise END010_DEFAULT_CLASS_U. camSize (orthographic half-height, m) = half the diagonal of the class envelope x 1.1, so the
     model stays in the frame whatever its attitude; sceneScale divides the km positions of the csv."""
     class_u, source = None, None
-    found = find_upstream_artifact(star_payload, ["component_selector_results.json"], [".json"])
+    # the satellite of the run: END-019 initial design (spacecraft_definition.json, step 0 of the workflow)
+    modules_output = next((p for p in Path(product_dir).resolve().parents if p.name == "modules_output"), None)
+    sat = load_spacecraft_definition(star_payload, modules_output)
+    if sat and int(sat.get("class_u") or 0) in CUBESAT_ENVELOPE_MM:
+        class_u, source = int(sat["class_u"]), "END-019 initial design of this run (spacecraft_definition.json)"
+    found = None if class_u else find_upstream_artifact(star_payload, ["component_selector_results.json"], [".json"])
     candidates = [found] if found else []
     # modules_output/<END-010>/output_... -> modules_output/END-019/output_component_selector/component_selector_results.json
     for parent in Path(product_dir).resolve().parents:
         if parent.name == "modules_output":
             candidates.append(parent / "END-019" / "output_component_selector" / "component_selector_results.json")
             break
-    for path in candidates:
+    for path in ([] if class_u else candidates):
         try:
             data = load_json(Path(path))
             u = int(((data.get("result") or {}).get("cubesat") or {}).get("class_u"))
@@ -1266,3 +1279,35 @@ def describe_pass(entry: dict[str, Any] | None, site_key: str = "target_site") -
     peak = entry.get("peak_elevation_deg")
     peak_text = f" | peak elevation {float(peak):.1f} deg" if isinstance(peak, (int, float)) else ""
     return f"{label} over {place} | {entry.get('start_utc')} -> {entry.get('end_utc')}{dur_text}{peak_text}{sun_text}"
+
+
+# ---------------------------------------------------------------------------
+# Satellite shared by the STAR modules (2026-10-17)
+# ---------------------------------------------------------------------------
+SPACECRAFT_DEFINITION_FILENAME = "spacecraft_definition.json"
+
+
+def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_output: Path | str | None = None) -> dict[str, Any] | None:
+    """The satellite of the END-019 initial design (modules_output/END-019/output_component_selector/spacecraft_definition.json,
+    written at step 0 before the other modules): class, envelope, mass, inertia, areas, Cd/Cr, solar panels, battery and
+    declared powers. None when the workflow has no END-019 (the modules keep their own templates then)."""
+    candidates: list[Path] = []
+    if star_payload:
+        found = find_upstream_artifact(star_payload, [SPACECRAFT_DEFINITION_FILENAME], [".json"])
+        if found:
+            candidates.append(Path(found))
+        root = star_payload.get("modules_output_root")
+        if root:
+            candidates.append(Path(root) / "END-019" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
+    if modules_output:
+        candidates.append(Path(modules_output) / "END-019" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
+    for path in candidates:
+        try:
+            if path.is_file():
+                data = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(data, dict) and data.get("mass_kg"):
+                    data["_source_path"] = str(path)
+                    return data
+        except Exception:
+            continue
+    return None

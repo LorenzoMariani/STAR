@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from pathlib import Path
 from typing import Any
 
 # Sources of resolved_inputs that are NOT mission information: registry
@@ -363,10 +364,20 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     else:
         note("TimeSettings", cfg.get("TimeSettings"), "automatic (template)")
     sc = cfg.setdefault("SpacecraftProperties", {})
+    # the satellite of the END-019 initial design (2026-10-17): the same mass, area and Cd for every module
+    try:
+        from .star_runner_io import load_spacecraft_definition
+    except ImportError:
+        from star_runner_io import load_spacecraft_definition
+    sat = load_spacecraft_definition(payload)
+    sat_vals = {"mass": sat["mass_kg"], "adrag": sat["area_mean_projected_m2"], "cd": sat["cd"]} if sat else {}
     for name, key, field in (("spacecraft_mass_kg", "mass", "Mass"), ("spacecraft_drag_area_m2", "adrag", "ADrag"),
                              ("spacecraft_drag_coefficient", "cd", "CD")):
         if name in inp and _number(inp[name][0]) is not None:
             sc[field] = float(inp[name][0]); note("SpacecraftProperties." + field, sc[field], f"STAR input {name} ({inp[name][1]})")
+        elif key in sat_vals:
+            sc[field] = round(float(sat_vals[key]), 6)
+            note("SpacecraftProperties." + field, sc[field], f"END-019 initial design ({sat.get('form_factor')}, spacecraft_definition.json)")
         elif key in found:
             sc[field] = found[key][0]; note("SpacecraftProperties." + field, sc[field], f"requirement {found[key][1]}")
     for name, field in (("evaluation_mode", "Evaluation_Mode"), ("surrogate_verify_top_k", "Surrogate_VerifyTopK"),
@@ -407,4 +418,54 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         note("propagation_time", inp["propagation_time"][0], "ignored: the module chooses the steady-state window ('auto')")
     opt["timeStep"] = 10
     note("OptimizerSettings.timeStep", 10, "fixed (STAR mode)")
+
+    # ---- passes for the downstream modules (2026-10-17) -------------------------
+    # END-001 selects the imaging pass over the AOI (END-007) and the first night
+    # pass visible from the observatory (END-010): pass_selection.json.
+    lc = cfg.setdefault("PassSelection", {}).setdefault("LightCurve", {})
+    obs_in = inp.get("observatory")
+    obs, why = _observatory(obs_in[0]) if obs_in else (None, "")
+    if obs:
+        lc["Observer"] = obs
+        note("PassSelection.LightCurve.Observer", obs, f"STAR input observatory ({obs_in[1]}): {why}")
+    else:
+        note("PassSelection.LightCurve.Observer", lc.get("Observer"), "automatic (template)" + (f": {why}" if why else ""))
     return cfg, report
+
+
+def _stations() -> dict[str, dict[str, Any]]:
+    """Observatories END-010 knows (END010-ReflectanceDetermination/lib/data/stations.json)."""
+    path = Path(__file__).resolve().parents[2] / "END010-ReflectanceDetermination" / "lib" / "data" / "stations.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _observatory(value: Any) -> tuple[dict[str, Any] | None, str]:
+    """PassSelection.LightCurve.Observer for an observatory value: {name, lat, lon, alt}, [lat, lon(, alt_m)],
+    "lat, lon" or the name / city of an END-010 station (e.g. SPADE, Matera, SCUDO)."""
+    value = _parse(value)
+    if isinstance(value, dict):
+        lat = next((value[k] for k in ("lat_deg", "lat", "latitude", "site_lat_deg") if value.get(k) is not None), None)
+        lon = next((value[k] for k in ("lon_deg", "lon", "longitude", "site_lon_deg") if value.get(k) is not None), None)
+        if _number(lat) is not None and _number(lon) is not None:
+            alt = _number(value.get("alt_m", value.get("alt", 0))) or 0.0
+            return {"name": str(value.get("name") or "Observatory"), "lat_deg": float(lat), "lon_deg": float(lon), "alt_m": alt}, "coordinates"
+        value = value.get("name") or ""
+    if isinstance(value, (list, tuple)) and len(value) >= 2 and all(_number(v) is not None for v in value[:2]):
+        alt = float(value[2]) if len(value) > 2 and _number(value[2]) is not None else 0.0
+        return {"name": "Observatory", "lat_deg": float(value[0]), "lon_deg": float(value[1]), "alt_m": alt}, "coordinates"
+    text = str(value or "").strip()
+    nums = re.findall(r"[-+]?\d+(?:\.\d+)?", text)
+    if len(nums) >= 2 and -90 <= float(nums[0]) <= 90:
+        return {"name": text[:60], "lat_deg": float(nums[0]), "lon_deg": float(nums[1]), "alt_m": 0.0}, "coordinates"
+    low = text.lower()
+    for name, st in _stations().items():
+        city = str(st.get("city", ""))
+        if low and (low == name.lower() or low in city.lower() or name.lower() in low):
+            label = f"{city.split('(')[0].strip()} ({name})" if city else name
+            return {"name": label, "lat_deg": float(st["lat"]), "lon_deg": float(st["lon"]), "alt_m": float(st.get("alt", 0))}, \
+                f"END-010 station {name}"
+    return None, (f"'{text}' is not a known observatory" if text else "")

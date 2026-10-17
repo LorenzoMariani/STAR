@@ -283,3 +283,14 @@ The following matrix describes the file access maps, including specific read/wri
 |***configFile***|Input|Structured JSON|Comprehensive configuration parameters (Time, ROI, Ground Stations, Sensor Settings, Algorithm Iterations, Optimization Weights). |**Read-Only (**r**)**|
 |***satellite\_XX.json***|Output|Standardized JSON|Individual orbital configurations, true anomaly profiles, inclination calculations, and Keplerian matrices for satellite ID XX. |**Write-Only (**w**)**|
 
+1. ## **STAR workflow, 2026-10-17**
+
+- **Spacecraft properties** (SpacecraftProperties Mass, ADrag, CD): from the END-019 initial design of the run
+  (spacecraft_definition.json: mass of the selected components, mean projected area = surface / 4, Cd 2.2) unless the user gives
+  them in STAR; END-016 reads them from END-001.
+- **Passes for the downstream modules** (before chosen by END-003): after writing satellite_NN_ephemeris.csv END-001 runs
+  lib/FUNCTIONS/select_downstream_passes.m and writes pass_selection.json: the imaging pass (best peak elevation over any AOI point,
+  daylight at the point and along the sub-satellite track, PassSelection.Imaging) and the FIRST useful light-curve pass from the
+  observatory (PassSelection.LightCurve: observer Sun <= -12 deg, relaxed to -6 / 0 only without windows, satellite sunlit,
+  elevation >= 10 + 1 deg, >= 120 s). The observatory is the STAR input `observatory` (an END-010 station name or city, "lat, lon"
+  or an object; default Matera, SPADE telescope).

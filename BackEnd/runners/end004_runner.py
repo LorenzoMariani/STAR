@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import queue
 import shutil
@@ -13,9 +14,13 @@ from pathlib import Path
 from typing import Any, Callable
 
 from runners.star_runner_io import (
+    coerce_float,
     ensure_module_output_layout,
     find_upstream_artifact,
+    input_value,
     load_json,
+    load_selected_passes,
+    load_spacecraft_definition,
     make_runtime_input_copy,
     normalize_direct_module_outputs,
     write_json,
@@ -24,6 +29,186 @@ from runners.star_runner_io import (
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END004_DIR = STAR_ROOT / "END004-PowerBudget"
 LogCallback = Callable[[str, str], Any]
+MU_EARTH = 3.986004415e14          # m^3/s^2, as END-001
+R_EARTH = 6378137.0                # m, reference of the END-001 altitudes
+MODE_KEYS = ("idle", "tx_uhf", "tx_sband", "payload")
+
+
+def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, end003_runtime_json: Path | None) -> dict[str, Any] | None:
+    """Period, sunlight and eclipse of the orbit of this run (2026-10-17): the period from the semi-major axis of the
+    satellite END-003 selected (END-001 elements, R = 6378.137 km), the eclipse from the shadow fraction END-003 computed
+    on its 48 h window (KPI-14). None when the upstream products are missing (the template values are used then)."""
+    orbit = None
+    selected = load_selected_passes(star_payload, end003_csv)
+    if selected:
+        orbit = (selected.get("imaging_pass") or {}).get("orbit") or None
+    if not orbit and end003_runtime_json and Path(end003_runtime_json).exists():
+        orbit = (load_json(Path(end003_runtime_json)) or {}).get("orbit")
+    try:
+        alt = 0.5 * (float(orbit["alt_perigee_m"]) + float(orbit["alt_apogee_m"]))
+    except (TypeError, KeyError, ValueError):
+        return None
+    a = R_EARTH + alt
+    period_min = 2.0 * math.pi * math.sqrt(a ** 3 / MU_EARTH) / 60.0
+    out: dict[str, Any] = {"period_min": round(period_min, 4), "daily_orbits": round(1440.0 / period_min, 3),
+                           "source": f"END-001 orbit of the satellite selected by END-003 (altitude {alt / 1000:.1f} km)"}
+    summary = find_upstream_artifact(star_payload, ["attitude_summary.json"], [".json"])
+    if summary and Path(summary).exists():
+        for kpi in (load_json(Path(summary)) or {}).get("kpis", []):
+            if kpi.get("id") == "KPI-14" and isinstance(kpi.get("value"), (int, float)):
+                eclipse = period_min * float(kpi["value"]) / 100.0
+                out.update({"eclipse_min": round(eclipse, 4), "sunlight_min": round(period_min - eclipse, 4)})
+                out["source"] += f"; eclipse {float(kpi['value']):.1f}% of the orbit (END-003 KPI-14)"
+                break
+    return out
+
+
+# Template loads (Input/input_power_budget.json) of the subsystems END-019 selects; the entry of the transmitter takes
+# the peak power END-019 declares, the other ones keep the template power and duty cycles.
+ROLE_TEMPLATE = {"obc": ["OBDH"], "eps": ["EPS"], "comms_uhf": ["RX UHF", "TX UHF", "BEACON UHF"],
+                 "comms_s": ["RX S BAND", "TX S BAND"], "adcs": ["ADCS"], "payload_imager": ["CAMERAS"]}
+ROLE_POWER_ENTRY = {"comms_uhf": "TX UHF", "comms_s": "TX S BAND"}
+ALWAYS_ON = ("gps", "gnss_antenna", "star_tracker", "reaction_wheel", "magnetorquer", "obc", "eps")
+NO_LOAD = ("structure", "solar_panel", "battery", "antenna_s", "antenna_uhf", "antenna_x")
+FACE_KEYS = {"+X": "x_plus", "-X": "x_minus", "+Y": "y_plus", "-Y": "y_minus", "+Z": "z_plus", "-Z": "z_minus"}
+
+
+def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
+    """Power loads of the END-019 satellite: template entries of the subsystems it has (with the declared powers), the heaters,
+    and its other subsystems with a declared power; template entries of subsystems it does not have are dropped."""
+    by_name = {str(s.get("name")): s for s in template}
+    comps = sat.get("components") or {}
+    powers = sat.get("consumers_declared_peak_w") or {}
+    modes = list(((template[0] if template else {}).get("duty") or {}).keys()) or list(MODE_KEYS)
+    out: list[dict[str, Any]] = []
+    notes: list[str] = []
+    for role, names in ROLE_TEMPLATE.items():
+        if role not in comps:
+            continue
+        target = ROLE_POWER_ENTRY.get(role, names[0])
+        for name in names:
+            if name not in by_name:
+                continue
+            entry = json.loads(json.dumps(by_name[name]))
+            if name == target and powers.get(role) is not None:
+                entry["powerW"] = float(powers[role])
+                entry["source"] = f"END-019 {comps[role]} (declared peak power)"
+            elif name == target:
+                entry["source"] = f"template (power of {comps[role]} not published)"
+                notes.append(f"{name}: power of {comps[role]} not published, template {entry.get('powerW')} W kept")
+            else:
+                entry["source"] = "template"
+            out.append(entry)
+    if "THERMAL" in by_name:
+        out.append({**json.loads(json.dumps(by_name["THERMAL"])), "source": "template (heaters, not a subsystem END-019 selects)"})
+    camera_duty = (by_name.get("CAMERAS") or {}).get("duty")
+    tx_duty = (by_name.get("TX S BAND") or {}).get("duty")
+    for role, comp in comps.items():
+        if role in ROLE_TEMPLATE or role in NO_LOAD:
+            continue
+        power = powers.get(role)
+        if power is None:
+            notes.append(f"{role}: power of {comp} not published, not in the budget")
+            continue
+        if role in ALWAYS_ON:
+            duty = {m: {"sun": 1, "eclipse": 1} for m in modes}
+        elif role == "propulsion":
+            duty = {m: {"sun": 0, "eclipse": 0} for m in modes}
+        elif role.startswith("payload") and camera_duty:
+            duty = json.loads(json.dumps(camera_duty))
+        elif role.startswith("comms") and tx_duty:
+            duty = json.loads(json.dumps(tx_duty))
+        else:
+            duty = {m: {"sun": 1, "eclipse": 1} for m in modes}
+        out.append({"name": role.upper().replace("_", " "), "powerW": float(power), "duty": duty,
+                    "source": f"END-019 {comp} (declared peak power)" + ("; fires only for manoeuvres" if role == "propulsion" else "")})
+    return out, notes
+
+
+def _illumination(star_payload: dict[str, Any]) -> dict[str, float] | None:
+    summary = find_upstream_artifact(star_payload, ["attitude_summary.json"], [".json"])
+    if summary and Path(summary).exists():
+        ill = (load_json(Path(summary)) or {}).get("illumination") or {}
+        return ill.get("mean_cos_sunlit") or None
+    return None
+
+
+def _apply_satellite(runtime_data: dict[str, Any], star_payload: dict[str, Any], sat: dict[str, Any] | None, report: dict[str, Any]) -> None:
+    """Loads, battery and solar generation of the END-019 satellite (the inputs approved in STAR win, see _apply_star_inputs)."""
+    if not sat:
+        report["satellite"] = {"source": "template (no END-019 in the workflow)"}
+        return
+    subs, notes = _subsystems_from_satellite(list(runtime_data.get("subsystems") or []), sat)
+    if subs:
+        runtime_data["subsystems"] = subs
+    report["subsystems"] = {"value": [{k: s.get(k) for k in ("name", "powerW", "source")} for s in subs], "notes": notes,
+                            "source": f"END-019 initial design ({sat.get('form_factor')})"}
+    if sat.get("battery_wh"):
+        runtime_data.setdefault("battery", {})["capacity_Wh"] = float(sat["battery_wh"])
+        report["battery_capacity_Wh"] = {"value": float(sat["battery_wh"]), "source": "END-019 initial design (battery / EPS integrated battery)"}
+    panels = sat.get("solar_panels") or {}
+    illum = _illumination(star_payload)
+    orbit = runtime_data.get("orbit") or {}
+    if panels.get("peak_power_w_per_panel") and panels.get("body_faces") and illum and orbit.get("sunlight_min"):
+        factor = sum(float(illum.get(FACE_KEYS[f], 0.0)) for f in panels["body_faces"] if f in FACE_KEYS)
+        p_sun = float(panels["peak_power_w_per_panel"]) * factor
+        energy = p_sun * float(orbit["sunlight_min"]) / 60.0
+        runtime_data.setdefault("generation", {})["power_generated_per_orbit_Wh"] = round(energy, 4)
+        runtime_data["generation"]["solar_power_W"] = None
+        report["power_generated_per_orbit_Wh"] = {
+            "value": round(energy, 4),
+            "source": (f"END-019 panels {panels.get('component')} ({panels.get('peak_power_w_per_panel')} W peak on {', '.join(panels['body_faces'])}) "
+                       f"x illumination of those faces in the END-003 attitude (sum of mean cosines {factor:.3f}) x sunlight "
+                       f"{float(orbit['sunlight_min']):.1f} min; beginning of life, no temperature or wiring losses")}
+    else:
+        report["power_generated_per_orbit_Wh"] = {"value": (runtime_data.get("generation") or {}).get("power_generated_per_orbit_Wh"),
+                                                  "source": "template (panel data or END-003 illumination not available)"}
+
+
+def _user_input(star_payload: dict[str, Any], name: str) -> Any:
+    """Value of an END-004 input the user gave or edited in STAR; registry first guesses (not reviewed) give None, so that
+    they do not override the satellite of the run."""
+    for item in star_payload.get("resolved_inputs") or []:
+        if isinstance(item, dict) and item.get("parameter") == name:
+            if item.get("source") in ("module_registry_default", "module_registry_required_input") and not item.get("reviewed_by_user"):
+                return None
+            return input_value({"resolved_inputs": [item]}, name, None)
+    return None
+
+
+def _apply_star_inputs(runtime_data: dict[str, Any], star_payload: dict[str, Any], orbit: dict[str, Any] | None) -> dict[str, Any]:
+    """Orbit of the run and the END-004 inputs approved in STAR over the native template; returns the decisions."""
+    report: dict[str, Any] = {}
+    tmpl_orbit = dict(runtime_data.get("orbit") or {})
+    if orbit:
+        runtime_data["orbit"] = {**tmpl_orbit, **{k: v for k, v in orbit.items() if k != "source"}}
+        if "eclipse_min" not in orbit:          # no END-003 shadow fraction: keep the template eclipse, sunlight from the period
+            runtime_data["orbit"]["sunlight_min"] = round(orbit["period_min"] - float(tmpl_orbit.get("eclipse_min", 35.0)), 4)
+        report["orbit"] = {"value": runtime_data["orbit"], "source": orbit["source"]}
+    else:
+        report["orbit"] = {"value": tmpl_orbit, "source": "template (END-003/END-001 products not found)"}
+    _apply_satellite(runtime_data, star_payload, load_spacecraft_definition(star_payload), report)
+    battery = coerce_float(_user_input(star_payload, "battery_capacity_Wh"), 0.0)
+    if battery > 0:
+        runtime_data.setdefault("battery", {})["capacity_Wh"] = battery
+        report["battery_capacity_Wh"] = {"value": battery, "source": "STAR input"}
+    generated = coerce_float(_user_input(star_payload, "power_generated_per_orbit_Wh"), 0.0)
+    if generated > 0:
+        runtime_data.setdefault("generation", {})["power_generated_per_orbit_Wh"] = generated
+        report["power_generated_per_orbit_Wh"] = {"value": generated, "source": "STAR input"}
+    ops = runtime_data.setdefault("operations", {}).setdefault("mode_orbits_per_day", {})
+    allocation = _user_input(star_payload, "daily_mode_allocation")
+    if isinstance(allocation, dict):
+        for key in MODE_KEYS:
+            if key in allocation:
+                ops[key] = coerce_float(allocation[key], float(ops.get(key, 0.0)))
+        report["daily_mode_allocation"] = {"value": dict(ops), "source": "STAR input"}
+    # the modes fill the orbits of a day: idle takes what the other modes leave
+    daily = float(runtime_data.get("orbit", {}).get("daily_orbits") or sum(float(ops.get(k, 0.0)) for k in MODE_KEYS))
+    busy = sum(float(ops.get(k, 0.0)) for k in MODE_KEYS if k != "idle")
+    ops["idle"] = round(max(0.0, daily - busy), 3)
+    report["mode_orbits_per_day"] = {"value": dict(ops), "source": f"idle = {daily:g} orbits/day - the other modes"}
+    return report
 
 
 def _emit(cb: LogCallback | None, level: str, msg: str) -> None:
@@ -340,7 +525,13 @@ def run_end004(
     if end003_runtime_json:
         runtime_data["paths"]["attitudeConfigJson"] = str(end003_runtime_json)
     runtime_data.setdefault("star_runtime", {}).update(runtime_extra)
+    decisions = _apply_star_inputs(runtime_data, star_payload, _orbit_from_upstream(star_payload, end003_csv, end003_runtime_json))
+    runtime_data["star_runtime"]["end004_inputs"] = decisions
     write_json(runtime_input, runtime_data)
+    o = runtime_data.get("orbit", {})
+    _emit(log_callback, "EXECUTION" if "template" not in decisions["orbit"]["source"] else "WARNING",
+          f"END-004 orbit: period {o.get('period_min')} min, sunlight {o.get('sunlight_min')} min, eclipse {o.get('eclipse_min')} min, "
+          f"{o.get('daily_orbits')} orbits/day ({decisions['orbit']['source']}).")
 
     stdout_path = output_path / "matlab_stdout.txt"
     stderr_path = output_path / "matlab_stderr.txt"

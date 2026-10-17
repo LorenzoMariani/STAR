@@ -11,9 +11,9 @@ function star_attitude_propagation_star(configFile, outputFolder)
 %     states between two rows come from a cubic Hermite interpolation with the
 %     tabulated velocity (sub-metre). The satellites are therefore exactly the
 %     ones END-001 designed and evaluated.
-%   - TARGET: target_selection of the runtime JSON: the site of the STAR input,
-%     or the area of interest of END-001 (ROI_2 of END-001, every AOI point is a
-%     candidate target), or the template site.
+%   - PASSES: chosen by END-001 (pass_selection.json, 2026-10-17): the imaging
+%     pass in daylight over the area of interest and the first night pass
+%     visible from the observatory. END-003 computes the attitude on them.
 %   - ATTITUDE on a 1 s grid: 'nadir' (+Z to nadir, +X along track, body rate
 %     = orbital rate about the orbit normal), 'follow_site' (+Z to the target
 %     while it is above the elevation threshold, nadir otherwise, slews limited
@@ -56,12 +56,8 @@ function star_attitude_propagation_star(configFile, outputFolder)
     fprintf('Orbit: END-001 ephemerides of %d satellite(s), from %s UTC for %.1f h, %g s step (no orbit propagation in END-003).\n', ...
         numel(eph), char(string(epoch, 'yyyy-MM-dd HH:mm:ss')), T/3600, eph(1).h);
 
-    %% == TARGET SITES =========================================================
-    sites = read_target_sites(cfg);
-    fprintf('Imaging target: %s.\n', sites.description);
-
-    %% == PASS PLANNING ========================================================
-    plan = plan_passes(eph, sites, S, ctx, T);
+    %% == PASSES SELECTED BY END-001 ===========================================
+    [plan, sites, S] = plan_from_end001(cfg, eph, S);
 
     %% == ATTITUDE (1 s grid) ==================================================
     tb = (0:S.base_step:T)';
@@ -362,290 +358,95 @@ function el = elevation_deg(r_ecef, p, up)
     el = asind(sum(rho.*up, 2)./vecnorm(rho, 2, 2));
 end
 
-function [elmax, jmax] = max_elevation_over_sites(r_ecef, P, U)
-    % Highest elevation over a set of ground points (chunks of the time grid).
-    n = size(r_ecef, 1); M = size(P, 1);
-    elmax = -90*ones(n, 1); jmax = ones(n, 1);
-    pu = sum(P.*U, 2)'; pp = sum(P.^2, 2)';
-    chunk = max(1, floor(3e6/M));
-    for a = 1:chunk:n
-        b = min(n, a + chunk - 1);
-        R = r_ecef(a:b, :);
-        num = R*U' - pu;
-        rho2 = sum(R.^2, 2) - 2*(R*P') + pp;
-        [elmax(a:b), jmax(a:b)] = max(asind(num./sqrt(rho2)), [], 2);
-    end
-end
-
 function [s_idx, e_idx] = find_runs(mask)
     d = diff([0; mask(:); 0]);
     s_idx = find(d == 1);
     e_idx = find(d == -1) - 1;
 end
 
-function sites = read_target_sites(cfg)
-    % Target of the imaging pass: target_selection.source is 'star_input'
-    % (sites = the STAR target), 'end001_aoi' (every point of the END-001 area
-    % of interest, from END-001's ROI_2) or 'template' (cfg.target).
-    ts = cfg_get(cfg, 'target_selection', struct());
-    src = char(cfg_get(ts, 'source', 'template'));
-    lat = []; lon = []; alt = []; names = {};
-    switch src
-        case 'end001_aoi'
-            rs = cfg_get(ts, 'end001_region_settings', struct());
-            fdir = char(cfg_get(ts, 'end001_functions_dir', ''));
-            try
-                P0 = path;
-                restore = onCleanup(@() path(P0));
-                addpath(fdir);
-                aoi = ROI_2(rs);                            % [lat lon] deg, END-001 grid
-                clear restore
-                lat = deg2rad(aoi(:,1)); lon = deg2rad(aoi(:,2)); alt = zeros(size(lat));
-                names = arrayfun(@(i) sprintf('AOI point %d', i), (1:numel(lat))', 'UniformOutput', false);
-                sites.description = sprintf('END-001 area of interest "%s" (%d points)', char(string(cfg_get(rs, 'AreaofInterest', 'AOI'))), numel(lat));
-            catch err
-                warning('STAR:END003:AOI', 'END-001 AOI not available (%s): template target used.', err.message);
-                src = 'template';
-            end
-        case 'star_input'
-            L = cfg_get(ts, 'sites', []);
-            if ~iscell(L), L = num2cell(L(:)); end
-            for k = 1:numel(L)
-                lat(end+1, 1) = deg2rad(L{k}.lat_deg); %#ok<AGROW>
-                lon(end+1, 1) = deg2rad(L{k}.lon_deg); %#ok<AGROW>
-                alt(end+1, 1) = cfg_get(L{k}, 'alt_m', 0); %#ok<AGROW>
-                names{end+1, 1} = char(cfg_get(L{k}, 'name', sprintf('Target %d', k))); %#ok<AGROW>
-            end
-            if isempty(lat), src = 'template'; else, sites.description = sprintf('STAR target input: %s', strjoin(names, ', ')); end
+function [plan, sites, S] = plan_from_end001(cfg, eph, S)
+    % Passes chosen by END-001 (pass_selection.json): the imaging pass over the
+    % AOI and the first night pass from the observatory, in the struct the rest
+    % of END-003 uses. The selection thresholds of END-001 replace the template ones.
+    f = char(cfg_get(cfg, 'end001_pass_selection', ''));
+    if isempty(f) || ~isfile(f)
+        error('STAR:END003:NoPassSelection', ['END-003 (STAR version) needs the passes selected by END-001 ', ...
+            '(pass_selection.json next to the END-001 ephemerides): run END-001 in the same workflow first.']);
     end
-    if strcmp(src, 'template')
-        tg = cfg_get(cfg, 'target', struct());
-        lat = deg2rad(cfg_get(tg, 'site_lat_deg', 44.4056));
-        lon = deg2rad(cfg_get(tg, 'site_lon_deg', 8.9463));
-        alt = 0;
-        names = {char(cfg_get(tg, 'site_name', 'Template target'))};
-        sites.description = sprintf('template target (%.4f N, %.4f E)', rad2deg(lat), rad2deg(lon));
-    end
-    sites.source = src;
-    sites.lat = lat; sites.lon = lon; sites.alt = alt; sites.names = names;
-    [sites.P, sites.U] = geodetic_ecef(lat, lon, alt);
-end
+    P = jsondecode(fileread(f));
+    idx = [eph.index];
+    st = P.settings;
+    S.elev_threshold = st.img.elev;
+    S.sun_enabled = logical(st.img.sun_enabled);
+    S.sun_mode = char(st.img.sun_mode);
+    S.sun_thr = st.img.sun_thr;
+    plan.n_satellites = numel(eph);
+    plan.source_file = f;
 
-%% =========================================================================
-%  PASS PLANNING
-%  =========================================================================
-function plan = plan_passes(eph, sites, S, ctx, T)
-    ns = numel(eph);
-    te = eph(1).t(eph(1).t <= T + 1e-6);
-    n = numel(te);
-    jd = ctx.jd0 + te/86400;
-    th = gmst_rad(jd);
-    Sun = sun_vectors_eci(jd);
-    Sun_ecef = rot_eci2ecef(Sun, th);
-    sun_at = @(j) asind(Sun_ecef*sites.U(j, :)');     % Sun elevation at target point j (deg)
-    plan.n_satellites = ns;
-    plan.sites = sites;
-    fprintf('[END-003 planner] Screening %d satellite(s) over %.1f h on the %g s END-001 grid, %d target point(s)...\n', ...
-        ns, T/3600, eph(1).h, numel(sites.lat));
-    cand = [];
-    geo = cell(ns, 1);
-    for k = 1:ns
-        r = eph(k).r(1:n, :);
-        r_ecef = rot_eci2ecef(r, th);
-        [elmax, jmax] = max_elevation_over_sites(r_ecef, sites.P, sites.U);
-        g.r_ecef = r_ecef;
-        g.elmax = elmax; g.jmax = jmax;
-        g.sunlit = sunlit_flags(r, Sun, S.Re);
-        g.sun_sub = asind(sum(Sun.*r, 2)./vecnorm(r, 2, 2));
-        geo{k} = g;
-        [s_idx, e_idx] = find_runs(elmax > S.elev_threshold);
-        for p = 1:numel(s_idx)
-            [~, ip] = max(elmax(s_idx(p):e_idx(p)));
-            ip = s_idx(p) + ip - 1;
-            j = jmax(ip);
-            el_j = elevation_deg(r_ecef, sites.P(j, :), sites.U(j, :));
-            [a2, b2] = find_runs(el_j > S.elev_threshold);
-            q = find(a2 <= ip & ip <= b2, 1);
-            if isempty(q), continue; end
-            rg = (a2(q):b2(q))';
-            c = imaging_candidate(k, j, rg, el_j, te, sun_at(j), g, S);
-            cand = [cand; c]; %#ok<AGROW>
-        end
+    im = P.imaging_pass;
+    k = find(idx == im.satellite_index, 1);
+    if isempty(k)
+        error('STAR:END003:PassSelection', 'Satellite %d of pass_selection.json has no END-001 ephemeris.', im.satellite_index);
     end
-    plan.candidates = cand;
-
-    % -- imaging pass (END-007): 1) Sun constraint + preferred light, 2) Sun
-    % constraint, 3) window-truncated passes allowed, 4) best elevation
-    plan.imaging.pass_found = ~isempty(cand);
-    if ~isempty(cand)
-        ok = [cand.ok]'; pref = [cand.preferred]'; trunc = [cand.truncated]';
-        pool = find(ok & pref & ~trunc); met = true;
-        if isempty(pool), pool = find(ok & ~trunc); end
-        if isempty(pool), pool = find(ok); end
-        if isempty(pool)
-            met = false;
-            pool = find(~trunc);
-            if isempty(pool), pool = (1:numel(cand))'; end
-        end
-        [~, ib] = max([cand(pool).peak_el]);
-        c = cand(pool(ib));
-        plan.imaging.constraint_met = met;
-        fprintf('[END-003 planner] Imaging pass: %s over %s | %d candidate pass(es), %d satisfy the Sun constraint | peak elevation %.2f deg | site Sun %.2f deg (min %.2f)\n', ...
-            eph(c.sat).label, sites.names{c.site}, numel(cand), sum(ok), c.peak_el, c.sun_el_peak, c.sun_el_min);
-        if S.sun_enabled && ~met
-            fprintf('[END-003 planner] WARNING: no pass satisfies Sun_Constraint_Mode="%s"; best-elevation pass selected.\n', S.sun_mode);
-        end
-    else
-        % no pass above the threshold: closest approach of the best satellite
-        best = -inf;
-        for k = 1:ns
-            [m, i] = max(geo{k}.elmax);
-            if m > best, best = m; kb = k; ib = i; end
-        end
-        j = geo{kb}.jmax(ib);
-        el_j = elevation_deg(geo{kb}.r_ecef, sites.P(j, :), sites.U(j, :));
-        rg = (max(1, ib - 30):min(n, ib + 30))';
-        c = imaging_candidate(kb, j, rg, el_j, te, sun_at(j), geo{kb}, S);
-        c.aos_t = te(rg(1)); c.los_t = te(rg(end));
-        plan.imaging.constraint_met = false;
-        fprintf('[END-003 planner] WARNING: no satellite rises above %.1f deg over the target; closest approach exported (%.2f deg).\n', ...
-            S.elev_threshold, best);
+    plan.candidates = struct('sat', {}, 'site_name', {}, 'aos_t', {}, 'los_t', {}, 'peak_t', {}, 'peak_el', {}, 'sun_el_peak', {}, ...
+        'sun_el_min', {}, 'sun_el_sub_min', {}, 'sunlit_frac', {}, 'ok', {}, 'truncated', {}, 'selected', {});
+    C = P.imaging_candidates;
+    if iscell(C), C = [C{:}]; end
+    for i = 1:numel(C)
+        plan.candidates(i) = struct('sat', find(idx == C(i).satellite_index, 1), 'site_name', C(i).site, 'aos_t', C(i).aos_t_s, ...
+            'los_t', C(i).los_t_s, 'peak_t', C(i).peak_t_s, 'peak_el', C(i).peak_elevation_deg, ...
+            'sun_el_peak', C(i).site_sun_elevation_at_peak_deg, 'sun_el_min', C(i).site_sun_elevation_min_deg, ...
+            'sun_el_sub_min', C(i).subsatellite_sun_elevation_min_deg, 'sunlit_frac', C(i).satellite_sunlit_fraction, ...
+            'ok', logical(C(i).sun_constraint_ok), 'truncated', logical(C(i).truncated_by_window), 'selected', logical(C(i).selected));
     end
+    c = struct('sat', k, 'site_name', im.site.name, 'aos_t', im.start_t_s, 'los_t', im.end_t_s, 'peak_t', im.peak_t_s, ...
+        'peak_el', im.peak_elevation_deg, 'sun_el_peak', im.site_sun_elevation_at_peak_deg, 'sun_el_min', im.site_sun_elevation_min_deg, ...
+        'sun_el_sub_min', im.subsatellite_sun_elevation_min_deg, 'sunlit_frac', im.satellite_sunlit_fraction, ...
+        'ok', logical(im.constraint_met), 'truncated', false, 'selected', true);
+    plan.imaging.pass_found = logical(im.pass_found);
+    plan.imaging.constraint_met = logical(im.constraint_met);
     plan.imaging.found = true;
     plan.imaging.cand = c;
-    plan.imaging.sat_pos = c.sat;
-    plan.imaging.sat_index = eph(c.sat).index;
-    plan.imaging.label = eph(c.sat).label;
-    plan.imaging.orbit_cfg = eph(c.sat).orbit;
-    plan.imaging.aos_t = c.aos_t;
-    plan.imaging.los_t = c.los_t;
-    plan.imaging.peak_t = c.peak_t;
-    plan.imaging.site = struct('name', sites.names{c.site}, 'lat', sites.lat(c.site), 'lon', sites.lon(c.site), ...
-        'alt', sites.alt(c.site), 'index', c.site);
+    plan.imaging.sat_pos = k;
+    plan.imaging.sat_index = eph(k).index;
+    plan.imaging.label = eph(k).label;
+    plan.imaging.orbit_cfg = eph(k).orbit;
+    plan.imaging.aos_t = im.start_t_s;
+    plan.imaging.los_t = im.end_t_s;
+    plan.imaging.peak_t = im.peak_t_s;
+    plan.imaging.site = struct('name', im.site.name, 'lat', deg2rad(im.site.lat_deg), 'lon', deg2rad(im.site.lon_deg), ...
+        'alt', im.site.alt_m, 'index', im.site.index);
+    sites = struct('source', 'END-001 pass_selection.json', 'description', im.target.description, 'n_points', im.target.n_points);
+    fprintf('Passes from END-001 (%s): imaging %s over %s, %s -> %s\n', f, eph(k).label, im.site.name, im.start_utc, im.end_utc);
 
-    % -- light-curve pass (END-010)
-    plan.lightcurve = struct('found', false, 'enabled', S.sel.lc.enabled);
-    if S.sel.lc.enabled
-        plan.lightcurve = select_lightcurve_pass(S, eph, te, Sun_ecef, geo, ctx, T);
+    L = P.lightcurve_pass;
+    plan.lightcurve = struct('found', false, 'enabled', logical(L.enabled), 'rule', char(cfg_get(L, 'rule', 'first useful pass')));
+    plan.lightcurve.observer = L.observer;
+    plan.lightcurve.n_windows = cfg_get(L, 'n_windows', 0);
+    plan.lightcurve.observer_sun_elevation_max_deg = cfg_get(L, 'observer_sun_elevation_max_deg', NaN);
+    plan.lightcurve.observer_sun_elevation_used_deg = cfg_get(L, 'observer_sun_elevation_used_deg', NaN);
+    if logical(L.found)
+        k2 = find(idx == L.satellite_index, 1);
+        so = S.sel.lc.output_step_s;                  % rows on the END-001 grid (multiples of the step)
+        t_out = (ceil(L.start_t_s/so)*so:so:floor(L.end_t_s/so)*so)';
+        if numel(t_out) < 2, t_out = (L.start_t_s:so:L.end_t_s)'; end
+        lc = plan.lightcurve;
+        lc.found = true;
+        lc.sat_pos = k2;
+        lc.sat_index = eph(k2).index;
+        lc.label = eph(k2).label;
+        lc.orbit_cfg = eph(k2).orbit;
+        lc.start_t_s = t_out(1);
+        lc.end_t_s = t_out(end);
+        lc.t_out = t_out;
+        lc.peak_t_s = L.peak_t_s;
+        lc.peak_el = L.peak_elevation_deg;
+        lc.sun_el_obs_at_peak = L.observer_sun_elevation_at_peak_deg;
+        lc.min_range_km = L.min_range_km;
+        lc.sunlit_fraction = L.satellite_sunlit_fraction;
+        plan.lightcurve = lc;
+        fprintf('Passes from END-001: light curve (%s) %s from %s, %s -> %s\n', lc.rule, lc.label, L.observer.name, L.start_utc, L.end_utc);
     end
-end
-
-function c = imaging_candidate(k, j, rg, el, te, sun_site, g, S)
-    [pk, ip] = max(el(rg));
-    sun_pass = sun_site(rg);
-    sub_pass = g.sun_sub(rg);
-    if S.sun_enabled && strcmp(S.sun_mode, 'day')
-        % daylight at the site AND along the sub-satellite track (END-007
-        % renders the ground under the satellite, not only the site)
-        ok = all(sun_pass >= S.sun_thr) && all(sub_pass >= S.sun_thr);
-        preferred = ok && all(sun_pass >= max(S.sel.img.preferred_sun_elevation_deg, S.sun_thr));
-    elseif S.sun_enabled && strcmp(S.sun_mode, 'night')
-        ok = all(sun_pass < S.sun_thr);
-        preferred = ok;
-    else
-        ok = true; preferred = true;
-    end
-    N = numel(te);
-    aos = te(rg(1)); los = te(rg(end));
-    thr = S.elev_threshold;
-    if rg(1) > 1
-        e0 = el(rg(1) - 1); e1 = el(rg(1));
-        aos = te(rg(1) - 1) + (thr - e0)/(e1 - e0)*(te(rg(1)) - te(rg(1) - 1));
-    end
-    if rg(end) < N
-        e0 = el(rg(end)); e1 = el(rg(end) + 1);
-        los = te(rg(end)) + (e0 - thr)/(e0 - e1)*(te(rg(end) + 1) - te(rg(end)));
-    end
-    c = struct('sat', k, 'site', j, 'aos_t', aos, 'los_t', los, 'peak_t', te(rg(ip)), 'peak_el', pk, ...
-        'sun_el_peak', sun_pass(ip), 'sun_el_min', min(sun_pass), 'sun_el_max', max(sun_pass), ...
-        'sun_el_sub_min', min(sub_pass), 'sunlit_frac', mean(g.sunlit(rg)), 'ok', ok, 'preferred', preferred, ...
-        'truncated', (rg(1) == 1) || (rg(end) == N));
-end
-
-function lc = select_lightcurve_pass(S, eph, te, Sun_ecef, geo, ctx, T)
-    % Best window with the satellite above the observer horizon, sunlit, and
-    % the observer in darkness (relaxed -12 -> -6 -> 0 deg if needed).
-    sel = S.sel;
-    lc = struct('found', false, 'enabled', true);
-    lc.observer = struct('name', sel.lc.name, 'site_lat_deg', sel.lc.lat_deg, 'site_lon_deg', sel.lc.lon_deg, 'site_alt_m', sel.lc.alt_m);
-    [p_o, up_o] = geodetic_ecef(deg2rad(sel.lc.lat_deg), deg2rad(sel.lc.lon_deg), sel.lc.alt_m);
-    thr = sel.lc.elev_threshold_deg + sel.lc.elev_margin_deg;
-    step = te(2) - te(1);
-    sun_obs = asind(Sun_ecef*up_o');
-    levels = sort(unique([sel.lc.sun_elev_max_deg, -12, -6, 0]));
-    levels = levels(levels >= sel.lc.sun_elev_max_deg);
-    best = []; level_used = NaN; n_windows = 0;
-    for lv = levels
-        best = []; n_windows = 0;
-        for k = 1:numel(geo)
-            el_o = elevation_deg(geo{k}.r_ecef, p_o, up_o);
-            vis = (el_o >= thr) & (sun_obs <= lv);
-            if sel.lc.require_sunlit, vis = vis & geo{k}.sunlit; end
-            [s_idx, e_idx] = find_runs(vis);
-            for p = 1:numel(s_idx)
-                rg = s_idx(p):e_idx(p);
-                if (numel(rg) - 1)*step < sel.lc.min_duration_s, continue; end
-                n_windows = n_windows + 1;
-                [pk, ip] = max(el_o(rg));
-                trunc = (s_idx(p) == 1) || (e_idx(p) == numel(vis));
-                c = struct('pos', k, 'rg', rg, 'peak_el', pk, 'peak_t', te(rg(ip)), 'trunc', trunc);
-                if isempty(best) || (best.trunc && ~c.trunc) || (best.trunc == c.trunc && c.peak_el > best.peak_el)
-                    best = c;
-                end
-            end
-        end
-        if ~isempty(best), level_used = lv; break; end
-    end
-    lc.n_windows = n_windows;
-    lc.observer_sun_elevation_max_deg = sel.lc.sun_elev_max_deg;
-    lc.observer_sun_elevation_used_deg = level_used;
-    if isempty(best)
-        fprintf('[END-003 planner] WARNING: no sunlit night pass visible from %s in the simulated window.\n', sel.lc.name);
-        return;
-    end
-    % refine on a 1 s grid
-    k = best.pos;
-    tf = (ceil(max(0, te(best.rg(1)) - step)):1:floor(min(T, te(best.rg(end)) + step)))';
-    jdf = ctx.jd0 + tf/86400;
-    thf = gmst_rad(jdf);
-    rf = eph_eval(eph(k), tf);
-    Sf = sun_vectors_eci(jdf);
-    el_f = elevation_deg(rot_eci2ecef(rf, thf), p_o, up_o);
-    sun_f = asind(rot_eci2ecef(Sf, thf)*up_o');
-    visf = (el_f >= thr) & (sun_f <= level_used);
-    if sel.lc.require_sunlit, visf = visf & sunlit_flags(rf, Sf, S.Re); end
-    [s2, e2] = find_runs(visf);
-    pick = find(tf(s2) <= best.peak_t & best.peak_t <= tf(e2), 1);
-    if isempty(pick), [~, pick] = max(e2 - s2); end
-    ta = tf(s2(pick)); tb = tf(e2(pick));
-    if (tb - ta) > 2*sel.lc.edge_margin_s + sel.lc.min_duration_s/2
-        ta = ta + sel.lc.edge_margin_s;
-        tb = tb - sel.lc.edge_margin_s;
-    end
-    so = sel.lc.output_step_s;                        % rows on the END-001 grid (multiples of the step)
-    t_out = (ceil(ta/so)*so:so:floor(tb/so)*so)';
-    if numel(t_out) < 2, t_out = (ta:so:tb)'; end
-    ta = t_out(1); tb = t_out(end);
-    jdo = ctx.jd0 + t_out/86400; tho = gmst_rad(jdo);
-    ro = eph_eval(eph(k), t_out);
-    So = sun_vectors_eci(jdo);
-    el_out = elevation_deg(rot_eci2ecef(ro, tho), p_o, up_o);
-    [pk, ip] = max(el_out);
-    lc.found = true;
-    lc.sat_pos = k;
-    lc.sat_index = eph(k).index;
-    lc.label = eph(k).label;
-    lc.orbit_cfg = eph(k).orbit;
-    lc.start_t_s = ta;
-    lc.end_t_s = tb;
-    lc.t_out = t_out;
-    lc.peak_t_s = t_out(ip);
-    lc.peak_el = pk;
-    lc.sun_el_obs_at_peak = asind(rot_eci2ecef(So(ip, :), tho(ip))*up_o');
-    lc.min_range_km = min(vecnorm(rot_eci2ecef(ro, tho) - p_o, 2, 2))/1000;
-    lc.sunlit_fraction = mean(sunlit_flags(ro, So, S.Re));
-    fprintf('[END-003 planner] Light-curve pass: %s from %s | peak elevation %.2f deg | observer Sun %.2f deg | %d window(s)\n', ...
-        lc.label, sel.lc.name, lc.peak_el, lc.sun_el_obs_at_peak, n_windows);
 end
 
 %% =========================================================================
@@ -1020,7 +821,8 @@ function info = export_selected_passes(product_dir, results_dir, plan, S, epoch,
     [p, ~] = geodetic_ecef(site.lat, site.lon, site.alt);
     im.min_off_nadir_deg = angle_deg(-rr, rot_ecef2eci(p, th) - rr);
     im.target_site = struct('name', site.name, 'lat_deg', rad2deg(site.lat), 'lon_deg', rad2deg(site.lon), ...
-        'elev_threshold_deg', S.elev_threshold, 'source', sites.source, 'description', sites.description, 'n_points', numel(sites.lat));
+        'elev_threshold_deg', S.elev_threshold, 'source', sites.source, 'description', sites.description, 'n_points', sites.n_points);
+    im.selected_by = 'END-001 (pass_selection.json)';
     im.site_sun_elevation_at_peak_deg = G.sun_site(ip);
     im.site_sun_elevation_min_deg = min(G.sun_site);
     im.satellite_sunlit_fraction = mean(G.sunlit);
@@ -1041,9 +843,11 @@ function info = export_selected_passes(product_dir, results_dir, plan, S, epoch,
 
     lc = plan.lightcurve;
     L = struct();
-    L.purpose = 'END-010 reflectance / light curve: sunlit satellite visible from the observer during the night';
+    L.purpose = 'END-010 reflectance / light curve: first pass of a sunlit satellite visible from the observatory at night';
     L.enabled = logical(lc.enabled);
     L.found = logical(lc.found);
+    L.selected_by = 'END-001 (pass_selection.json)';
+    L.rule = lc.rule;
     if lc.enabled
         L.observer = lc.observer;
         L.observer_sun_elevation_max_deg = lc.observer_sun_elevation_max_deg;
@@ -1097,7 +901,7 @@ function info = export_selected_passes(product_dir, results_dir, plan, S, epoch,
     for i = 1:numel(plan.candidates)
         cc = plan.candidates(i);
         cand_rows(i).satellite_index = eph(cc.sat).index;
-        cand_rows(i).site = sites.names{cc.site};
+        cand_rows(i).site = cc.site_name;
         cand_rows(i).start_utc = utc_str(epoch, round(cc.aos_t));
         cand_rows(i).end_utc = utc_str(epoch, round(cc.los_t));
         cand_rows(i).peak_time_utc = utc_str(epoch, cc.peak_t);
@@ -1108,7 +912,7 @@ function info = export_selected_passes(product_dir, results_dir, plan, S, epoch,
         cand_rows(i).satellite_sunlit_fraction = cc.sunlit_frac;
         cand_rows(i).sun_constraint_ok = cc.ok;
         cand_rows(i).truncated_by_window = cc.truncated;
-        cand_rows(i).selected = (cc.sat == c.sat) && (cc.peak_t == c.peak_t) && plan.imaging.pass_found;
+        cand_rows(i).selected = cc.selected;
     end
     P.imaging_candidates = cand_rows;
     txt = jsonencode(P, 'PrettyPrint', true);
@@ -1193,6 +997,11 @@ function D = dashboard_series(A, td, S, ctx, site, E)
     D.H_dir(D.H_mag == 0, :) = 0;
     D.energy = 0.5*sum(D.w.*D.H_body, 2);
     [D.start_idx, D.end_idx] = find_runs(D.el > S.elev_threshold);
+    % illumination of the body faces (+X -X +Y -Y +Z -Z): mean cosine of the Sun
+    % incidence over the sunlit time, for the solar panels of END-019 (END-004)
+    s_b = quat_rotate([-D.q(:, 1:3), D.q(:, 4)], Sun);
+    cosf = max(0, s_b*[1 0 0; -1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1]');
+    D.face_illum = mean(cosf(D.sunlit, :), 1);
 end
 
 function make_standard_plots(out_dir, D, S, site)
@@ -1378,6 +1187,11 @@ function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat)
     k = [k, kpi_entry('KPI-21', 'Max Body Rate During Imaging Pass', max(rate), 'deg/s', 'momentum_and_rates', NaN, NaN, NaN)];
     cat = struct('module_id', 'END-003', 'attitude_mode', S.mode, 'orbit_source', 'END-001 ephemeris', ...
         'generated_at', char(string(datetime('now', 'TimeZone', 'UTC'), 'yyyy-MM-dd HH:mm:ss')), 'kpis', k);
+    f = D.face_illum;
+    cat.illumination = struct('mean_cos_sunlit', struct('x_plus', f(1), 'x_minus', f(2), 'y_plus', f(3), 'y_minus', f(4), ...
+        'z_plus', f(5), 'z_minus', f(6)), 'sunlit_fraction', mean(D.sunlit), 'satellite', plan.imaging.label, ...
+        'note', ['mean cosine of the Sun incidence on each body face over the sunlit time of the whole window ', ...
+        '(attitude of this run, eclipses excluded): P_face = P_peak x factor']);
     file = fullfile(out_dir, 'attitude_summary.json');
     write_text(file, jsonencode(cat, 'PrettyPrint', true));
     fprintf('KPI catalog saved: %s\n', file);

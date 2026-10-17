@@ -338,3 +338,9 @@ The following matrix describes the file access map, including specific read/writ
 |***output_reflectance_determination/flux.csv***|Output|CSV|Unity-generated reflectance/light-curve output.|**Write-Only (w)**|
 |***output_reflectance_determination/log file***|Output|Text log|Unity execution log file named according to `cfg.unityOpts.logFile`.|**Write-Only (w)**|
 |***results_reflectance_determination/Plots***|Output|PNG figures|Diagnostic plots generated when debug mode is enabled.|**Write-Only (w)**|
+
+1. ## **Satellite and pass of the run (2026-10-17)**
+
+The CubeSat class rendered by Unity and the reference area of the magnitude estimate (mean projected area) come from the END-019
+initial design (spacecraft_definition.json). The light-curve pass is the first useful night pass from the observatory, chosen by
+END-001 (pass_selection.json); END-003 writes its ephemeris and attitude in J2000.

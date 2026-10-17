@@ -25,8 +25,11 @@ description: >
   the module screens every satellite and selects (1) the satellite and the
   daylight pass in visibility of the target site used by END-007, and (2) a
   night pass, visible from a ground observer (e.g. the Matera telescope) with
-  the satellite sunlit, used by END-010. The selected satellite, pass date and
-  pass start/end times are written to selected_passes.json.
+  the satellite sunlit, used by END-010. Since 2026-10-17 both passes are chosen
+  by END-001 (pass_selection.json: best daylight pass over the AOI, FIRST useful
+  night pass from the observatory) and END-003 computes the attitude on them;
+  the selected satellite, pass date and pass start/end times are written to
+  selected_passes.json.
 
 capabilities:
   - orbital_propagation
@@ -143,29 +146,6 @@ required_inputs:
       Required to initialize the orbital propagation. These values may be
       provided by the user, assumed for a preliminary case, or derived from an
       upstream orbit/constellation analysis.
-
-  - name: target_site
-    kind: parameter_group
-    data_type: object
-    unit: mixed
-    required: false
-    default_value: null
-    assumption_allowed: true
-    fields:
-      - site_lat_deg
-      - site_lon_deg
-      - elev_threshold_deg
-    description: >
-      Ground target or station coordinates and minimum topocentric elevation
-      threshold, corresponding to cfg.target in the module input JSON. Accepted
-      as {lat, lon}, [lat, lon], "lat, lon" or a known name (Etna, Matera,
-      Genova, Roma). When it is not given, every point of the END-001 area of
-      interest (ROI_2 of END-001 with its RegionSettings) is a candidate target
-      and the best pass over any of them is selected.
-    missing_information_reason: >
-      Required to evaluate target visibility, tracking windows and pass
-      selection. If only a named target is provided, coordinates or a resolved
-      site definition are still required before execution.
 
   - name: attitude_mode
     kind: parameter

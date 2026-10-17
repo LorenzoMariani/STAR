@@ -137,6 +137,8 @@ execution:
   downstream_dependencies: []
   estimated_runtime: 2
 interface_notes: >
+  Since 2026-10-17 the CubeSat class is the one of the END-019 initial design of the run (spacecraft_definition.json), shared by all
+  modules; only a class the user approved explicitly wins, a class written in the requirements is reported.
   The Python runner checks that the mission is a CubeSat, builds input_termico.json from the requirements and the approved
   inputs (what the mission does not state is left to the model's defaults), copies the END-001 and END-003 products of the run
   into one folder (the pass attitude as END-003's output_attitude_propagation_ECI.csv, quaternion body to ECI), runs

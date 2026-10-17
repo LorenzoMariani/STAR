@@ -391,6 +391,23 @@ required_inputs:
   missing_information_reason: 'Required when single_sensor_type is RECT.
 
     '
+- name: observatory
+  kind: parameter
+  data_type: object_or_string
+  unit: '-'
+  required: false
+  default_value: Matera (SPADE)
+  assumption_allowed: true
+  description: 'Ground observatory of the light-curve pass (END-010): the name or city of
+    an END-010 station (SPADE = Matera, SCUDO = Collepardo, ...), "lat, lon" or {name,
+    lat, lon, alt_m}. END-001 selects the first pass of the designed constellation visible
+    from it at night with the satellite sunlit (pass_selection.json).
+
+    '
+  missing_information_reason: 'Needed only when the workflow simulates light curves (END-010);
+    the default is the Matera telescope.
+
+    '
 outputs:
 - name: revisit_time
   kind: result
@@ -429,6 +446,18 @@ outputs:
     (ECI with ECEF = R3(GMST) ECI, as END-003 and END-007; J2-secular propagation of END-001), qw/qx/qy/qz_body2eci
     (scalar-first quaternion body to ECI of the nadir-pointing attitude: +Z nadir, +X forward, +Y right of the
     track).
+
+    '
+- name: pass_selection
+  kind: result
+  artifact_name: pass_selection.json
+  data_type: json
+  description: 'Passes of the designed constellation for the downstream modules (2026-10-17,
+    before chosen by END-003): imaging_pass, the best pass in daylight over the AOI (daylight
+    at the AOI point and along the sub-satellite track) for END-003/END-007; lightcurve_pass,
+    the FIRST pass visible from the observatory at night (observer Sun below -12 deg, relaxed
+    to -6 and 0 only if no window exists) with the satellite sunlit, for END-003/END-010;
+    imaging_candidates. Times in seconds from the ephemeris epoch and UTC.
 
     '
 execution:

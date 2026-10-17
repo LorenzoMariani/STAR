@@ -39,6 +39,11 @@ import subprocess
 import sys
 import time
 from datetime import datetime
+
+try:
+    from .star_runner_io import load_spacecraft_definition
+except ImportError:          # loaded outside the runners package
+    from star_runner_io import load_spacecraft_definition
 from pathlib import Path
 from typing import Any, Callable
 
@@ -238,11 +243,20 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
             config[k] = v
             provenance[k] = source
     notes: list[str] = []
+    # the satellite of the run (2026-10-17): the class of the END-019 initial design, the one every module uses;
+    # only a class the user approved explicitly wins, a class written in the requirements is only reported
+    sat = load_spacecraft_definition(payload, Path(output_dir).resolve().parent)
+    if sat and sat.get("form_factor") in CLASSES and "form_factor" not in approved:
+        if req_params.get("form_factor") and req_params["form_factor"] != sat["form_factor"]:
+            notes.append(f"The requirements state a {req_params['form_factor']} CubeSat; the END-019 design of the run is a "
+                         f"{sat['form_factor']} (the class that meets the required performance), used here")
+        config["form_factor"] = sat["form_factor"]
+        provenance["form_factor"] = f"END-019 initial design of the run (spacecraft_definition.json, {sat.get('mass_kg', 0):.2f} kg)"
     if config.get("form_factor") not in CLASSES:
         config.pop("form_factor", None)
         provenance.pop("form_factor", None)
     # the domain is decided by what the requirements or the user state, never by a first guess
-    stated_class = approved.get("form_factor") or req_params.get("form_factor")
+    stated_class = approved.get("form_factor") or req_params.get("form_factor") or (sat or {}).get("form_factor")
     if not out_of_scope and not stated_class:
         if not is_cubesat:
             out_of_scope.append("the mission names no CubeSat and no CubeSat class was approved: END-018 models CubeSats of 1U-12U only")
