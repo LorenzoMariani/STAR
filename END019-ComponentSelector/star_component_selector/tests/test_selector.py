@@ -23,6 +23,12 @@ def synthetic(cid, category, mass, dims=None, **specs):
     return Component(raw)
 
 
+def user_document(c):
+    """Fonte = PDF fornito dall'utente senza URL pubblico (source.url null, source.origin): la copia in datasheets/ e' la prova."""
+    src = c.raw["source"]
+    return src["url"] is None and bool(src.get("origin")) and bool(c.raw.get("datasheet"))
+
+
 def structure_1u():
     return synthetic("s", "structure", 0.1, [100, 100, 113.5], form_factor_u=1.0, max_total_mass_kg=2.0)
 
@@ -32,18 +38,18 @@ class TestCatalog(unittest.TestCase):
     def setUpClass(cls):
         cls.cat = load_catalog(CATALOG)
 
-    def test_catalog_is_valid_and_has_232_components_in_all_categories(self):
-        self.assertEqual(len(self.cat), 232)
+    def test_catalog_is_valid_and_has_236_components_in_all_categories(self):
+        self.assertEqual(len(self.cat), 236)
         by_cat = {}
         for c in self.cat:
             by_cat[c.category] = by_cat.get(c.category, 0) + 1
         self.assertEqual(set(by_cat), set(CATEGORIES))
         self.assertEqual({k: by_cat[k] for k in ("structure", "magnetorquer", "reaction_wheel", "propulsion", "antenna", "gps")},
-                         {"structure": 16, "magnetorquer": 8, "reaction_wheel": 30, "propulsion": 27, "antenna": 11, "gps": 6})
+                         {"structure": 16, "magnetorquer": 8, "reaction_wheel": 30, "propulsion": 27, "antenna": 12, "gps": 6})
 
     def test_every_component_has_a_source_and_none_is_marked_verified_without_a_person(self):
         for c in self.cat:
-            self.assertTrue(c.raw["source"]["url"].startswith("https://"), c.id)
+            self.assertTrue(user_document(c) or c.raw["source"]["url"].startswith("https://"), c.id)
             self.assertTrue(c.raw["source"]["document"], c.id)
             self.assertFalse(c.verified, c.id)
 
@@ -57,8 +63,9 @@ class TestCatalog(unittest.TestCase):
             path = root / img["file"]
             self.assertTrue(path.is_file(), c.id)
             self.assertRegex(path.name, r"^[A-Za-z0-9]+-[A-Za-z0-9.\-]+\.png$", c.id)
-            self.assertTrue(img["image_url"].startswith("https://"), c.id)
-            self.assertTrue(img["page_url"].startswith("https://"), c.id)
+            web = ("https://",) if not user_document(c) else (c.raw["datasheet"]["file"],)      # foto dal PDF fornito dall'utente
+            self.assertTrue(img["image_url"].startswith(web), c.id)
+            self.assertTrue(img["page_url"].startswith(web), c.id)
             names.add(path.name)
         self.assertGreaterEqual(len(names), 150)
 
@@ -80,7 +87,7 @@ class TestCatalog(unittest.TestCase):
             if img:
                 self.assertIn(c.id, rows, c.id)
                 self.assertEqual(rows[c.id]["file"], Path(img["file"]).name, c.id)
-                self.assertTrue(rows[c.id]["fonte_immagine"].startswith("https://"), c.id)
+                self.assertTrue(rows[c.id]["fonte_immagine"].startswith(c.raw["datasheet"]["file"] if user_document(c) else "https://"), c.id)
 
     def test_no_value_is_filled_with_a_default(self):
         self.assertIsNone(CAT["gomspace-nanopower-p60"].raw.get("power_w"))
@@ -184,7 +191,7 @@ class TestSelection(unittest.TestCase):
         by = {s["id"]: s for s in SERVICE.select({"form_factor_u": 6})["subsystems"]}
         self.assertEqual(by["eps"]["n_database"], 15)
         self.assertEqual(by["propulsion"]["n_database"], 27)
-        self.assertEqual(by["payload_imager"]["n_database"] + by["payload_optical"]["n_database"], 33)
+        self.assertEqual(by["payload_imager"]["n_database"] + by["payload_optical"]["n_database"], 36)
         for s in by.values():
             self.assertLessEqual(s["n_fit"], s["n_database"], s["id"])
             self.assertEqual(s["n_fit"], (1 if s["selected"] else 0) + len(s["alternatives"]), s["id"])

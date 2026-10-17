@@ -24,7 +24,10 @@ class TestDatasheets(unittest.TestCase):
             path = SERVICE.root / ds["file"]
             self.assertTrue(path.is_file(), c.id)
             self.assertEqual(path.read_bytes()[:4], b"%PDF", c.id)
-            self.assertEqual(ds["source_url"], c.raw["source"]["url"], c.id)       # il file e' il documento citato come fonte
+            if not ds.get("origin"):     # il file e' il documento citato come fonte (un PDF aggiunto dall'utente puo' essere solo di riferimento)
+                self.assertEqual(ds["source_url"], c.raw["source"]["url"], c.id)
+            else:
+                self.assertIsNone(ds["source_url"], c.id)
             self.assertEqual(ds["bytes"], path.stat().st_size, c.id)
         self.assertGreaterEqual(n, 90)
 

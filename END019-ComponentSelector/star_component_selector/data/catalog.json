@@ -3028,7 +3028,7 @@
     60
    ],
    "family": "bct-xact",
-   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 3U (4 kg)); 15 mNms per asse, coppia massima 0.005 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 3U.",
+   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 3U (4 kg)); 15 mNms per asse, coppia massima 0.005 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 3U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): 0.885 kg, 10 x 10 x 5 cm (0.5U), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, 12 V, RS-422, vita di progetto 5 anni in LEO; consumo non dichiarato.",
    "source": {
     "url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "document": "Blue Canyon Technologies ADCS product sheet REV 1/2026",
@@ -3094,7 +3094,7 @@
     60
    ],
    "family": "bct-xact",
-   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 6U (14 kg)); 50 mNms per asse, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x7.54 cm (0.75U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U.",
+   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 6U (14 kg)); 50 mNms per asse, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x7.54 cm (0.75U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): 1.23 kg, 10 x 10 x 7.54 cm (0.75U), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, 12 V, RS-422, vita di progetto 5 anni in LEO; consumo non dichiarato.",
    "source": {
     "url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "document": "Blue Canyon Technologies ADCS product sheet REV 1/2026",
@@ -3160,7 +3160,7 @@
     60
    ],
    "family": "bct-xact",
-   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. Massa '0.52 kg + 1 kg (ruote)': sommata (1.52 kg), ma la scheda non dice a quante ruote si riferisce il chilogrammo. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 12U (25 kg)); fino a 4 ruote da 100 mNms, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U) esclusi i componenti esterni. Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 12U.",
+   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. Massa '0.52 kg + 1 kg (ruote)': sommata (1.52 kg), ma la scheda non dice a quante ruote si riferisce il chilogrammo. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 12U (25 kg)); fino a 4 ruote da 100 mNms, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U) esclusi i componenti esterni. Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 12U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): XACT-100 0.433 kg + 1.38 kg (ruote + barre di torsione) = 1.813 kg, 10 x 10 x 5 cm (0.5U) esclusi i componenti esterni, 100 mNms, 12 V, RS-422, slew >= 10 gradi/s (12U da 25 kg), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, vita di progetto 5 anni in LEO. Si tiene la massa della REV 1/2026 (piu' recente); per un bilancio di massa prudente il valore 2019 e' 0.29 kg piu' alto. Consumo non dichiarato nemmeno nella scheda 2019.",
    "source": {
     "url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "document": "Blue Canyon Technologies ADCS product sheet REV 1/2026",
@@ -6963,7 +6963,7 @@
     -10,
     50
    ],
-   "notes": "Fonte: pagina della variante su simera-sense.com letta il 2026-10-13 (ICD, manuali e brochure sono dietro modulo o richiesta; TRL, eredita' di volo e prezzo non pubblicati). GSD e swath a 500 km. Potenza: in acquisizione il valore dichiarato (usato come power_w), a riposo e' nelle note. 'Pienamente funzionante fino a 15 krad' non e' etichettato come TID ma e' usato come tid_krad. Push-broom CMOS a otturatore globale 4096 pixel, 12 bit, dTDI 1-32 per banda, 8 bande VNIR (450-900 nm), campo 2.22 gradi; massa 1.26 kg +-5%. Ingombro 176.5 x 98.3 x 98.3 mm. Potenza a riposo 3.25 W. Famiglia xScape100: volume 1.5U, taglia minima 6U secondo le FAQ del sito.",
+   "notes": "Fonte: pagina della variante su simera-sense.com letta il 2026-10-13 (ICD, manuali e brochure sono dietro modulo o richiesta; TRL, eredita' di volo e prezzo non pubblicati). GSD e swath a 500 km. Potenza: in acquisizione il valore dichiarato (usato come power_w), a riposo e' nelle note. 'Pienamente funzionante fino a 15 krad' non e' etichettato come TID ma e' usato come tid_krad. Push-broom CMOS a otturatore globale 4096 pixel, 12 bit, dTDI 1-32 per banda, 8 bande VNIR (450-900 nm), campo 2.22 gradi; massa 1.26 kg +-5%. Ingombro 176.5 x 98.3 x 98.3 mm. Potenza a riposo 3.25 W. Famiglia xScape100: volume 1.5U, taglia minima 6U secondo le FAQ del sito. Datasheet 036665 rev. 5 (2020-11-19; PDF aggiunto dall'utente il 2026-10-17, copia locale collegata come riferimento): 1.1 kg +-5%, 2.5 W a riposo o in lettura e 5.8 W in acquisizione, 7 bande VNIR, 98 x 98 x 176 mm, campo 2.22 gradi across-track e 1.66 along-track, 5 V +-250 mV, -10..+50 C, almeno 15 krad (provato fino a 25 krad senza schermo, Co-60), per CubeSat 3U o piu' grandi, striscia continua fino a 4500 km a 500 km. Si tengono i valori della pagina prodotto (piu' recente). Il datasheet porta una nota di copyright Simera Sense (uso limitato allo scopo per cui e' fornito): il PDF resta fuori da git.",
    "source": {
     "url": "https://simera-sense.com/products/multiscape100/",
     "document": "Pagina prodotto Simera Sense 'MultiScape100'",
@@ -7029,6 +7029,14 @@
     "axis": 0,
     "basis": "image",
     "set": "2026-10-15"
+   },
+   "datasheet": {
+    "file": "datasheets/SatCatalog_-_Simera_Sense_-_MultiScape100_CIS_-_Datasheet.pdf",
+    "document": "Simera Sense MultiScape100 CIS datasheet 036665 rev. 5 (2020-11-19, distribuito da SatCatalog)",
+    "source_url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "retrieved": "2026-10-17",
+    "bytes": 1133987
    }
   },
   {
@@ -9388,6 +9396,252 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "skyfox-picam",
+   "category": "payload",
+   "vendor": "SkyFox Labs",
+   "name": "piCAM (VGA, 60 deg)",
+   "mass_kg": 0.04,
+   "power_w": 0.315,
+   "temp_op_c": [
+    -30,
+    85
+   ],
+   "notes": "Datasheet piCAM Rev. A/2025 (SkyFox Labs, Praga): camera digitale a colori VGA 640 x 480 con uscita JPEG (cattura in 5 s), comandi a un byte su UART 115200-8-N-1 (1200-921600 bit/s, livelli CMOS 3.3 V), uscita a collettore aperto per un flash LED esterno, telemetria di tensioni e correnti. Alimentazione 2.7-3.6 V (3.3 V nominali), 315 mW tipici (95 mA); 40 g; corpo 33 x 33 x 19 mm piu' l'ottica (lunghezza variabile, non dichiarata), staffa 48 x 33 mm con 4 fori M2.5; connettore Molex PicoBlade a 6 poli; -30..+85 C operativi. Ottica S-mount a fuoco fisso (infinito), campo di vista ~60 gradi diagonale con filtro IR-cut (116 e 170 gradi a richiesta); immagini di esempio da un CubeSat in orbita eliosincrona a 530 km. GSD e swath non dichiarati: con 60 gradi in diagonale su 800 pixel a 530 km verrebbero circa 765 m e 490 km (solo indicativi, non usati). Versioni EM e FM elettricamente identiche; parti commerciali non resistenti alle radiazioni; esportazione soggetta a licenza del Ministero dell'Industria ceco (30-60 giorni). Uso tipico: monitoraggio di dispiegamenti e immagini a bassa risoluzione.",
+   "source": {
+    "url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "document": "SkyFox Labs piCAM Product Datasheet Rev. A/2025",
+    "retrieved": "2026-10-17",
+    "verified": false,
+    "method": "trascritto dal datasheet del fornitore aggiunto dall'utente (copia in datasheets/); da controllare manualmente"
+   },
+   "specs": {
+    "payload_type": "imager",
+    "spectral_bands": [
+     "RGB"
+    ],
+    "reference_altitude_km": null,
+    "gsd_m_at_ref": null,
+    "swath_km_at_ref": null,
+    "focal_length_mm": null,
+    "aperture_mm": null,
+    "pixel_pitch_um": null,
+    "across_track_pixels": 640,
+    "min_form_factor_u": null,
+    "data_interfaces": [
+     "UART"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      2.7,
+      3.6
+     ]
+    ],
+    "storage_gb": null,
+    "link_type": null,
+    "link_data_rate_mbps": null,
+    "uplink_data_rate_kbps": null,
+    "max_range_km": null,
+    "wavelength_nm": null,
+    "host_pointing_deg": null
+   },
+   "dimensions": {
+    "mm": [
+     48.0,
+     33.0,
+     null
+    ],
+    "basis": "declared",
+    "note": "Datasheet piCAM: staffa 48 x 33 mm; corpo 33 x 33 x 19 mm piu' l'ottica, la cui lunghezza non e' dichiarata."
+   },
+   "image": {
+    "file": "images/SkyFoxLabs-piCAM.png",
+    "image_url": "datasheets/piCAM_Datasheet_rev_A_2025.pdf#page=2",
+    "page_url": "datasheets/piCAM_Datasheet_rev_A_2025.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-17",
+    "note": "Pagina 2 del datasheet SkyFox Labs piCAM Product Datasheet Rev. A/2025 (PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico)."
+   },
+   "datasheet": {
+    "file": "datasheets/piCAM_Datasheet_rev_A_2025.pdf",
+    "document": "SkyFox Labs piCAM Product Datasheet Rev. A/2025",
+    "source_url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "retrieved": "2026-10-17",
+    "bytes": 1393188
+   },
+   "shape": {
+    "type": "board_lens",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-17"
+   }
+  },
+  {
+   "id": "xcam-c3d",
+   "category": "payload",
+   "vendor": "XCAM",
+   "name": "C3D CubeSat Camera (1.3 MP, 9.6 mm)",
+   "mass_kg": 0.085,
+   "power_w": 0.845,
+   "trl": 9,
+   "flight_heritage": 2,
+   "temp_op_c": [
+    -25,
+    65
+   ],
+   "notes": "Scheda XCAM C3D MKPU-XCAM-MS-00011vC (2022, distribuita da SatCatalog; la copia satsearch del 2018 e' identica salvo 'eredita' di volo 3 anni' invece di 8): TRL 9, in volo dal 2014 su UKube-1 (UK Space Agency) e AlSat Nano; fino a tre teste per scheda (stereo o ottiche diverse), sensore CMOS 1.3 MP 1280 x 1024 da 5.3 um a colori (RGB) o bianco e nero, 400-650 nm, obiettivo commerciale 9.6 mm F/3.0, GSD 360 m a 650 km con questo obiettivo (altre varianti disponibili). Swath DERIVATO come 1280 pixel x GSD (non dichiarato) e apertura DERIVATA come 9.6 mm / 3.0. Dati: grezzi a 8 bit e miniature 1:10, compressione JPEG-LS senza perdite (50%), 16 MB SDRAM e 8 MB flash, interfacce I2C o SPI. Scheda 9.5 x 9.1 x 2.7 cm; 85 g con una testa WFI; picco 845 mW; -25..+65 C operativi, -35..+75 C di sopravvivenza (provati). Per CubeSat da 1U in su. Tensione di alimentazione non dichiarata.",
+   "source": {
+    "url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "document": "XCAM C3D CubeSat Camera product sheet MKPU-XCAM-MS-00011vC (2022, distribuito da SatCatalog)",
+    "retrieved": "2026-10-17",
+    "verified": false,
+    "method": "trascritto dal datasheet del fornitore aggiunto dall'utente (copia in datasheets/); da controllare manualmente"
+   },
+   "specs": {
+    "payload_type": "imager",
+    "spectral_bands": [
+     "RGB",
+     "MONO"
+    ],
+    "reference_altitude_km": 650.0,
+    "gsd_m_at_ref": 360.0,
+    "swath_km_at_ref": 460.8,
+    "focal_length_mm": 9.6,
+    "aperture_mm": 3.2,
+    "pixel_pitch_um": 5.3,
+    "across_track_pixels": 1280,
+    "min_form_factor_u": 1,
+    "data_interfaces": [
+     "I2C",
+     "SPI"
+    ],
+    "supply_voltage_ranges_v": null,
+    "storage_gb": 0.008,
+    "link_type": null,
+    "link_data_rate_mbps": null,
+    "uplink_data_rate_kbps": null,
+    "max_range_km": null,
+    "wavelength_nm": null,
+    "host_pointing_deg": null
+   },
+   "dimensions": {
+    "mm": [
+     95.0,
+     91.0,
+     27.0
+    ],
+    "basis": "declared",
+    "note": "Scheda XCAM C3D: 9.5 x 9.1 x 2.7 cm."
+   },
+   "image": {
+    "file": "images/XCAM-C3D.png",
+    "image_url": "datasheets/SatCatalog_-_XCAM_-_C3D_CubeSat_Camera_-_Datasheet.pdf#page=1",
+    "page_url": "datasheets/SatCatalog_-_XCAM_-_C3D_CubeSat_Camera_-_Datasheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-17",
+    "note": "Pagina 1 del datasheet XCAM C3D CubeSat Camera product sheet MKPU-XCAM-MS-00011vC (2022, distribuito da SatCatalog) (PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico)."
+   },
+   "datasheet": {
+    "file": "datasheets/SatCatalog_-_XCAM_-_C3D_CubeSat_Camera_-_Datasheet.pdf",
+    "document": "XCAM C3D CubeSat Camera product sheet MKPU-XCAM-MS-00011vC (2022, distribuito da SatCatalog)",
+    "source_url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "retrieved": "2026-10-17",
+    "bytes": 885509
+   },
+   "shape": {
+    "type": "board_lens",
+    "axis": 2,
+    "basis": "image",
+    "set": "2026-10-17"
+   }
+  },
+  {
+   "id": "cavu-raveneye5",
+   "category": "payload",
+   "vendor": "CAVU Aerospace",
+   "name": "RavenEye5 (s.LDU345, 5 MP, 2U)",
+   "mass_kg": 1.1,
+   "power_w": null,
+   "volume_u": 2.0,
+   "tid_krad": 30.0,
+   "notes": "Datasheet CAVU Aerospace RavenEye5 (agosto 2026): camera s.LDU345 da 5 MP (2448 x 2048, pixel 3.4 um), apertura 60 mm, focale 400 mm, GSD 4.25 m e swath 10.4 km a 500 km; immagini RAW Bayer a 12 bit senza compressione e JPEG, ritaglio centrale in hardware; FPGA Microchip PolarFire SoC con NVIDIA Jetson Xavier NX via MIPI CSI-2 a 4 linee (streaming). Modello di volo 1.1 kg, 200 x 96 x 96 mm (2U); alimentazione 12 V (consumo non dichiarato); connettori Samtec e Nano-D; dati LVDS + RS-422 + Ethernet, trasmissione UART RS-485; radiazione 30 krad (60 MeV), progetto immune agli SEU; EMC, vibrazioni e TVAC a livello di qualifica. Dichiarata 'flight proven' senza numero di missioni. Varianti 2U, 3U e 12U da 5, 16 e 51 MP non modellate (solo la 2U da 5 MP ha i dati). Temperature non dichiarate. Sensore ad area (camera a immagine, non push-broom).",
+   "source": {
+    "url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "document": "CAVU Aerospace RavenEye5 datasheet (agosto 2026)",
+    "retrieved": "2026-10-17",
+    "verified": false,
+    "method": "trascritto dal datasheet del fornitore aggiunto dall'utente (copia in datasheets/); da controllare manualmente"
+   },
+   "specs": {
+    "payload_type": "imager",
+    "spectral_bands": [
+     "RGB"
+    ],
+    "reference_altitude_km": 500.0,
+    "gsd_m_at_ref": 4.25,
+    "swath_km_at_ref": 10.4,
+    "focal_length_mm": 400.0,
+    "aperture_mm": 60.0,
+    "pixel_pitch_um": 3.4,
+    "across_track_pixels": 2448,
+    "min_form_factor_u": null,
+    "data_interfaces": [
+     "LVDS",
+     "RS-422",
+     "Ethernet",
+     "RS-485"
+    ],
+    "supply_voltage_ranges_v": [
+     [
+      12.0,
+      12.0
+     ]
+    ],
+    "storage_gb": null,
+    "link_type": null,
+    "link_data_rate_mbps": null,
+    "uplink_data_rate_kbps": null,
+    "max_range_km": null,
+    "wavelength_nm": null,
+    "host_pointing_deg": null
+   },
+   "dimensions": {
+    "mm": [
+     200.0,
+     96.0,
+     96.0
+    ],
+    "basis": "declared",
+    "note": "Datasheet RavenEye5, modello di volo: 200 x 96 x 96 mm."
+   },
+   "image": {
+    "file": "images/CAVUAerospace-RavenEye5.png",
+    "image_url": "datasheets/CAVU-Camera-RavenEye5-Datasheet.pdf#page=1",
+    "page_url": "datasheets/CAVU-Camera-RavenEye5-Datasheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-17",
+    "note": "Pagina 1 del datasheet CAVU Aerospace RavenEye5 datasheet (agosto 2026) (PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico)."
+   },
+   "datasheet": {
+    "file": "datasheets/CAVU-Camera-RavenEye5-Datasheet.pdf",
+    "document": "CAVU Aerospace RavenEye5 datasheet (agosto 2026)",
+    "source_url": null,
+    "origin": "PDF aggiunto dall'utente in datasheets/ il 2026-10-17, senza URL pubblico",
+    "retrieved": "2026-10-17",
+    "bytes": 470885
+   },
+   "shape": {
+    "type": "lens_box",
+    "axis": 0,
+    "basis": "image",
+    "set": "2026-10-17"
    }
   },
   {
@@ -11837,6 +12091,77 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "nanoavionics-uhf-antenna-system",
+   "category": "antenna",
+   "vendor": "NanoAvionics",
+   "name": "UHF Antenna System (NA-RFS-G1-R0)",
+   "mass_kg": 0.042,
+   "power_w": null,
+   "temp_op_c": [
+    -40,
+    85
+   ],
+   "notes": "Datasheet NA-RFS-G1-R0 rev. 0 (NanoAvionics, 2018-12-04): splitter RF (adattamento d'impedenza e rete di sfasamento) con 4 monopoli per formare una turnstile a polarizzazione circolare, sinistra vista dall'alto e destra dal basso, lineare nel piano delle antenne; 400-500 MHz, 50 ohm, potenza RF massima 10 W, perdita d'inserzione < 1.3 dB, perdita di ritorno > 28 dB, connettore MCX, massa 42 g, -40..+85 C. Guadagno 'sempre specifico del satellite': simulato su LituanicaSAT-2 (3U, antenne a 90 gradi dall'asse lungo) massimo 2.03 dBi lungo l'asse lungo (Z) e da -1.9 a -0.2 dBi lungo X e Y (2.03 dBi usato come picco). Monopoli su cerniere a molla in alluminio 7075, ripiegati a 90 gradi quando stivati e lunghi 156.79 mm (Figura 4, piu' del lato di un 1U); il sistema di dispiegamento NON e' incluso (NanoAvionics lo vende a parte) e il datasheet non dichiara potenza. Compatibile con i prodotti NanoAvionics, CubeSat Kit e strutture ISIS; foro opzionale nello splitter per altri carichi. Pianta 99.6 x 99.6 mm (Figura 5); il connettore MCX sporge 10.36 mm sotto la scheda (Figura 4), escluso dall'altezza. Pagina prodotto attuale (https://nanoavionics.com/cubesat-components/cubesat-uhf-antenna/, letta il 2026-10-17): versioni 1x1U 33 g, 99.6 x 99.6 x 7.7 mm, guadagno tipico 1.37 dB; 1x2U 50 g, 222 x 96 x 7.7 mm, 2.86 dB; 2x2U 65 g, 224 x 222 x 7.7 mm, 2-3 dB; perdita di ritorno > 14 dB, temperatura di rumore 360 K (nadir); prezzi 5,300 EUR (antenna a monopolo), 5,440 EUR (sistema per CubeSat 6U-16U), 5,580 EUR (microsatelliti), ordine minimo 4, consegna 2-4 mesi. Qui si usano massa e guadagno del datasheet (versione 1x1U del 2018) e l'altezza 7.7 mm della pagina. Stesso fornitore della radio NanoAvionics SatCOM UHF (395-440 MHz).",
+   "source": {
+    "url": null,
+    "origin": "PDF fornito dall'utente il 2026-10-17 (scaricato da satbase), senza URL pubblico",
+    "document": "NanoAvionics UHF Antenna System datasheet NA-RFS-G1-R0 rev. 0 (2018-12-04)",
+    "retrieved": "2026-10-17",
+    "verified": false,
+    "method": "trascritto dal datasheet del fornitore fornito dall'utente (copia in datasheets/); da controllare manualmente"
+   },
+   "specs": {
+    "bands": [
+     "UHF"
+    ],
+    "frequency_ranges_mhz": [
+     [
+      400.0,
+      500.0
+     ]
+    ],
+    "antenna_type": "wire",
+    "gain_dbi": 2.03,
+    "beamwidth_deg": null,
+    "polarization": "RHCP/LHCP",
+    "rf_power_w_max": 10.0,
+    "deployable": true,
+    "data_interfaces": null,
+    "supply_voltage_ranges_v": null
+   },
+   "dimensions": {
+    "mm": [
+     99.6,
+     99.6,
+     7.7
+    ],
+    "basis": "declared",
+    "note": "Pianta 99.6 x 99.6 mm dal disegno del datasheet (Figura 5) e dalla pagina prodotto; altezza 7.7 mm dalla pagina prodotto (versione 1x1U). Il connettore MCX sporge 10.36 mm sotto la scheda (Figura 4) e non e' compreso."
+   },
+   "image": {
+    "file": "images/NanoAvionics-UHFAntennaSystem.png",
+    "image_url": "datasheets/NanoAvionics__UHF-Antenna-System-NA-RFS-G1-R0.pdf#page=1",
+    "page_url": "datasheets/NanoAvionics__UHF-Antenna-System-NA-RFS-G1-R0.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-17",
+    "note": "Pagina 1 del datasheet NanoAvionics UHF Antenna System datasheet NA-RFS-G1-R0 rev. 0 (2018-12-04) (PDF fornito dall'utente il 2026-10-17 (scaricato da satbase), senza URL pubblico)."
+   },
+   "datasheet": {
+    "file": "datasheets/NanoAvionics__UHF-Antenna-System-NA-RFS-G1-R0.pdf",
+    "document": "NanoAvionics UHF Antenna System datasheet NA-RFS-G1-R0 rev. 0 (2018-12-04)",
+    "source_url": null,
+    "origin": "PDF fornito dall'utente il 2026-10-17 (scaricato da satbase), senza URL pubblico",
+    "retrieved": "2026-10-17",
+    "bytes": 431750
+   },
+   "shape": {
+    "type": "patch",
+    "axis": null,
+    "basis": "image",
+    "set": "2026-10-17"
    }
   },
   {

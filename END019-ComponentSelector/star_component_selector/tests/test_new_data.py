@@ -317,7 +317,7 @@ class TestMorePropulsion(unittest.TestCase):
 
 class TestPropulsionAntennaGps(unittest.TestCase):
     def test_counts(self):
-        self.assertEqual((len(BY["propulsion"]), len(BY["antenna"]), len(BY["gps"])), (27, 11, 6))
+        self.assertEqual((len(BY["propulsion"]), len(BY["antenna"]), len(BY["gps"])), (27, 12, 6))
 
     def test_busek_bit3_derived_impulse_matches_the_declared_delta_v(self):
         """Il datasheet dichiara 2.39 km/s per un CubeSat da 14 kg: l'impulso derivato (Isp x g0 x propellente) deve darlo."""
@@ -341,6 +341,58 @@ class TestPropulsionAntennaGps(unittest.TestCase):
         self.assertEqual(CAT["sstl-sgr-ligo"].spec("accuracy_position_m"), 5.0)
         self.assertEqual(CAT["skyfox-pinav-ng"].spec("accuracy_basis"), "2-sigma")
         self.assertIsNone(CAT["spacemanic-celeste"].spec("accuracy_position_m"))
+
+
+
+class TestUserDatasheets(unittest.TestCase):
+    """Datasheet forniti dall'utente il 2026-10-17 (tools/add_satbase_datasheets.py)."""
+
+    def test_nanoavionics_uhf_antenna_system_from_its_datasheet(self):
+        c = CAT["nanoavionics-uhf-antenna-system"]
+        self.assertEqual((c.category, c.mass_kg, c.spec("bands"), c.spec("frequency_ranges_mhz"), c.spec("gain_dbi"), c.spec("rf_power_w_max"),
+                          c.spec("deployable"), c.dimensions_mm), ("antenna", 0.042, ["UHF"], [[400.0, 500.0]], 2.03, 10.0, True, [99.6, 99.6, 7.7]))
+        src, ds = c.raw["source"], c.raw["datasheet"]
+        self.assertIsNone(src["url"])
+        self.assertIn("utente", src["origin"])
+        self.assertEqual(ds["bytes"], (SERVICE.root / ds["file"]).stat().st_size)
+        self.assertTrue(c.raw["image"]["image_url"].startswith(ds["file"]))
+
+    def test_xact_keeps_the_2026_sheet_and_notes_the_2019_one(self):
+        c = CAT["bct-xact-100"]
+        self.assertEqual(c.mass_kg, 1.52)
+        self.assertEqual(c.raw["datasheet"]["file"], "datasheets/Blue-Canyon-Technologies__ADCS-2026.pdf")
+        self.assertIn("0.433 kg + 1.38 kg", c.raw["notes"])
+        for cid in ("bct-xact-15", "bct-xact-50", "bct-xact-100"):
+            self.assertEqual(CAT[cid].raw["notes"].count("Scheda BCT precedente (ottobre 2019"), 1, cid)
+
+
+
+class TestUserCameras(unittest.TestCase):
+    """Camere dai datasheet aggiunti dall'utente il 2026-10-17 (tools/add_user_cameras.py)."""
+
+    def test_cameras(self):
+        rows = {"skyfox-picam": (0.04, 0.315, None, None, 640), "xcam-c3d": (0.085, 0.845, 360.0, 460.8, 1280),
+                "cavu-raveneye5": (1.1, None, 4.25, 10.4, 2448)}
+        for cid, row in rows.items():
+            c = CAT[cid]
+            self.assertEqual((c.mass_kg, c.raw["power_w"], c.spec("gsd_m_at_ref"), c.spec("swath_km_at_ref"), c.spec("across_track_pixels")), row, cid)
+            self.assertIsNone(c.raw["source"]["url"], cid)
+            self.assertTrue((SERVICE.root / c.raw["datasheet"]["file"]).is_file(), cid)
+
+    def test_raveneye5_gsd_matches_its_optics(self):
+        c = CAT["cavu-raveneye5"]
+        self.assertAlmostEqual(c.spec("pixel_pitch_um") * 1e-6 * 500e3 / (c.spec("focal_length_mm") * 1e-3), c.spec("gsd_m_at_ref"), places=2)
+
+    def test_multiscape100_keeps_the_web_values_with_the_2020_datasheet_as_reference(self):
+        c = CAT["simera-multiscape100"]
+        self.assertEqual((c.mass_kg, c.raw["power_w"]), (1.26, 7.0))
+        self.assertTrue(c.raw["source"]["url"].startswith("https://"))
+        self.assertIn("rev. 5", c.raw["datasheet"]["document"])
+
+    def test_no_prototypes_or_platforms(self):
+        names = " ".join(c.raw["name"].lower() for c in SERVICE.catalog)
+        for word in ("ccam", "nuscis", "fastbus"):
+            self.assertNotIn(word, names)
 
 
 if __name__ == "__main__":

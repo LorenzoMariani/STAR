@@ -348,6 +348,8 @@ def validate_component(d: dict) -> list[str]:
     src = d.get("source")
     if isinstance(src, dict):
         errs += [f"{cid}: source.{k} mancante" for k in ("url", "document", "retrieved", "verified") if k not in src]
+        if "url" in src and src["url"] is None and not (src.get("origin") and isinstance(d.get("datasheet"), dict)):
+            errs.append(f"{cid}: source.url null solo per un documento fornito dall'utente (source.origin) con la copia in datasheets/")
     return errs
 
 
