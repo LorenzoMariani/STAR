@@ -32,8 +32,8 @@ from runners.star_runner_io import (
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END003_DIR = STAR_ROOT / "END003-AttitudePropagation"
 # STAR version of END-003 (2026-10-17): orbit from the END-001 ephemerides, no
-# orbit propagation. star_attitude_propagation.m (internal propagation) is kept
-# unchanged in the module folder for standalone use.
+# orbit propagation. The legacy star_attitude_propagation.m (internal propagation)
+# is archived in END003-AttitudePropagation/_old/ (2026-10-17).
 STAR_SCRIPT_NAME = "star_attitude_propagation_star.m"
 ATTITUDE_MODES = ("nadir", "follow_site", "dynamics")
 SPACECRAFT_NOTE = "uniform box of the class envelope, mean projected area as reference area"

@@ -118,8 +118,9 @@ def run_end010(
     # END-003 exports three CSV flavors of the same pass: output_attitude_propagation_ECI.csv
     # (true right-handed ECI, X/Y/Z as propagated), output_attitude_propagation_Unity.csv
     # (Unity left-handed Y-up axes), and output_attitude_propagation.csv (Unreal Engine
-    # left-handed Z-up axes, Y negated -- see star_attitude_propagation.m's "MULTI-ENGINE
-    # CSV EXPORT" section). END-010's MATLAB pipeline reads eci_x/y/z_km as plain ECI and
+    # left-handed Z-up axes, Y negated in the legacy END-003 -- see the "MULTI-ENGINE CSV EXPORT"
+    # section of END003-AttitudePropagation/_old/star_attitude_propagation.m; the STAR version keeps
+    # the ECI position). END-010's MATLAB pipeline reads eci_x/y/z_km as plain ECI and
     # does its own Unity-axis conversion internally, so it must consume the _ECI file --
     # consuming the base-name file (the Unreal-flavored, Y-flipped one) silently corrupts
     # every downstream geometry/visibility computation (elevation, range, phase angle).

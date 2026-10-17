@@ -19,7 +19,8 @@ from urllib.parse import unquote, urlparse
 
 from .api import ROOT, SelectorService, dumps, requirements_to_params
 
-GUI = ROOT / "gui" / "component_selector.html"
+# la GUI e' il file del tab END-019 nel FrontEnd di STAR (unica copia dal 2026-10-17): STAR/FrontEnd/web/modules/end019_results.html
+GUI = ROOT.parent.parent / "FrontEnd" / "web" / "modules" / "end019_results.html"
 MAX_BODY = 1_000_000
 
 
@@ -47,6 +48,9 @@ def make_handler(service: SelectorService, gui_path: Path = GUI):
             path = unquote(urlparse(self.path).path)
             try:
                 if path in ("/", "/index.html"):
+                    if not gui_path.is_file():
+                        return self._send(404, f"GUI not found: {gui_path} (STAR FrontEnd/web/modules/end019_results.html)".encode("utf-8"),
+                                          "text/plain; charset=utf-8")
                     self._send(200, gui_path.read_bytes(), "text/html; charset=utf-8")
                 elif path == "/api/health":
                     self._json({"ok": True, "components": len(service.catalog)})

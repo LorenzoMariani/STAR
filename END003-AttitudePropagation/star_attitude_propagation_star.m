@@ -3,8 +3,8 @@ function star_attitude_propagation_star(configFile, outputFolder)
 %
 %   star_attitude_propagation_star(configFile, outputFolder)
 %
-%   Same products as star_attitude_propagation.m (kept unchanged for standalone
-%   use), made to run inside STAR:
+%   Same products as the legacy star_attitude_propagation.m (own orbit
+%   propagation; moved to _old/ on 2026-10-17), made to run inside STAR:
 %   - ORBIT: taken from END-001, not propagated. END-001 writes for every
 %     satellite satellite_NN_ephemeris.csv (ECI position and velocity every
 %     10 s, the frame where ECEF = R3(GMST) ECI, from the END-001 epoch). The
@@ -678,7 +678,7 @@ function write_pass_csvs(results_dir, product_dir, epoch, t, G)
         % 2. Unity (left-handed, Y up): X->X, Y->Z, Z->Y, quaternion (w, -x, -z, -y)
         fprintf(fid_unity, fmt, ts, r(1), r(3), r(2), qw, -qx, -qz, -qy, G.offset(k));
         % 3. Unreal / END-007 (EarthSim): ECI position unchanged, conjugate
-        %    quaternion (validated by the END-007 renders, see star_attitude_propagation.m)
+        %    quaternion (validated by the END-007 renders, see _old/star_attitude_propagation.m)
         fprintf(fid_unreal, fmt, ts, r(1), r(2), r(3), qw, -qx, -qy, -qz, G.offset(k));
     end
     fclose(fid_eci); fclose(fid_unity); fclose(fid_unreal);

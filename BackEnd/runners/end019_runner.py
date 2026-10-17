@@ -310,7 +310,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     var = "componentSelectorDataInitial" if phase == "initial" else "componentSelectorData"
     data = {**record}
     write(results_dir / f"component_selector_data{sfx}.js", f"window.{var} = " + dumps(data) + ";\n")
-    gui_html = selector_root / "gui" / "component_selector.html"
+    gui_html = Path(__file__).resolve().parents[2] / "FrontEnd" / "web" / "modules" / "end019_results.html"   # the END-019 tab (only copy of the GUI)
     if gui_html.is_file():
         page = gui_html.read_text(encoding="utf-8")
         embedded = "<script>window.componentSelectorData = " + dumps(data).replace("</", "<\\/") + ";</script>\n"

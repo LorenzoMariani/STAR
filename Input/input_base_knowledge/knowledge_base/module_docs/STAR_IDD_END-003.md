@@ -234,7 +234,7 @@ Output Data Map (Generated Artifacts):
 
 1. ## **STAR version (2026-10-17)**
 
-STAR runs `star_attitude_propagation_star(configFile, outputFolder)` (END003-AttitudePropagation/star_attitude_propagation_star.m); `star_attitude_propagation.m` is kept unchanged for standalone use with its own orbit propagation.
+STAR runs `star_attitude_propagation_star(configFile, outputFolder)` (END003-AttitudePropagation/star_attitude_propagation_star.m); the legacy `star_attitude_propagation.m` (own orbit propagation, standalone use) is archived in END003-AttitudePropagation/_old/ since 2026-10-17.
 
 - **Orbit from END-001, no propagation.** The runner (BackEnd/runners/end003_runner.py) passes the END-001 ephemerides `satellite_NN_ephemeris.csv` (ECI position and velocity every 10 s from the END-001 epoch, the frame where ECEF = R3(GMST) ECI) in `cfg.end001_ephemeris`; states between rows come from a cubic Hermite interpolation of positions and velocities (5 mm at mid step). Without the ephemerides END-003 stops with an error asking to run END-001 first. The satellites are therefore exactly the ones END-001 designed (the previous version rebuilt them from the mean elements with another Earth radius and drifted by tens of km within a few hours).
 - **Target.** `target_selection`: the STAR `target_site` input when given ({lat, lon}, [lat, lon], "lat, lon" or a known name), otherwise every point of the END-001 area of interest (ROI_2 of END-001 with its RegionSettings, e.g. 498 points for Italy), otherwise the template site. The imaging pass is the best pass over any of the points, with the Sun constraint on the site and on the sub-satellite track.
