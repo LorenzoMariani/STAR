@@ -14,9 +14,12 @@ from typing import Any, Callable
 
 from runners.star_runner_io import (
     build_end003_config,
+    coerce_bool,
+    coerce_float,
     describe_pass,
     ensure_module_output_layout,
     find_upstream_artifact,
+    input_value,
     load_end001_constellation,
     load_json,
     load_selected_passes,
@@ -27,6 +30,21 @@ from runners.star_runner_io import (
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END003_DIR = STAR_ROOT / "END003-AttitudePropagation"
+END001_FUNCTIONS_DIR = STAR_ROOT / "END001-ConstellationOptimizer" / "lib" / "FUNCTIONS"
+# STAR version of END-003 (2026-10-17): orbit from the END-001 ephemerides, no
+# orbit propagation. star_attitude_propagation.m (internal propagation) is kept
+# unchanged in the module folder for standalone use.
+STAR_SCRIPT_NAME = "star_attitude_propagation_star.m"
+ATTITUDE_MODES = ("nadir", "follow_site", "dynamics")
+# Named sites accepted as STAR target_site text (otherwise numbers "lat, lon").
+KNOWN_SITES = {
+    "etna": ("Mount Etna", 37.748, 14.999),
+    "matera": ("Matera", 40.6492, 16.7039),
+    "genova": ("Genova", 44.4056, 8.9463),
+    "genoa": ("Genova", 44.4056, 8.9463),
+    "roma": ("Roma", 41.9028, 12.4964),
+    "rome": ("Roma", 41.9028, 12.4964),
+}
 LogCallback = Callable[[str, str], Any]
 
 
@@ -59,41 +77,113 @@ def _find_dir() -> Path:
 
 
 def _find_script(folder: Path) -> Path:
-    env = os.environ.get("STAR_END003_SCRIPT", "").strip()
-    if env and Path(env).exists(): return Path(env)
-    for p in [folder / "star_attitude_propagation.m", folder / "star_attitude_propagator.m"]:
-        if p.exists(): return p
-    hits = sorted(folder.rglob("*attitude*propagation*.m"))
-    if hits: return hits[0]
-    raise FileNotFoundError(f"END-003 MATLAB script not found in {folder}")
+    script = folder / STAR_SCRIPT_NAME
+    if script.exists(): return script
+    raise FileNotFoundError(f"END-003 MATLAB function {STAR_SCRIPT_NAME} not found in {folder}")
 
 
-def _prepare_runtime_script(source: Path, runtime: Path, config: Path, output_folder: Path) -> None:
-    text = source.read_text(encoding="utf-8", errors="replace")
-    text = re.sub(r"set\(0,\s*DefaultFigureVisible\s*,\s*off\s*\);", "set(0, 'DefaultFigureVisible', 'off');", text)
-    if "DefaultFigureVisible" not in text:
-        text = re.sub(r"(?m)^(\s*clear\s*;\s*clc\s*;\s*close all\s*;\s*)$", r"\1\nset(0, 'DefaultFigureVisible', 'off');", text, count=1)
-    text = re.sub(r"(?m)^\s*file_input\s*=\s*.*?;\s*$", f"file_input = '{_quote(config)}';", text, count=1)
-    text = re.sub(r"(?m)^\s*path_output\s*=\s*.*?;\s*$", f"path_output = '{_quote(output_folder)}';", text, count=1)
-    text = re.sub(r"\bsaveas\s*\(", "star_save_png(", text)
-    if "function star_save_png(" not in text:
-        text += """
+def _end001_ephemerides(end001_csv: Path | None) -> list[dict[str, Any]]:
+    """satellite_NN_ephemeris.csv written by END-001 next to its constellation CSV."""
+    if not end001_csv:
+        return []
+    found = []
+    for path in sorted(Path(end001_csv).parent.glob("satellite_*_ephemeris.csv")):
+        m = re.match(r"satellite_(\d+)_ephemeris\.csv$", path.name)
+        if m:
+            found.append({"satellite_index": int(m.group(1)), "file": str(path)})
+    return sorted(found, key=lambda item: item["satellite_index"])
 
-function star_save_png(fig_handle, file_path)
-    try
-        drawnow;
-        exportgraphics(fig_handle, file_path, 'Resolution', 200);
-    catch
-        try
-            print(fig_handle, file_path, '-dpng', '-r200');
-        catch save_error
-            warning('STAR:PNGSaveFailed', 'Could not save PNG %s: %s', file_path, save_error.message);
-        end
-    end
-end
-"""
-    runtime.parent.mkdir(parents=True, exist_ok=True)
-    runtime.write_text(text, encoding="utf-8")
+
+def _parse_sites(value: Any) -> list[dict[str, Any]]:
+    """Target sites from a STAR input value: {lat, lon}, [lat, lon], "lat, lon", a known name or a list of them."""
+    if value is None:
+        return []
+    if isinstance(value, dict):
+        lat = next((value.get(k) for k in ("lat", "latitude", "site_lat_deg", "lat_deg") if value.get(k) is not None), None)
+        lon = next((value.get(k) for k in ("lon", "longitude", "site_lon_deg", "lon_deg") if value.get(k) is not None), None)
+        try:
+            return [{"name": str(value.get("name") or "Target site"), "lat_deg": float(lat), "lon_deg": float(lon),
+                     "alt_m": float(value.get("alt_m", value.get("alt", 0.0)) or 0.0)}]
+        except (TypeError, ValueError):
+            return _parse_sites(value.get("sites"))
+    if isinstance(value, (list, tuple)):
+        if len(value) == 2 and all(isinstance(v, (int, float)) for v in value):
+            return [{"name": "Target site", "lat_deg": float(value[0]), "lon_deg": float(value[1]), "alt_m": 0.0}]
+        sites: list[dict[str, Any]] = []
+        for item in value:
+            sites.extend(_parse_sites(item))
+        return sites
+    text = str(value).strip()
+    if not text or text.lower().startswith("tbd"):
+        return []
+    nums = re.findall(r"[-+]?\d+(?:\.\d+)?", text)
+    if len(nums) >= 2:
+        lat, lon = float(nums[0]), float(nums[1])
+        if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 360.0:
+            return [{"name": text[:60], "lat_deg": lat, "lon_deg": lon, "alt_m": 0.0}]
+    low = text.lower()
+    for key, (name, lat, lon) in KNOWN_SITES.items():
+        if key in low:
+            return [{"name": name, "lat_deg": lat, "lon_deg": lon, "alt_m": 0.0}]
+    return []
+
+
+def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any], end001_csv: Path | None) -> dict[str, Any]:
+    """STAR inputs over the native template; returns the decisions (star_runtime.end003_inputs)."""
+    report: dict[str, Any] = {}
+    sat = config.setdefault("sat", {})
+    mode = str(input_value(star_payload, "attitude_mode", "") or "").strip().lower()
+    if mode in ATTITUDE_MODES:
+        sat["attitude_mode"] = mode
+        report["attitude_mode"] = {"value": mode, "source": "STAR input"}
+    else:
+        report["attitude_mode"] = {"value": sat.get("attitude_mode", "nadir"), "source": "template"}
+    state = input_value(star_payload, "initial_attitude_state", None)
+    if isinstance(state, dict):
+        q0 = state.get("q0")
+        if isinstance(q0, list) and len(q0) == 4:
+            # registry: scalar first [w, x, y, z]; END-003: scalar last [x, y, z, w]
+            sat["q0"] = [float(q0[1]), float(q0[2]), float(q0[3]), float(q0[0])]
+        w0 = state.get("w0_rad_s", state.get("w0"))
+        if isinstance(w0, list) and len(w0) == 3:
+            sat["w0"] = [float(v) for v in w0]
+        report["initial_attitude_state"] = {"q0_scalar_last": sat.get("q0"), "w0_rad_s": sat.get("w0"), "source": "STAR input"}
+    flags = input_value(star_payload, "environmental_flags", None)
+    env_flags = config.setdefault("env", {}).setdefault("flags", {})
+    if isinstance(flags, dict):
+        for key in ("gg", "srp", "drag"):
+            if key in flags:
+                env_flags[key] = coerce_bool(flags.get(key), bool(env_flags.get(key, True)))
+        report["environmental_flags"] = {"value": {k: env_flags.get(k) for k in ("gg", "srp", "drag")}, "source": "STAR input"}
+    hours = coerce_float(input_value(star_payload, "simulation_duration_hours", None), 0.0)
+    if hours > 0:
+        config["sim_hours"] = hours
+        report["simulation_duration_hours"] = {"value": hours, "source": "STAR input (limited to the END-001 ephemeris span)"}
+
+    # Imaging target: STAR target input, otherwise the END-001 area of interest, otherwise the template site.
+    sites: list[dict[str, Any]] = []
+    for key in ("target_site", "target_area", "points_or_areas_of_interest"):
+        sites = _parse_sites(input_value(star_payload, key, None))
+        if sites:
+            break
+    selection: dict[str, Any] = {"source": "template"}
+    if sites:
+        selection = {"source": "star_input", "sites": sites}
+    elif end001_csv:
+        runtime = Path(end001_csv).parent.parent / "end001_runtime_input.json"
+        region = None
+        try:
+            region = load_json(runtime).get("RegionSettings") if runtime.exists() else None
+        except Exception:
+            region = None
+        if isinstance(region, dict) and region.get("AreaofInterest") and END001_FUNCTIONS_DIR.exists():
+            selection = {"source": "end001_aoi", "end001_region_settings": region,
+                         "end001_runtime_input": str(runtime), "end001_functions_dir": str(END001_FUNCTIONS_DIR)}
+    config["target_selection"] = selection
+    report["target_site"] = {"source": selection["source"],
+                             "value": sites or (selection.get("end001_region_settings") or {}).get("AreaofInterest")
+                             or [config.get("target", {}).get("site_lat_deg"), config.get("target", {}).get("site_lon_deg")]}
+    return report
 
 
 def _terminate(proc: subprocess.Popen, cb: LogCallback | None) -> None:
@@ -182,24 +272,39 @@ def run_end003(
             _emit(log_callback, "EXECUTION", f"END-003: sim_start_date aligned to the END-001 epoch {constellation_epoch} (was {config.get('sim_start_date')}).")
             config["sim_start_date"] = constellation_epoch
         _emit(log_callback, "EXECUTION", f"END-003: {len(constellation)} satellite(s) loaded from END-001 for pass selection.")
-    else:
-        _emit(log_callback, "WARNING", "END-003: no END-001 constellation CSV found; screening only the orbit of the END-003 input template.")
+    process_info_path = output_path / "end003_process_result.json"
+    # The STAR version of END-003 takes the orbits from END-001 and does not propagate them.
+    ephemerides = _end001_ephemerides(end001_csv)
+    if not ephemerides:
+        reason = ("END-003 needs the END-001 ephemerides (satellite_NN_ephemeris.csv next to constellation_optimizer_output.csv): "
+                  "run END-001 in the same workflow first." + ("" if end001_csv else " No END-001 constellation CSV was found upstream."))
+        _emit(log_callback, "ERROR", reason)
+        write_json(process_info_path, {"run_id": run_id, "status": "failed", "reason": reason})
+        return {"status": "failed", "evidence": reason, "generated_artifacts": _collect(output_path)}
+    config["end001_ephemeris"] = ephemerides
+    if constellation:
+        first = constellation[0]
+        config["orbit"] = {k: first[k] for k in ("alt_perigee_m", "alt_apogee_m", "inclination_deg", "raan_deg", "omega_deg", "nu_deg")}
+    config.setdefault("env", {})["Re"] = 6378137.0          # reference of the END-001 altitudes (WGS84)
+    decisions = _apply_star_inputs(config, star_payload, end001_csv)
+    config.setdefault("star_runtime", {})["end003_inputs"] = decisions
+    config["star_runtime"]["orbit_source"] = "END-001 ephemeris (no orbit propagation in END-003)"
     config["pass_selection"] = merge_pass_selection_defaults(config.get("pass_selection"))
     config_path = output_path / "end003_runtime_input.json"
     write_json(config_path, config)
+    _emit(log_callback, "EXECUTION", f"END-003: orbits from {len(ephemerides)} END-001 ephemeris file(s); attitude mode "
+          f"{config['sat'].get('attitude_mode')} ({decisions['attitude_mode']['source']}); imaging target from "
+          f"{decisions['target_site']['source']}.")
 
     folder = _find_dir()
     script = _find_script(folder)
-    runtime_script = output_path / "star_attitude_propagation_runtime.m"
     stdout_path = output_path / "matlab_stdout.txt"
     stderr_path = output_path / "matlab_stderr.txt"
-    process_info_path = output_path / "end003_process_result.json"
     invocation_path = output_path / "end003_runner_invocation.json"
     started_at = datetime.now().isoformat(); started_perf = time.perf_counter()
     matlab = os.environ.get("MATLAB_EXECUTABLE", "matlab")
-    _prepare_runtime_script(script, runtime_script, config_path, output_path)
-    command = f"cd('{_quote(folder)}'); run('{_quote(runtime_script)}');"
-    write_json(invocation_path, {"run_id": run_id, "started_at": started_at, "star_input_file": str(input_path), "runtime_input_file": str(config_path), "runtime_matlab_file": str(runtime_script), "output_dir": str(output_path), "product_output_dir": str(product_dir), "results_output_dir": str(results_dir), "end001_output_csv": str(end001_csv) if end001_csv else None, "matlab_command": command})
+    command = f"cd('{_quote(folder)}'); {script.stem}('{_quote(config_path)}', '{_quote(output_path)}');"
+    write_json(invocation_path, {"run_id": run_id, "started_at": started_at, "star_input_file": str(input_path), "runtime_input_file": str(config_path), "matlab_function": str(script), "output_dir": str(output_path), "product_output_dir": str(product_dir), "results_output_dir": str(results_dir), "end001_output_csv": str(end001_csv) if end001_csv else None, "matlab_command": command})
 
     if stop_event is not None and stop_event.is_set():
         write_json(process_info_path, {"run_id": run_id, "status": "stopped", "reason": "Stop requested before MATLAB launch."})

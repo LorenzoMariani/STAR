@@ -138,7 +138,7 @@ def star_full_level_text(level: int) -> str:
 # sums them over the planned workflow (only END-001 before planning).
 STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
     "END-001": {"test": 58, "1": 114, "2": 188, "3": 345, "4": 492, "5": 671},
-    "END-003": {"test": 32},
+    "END-003": {"test": 47},          # STAR version (2026-10-17): orbit from END-001, AEM + attitude figures
     "END-004": {"test": 26},
     "END-007": {"test": 150},
     "END-010": {"test": 49},

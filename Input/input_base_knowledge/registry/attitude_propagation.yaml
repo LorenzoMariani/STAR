@@ -12,8 +12,11 @@ source_documents:
   - STAR_IDD_END-003.md
 
 description: >
-  Propagate the spacecraft orbital path together with spacecraft attitude
-  kinematics and, when required, attitude dynamics. The module generates
+  Propagate the spacecraft attitude kinematics and, when required, attitude
+  dynamics along the orbits designed by END-001. In STAR (2026-10-17,
+  star_attitude_propagation_star.m) the orbit is not propagated by END-003: it
+  is read from the END-001 ephemerides (satellite_NN_ephemeris.csv, ECI state
+  every 10 s), so every satellite is exactly the one END-001 designed. The module generates
   time-tagged orbital state vectors, attitude quaternions and pointing-error
   telemetry during selected visibility or tracking windows. These outputs
   provide downstream modules with the spacecraft-target geometry and attitude
@@ -46,6 +49,8 @@ capabilities:
   - constellation_pass_planning
   - daylight_imaging_pass_selection
   - night_pass_selection_for_light_curve
+  - ccsds_aem_export
+  - attitude_description_figures
 
 domain_of_validity:
   mission_phase:
@@ -105,7 +110,8 @@ required_inputs:
     assumption_allowed: true
     description: >
       Duration of the propagation window, corresponding to cfg.sim_hours in the
-      module input JSON.
+      module input JSON. Limited to the span of the END-001 ephemerides
+      (DownstreamSimHours of END-001, 48 h by default).
     missing_information_reason: >
       Required to define the time span over which visibility windows, attitude
       states and pointing errors are computed.
@@ -128,8 +134,11 @@ required_inputs:
       - omega_deg
       - nu_deg
     description: >
-      Keplerian initial conditions used by the propagator, corresponding to
-      cfg.orbit in the module input JSON.
+      Orbits of the constellation. In STAR they are the END-001 ephemerides
+      (satellite_NN_ephemeris.csv next to constellation_optimizer_output.csv),
+      interpolated with a cubic Hermite polynomial on the tabulated positions and
+      velocities; END-003 stops with an error when they are missing. cfg.orbit
+      keeps the elements of the first satellite for the modules that read it.
     missing_information_reason: >
       Required to initialize the orbital propagation. These values may be
       provided by the user, assumed for a preliminary case, or derived from an
@@ -139,16 +148,20 @@ required_inputs:
     kind: parameter_group
     data_type: object
     unit: mixed
-    required: true
+    required: false
     default_value: null
-    assumption_allowed: false
+    assumption_allowed: true
     fields:
       - site_lat_deg
       - site_lon_deg
       - elev_threshold_deg
     description: >
       Ground target or station coordinates and minimum topocentric elevation
-      threshold, corresponding to cfg.target in the module input JSON.
+      threshold, corresponding to cfg.target in the module input JSON. Accepted
+      as {lat, lon}, [lat, lon], "lat, lon" or a known name (Etna, Matera,
+      Genova, Roma). When it is not given, every point of the END-001 area of
+      interest (ROI_2 of END-001 with its RegionSettings) is a candidate target
+      and the best pass over any of them is selected.
     missing_information_reason: >
       Required to evaluate target visibility, tracking windows and pass
       selection. If only a named target is provided, coordinates or a resolved
@@ -241,7 +254,8 @@ required_inputs:
     description: >
       Environmental and perturbation flags controlling gravity-gradient torque,
       solar radiation pressure, aerodynamic drag and orbital perturbations up to
-      J2/J3, corresponding to cfg.env.flags in the module input JSON.
+      J2/J3, corresponding to cfg.env.flags in the module input JSON. In STAR
+      only gg, srp and drag are used (the orbit comes from END-001).
     missing_information_reason: >
       Required to define propagation fidelity and environmental disturbance
       modelling assumptions.
@@ -369,6 +383,26 @@ outputs:
       ECI position and nadir attitude of the satellite during the selected night
       pass visible from the observer, sampled every 10 s; ephemeris input of END-010.
 
+  - name: attitude_ephemeris_message
+    kind: artifact
+    artifact_name: AEM_END003_<SAT>_<imaging|lightcurve>_<start>.xml
+    data_type: xml
+    description: >
+      CCSDS AEM (NDM/XML, S5Lab BILAR layout, QUATERNION/ANGVEL) of the selected
+      imaging pass and of the light-curve pass, every 1 s: quaternion Q1 Q2 Q3 QC
+      (scalar last, rotation body -> J2000) and body angular velocity in rad/s.
+
+  - name: attitude_description_figures
+    kind: artifact
+    artifact_name: 07_aem_<imaging|lightcurve>_<A|B|C|D>_*.png
+    data_type: png
+    description: >
+      Figures made from each AEM (end003_aem_figures.m), as for the Sentinel-1B
+      attitude of the ERASE proposal: A attitude sequence in a fixed inertial view
+      with H vertical, B the same along H, C H and omega with respect to the orbit,
+      D quaternion, ZYX Euler angles and body angular velocity; with
+      07_aem_<pass>_rotational_state.json (rotational state table).
+
   - name: performance_kpi_catalog
     kind: result
     artifact_name: attitude_summary.json
@@ -387,8 +421,8 @@ execution:
   execution_mode: sequential
   input_format: json
   input_filename: input_attitude_propagator.json
-  runner_module: null
-  runner_function: null
+  runner_module: runners.end003_runner
+  runner_function: run_end003
   upstream_dependencies:
     - END-001
   downstream_dependencies:

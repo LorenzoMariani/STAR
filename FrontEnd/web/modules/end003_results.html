@@ -99,6 +99,21 @@ header.header{display:none!important;}
 .pass-table-wrap th,.pass-table-wrap td{border-bottom:1px solid var(--border-soft);padding:5px 8px;text-align:right;white-space:nowrap}
 .pass-table-wrap th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase}
 .pass-table-wrap tr.sel td{color:var(--accent-2);font-weight:700}
+/* attitude description from the AEM (STAR version of END-003, 2026-10-17) */
+.aem-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.aem-tab{border:1px solid var(--border-soft);background:var(--panel-muted);color:var(--text);border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer}
+.aem-tab.active{border-color:var(--accent);color:var(--text-strong);background:var(--panel-strong)}
+.aem-file{font-size:11px;color:var(--muted);margin-bottom:8px;word-break:break-all}
+.aem-table{width:100%;border-collapse:collapse;font-size:12px}
+.aem-table td{border-bottom:1px solid var(--border-soft);padding:6px 8px;vertical-align:top;color:var(--text)}
+.aem-table td:first-child{color:var(--muted);width:36%}
+.aem-figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.aem-fig{margin:0;border:1px solid var(--border-soft);border-radius:16px;overflow:hidden;background:var(--panel-muted)}
+.aem-fig.wide{grid-column:1/-1}
+.aem-fig img{display:block;width:100%;height:auto;cursor:zoom-in;background:#fff}
+.aem-fig figcaption{padding:8px 12px;font-size:11px;line-height:1.45;color:var(--muted)}
+.aem-fig figcaption b{color:var(--text-strong)}
+@media(max-width:980px){.aem-figs{grid-template-columns:1fr}}
 details.pass-details>summary{cursor:pointer;color:var(--muted-2);font-size:11px;margin-top:8px}
 </style>
 </head>
@@ -141,6 +156,8 @@ details.pass-details>summary{cursor:pointer;color:var(--muted-2);font-size:11px;
 
     <main class="main-content">
       <article class="card" id="passes-card"><div class="card-header"><h3>Selected Passes · Satellite, Date, Start/End</h3><span class="small" id="passes-status">Pending</span></div><div class="card-body"><div id="passes-panel"><div class="empty-cell">Load the propagation results to show the satellite and pass selected by END-003.</div></div></div></article>
+
+      <article class="card" id="aem-card"><div class="card-header"><h3>Attitude Description · AEM of the Selected Passes</h3><span class="small" id="aem-status">Pending</span></div><div class="card-body"><div id="aem-panel"><div class="empty-cell">Load the propagation results to show the attitude figures made from the AEM of the selected passes.</div></div></div></article>
 
       <section class="plot-grid two-col">
         <article class="card"><div class="card-header"><h3>Angular Velocity</h3></div><div class="card-body"><div id="plotAngularVelocity" class="plot small"></div></div></article>
@@ -484,6 +501,32 @@ function populatePassesCard() {
   if (status) status.textContent = 'Loaded';
   panel.innerHTML = blocks.join('') + table;
 }
+function aemPasses() {
+  const a = state.data && state.data.aem;
+  if (!a) return [];
+  return Array.isArray(a) ? a : [a];
+}
+function asList(x) { return Array.isArray(x) ? x : (x ? [x] : []); }
+function populateAemCard() {
+  const panel = $('aem-panel');
+  const status = $('aem-status');
+  if (!panel) return;
+  const list = aemPasses();
+  if (!list.length) {
+    if (status) status.textContent = 'Not available';
+    panel.innerHTML = '<div class="empty-cell">No AEM in this run (written by the STAR version of END-003, which takes the orbit from END-001).</div>';
+    return;
+  }
+  if (!(state.aemIndex >= 0 && state.aemIndex < list.length)) state.aemIndex = 0;
+  const p = list[state.aemIndex];
+  const tabs = list.map((x, i) => `<button type="button" class="aem-tab ${i === state.aemIndex ? 'active' : ''}" data-i="${i}">${escapeHtml(x.label || x.key || ('Pass ' + (i + 1)))}</button>`).join('');
+  const rows = asList(p.rotational_state).map((r) => `<tr><td>${escapeHtml(r.quantity)}</td><td>${escapeHtml(r.value)}</td></tr>`).join('');
+  const figs = asList(p.figures).map((f) => `<figure class="aem-fig${/_[AB]_[a-z_]+\.png$/i.test(f.file) ? ' wide' : ''}"><img src="${state.pngFiles.get(f.file) || (AUTO_DATA_DIR + f.file)}" alt="${escapeHtml(f.title)}" data-name="${escapeHtml(f.title)}"><figcaption><b>${escapeHtml(f.title)}.</b> ${escapeHtml(f.caption)}</figcaption></figure>`).join('');
+  if (status) status.textContent = `${list.length} pass${list.length > 1 ? 'es' : ''}`;
+  panel.innerHTML = `<div class="aem-tabs">${tabs}</div><div class="aem-file">CCSDS AEM (quaternion J2000 → body, scalar last; body angular velocity in rad/s): output_attitude_propagation/${escapeHtml(p.file || '—')}</div><table class="aem-table"><tbody>${rows}</tbody></table><div class="aem-figs">${figs}</div>`;
+  panel.querySelectorAll('.aem-tab').forEach((b) => b.addEventListener('click', () => { state.aemIndex = Number(b.dataset.i); populateAemCard(); }));
+  panel.querySelectorAll('.aem-fig img').forEach((img) => img.addEventListener('click', () => openImageModal(img.src, img.dataset.name || img.alt || 'AEM figure')));
+}
 function populateKpiTable() {
   const container = $('kpi-table');
   if (!container) return;
@@ -634,6 +677,7 @@ window.receiveAttitudeFilesFromParent = async function(payload = {}, labels = {}
 };
 window.refreshAttitudeDashboard = function() {
   populatePassesCard();
+  populateAemCard();
   updateFileAccessPanel();
   drawDashboard();
 };
@@ -901,7 +945,7 @@ function populatePngGallery() {
     gallery.innerHTML = '<div class="empty-cell">No PNG files loaded.</div>';
     return;
   }
-  gallery.innerHTML = Array.from(state.pngFiles.entries()).map(([name,url]) => `<div class="gallery-item"><img src="${url}" alt="${escapeHtml(name)}" data-name="${escapeHtml(name)}"><div class="gallery-caption">${escapeHtml(name)}</div></div>`).join('');
+  gallery.innerHTML = Array.from(state.pngFiles.entries()).filter(([name]) => !/^07_aem_/i.test(name)).map(([name,url]) => `<div class="gallery-item"><img src="${url}" alt="${escapeHtml(name)}" data-name="${escapeHtml(name)}"><div class="gallery-caption">${escapeHtml(name)}</div></div>`).join('');
   gallery.querySelectorAll('img').forEach(img => img.addEventListener('click', () => openImageModal(img.src, img.dataset.name || img.alt || 'MATLAB figure')));
 }
 
@@ -919,6 +963,7 @@ function drawDashboard() {
   populateInputsPanel();
   populateSummary();
   populatePngGallery();
+  populateAemCard();
   populateKpiTable();
 
   if (!state.data) {

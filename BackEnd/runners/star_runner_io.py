@@ -1157,7 +1157,10 @@ SELECTED_PASSES_FILENAME = "selected_passes.json"
 # end003_runtime_input.json.
 DEFAULT_PASS_SELECTION: dict[str, Any] = {
     "screening_step_s": 20,
-    "imaging": {"preferred_sun_elevation_deg": 20},
+    # STAR version of END-003: CSV of the imaging pass every output_step_s
+    # seconds, AEM of both passes every aem_step_s seconds.
+    "imaging": {"preferred_sun_elevation_deg": 20, "output_step_s": 10},
+    "aem_step_s": 1,
     "lightcurve": {
         "enabled": True,
         "observer": {"name": "Matera", "site_lat_deg": 40.6492, "site_lon_deg": 16.7039, "site_alt_m": 400},
