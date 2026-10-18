@@ -170,12 +170,17 @@ code{color:var(--accent-2)}
 
 /* v5 (2026-10-18): workspace buttons in the header, title on one line */
 .workspace-tabs{display:none!important}
-.header-workspace-tabs{display:flex;gap:8px;margin-right:10px}
-.header .workspace-tab{min-height:38px!important;padding:8px 16px!important}
-.header .workspace-tab .tab-title{font-size:13px!important}
 .header h1{font-size:clamp(18px,1.35vw,26px)!important}
+/* the workspace buttons are a pair like Test / Full: one pill-shaped group, the active one with the STAR accent */
+.header-workspace-tabs{display:inline-flex;align-items:center;gap:4px;padding:4px;margin-right:4px;height:40px;box-sizing:border-box;
+  border:1px solid var(--border);border-radius:999px;background:var(--panel-muted)}
+.header .workspace-tab{height:28px!important;min-height:0!important;padding:5px 14px!important;border-radius:999px!important;
+  border:1px solid transparent!important;background:transparent!important;color:var(--muted-2)!important;box-shadow:none!important}
+.header .workspace-tab .tab-title{font-size:13px!important;font-weight:700!important}
+.header .workspace-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-2))!important;color:#07100d!important}
+.header .workspace-tab.active .tab-title{font-weight:800!important}
+.header .run-mode-btn{font-size:13px}
 /* same height for every control of the header; the Space It Up! logo round and as large as the STAR logo */
-.header .workspace-tab{height:40px!important;min-height:40px!important;box-sizing:border-box}
 .header .run-mode-switch{height:40px;box-sizing:border-box}
 .header .theme-toggle{height:40px;box-sizing:border-box}
 .header-logo-siu{width:56px!important;height:56px!important;border-radius:50%!important;padding:7px!important;justify-content:center;overflow:hidden;box-sizing:border-box}
