@@ -174,7 +174,10 @@ function orbitFamilyHtml(d){
   });
   const choice=famObj(d.orbit_family_choice);
   const basis=choice?`<div class="fam-basis">Choice: ${escapeHtml(choice.basis||'')} → <b>${escapeHtml(famName(choice.orbit_type))}</b> (${escapeHtml(choice.chosen||'')}).</div>`:'';
-  return `<div class="kpi-category"><h4>Orbit family choice (the call names no orbit type)</h4>${rows}${basis}</div>`+orbitFamilyBySizeHtml(d);
+  // Walker delta inclinations searched (2026-10-18): narrowed to the latitudes of the area of interest
+  const inc=famObj(d.rgt_inclination_range);
+  const incl=inc&&Array.isArray(inc.range_deg)?`<div class="fam-basis">Walker delta inclinations searched: <b>${fmtNum(inc.range_deg[0])}–${fmtNum(inc.range_deg[1])}°</b> (${escapeHtml(inc.basis||'')}).</div>`:'';
+  return `<div class="kpi-category"><h4>Orbit family choice (the call names no orbit type)</h4>${rows}${basis}${incl}</div>`+orbitFamilyBySizeHtml(d);
 }
 function orbitFamilyBySizeHtml(d){
   const table=d&&Array.isArray(d.orbit_family_by_size)?d.orbit_family_by_size:null;

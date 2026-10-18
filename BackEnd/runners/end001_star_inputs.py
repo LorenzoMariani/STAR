@@ -322,8 +322,14 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
                 if incl[0] < dom["incl_deg"][0] or incl[1] > dom["incl_deg"][1]:
                     outside.append(f"inclination {incl[0]:g} deg (trained {dom['incl_deg'][0]}-{dom['incl_deg'][1]} deg)")
             else:
-                note("RGT_InclinationRange_deg", incl, "automatic (surrogate domain)")
+                note("RGT_InclinationRange_deg", incl, "automatic (surrogate domain): the outer range of the search")
             opt["RGT_InclinationRange_deg"] = incl
+            # 2026-10-18: with no inclination in the call END-001 searches only the inclinations compatible with the area of
+            # interest (farthest AOI latitude minus the sensor reach, up to 20 deg above it; aoi_inclination_range.m)
+            opt["RGT_InclinationFromAOI"] = "incl" not in found
+            if "incl" not in found:
+                note("RGT_InclinationFromAOI", True, "automatic: END-001 narrows the Walker delta inclinations to the latitudes of "
+                     "the area of interest (from its farthest site minus the sensor reach to 20 deg above it)")
             opt["RGT_RepeatCycleRange_days"] = list(dom["kday"])
         outside_by_family[fam] = outside
 
