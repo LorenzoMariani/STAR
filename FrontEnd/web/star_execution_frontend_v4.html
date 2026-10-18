@@ -4,20 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAR — Local Desktop App</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=1792323567" />
 
 <style id="star-v1-execution-ui-patch">
 .star-v1-hidden{display:none!important;visibility:hidden!important;max-height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important;}
 .star-v1-upload-normalized{
-  min-height:32px!important;
-  height:32px!important;
-  padding:0 14px!important;
-  border-radius:999px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  font-size:12px!important;
-  line-height:1!important;
   white-space:nowrap!important;
   flex:0 0 auto!important;
 }
@@ -100,7 +91,7 @@
 
       <main class="workflow-control-panel panel">
         <div class="tabs workflow-tabs-with-upload">
-          <button id="upload-button" class="tab-button tabs-upload-button upload-state unloaded" type="button">Upload Mission Request Document</button>
+          <button id="upload-button" class="tab-button tabs-upload-button upload-state unloaded" type="button" title="Upload the mission request document (.docx, .txt, .md)">Upload Document</button>
           <button class="tab-button active" data-tab="requirements">1. Requirements</button>
           <button class="tab-button" data-tab="workflow">2. Mission Planning</button>
           <button class="tab-button" data-tab="assumptions">3. Input Resolution</button>
@@ -396,7 +387,7 @@
     </section>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1792323590"></script>
 
 <script id="star-v1-execution-ui-patch-script">
 (function(){
@@ -469,7 +460,7 @@
   }
 
   function normalizeUploadButton(){
-    const button = all('button').find(btn => /upload mission request document/i.test(norm(btn.textContent)));
+    const button = document.getElementById('upload-button') || all('button').find(btn => /upload (mission request )?document/i.test(norm(btn.textContent)));
     if (!button) return null;
     button.classList.add('star-v1-upload-normalized');
     button.style.whiteSpace = 'nowrap';
@@ -493,7 +484,7 @@
       if (toolbar && toolbar.parentElement) toolbar.parentElement.insertBefore(hint, toolbar.nextSibling);
       else uploadButton.insertAdjacentElement('afterend', hint);
     }
-    hint.style.display = missionDocumentAppearsLoaded() ? 'none' : '';
+    hint.style.display = (document.getElementById('star-doc-bar') || missionDocumentAppearsLoaded()) ? 'none' : '';
   }
 
   function findLabelElement(label){

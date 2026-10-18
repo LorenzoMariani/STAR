@@ -233,11 +233,105 @@ function updateUploadButtonState(run) {
   const loaded = Boolean(run && run.current_run_id && run.input_document_filename);
   button.classList.toggle("loaded", loaded);
   button.classList.toggle("unloaded", !loaded);
-  button.title = loaded ? `Loaded: ${run.input_document_filename}` : "No mission request document loaded";
+  button.title = loaded ? `Loaded: ${run.input_document_filename} (press to upload another document)` : "Upload the mission request document (.docx, .txt, .md)";
 }
+
+// Document bar (2026-10-18): after the upload the document is shown below the tabs (type, name, size, words, lines, upload
+// time, run and saved copy), with "Show text" (the text STAR read, in a window) and "Replace" (upload another document).
+function formatDocumentSize(bytes) {
+  if (bytes === null || bytes === undefined) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function renderDocumentBar(run) {
+  const tabs = document.querySelector(".workflow-tabs-with-upload");
+  if (!tabs) return;
+  let bar = document.getElementById("star-doc-bar");
+  const doc = run && run.current_run_id && run.input_document_filename ? (run.input_document || {}) : null;
+  if (!doc) {
+    if (bar) bar.remove();
+    return;
+  }
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "star-doc-bar";
+    bar.className = "star-doc-bar";
+    tabs.insertAdjacentElement("afterend", bar);
+  }
+  const meta = [
+    formatDocumentSize(doc.size_bytes),
+    doc.words !== undefined ? `${Number(doc.words).toLocaleString("en-US")} words` : null,
+    doc.lines !== undefined ? `${Number(doc.lines).toLocaleString("en-US")} lines` : null,
+    doc.uploaded_at || null,
+    run.current_run_id,
+    doc.saved_relative_to_star ? `saved in ${doc.saved_relative_to_star.replace(/[^/]+$/, "")}` : null,
+  ].filter(Boolean).join(" · ");
+  bar.innerHTML = `
+    <div class="star-doc-icon">${escapeHtml(String(doc.type || "FILE").slice(0, 4))}</div>
+    <div class="star-doc-main">
+      <div class="star-doc-name" title="${escapeHtml(run.input_document_filename)}">${escapeHtml(run.input_document_filename)}<span class="star-doc-ok">&#10003; loaded</span></div>
+      <div class="star-doc-meta" title="${escapeHtml(meta)}">${escapeHtml(meta)}</div>
+    </div>
+    <div class="star-doc-actions">
+      <button class="tab-button" type="button" id="star-doc-show-text">Show text</button>
+      <button class="tab-button" type="button" id="star-doc-replace">Replace</button>
+    </div>`;
+  bar.querySelector("#star-doc-show-text").addEventListener("click", showDocumentText);
+  bar.querySelector("#star-doc-replace").addEventListener("click", uploadDocument);
+  const hint = document.getElementById("star-v1-initial-hint");
+  if (hint) hint.style.display = "none";
+}
+
+function closeDocumentText() {
+  const back = document.getElementById("star-doc-modal");
+  if (back) back.remove();
+}
+
+async function showDocumentText() {
+  try {
+    await waitForPywebview();
+    const result = await window.pywebview.api.get_uploaded_document_text();
+    if (!result || !result.ok) {
+      addChatMessage("STAR", (result && result.error) || "The document text is not available.");
+      return;
+    }
+    closeDocumentText();
+    const doc = result.summary || {};
+    const back = document.createElement("div");
+    back.id = "star-doc-modal";
+    back.className = "star-doc-modal-back";
+    const meta = [formatDocumentSize(doc.size_bytes), `${Number(doc.words || 0).toLocaleString("en-US")} words`,
+      `${Number(doc.lines || 0).toLocaleString("en-US")} lines`, doc.saved_relative_to_star].filter(Boolean).join(" · ");
+    back.innerHTML = `
+      <div class="star-doc-modal" role="dialog" aria-modal="true" aria-label="Text of the mission request document">
+        <div class="star-doc-modal-head">
+          <div class="star-doc-icon">${escapeHtml(String(doc.type || "FILE").slice(0, 4))}</div>
+          <div class="star-doc-main">
+            <div class="star-doc-name">${escapeHtml(result.filename)}</div>
+            <div class="star-doc-meta">${escapeHtml(meta)}</div>
+          </div>
+          <div class="star-doc-actions"><button class="tab-button" type="button" id="star-doc-close">Close</button></div>
+        </div>
+        <pre class="star-doc-modal-body"></pre>
+        <div class="star-doc-modal-foot">Text read by STAR from the document: requirement extraction and planning use exactly this text.</div>
+      </div>`;
+    back.querySelector(".star-doc-modal-body").textContent = result.text;
+    back.querySelector("#star-doc-close").addEventListener("click", closeDocumentText);
+    back.addEventListener("click", (event) => { if (event.target === back) closeDocumentText(); });
+    document.body.appendChild(back);
+  } catch (error) {
+    showFrontendError(error);
+  }
+}
+
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeDocumentText(); });
+
 function renderRun(run) {
   currentRun = run || null;
   updateUploadButtonState(run);
+  renderDocumentBar(run);
   const chip = getElement("run-chip");
   const fileCard = getElement("file-card");
   const extractButton = getElement("extract-button");

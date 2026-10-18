@@ -2190,8 +2190,6 @@ body[data-theme="light"] .small-action-button:disabled {
 .tabs-upload-button {
   margin-right: 4px !important;
   white-space: nowrap !important;
-  min-height: 34px !important;
-  padding: 8px 12px !important;
 }
 
 .status-light.Idle,
@@ -2335,26 +2333,113 @@ body[data-theme="light"] .table-action-button.danger-link {
 /* ------------------------------------------------------------------
    STAR workflow/output UX refinements
    ------------------------------------------------------------------ */
+/* 2026-10-18: the upload button looks like the other tab buttons (.tab-button); the loaded document is shown by the
+   document bar below the tabs, not by the colour of the button. */
 .tabs-upload-button {
-  border-radius: 999px !important;
-  padding: 5px 14px !important;
-  font-size: 11px !important;
-  font-weight: 800;
   white-space: nowrap;
-  box-shadow: none !important;
 }
 
-.tabs-upload-button.unloaded {
-  background: #facc15 !important;
-  color: #1f2937 !important;
-  border-color: rgba(250, 204, 21, 0.75) !important;
+/* Document bar (shown after the upload, below the tabs) and the text window of "Show text" */
+.star-doc-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 0 0;
+  padding: 9px 12px;
+  border: 1px solid rgba(47, 140, 255, 0.35);
+  border-radius: 12px;
+  background: rgba(23, 104, 216, 0.10);
 }
-
-.tabs-upload-button.loaded {
-  background: #22c55e !important;
-  color: #052e16 !important;
-  border-color: rgba(34, 197, 94, 0.75) !important;
+.star-doc-icon {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 44px;
+  border-radius: 6px;
+  background: #dbeafe;
+  color: #1768d8;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  font: 700 10px Arial, sans-serif;
+  position: relative;
+  box-sizing: border-box;
 }
+.star-doc-icon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 10px 10px 0;
+  border-style: solid;
+  border-color: transparent #0d1117 #93c5fd transparent;
+}
+.star-doc-main { min-width: 0; flex: 1 1 auto; }
+.star-doc-name {
+  color: #ffffff;
+  font: 700 13px Arial, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.star-doc-ok { color: #22c55e; font-size: 11px; font-weight: 700; margin-left: 8px; }
+.star-doc-meta {
+  color: #9aa3b4;
+  font: 11px "Space Mono", ui-monospace, monospace;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.star-doc-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+.star-doc-modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 12, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.star-doc-modal {
+  width: min(900px, 86vw);
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(47, 140, 255, 0.40);
+  border-radius: 16px;
+  background: #0d1117;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+.star-doc-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(140, 156, 190, 0.22);
+}
+.star-doc-modal-body {
+  overflow: auto;
+  padding: 14px 18px;
+  color: #cbd5e1;
+  font: 12px/1.55 "Space Mono", ui-monospace, monospace;
+  white-space: pre-wrap;
+  margin: 0;
+}
+.star-doc-modal-foot {
+  padding: 8px 14px;
+  border-top: 1px solid rgba(140, 156, 190, 0.22);
+  color: #7d879a;
+  font: 10px "Space Mono", ui-monospace, monospace;
+}
+body[data-theme="light"] .star-doc-bar { background: #eff6ff; border-color: rgba(23, 104, 216, 0.30); }
+body[data-theme="light"] .star-doc-name { color: #0f172a; }
+body[data-theme="light"] .star-doc-meta { color: #475467; }
+body[data-theme="light"] .star-doc-icon::before { border-color: transparent #ffffff #93c5fd transparent; }
+body[data-theme="light"] .star-doc-modal { background: #ffffff; border-color: rgba(23, 104, 216, 0.30); }
+body[data-theme="light"] .star-doc-modal-body { color: #1f2937; }
+body[data-theme="light"] .star-doc-modal-head,
+body[data-theme="light"] .star-doc-modal-foot { border-color: #d9e0eb; color: #667085; }
 
 .workflow-toolbar-add-select {
   max-width: 260px;
