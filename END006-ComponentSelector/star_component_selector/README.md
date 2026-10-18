@@ -1,5 +1,7 @@
 # star_component_selector — prototipo
 
+> In STAR e' il modulo **END-006** dal 2026-10-18 (fino ad allora END-019): il numero END-006 si e' liberato quando Scenario Generation e' confluito in END-007, cosi' STAR ha 18 END. Cartella `STAR/END006-ComponentSelector`, runner `BackEnd/runners/end006_runner.py`, risultati in `modules_output/END-006`.
+
 Seleziona i componenti di un CubeSat (1U, 3U, 6U, 12U) da un catalogo di **232 componenti reali** costruito da documenti pubblici dei fornitori. Per ogni sottosistema sceglie **almeno un componente che entra nel CubeSat**, nel rispetto dei limiti di **massa** e di **volume** della CubeSat Design Specification (CDS) Rev. 14.1, e privilegia quelli con **i dati fondamentali pubblici piu' completi**. Solo libreria standard, Python >= 3.10. Per riprendere il lavoro vedi [HANDOFF.md](HANDOFF.md).
 
 ## Cosa fa e cosa non fa

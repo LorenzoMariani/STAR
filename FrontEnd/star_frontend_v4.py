@@ -3755,7 +3755,7 @@ STRICT RULES
 - Treat payload/sensor performance checks as possible final requested outputs when the requirements mention optical payload, sensor, image products, spatial resolution, GSD, swath, footprint, acquisition geometry or verification of observation performance.
 - If trajectory/access windows and attitude/pointing are produced for an EO payload case, check whether a sensor-level observation/synthetic-data module is needed to transform geometry into payload-resolution, image, metadata or observation-performance outputs.
 - If a downstream module requires acquisition geometry, trajectory, access windows, scenario package, attitude profile or sensor model, include upstream modules only when they are needed to produce those artifacts.
-- Do not force a custom scenario-generation module before synthetic-data generation if the selected module registry says that simplified/base scenes or global reference maps are acceptable. Include custom scenario generation only when the mission requires high-fidelity terrain, local DEM/texture, 3D targets, event-specific rendering or a mission-specific scene package.
+- Scenario generation is part of END-007 Synthetic Data Generation (there is no separate scenario-generation module since 2026-10-18). Do not ask for a custom scenario when the registry says that simplified/base scenes or global reference maps are acceptable. Ask for custom scenario data only when the mission requires high-fidelity terrain, local DEM/texture, 3D targets, event-specific rendering or a mission-specific scene package.
 - Use RAG documents as engineering context. Adapt them to this mission; do not copy a generic workflow.
 - Return a compact workflow in execution order.
 

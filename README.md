@@ -46,6 +46,36 @@ git clone --recursive https://github.com/LorenzoMariani/STAR.git
 
 (or `git submodule update --init` in an existing clone).
 
+## The 18 END
+
+STAR federates 18 END modules (frontend v4, `CANONICAL_MODULE_CATALOG`). Since
+2026-10-18 Scenario Generation (the former END-006, TELESPAZIO) is part of
+END-007 Synthetic Data Generation, and the Satellite Design Component Selector,
+END-019 until then, is END-006. The modules marked "runs" have a runner and a
+module folder in this repository; the others are shown in the Module Bay but
+are not executed.
+
+| END | module | owner | in STAR |
+|---|---|---|---|
+| END-001 | Constellation Optimizer | UNIRM1 | runs (always: orbits and passes) |
+| END-002 | Constellation Orbit Determination | UNIPD | catalogue only |
+| END-003 | Attitude Propagation | UNIRM1 | runs |
+| END-004 | Power Budget | UNIRM1 | runs |
+| END-005 | CMG Health Monitoring | TASI-POLIBA | catalogue only |
+| END-006 | Satellite Design Component Selector (END-019 until 2026-10-18) | UNIRM1 | runs (always: initial design at step 0, final design last) |
+| END-007 | Synthetic Data Generation, scenario generation included | TELESPAZIO | runs (Unreal) |
+| END-008 | Battery Health Monitoring | UNIRM1 | catalogue only (registry entry, no runner) |
+| END-009 | Solar Array Wings | TASI-POLIBA | catalogue only |
+| END-010 | Reflectance Determination | UNIRM1 | runs |
+| END-011 | Multi-Fidelity Analysis | POLITO | catalogue only |
+| END-012 | Degradation of Materials and Structures | UNIPA | catalogue only |
+| END-013 | Interaction with Planetary Surface | POLIMI | catalogue only |
+| END-014 | Robotic Manipulator | UNIRM1 | catalogue only |
+| END-015 | Flexible Components Health Monitoring | UNIRM1 | catalogue only |
+| END-016 | Collision Avoidance | UNIRM1 | runs |
+| END-017 | Clock Anomalies Detection | INRIM | catalogue only |
+| END-018 | Components Thermal Analysis | UNIRM1 | runs |
+
 ## Run modes and smoke test
 
 FrontEnd v4 (as v3) has two **Test / Full** buttons next to the theme switch (default
