@@ -1,8 +1,8 @@
 """STAR FrontEnd v3 (2026-10-15): star_frontend_v2.py plus END-019 Satellite
 Design Component Selector (canonical module, default runner, planner rule,
 output folders, live selector API for its results tab). It writes its own
-pages (web/star_*_v3.html, from web/star_results_shell_template_v3.html), so
-star_frontend_v2.py keeps working unchanged next to it.
+pages (web/star_*_v3.html, from web/star_results_shell_template_v3.html).
+star_frontend_v2.py was moved to FrontEnd/_old_frontend/ on 2026-10-18 (not in git).
 """
 from __future__ import annotations
 

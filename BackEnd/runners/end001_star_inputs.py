@@ -38,7 +38,7 @@ REGISTRY_SOURCES = {"module_registry_default", "module_registry_required_input"}
 NAMED_AREAS = ["Italy and Med", "Italian Coasts", "Mediterranean Area", "Mediterranean", "Europe (High Lat)",
                "Europe", "Italy", "Qatar", "Malaysia", "Artic"]
 
-# Point targets the STAR planner names (FrontEnd star_frontend_v2.py), same
+# Point targets the STAR planner names (FrontEnd star_frontend_v3.py), same
 # coordinates as star_runner_io.target_lat_lon.
 POINT_TARGETS = {"etna": (37.748, 14.999)}
 

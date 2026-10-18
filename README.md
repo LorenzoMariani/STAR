@@ -5,9 +5,9 @@ a Python / pywebview orchestrator (`FrontEnd/`, `BackEnd/`) that plans a mission
 from its requirements and runs the simulation modules `END0XX-*` (MATLAB,
 Python, Unity / Unreal). This repository holds only what running STAR needs.
 
-- `FrontEnd/` - `star_frontend_v3.py` (entry point, with END-018 and END-019) or
-  `star_frontend_v2.py` (without them), and the `web/` assets; each version
-  writes its own `web/star_*_v2.html` / `_v3.html` pages.
+- `FrontEnd/` - `star_frontend_v3.py` (entry point) and the `web/` assets; it
+  writes its own `web/star_*_v3.html` pages. `star_frontend_v2.py` (without
+  END-018 and END-019) was moved to `FrontEnd/_old_frontend/` (not in git).
 - `BackEnd/` - `ai/` (LLM providers), `modules/`, `runners/` (one runner per
   module; they find STAR's root from their own location).
 - `Input/` - `input_base_knowledge/` (module registry, AI config, knowledge
