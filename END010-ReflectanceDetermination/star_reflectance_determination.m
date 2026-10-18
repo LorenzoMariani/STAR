@@ -268,9 +268,24 @@ function [status] = STAR_END010_REFLECTANCE_DETERMINATION(configFile, output_fol
         end
     end
 
+    % Attitude of the Unity model (2026-10-18). The CDS CubeSat models of the
+    % Unity player are not drawn in the STAR body frame (OBJ axes + Unity
+    % import): sat.unityModelToBody_q (scalar first, set by the STAR runner,
+    % star_runner_io.END010_MODEL_TO_BODY_Q) is the fixed rotation C with
+    % R(q_unity) = R(q) C, so that the model's long axis is body Z and its
+    % structure cap faces body +Z (payload, nadir). Only the csv for Unity
+    % changes; att keeps the body attitude.
+    attUnity = att(:,1:4);
+    if isfield(cfg, 'sat') && isfield(cfg.sat, 'unityModelToBody_q') && numel(cfg.sat.unityModelToBody_q) == 4
+        qc = double(cfg.sat.unityModelToBody_q(:)');
+        qc = qc / norm(qc);
+        attUnity = quat_mult_rows(attUnity, qc);
+        fprintf('[STAR END-010] Unity model attitude: body attitude x model-to-body rotation [%g %g %g %g]\n', qc);
+    end
+
     % Salvataggio del CSV generato nella cartella di output per Unity
     csvPath = fullfile(res_folder, 'csvUnity.csv');
-    csv_lines = [times_(:), reci, rseci, rsun, e(:), r(:), s(:), att(:,1:4)];
+    csv_lines = [times_(:), reci, rseci, rsun, e(:), r(:), s(:), attUnity];
     writematrix(csv_lines, csvPath);
 
     %% 4. Configurazione ed Esecuzione Unity
@@ -507,6 +522,13 @@ end
 %% =======================================================================%
 % == HELPER: RISOLUZIONE PATH OPZIONALI DA CONFIG O DIALOGO ==============%
 %=========================================================================%
+function q = quat_mult_rows(p, r)
+% Hamilton product p (x) r, scalar first, row-wise (p: n x 4, r: 1 x 4).
+    pw = p(:,1); pv = p(:,2:4);
+    rv = repmat(r(2:4), size(p,1), 1);
+    q = [pw*r(1) - pv*r(2:4)', pw.*rv + r(1)*pv + cross(pv, rv, 2)];
+end
+
 function filePath = resolveOptionalPath(cfgPaths, fieldName, dialogTitle)
     % Usa il percorso da configurazione se presente (uso STAR/headless),
     % altrimenti lo richiede con una finestra di dialogo (uso standalone).

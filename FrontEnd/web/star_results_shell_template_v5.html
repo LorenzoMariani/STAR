@@ -862,7 +862,16 @@ async function loadReflectanceFromStarRoot() {
       kpiData: await readJsonFileFromPathIfExists(starRootHandle, kpiPath),
       timeSeriesData: await readJsonFileFromPathIfExists(starRootHandle, timeseriesPath)
     };
-    await frame.contentWindow.receiveReflectanceFilesFromParent(payload, { csv: csvLabel, frames: framesLabel, results: resultsLabel });
+    // attitude of the light-curve pass (2026-10-18): END-003 AEM figures and rotational state, shown at the bottom of the tab
+    const attitudePath = ['modules_output','END-003','results_attitude_propagator'];
+    try {
+      payload.attitudeFiles = (await collectFilesFromSelectedPath(attitudePath)).filter((f) => /^07_aem_lightcurve_.*\.png$/i.test(f.name));
+    } catch (_) {
+      payload.attitudeFiles = [];
+    }
+    payload.attitudeState = await readJsonFileFromPathIfExists(starRootHandle, [...attitudePath, '07_aem_lightcurve_rotational_state.json']);
+    await frame.contentWindow.receiveReflectanceFilesFromParent(payload, { csv: csvLabel, frames: framesLabel, results: resultsLabel,
+      attitude: selectedPathLabel(attitudePath) });
     return true;
   } catch (error) {
     console.warn('Unable to load END-010 reflectance data from the selected RUN folder:', error);

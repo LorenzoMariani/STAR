@@ -1067,6 +1067,8 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
     cubesat = end010_cubesat_options(star_payload, product_dir) if cubesat_exe.exists() or not aqua_exe.exists() else None
     if cubesat:
         cfg.setdefault("unityOpts", {}).update(cubesat["unityOpts"])
+        # fixed rotation that puts the CDS model of the player in the STAR body frame (END010_MODEL_TO_BODY_Q)
+        cfg.setdefault("sat", {})["unityModelToBody_q"] = cubesat["unity_model_to_body_q"]
     # reference area of the magnitude estimate: the mean projected area of the satellite of the run (END-006)
     sat = load_spacecraft_definition(star_payload, next((p for p in Path(product_dir).resolve().parents if p.name == "modules_output"), None))
     if sat and sat.get("area_mean_projected_m2"):
@@ -1122,6 +1124,14 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
 CUBESAT_ENVELOPE_MM = {1: (100.0, 100.0, 113.5), 2: (100.0, 100.0, 227.0), 3: (100.0, 100.0, 340.5), 6: (226.3, 100.0, 366.0), 12: (226.3, 226.3, 366.0)}
 END010_DEFAULT_CLASS_U = 6
 END010_SCENE_SCALE = 100.0      # STAR csv positions are in km: divided by 100 the camera stays thousands of units from a 0.1-0.4 m model
+# Attitude input of the Unity CubeSat player (2026-10-18). The models are not drawn in the STAR body frame: a body vector b
+# reaches Unity at local (bx, bz, by) (CsvLoader), an OBJ point m at (-mx, my, mz) (OBJ import), and the OBJ axes are not the
+# body axes (cells on the +Z cap, which END-006 keeps for the payload; the NASA-style 6U is 226.3 x 100 mm, END-006's 6U is
+# 100 x 226.3 mm). With no correction the long axis lay along body Y and a long face with cells faced nadir (rendered frames,
+# 2026-10-18). END-010 sends Unity q (x) q_c, R(q_c) = C = A^T F M, with A = body -> model axes: the structure cap (model -Z) on
+# body +Z (payload, nadir), long axis on body Z; 6U also model X <-> body Y. Quaternions scalar first [w, x, y, z]; key 0 = the
+# classes with a square cross-section (1U, 2U, 3U, 12U). The Unity player itself is unchanged.
+END010_MODEL_TO_BODY_Q = {0: (0.0, 0.0, 0.707107, -0.707107), 6: (0.5, -0.5, 0.5, -0.5)}
 
 
 def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> dict[str, Any]:
@@ -1156,6 +1166,7 @@ def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> d
     half_diagonal_m = 0.5 * math.sqrt(x * x + y * y + z * z) / 1000.0
     cam_size = round(1.1 * half_diagonal_m, 4)
     return {"class_u": class_u, "source": source, "model": f"CDS_{class_u}U_nasa_style", "envelope_mm": [x, y, z],
+            "unity_model_to_body_q": list(END010_MODEL_TO_BODY_Q[6 if class_u == 6 else 0]),
             "unityOpts": {"cubesatClass": class_u, "camSize": cam_size, "sceneScale": END010_SCENE_SCALE}}
 
 

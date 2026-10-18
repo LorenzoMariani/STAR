@@ -355,6 +355,23 @@ input[type="range"]{width:100%}
 .kpi-category:last-child{margin-bottom:0}
 .kpi-category h4{margin:0 0 8px;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
 .kpi-threshold{font-size:10px;color:var(--muted);display:block;font-weight:400;text-align:right}
+/* attitude sequence of the light-curve pass (END-003 AEM figures), 2026-10-18 */
+.att-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.att-note{color:var(--muted-2);font-size:12px;line-height:1.5;margin:4px 0 12px}
+.att-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.att-table td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+.att-table td:first-child{color:var(--muted);width:34%}
+.att-table td:last-child{color:var(--text)}
+.att-figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.att-fig{margin:0;background:var(--panel-muted);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.att-fig.wide{grid-column:1 / -1}
+.att-fig img{display:block;width:100%;height:auto;cursor:zoom-in;background:#212631}
+.att-fig figcaption{padding:8px 12px;font-size:12px;line-height:1.45;color:var(--muted-2)}
+.att-fig figcaption b{color:var(--text-strong)}
+.att-lightbox{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(5,7,12,.86);cursor:zoom-out}
+.att-lightbox[hidden]{display:none}
+.att-lightbox img{max-width:96vw;max-height:92vh;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+@media(max-width:980px){.att-figs{grid-template-columns:1fr}}
 .status-message{
   color:var(--muted);
   border:1px dashed var(--border);
@@ -519,7 +536,10 @@ header.header{display:none!important;}
       </section>
 
       <article class="card"><div class="card-header"><h3>Performance KPI Catalog</h3></div><div class="card-body"><div id="kpi-table"><div class="empty-cell">Load the reflectance results to populate the KPI catalog.</div></div></div></article>
+
+      <article class="card" id="attitude-card"><div class="card-header att-head"><h3>Attitude Sequence of the Light-Curve Pass</h3><span class="muted small" id="attitude-status">pending</span></div><div class="card-body"><div id="attitude-panel"><div class="empty-cell">Open a RUN folder with END-003 to show the attitude of the satellite during the simulated reflectance pass.</div></div></div></article>
     </main>
+    <div class="att-lightbox" id="att-lightbox" hidden><img id="att-lightbox-img" alt=""></div>
   </div>
 </div>
 
@@ -1695,8 +1715,61 @@ window.addEventListener('drop', async (event) => {
 });
 
 
+// Attitude of the light-curve pass (2026-10-18): the END-003 figures of the AEM of this pass (attitude sequence in a fixed inertial
+// view and seen along H, H and omega with respect to the orbit, quaternion / Euler angles / body rates) and its rotational state.
+let attitudeState = null;
+let attitudeFigureURLs = new Map();
+let attitudeSourceLabel = '';
+const ATTITUDE_FALLBACK_FIGURES = [
+  { file: '07_aem_lightcurve_A_inertial_view.png', title: 'Attitude sequence, fixed inertial view (H vertical)', caption: 'Attitude at 8 epochs over the pass in a fixed inertial view with the mean angular momentum H vertical; red, green and blue arrows: body axes X, Y, Z (+Z = payload boresight).' },
+  { file: '07_aem_lightcurve_B_view_along_H.png', title: 'Same sequence seen along H', caption: 'Same sequence seen along H: the rotation about H appears in the image plane.' },
+  { file: '07_aem_lightcurve_C_H_orbital_plane.png', title: 'H and \u03c9 with respect to the orbit', caption: 'Angular momentum H and rotation axis \u03c9 with respect to the orbit at the middle of the pass.' },
+  { file: '07_aem_lightcurve_D_parameters.png', title: 'Attitude parameters from the AEM', caption: 'Quaternion, ZYX Euler angles and body angular velocity over the pass.' },
+];
+function setAttitudeFiles(files) {
+  attitudeFigureURLs.forEach((url) => { try { URL.revokeObjectURL(url); } catch (_) {} });
+  attitudeFigureURLs = new Map();
+  (files || []).forEach((f) => attitudeFigureURLs.set(f.name, URL.createObjectURL(f)));
+}
+function populateAttitudeCard() {
+  const panel = $('attitude-panel');
+  const status = $('attitude-status');
+  if (!panel) return;
+  const figs = (attitudeState && Array.isArray(attitudeState.figures) && attitudeState.figures.length ? attitudeState.figures : ATTITUDE_FALLBACK_FIGURES)
+    .filter((f) => attitudeFigureURLs.has(f.file));
+  const rows = attitudeState && Array.isArray(attitudeState.rows) ? attitudeState.rows : [];
+  if (!figs.length && !rows.length) {
+    if (status) status.textContent = 'not available';
+    panel.innerHTML = '<div class="empty-cell">No attitude figures of the light-curve pass in this RUN (they are written by END-003 with the AEM of the pass).</div>';
+    return;
+  }
+  if (status) status.textContent = attitudeSourceLabel || 'END-003';
+  const title = attitudeState && attitudeState.title ? `<b>${escapeHtml(attitudeState.title)}</b>. ` : '';
+  const note = `<p class="att-note">${title}Attitude computed by END-003 for the pass that END-010 renders (CCSDS AEM, quaternion J2000 \u2192 body). `
+    + 'Body frame: +Z payload boresight (nadir in nadir mode), +X along track, +Y = Z \u00d7 X. The Unity renderer draws the CubeSat in this frame: '
+    + 'long axis along Z, structure cap on +Z, solar cells on the four long faces.</p>';
+  const table = rows.length ? `<table class="att-table"><tbody>${rows.map((r) => `<tr><td>${escapeHtml(r.quantity)}</td><td>${escapeHtml(r.value)}</td></tr>`).join('')}</tbody></table>` : '';
+  const html = figs.map((f) => `<figure class="att-fig${/_[AB]_[a-z_]+\.png$/i.test(f.file) ? ' wide' : ''}"><img src="${attitudeFigureURLs.get(f.file)}" alt="${escapeHtml(f.title)}" loading="lazy"><figcaption><b>${escapeHtml(f.title)}.</b> ${escapeHtml(f.caption || '')}</figcaption></figure>`).join('');
+  panel.innerHTML = note + table + `<div class="att-figs">${html}</div>`;
+  panel.querySelectorAll('.att-fig img').forEach((img) => img.addEventListener('click', () => {
+    $('att-lightbox-img').src = img.src;
+    $('att-lightbox').hidden = false;
+  }));
+}
+document.addEventListener('click', (event) => {
+  const box = $('att-lightbox');
+  if (box && !box.hidden && (event.target === box || event.target.id === 'att-lightbox-img')) box.hidden = true;
+});
+document.addEventListener('keydown', (event) => { const box = $('att-lightbox'); if (event.key === 'Escape' && box) box.hidden = true; });
+
 window.receiveReflectanceFilesFromParent = async function(payload = {}, labels = {}) {
   try {
+    if (payload.attitudeFiles || payload.attitudeState) {
+      setAttitudeFiles(Array.from(payload.attitudeFiles || []));
+      attitudeState = payload.attitudeState || null;
+      attitudeSourceLabel = labels.attitude || 'END-003';
+      populateAttitudeCard();
+    }
     if (payload.csvFiles) await loadCSVFromFolderFiles(Array.from(payload.csvFiles || []), labels.csv || 'RUN folder · END-010 flux output');
     if (payload.frameFiles) await loadFramesFromFolderFiles(Array.from(payload.frameFiles || []), labels.frames || 'RUN folder · END-010 rendered frames');
     if (payload.kpiData) {

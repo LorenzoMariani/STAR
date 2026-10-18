@@ -91,7 +91,7 @@ function info = end003_aem_figures(aemFile, opts)
     info.figures = figs;
     info.rotational_state = stats.rows;
     info.values = stats.values;
-    js = struct('aem', aemFile, 'title', opts.title, 'rows', stats.rows, 'values', stats.values);
+    js = struct('aem', aemFile, 'title', opts.title, 'rows', stats.rows, 'values', stats.values, 'figures', figs);
     fid = fopen(fullfile(opts.out_dir, sprintf('%s_rotational_state.json', opts.prefix)), 'w');
     if fid >= 0
         fprintf(fid, '%s', jsonencode(js, 'PrettyPrint', true));
@@ -321,8 +321,10 @@ function draw_sequence(file, kind, t, R, W, Hm, k8, st, opts)
     LH = 1.55; LW = 1.38; LA = 1.12;
     tips = LW*Wn;
     col = struct('H', [0.93 0.95 0.98], 'w', [0.98 0.55 0.22], 'X', [0.93 0.33 0.30], 'Y', [0.35 0.80 0.40], 'Z', [0.40 0.60 0.98]);
+    tileTimes = zeros(1, 0);
     for k = k8(:)'
         ax = nexttile(tl);
+        tileTimes(end+1) = t(k); %#ok<AGROW>
         hold(ax, 'on'); axis(ax, 'equal'); axis(ax, 'off');
         ax.Color = bg;
         Rk = R(:, :, k);
@@ -355,8 +357,16 @@ function draw_sequence(file, kind, t, R, W, Hm, k8, st, opts)
         light(ax, 'Position', 6*dview + 4*up + 3*cross(up, dview), 'Style', 'infinite');
         light(ax, 'Position', -3*dview + 2*up, 'Style', 'infinite', 'Color', [0.35 0.35 0.4]);
         lighting(ax, 'gouraud');
-        text(ax, 0.03, 0.97, sprintf('t = %.0f s', t(k)), 'Units', 'normalized', 'Color', 'w', 'FontSize', 17, 'FontWeight', 'bold', ...
-            'VerticalAlignment', 'top');
+    end
+    % time of each tile, in a 2-D layer over the 2 x 4 grid: 'normalized' text in these 3-D axes follows the camera, and in
+    % the inertial view (camera from the side) the labels of the second row ended in the first one (2026-10-18)
+    ov = axes(fig, 'Position', [0 0 1 1], 'Visible', 'off', 'HitTest', 'off');
+    xlim(ov, [0 1]); ylim(ov, [0 1]);
+    gp = tl.OuterPosition;
+    for i = 1:numel(tileTimes)
+        row = ceil(i/4); c = i - 4*(row - 1);
+        text(ov, gp(1) + gp(3)*(c - 1)/4 + 0.012, gp(2) + gp(4)*(1 - (row - 1)/2) - 0.006, sprintf('t = %.0f s', tileTimes(i)), ...
+            'Color', 'w', 'FontSize', 17, 'FontWeight', 'bold', 'VerticalAlignment', 'top');
     end
     if strcmp(kind, 'inertial')
         note = 'White arc: sense of rotation about H. Orange curve: path of the tip of \omega during the pass. Fixed inertial view, mean H vertical.';
