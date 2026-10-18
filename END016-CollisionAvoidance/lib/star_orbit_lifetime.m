@@ -81,7 +81,10 @@ end
     end
 
     function dx = rates(~, x)
-        a = x(1); e = min(max(x(2), 0), 0.99);
+        % 2026-10-17: with a fast decay (low orbit, high solar activity) an ode45 trial step can go past the re-entry
+        % (a < Re, complex velocity and density); the rates are then evaluated at the re-entry altitude, the state stays
+        % real and the perigee event still stops the integration
+        a = max(real(x(1)), Re + hre*1e3); e = min(max(real(x(2)), 0), 0.99);
         M = linspace(0, 2*pi, 73); M(end) = [];
         E = M;
         for it = 1:8, E = E - (E - e*sin(E) - M)./(1 - e*cos(E)); end
