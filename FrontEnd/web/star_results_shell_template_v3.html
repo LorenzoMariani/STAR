@@ -484,7 +484,7 @@ async function listRunFolders(rootHandle) {
 
 async function ensureCurrentRunFolder() {
   if (currentRunHandle) return currentRunHandle;
-  if (hasRunFolderSelection()) {
+  if (starRootHandle) {             // directory access (a file-list selection has no handle: next branch)
     currentRunHandle = starRootHandle;
     currentRunName = starRootHandle.name;
     updateRootStatus();
@@ -546,7 +546,7 @@ function updateRootStatus() {
   if (hasRunFolderSelection()) {
     dot.classList.add('loaded');
     const modeLabel = starRunSelectionMode === 'file-list' ? 'file-list selection' : 'directory access';
-    text.textContent = `RUN folder selected: ${selectedRunName()} · ${modeLabel}`;
+    text.textContent = `RUN folder selected: ${selectedRunName()} · ${modeLabel} · press Select RUN Folder again to reload the outputs`;
   } else {
     dot.classList.remove('loaded');
     text.textContent = 'RUN output folder not selected. Select a RUN_XXXXX folder to load modules_output.';
@@ -1013,81 +1013,105 @@ function scheduleAttitudeDataDelivery() {
   }, 200);
 }
 
+// 2026-10-18: each tab reads its RUN data once, the first time it is shown (visible) after the RUN selection. Before,
+// every click re-read the files and the module re-processed them (thousands of END-007 frames, ~13 MB of END-019 data)
+// and selecting the RUN read every tab at once, freezing the window. Later clicks only show the tab, redrawn when its
+// size changed while it was hidden (window resized). "Select RUN Folder" pressed again reads the data again (outputs of
+// a run still in progress).
+const TAB_FRAMES = {
+  constellation: 'frame-constellation', attitude: 'frame-attitude', powerviz: 'frame-powerviz', synthetic: 'frame-synthetic',
+  reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', compsel: 'frame-compsel',
+  compliance: 'frame-compliance', diagnostics: 'frame-diagnostics'
+};
+const TAB_LOADERS = {
+  constellation: loadConstellationFromStarRoot,
+  attitude: async () => {
+    const ok = hasRunFolderSelection() ? await loadAttitudeDataFromStarRoot() : false;
+    if (window.attitudePropagationData) deliverAttitudeDataToFrame();
+    return ok || Boolean(window.attitudePropagationData);
+  },
+  powerviz: loadPowerInsightsFromStarRoot,
+  synthetic: loadSyntheticImagesFromStarRoot,
+  reflectance: loadReflectanceFromStarRoot,
+  collision: loadCollisionAvoidanceFromStarRoot,
+  thermal: loadThermalAnalysisFromStarRoot,
+  compsel: loadComponentSelectorFromStarRoot,
+  compliance: loadComplianceFromStarRoot,
+  diagnostics: updateRunDiagnostics
+};
+// module redraws; refreshDiagnosticsDashboard is left out because it scans the RUN again (its loader already did)
+const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshComponentSelectorDashboard',
+  'refreshConstellationDashboard', 'refreshAttitudeDashboard', 'refreshPowerInsightsDashboard', 'refreshSyntheticDashboard',
+  'refreshReflectanceDashboard', 'refreshComplianceDashboard'];
+const tabLoads = {};    // tab -> { run, promise, size }: data read for the selected RUN, frame size at the last redraw
+
+function activeTabName() {
+  const button = document.querySelector('.tab-button.active');
+  return button ? button.dataset.tab : 'constellation';
+}
+
+function runSelectionKey() {
+  return hasRunFolderSelection() ? `${starRunSelectionMode}|${selectedRunName()}` : '';
+}
+
+function invalidateTabData(tabName = null) {
+  for (const name of tabName ? [tabName] : Object.keys(tabLoads)) delete tabLoads[name];
+}
+
+// true when this call read the data; false when it was already read (or is being read) for the selected RUN, or there is
+// nothing to read. A loader that fails is tried again at the next visit.
+async function ensureTabLoaded(tabName) {
+  const run = runSelectionKey();
+  const existing = tabLoads[tabName];
+  if (existing && existing.run === run) { await existing.promise; return false; }
+  const loader = TAB_LOADERS[tabName];
+  if (!loader || (!run && tabName !== 'diagnostics' && tabName !== 'attitude')) return false;
+  const entry = { run, size: null };
+  entry.promise = (async () => {
+    let ok = false;
+    try { ok = await loader(); } catch (error) { console.warn(`Unable to load the ${tabName} tab:`, error); }
+    if (ok === false && tabLoads[tabName] === entry) delete tabLoads[tabName];
+    return ok;
+  })();
+  tabLoads[tabName] = entry;
+  await entry.promise;
+  return true;
+}
+
+function redrawTab(frame) {
+  const win = frame.contentWindow;
+  if (!win) return;
+  win.dispatchEvent(new Event('resize'));
+  for (const name of TAB_REFRESH_FUNCTIONS) {
+    if (typeof win[name] === 'function') win[name]();
+  }
+  if (win.Plotly) {
+    const ids = ['plotWeights','plotGround','plot3D','plot3DECEF','plotAngularVelocity','plotEulerAngles','plotTorquesLinear','plotTorquesLog','plotEnergy','plotAltitude','plotElevation','plotNadirOffset','plotTargetOffset','plotHMag','plotHDir','plotGroundTrack','plotOrbitECI','plotOrbitECEF'];
+    ids.forEach(id => { const el = frame.contentDocument.getElementById(id); if (el && el.data) win.Plotly.Plots.resize(el); });
+  }
+}
+
+async function showTab(tabName) {
+  const frame = $(TAB_FRAMES[tabName]) || $('frame-constellation');
+  try {
+    const fresh = await ensureTabLoaded(tabName);
+    if (activeTabName() !== tabName) return;            // another tab was opened meanwhile: redrawn at its next visit
+    const entry = tabLoads[tabName];
+    const size = `${frame.clientWidth}x${frame.clientHeight}`;
+    if (!fresh && entry && entry.size === size) return;  // already drawn at this size
+    redrawTab(frame);
+    if (entry) entry.size = size;
+  } catch (error) { console.warn('Unable to refresh active child frame:', error); }
+}
+
 function switchTab(tabName) {
   for (const button of document.querySelectorAll('.tab-button')) {
     button.classList.toggle('active', button.dataset.tab === tabName);
   }
-
-  const frameByTab = {
-    constellation: $('frame-constellation'),
-    attitude: $('frame-attitude'),
-    powerviz: $('frame-powerviz'),
-    synthetic: $('frame-synthetic'),
-    reflectance: $('frame-reflectance'),
-    collision: $('frame-collision'),
-    thermal: $('frame-thermal'),
-    compsel: $('frame-compsel'),
-    compliance: $('frame-compliance'),
-    diagnostics: $('frame-diagnostics')
-  };
-
-  Object.entries(frameByTab).forEach(([name, frame]) => {
-    frame.classList.toggle('active', name === tabName);
+  Object.entries(TAB_FRAMES).forEach(([name, id]) => {
+    $(id).classList.toggle('active', name === tabName);
   });
-
-  setTimeout(() => {
-    const activeFrame = frameByTab[tabName] || $('frame-constellation');
-    (async () => {
-      try {
-        if (tabName === 'constellation' && hasRunFolderSelection()) {
-          await loadConstellationFromStarRoot();
-        }
-        if (tabName === 'attitude') {
-          if (!window.attitudePropagationData && hasRunFolderSelection()) await loadAttitudeDataFromStarRoot();
-          if (window.attitudePropagationData) deliverAttitudeDataToFrame();
-        }
-        if (tabName === 'powerviz' && hasRunFolderSelection()) {
-          await loadPowerInsightsFromStarRoot();
-        }
-        if (tabName === 'synthetic' && hasRunFolderSelection()) {
-          await loadSyntheticImagesFromStarRoot();
-        }
-        if (tabName === 'reflectance' && hasRunFolderSelection()) {
-          await loadReflectanceFromStarRoot();
-        }
-        if (tabName === 'collision' && hasRunFolderSelection()) {
-          await loadCollisionAvoidanceFromStarRoot();
-        }
-        if (tabName === 'thermal' && hasRunFolderSelection()) {
-          await loadThermalAnalysisFromStarRoot();
-        }
-        if (tabName === 'compsel' && hasRunFolderSelection()) {
-          await loadComponentSelectorFromStarRoot();
-        }
-        if (tabName === 'compliance' && hasRunFolderSelection()) {
-          await loadComplianceFromStarRoot();
-        }
-        if (tabName === 'diagnostics') {
-          await updateRunDiagnostics();
-        }
-        activeFrame.contentWindow.dispatchEvent(new Event('resize'));
-        if (typeof activeFrame.contentWindow.refreshCollisionDashboard === 'function') activeFrame.contentWindow.refreshCollisionDashboard();
-        if (typeof activeFrame.contentWindow.refreshThermalDashboard === 'function') activeFrame.contentWindow.refreshThermalDashboard();
-        if (typeof activeFrame.contentWindow.refreshComponentSelectorDashboard === 'function') activeFrame.contentWindow.refreshComponentSelectorDashboard();
-        if (typeof activeFrame.contentWindow.refreshConstellationDashboard === 'function') activeFrame.contentWindow.refreshConstellationDashboard();
-        if (typeof activeFrame.contentWindow.refreshAttitudeDashboard === 'function') activeFrame.contentWindow.refreshAttitudeDashboard();
-        if (typeof activeFrame.contentWindow.refreshPowerInsightsDashboard === 'function') activeFrame.contentWindow.refreshPowerInsightsDashboard();
-        if (typeof activeFrame.contentWindow.refreshSyntheticDashboard === 'function') activeFrame.contentWindow.refreshSyntheticDashboard();
-        if (typeof activeFrame.contentWindow.refreshReflectanceDashboard === 'function') activeFrame.contentWindow.refreshReflectanceDashboard();
-        if (typeof activeFrame.contentWindow.refreshDiagnosticsDashboard === 'function') activeFrame.contentWindow.refreshDiagnosticsDashboard();
-        if (typeof activeFrame.contentWindow.refreshComplianceDashboard === 'function') activeFrame.contentWindow.refreshComplianceDashboard();
-        if (activeFrame.contentWindow.Plotly) {
-          const ids = ['plotWeights','plotGround','plot3D','plot3DECEF','plotAngularVelocity','plotEulerAngles','plotTorquesLinear','plotTorquesLog','plotEnergy','plotAltitude','plotElevation','plotNadirOffset','plotTargetOffset','plotHMag','plotHDir','plotGroundTrack','plotOrbitECI','plotOrbitECEF'];
-          ids.forEach(id => { const el = activeFrame.contentDocument.getElementById(id); if (el && el.data) activeFrame.contentWindow.Plotly.Plots.resize(el); });
-        }
-      } catch (error) { console.warn('Unable to refresh active child frame:', error); }
-    })();
-  }, 160);
+  setTimeout(() => showTab(tabName), 160);
 }
 
 function bindEvents() {
@@ -1096,17 +1120,8 @@ function bindEvents() {
   $('star-root-button').addEventListener('click', async () => {
     try {
       await ensureStarRootFolder();
-      await loadConstellationFromStarRoot();
-      await loadAttitudeDataFromStarRoot();
-      await loadPowerInsightsFromStarRoot();
-      await loadSyntheticImagesFromStarRoot();
-      await loadReflectanceFromStarRoot();
-      await loadCollisionAvoidanceFromStarRoot();
-      await loadThermalAnalysisFromStarRoot();
-      await loadComponentSelectorFromStarRoot();
-      await loadComplianceFromStarRoot();
-      await updateRunDiagnostics();
-      deliverAttitudeDataToFrame();
+      invalidateTabData();              // every tab reads the RUN again: the shown one now, the others at their first visit
+      await showTab(activeTabName());
     } catch (error) {
       console.warn(error);
       updateRootStatus();
@@ -1117,40 +1132,12 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
-    frame.addEventListener('load', () => {
-      if (frame.id === 'frame-collision' && hasRunFolderSelection()) {
-        loadCollisionAvoidanceFromStarRoot();
-      }
-      if (frame.id === 'frame-thermal' && hasRunFolderSelection()) {
-        loadThermalAnalysisFromStarRoot();
-      }
-      if (frame.id === 'frame-compsel' && hasRunFolderSelection()) {
-        loadComponentSelectorFromStarRoot();
-      }
-      if (frame.id === 'frame-compliance' && hasRunFolderSelection()) {
-        loadComplianceFromStarRoot();
-      }
+  for (const [tabName, frameId] of Object.entries(TAB_FRAMES)) {
+    $(frameId).addEventListener('load', () => {
       propagateTheme(document.documentElement.dataset.theme || 'dark');
-      if (frame.id === 'frame-attitude') {
-        if (window.attitudePropagationData) deliverAttitudeDataToFrame();
-        else if (hasRunFolderSelection()) loadAttitudeDataFromStarRoot();
-      }
-      if (frame.id === 'frame-constellation' && hasRunFolderSelection()) {
-        loadConstellationFromStarRoot();
-      }
-      if (frame.id === 'frame-powerviz' && hasRunFolderSelection()) {
-        loadPowerInsightsFromStarRoot();
-      }
-      if (frame.id === 'frame-synthetic' && hasRunFolderSelection()) {
-        loadSyntheticImagesFromStarRoot();
-      }
-      if (frame.id === 'frame-reflectance' && hasRunFolderSelection()) {
-        loadReflectanceFromStarRoot();
-      }
-      if (frame.id === 'frame-diagnostics') {
-        updateRunDiagnostics();
-      }
+      invalidateTabData(tabName);       // a (re)loaded frame holds no RUN data
+      if (tabName === 'attitude' && window.attitudePropagationData && !hasRunFolderSelection()) deliverAttitudeDataToFrame();
+      if (tabName === activeTabName()) showTab(tabName);
     });
   }
 }
