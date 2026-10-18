@@ -10,6 +10,9 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
   (2026-10-18): Scenario Generation (the former END-006) is part of END-007,
   and the component selector (END-019 until then) is END-006.
   `star_frontend_v2.py` was moved to `FrontEnd/_old_frontend/` (not in git).
+  In the results workspace "Select RUN Folder" opens a folder dialog in
+  `Output/` of STAR (found from where STAR is); STAR serves the chosen RUN
+  read-only on 127.0.0.1 and the tabs read its files when they need them.
 - `BackEnd/` - `ai/` (LLM providers), `modules/`, `runners/` (one runner per
   module; they find STAR's root from their own location).
 - `Input/` - `input_base_knowledge/` (module registry, AI config, knowledge
@@ -54,6 +57,10 @@ END-007 Synthetic Data Generation, and the Satellite Design Component Selector,
 END-019 until then, is END-006. The modules marked "runs" have a runner and a
 module folder in this repository; the others are shown in the Module Bay but
 are not executed.
+
+Which calls for proposals STAR can process today (Italian area, LEO 400-1200 km,
+CubeSat 1U-12U up to 24 kg, optical payload) is described in
+[STAR_FIELD_OF_USE.md](STAR_FIELD_OF_USE.md).
 
 | END | module | owner | in STAR |
 |---|---|---|---|

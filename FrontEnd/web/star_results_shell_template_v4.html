@@ -395,6 +395,7 @@ function selectedPathLabel(pathParts) {
 }
 
 function getRunRelativePath(file) {
+  if (file && file.runRelativePath) return file.runRelativePath;
   const raw = String(file.relativeDisplayPath || file.webkitRelativePath || file.name || '').replace(/\\/g, '/');
   const parts = raw.split('/').filter(Boolean);
   if (!parts.length) return raw;
@@ -510,7 +511,71 @@ async function resolveDirectoryHandle(rootHandle, pathParts) {
   return current;
 }
 
-async function ensureStarRootFolder() {
+// 2026-10-18: inside the STAR window the RUN folder is chosen with the native dialog of STAR, which opens in
+// <STAR root>/Output (the browser folder picker cannot start in a given folder). STAR serves the chosen RUN read-only on
+// 127.0.0.1: each file is a placeholder File (name, size, path relative to the RUN) whose content is fetched only when a
+// tab reads it (text(), arrayBuffer()) or shows it (URL.createObjectURL gives its served URL). Outside STAR (a plain
+// browser) the browser picker below is used.
+let starServedRun = null;
+
+function starPywebviewApi() {
+  for (const w of [window, window.parent, window.parent && window.parent.parent, window.top]) {
+    try { if (w && w.pywebview && w.pywebview.api && typeof w.pywebview.api.results_pick_run_folder === 'function') return w.pywebview.api; } catch (_) {}
+  }
+  return null;
+}
+
+function servedRunFile(baseUrl, runName, entry) {
+  const file = new File([], entry.rel.split('/').pop());
+  const url = baseUrl + entry.rel.split('/').map(encodeURIComponent).join('/');
+  const get = () => fetch(url, { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(`${r.status} ${entry.rel}`); return r; });
+  Object.defineProperty(file, 'size', { value: Number(entry.size) || 0 });
+  file.runRelativePath = entry.rel;
+  file.relativeDisplayPath = `${runName}/${entry.rel}`;
+  file.starUrl = url;
+  file.text = () => get().then(r => r.text());
+  file.arrayBuffer = () => get().then(r => r.arrayBuffer());
+  return file;
+}
+
+function patchServedObjectUrls(win) {
+  try {
+    if (!win || !win.URL || win.URL.__starServedRunPatch) return;
+    const create = win.URL.createObjectURL.bind(win.URL);
+    const revoke = win.URL.revokeObjectURL.bind(win.URL);
+    win.URL.createObjectURL = obj => (obj && obj.starUrl) ? obj.starUrl : create(obj);
+    win.URL.revokeObjectURL = url => { if (String(url).startsWith('blob:')) revoke(url); };
+    win.URL.__starServedRunPatch = true;
+  } catch (error) {
+    console.warn('Unable to patch the object URLs of a frame:', error);
+  }
+}
+
+function patchAllServedObjectUrls() {
+  patchServedObjectUrls(window);
+  for (const frame of document.querySelectorAll('iframe.tab-frame')) patchServedObjectUrls(frame.contentWindow);
+}
+
+async function selectRunFolderViaStar(api) {
+  const info = await api.results_pick_run_folder();
+  if (!info || info.cancelled) throw new DOMException('No RUN folder was selected.', 'AbortError');
+  if (!info.ok) throw new Error(info.error || 'The RUN folder could not be opened.');
+  starServedRun = { name: info.name, path: info.path, relative: info.relative_to_star, baseUrl: info.base_url };
+  starRunFiles = info.files.map(entry => servedRunFile(info.base_url, info.name, entry));
+  starRootHandle = null;
+  currentRunHandle = null;
+  currentRunName = info.name;
+  starRunSelectionMode = 'star-output';
+  patchAllServedObjectUrls();
+  updateRootStatus();
+  return { name: currentRunName, files: starRunFiles };
+}
+
+async function ensureStarRootFolder(options = {}) {
+  const starApi = starPywebviewApi();
+  if (starApi && (options.choose || !hasRunFolderSelection())) {
+    return await selectRunFolderViaStar(starApi);
+  }
   if (hasRunFolderSelection()) {
     await ensureCurrentRunFolder();
     return starRootHandle || { name: selectedRunName() };
@@ -545,6 +610,10 @@ function updateRootStatus() {
   const text = $('root-status-text');
   if (hasRunFolderSelection()) {
     dot.classList.add('loaded');
+    if (starRunSelectionMode === 'star-output' && starServedRun) {
+      text.textContent = `RUN folder selected: ${starServedRun.relative} · press Select RUN Folder to choose another RUN or the same one to reload it`;
+      return;
+    }
     const modeLabel = starRunSelectionMode === 'file-list' ? 'file-list selection' : 'directory access';
     text.textContent = `RUN folder selected: ${selectedRunName()} · ${modeLabel} · press Select RUN Folder again to reload the outputs`;
   } else {
@@ -1118,12 +1187,13 @@ function bindEvents() {
   if (themeSwitch) themeSwitch.addEventListener('change', event => setTheme(event.target.checked ? 'light' : 'dark'));
   $('star-root-button').addEventListener('click', async () => {
     try {
-      await ensureStarRootFolder();
+      await ensureStarRootFolder({ choose: true });
       invalidateTabData();              // every tab reads the RUN again: the shown one now, the others at their first visit
       await showTab(activeTabName());
     } catch (error) {
       console.warn(error);
       updateRootStatus();
+      if (error && error.name !== 'AbortError') $('root-status-text').textContent = String(error.message || error);   // e.g. Output chosen instead of a RUN
     }
   });
 
@@ -1133,6 +1203,7 @@ function bindEvents() {
 
   for (const [tabName, frameId] of Object.entries(TAB_FRAMES)) {
     $(frameId).addEventListener('load', () => {
+      patchServedObjectUrls($(frameId).contentWindow);
       propagateTheme(document.documentElement.dataset.theme || 'dark');
       invalidateTabData(tabName);       // a (re)loaded frame holds no RUN data
       if (tabName === 'attitude' && window.attitudePropagationData && !hasRunFolderSelection()) deliverAttitudeDataToFrame();

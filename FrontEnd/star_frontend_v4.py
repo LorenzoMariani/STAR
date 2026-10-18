@@ -9,12 +9,16 @@ from __future__ import annotations
 
 import csv
 import html
+import http.server
 import inspect
 import json
+import mimetypes
 import os
 import re
+import secrets
 import shutil
 import threading
+import urllib.parse
 import time
 import unicodedata
 from datetime import datetime
@@ -5533,6 +5537,117 @@ Return only valid JSON:
         self.add_log("STAR", reply)
 
         return {"ok": True, "reply": reply, "modules": self.modules, "logs": self.logs}
+
+    # ------------------------------------------------------------------
+    # Results workspace (2026-10-18): the RUN folder is chosen with a native dialog that opens in <STAR root>/Output (found
+    # from where STAR is, never a fixed path). The browser folder picker cannot start in a given folder. The chosen RUN is
+    # served read-only on 127.0.0.1 with a random token; the results page reads its files with paths relative to the RUN,
+    # only when a tab needs them.
+    # ------------------------------------------------------------------
+    def results_output_dir(self) -> Path:
+        return self.star_root / "Output"
+
+    def results_pick_run_folder(self) -> dict[str, Any]:
+        """Native folder dialog in STAR/Output; the chosen RUN is served to the results page (results_open_run)."""
+        start = self.results_output_dir()
+        try:
+            window = webview.windows[0]
+            dialog = getattr(getattr(webview, "FileDialog", None), "FOLDER", None) or webview.FOLDER_DIALOG
+            picked = window.create_file_dialog(dialog, directory=str(start if start.is_dir() else self.star_root))
+        except Exception as exc:
+            return {"ok": False, "error": f"folder dialog not available: {exc}"}
+        if not picked:
+            return {"ok": False, "cancelled": True}
+        return self.results_open_run(str(picked[0] if isinstance(picked, (list, tuple)) else picked))
+
+    def results_open_run(self, run_path: str) -> dict[str, Any]:
+        """Serve a RUN folder to the results page: the list of its files (paths relative to the RUN, sizes) and the base
+        URL of the read-only server that gives their content."""
+        root = Path(run_path).expanduser().resolve()
+        if not (root / "modules_output").is_dir():
+            return {"ok": False, "error": f"{root.name} is not a STAR RUN folder (no modules_output inside): select a "
+                                          "RUN_XXXXX folder inside Output, not Output itself."}
+        server = results_file_server()
+        server.root = root
+        files = []
+        for dirpath, _dirs, names in os.walk(root):
+            for name in names:
+                path = Path(dirpath) / name
+                try:
+                    files.append({"rel": path.relative_to(root).as_posix(), "size": path.stat().st_size})
+                except OSError:
+                    continue
+        try:
+            shown = root.relative_to(self.star_root).as_posix()
+        except ValueError:
+            shown = str(root)
+        self.add_log("SYSTEM", f"Results workspace: {shown} ({len(files)} files) served read-only to the results page.")
+        return {"ok": True, "name": root.name, "path": str(root), "relative_to_star": shown,
+                "base_url": f"http://127.0.0.1:{server.server_port}/{server.token}/", "files": files}
+
+
+
+
+class ResultsFileHandler(http.server.BaseHTTPRequestHandler):
+    """GET / HEAD of the files of the RUN folder served to the results page: /<token>/<path relative to the RUN>."""
+
+    def log_message(self, *args: Any) -> None:
+        pass
+
+    def _target(self) -> Path | None:
+        server = self.server
+        prefix = f"/{server.token}/"
+        path = urllib.parse.urlsplit(self.path).path
+        if server.root is None or not path.startswith(prefix):
+            return None
+        target = (server.root / urllib.parse.unquote(path[len(prefix):])).resolve()
+        if server.root not in target.parents or not target.is_file():
+            return None
+        return target
+
+    def _serve(self, body: bool) -> None:
+        target = self._target()
+        if target is None:
+            self.send_error(404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", mimetypes.guess_type(target.name)[0] or "application/octet-stream")
+        self.send_header("Content-Length", str(target.stat().st_size))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        if body:
+            with target.open("rb") as handle:
+                shutil.copyfileobj(handle, self.wfile)
+
+    def do_GET(self) -> None:  # noqa: N802
+        self._serve(True)
+
+    def do_HEAD(self) -> None:  # noqa: N802
+        self._serve(False)
+
+
+class ResultsFileServer(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+
+    def __init__(self) -> None:
+        super().__init__(("127.0.0.1", 0), ResultsFileHandler)
+        self.root: Path | None = None
+        self.token = secrets.token_urlsafe(16)
+
+
+_RESULTS_FILE_SERVER: ResultsFileServer | None = None
+_RESULTS_FILE_SERVER_LOCK = threading.Lock()
+
+
+def results_file_server() -> ResultsFileServer:
+    """The read-only server of the results workspace (started once, on 127.0.0.1 and a free port)."""
+    global _RESULTS_FILE_SERVER
+    with _RESULTS_FILE_SERVER_LOCK:
+        if _RESULTS_FILE_SERVER is None:
+            _RESULTS_FILE_SERVER = ResultsFileServer()
+            threading.Thread(target=_RESULTS_FILE_SERVER.serve_forever, name="star-results-files", daemon=True).start()
+        return _RESULTS_FILE_SERVER
 
 
 def build_results_frontend_html(web_dir: Path) -> str:
