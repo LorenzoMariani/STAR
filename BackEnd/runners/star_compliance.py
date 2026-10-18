@@ -52,6 +52,10 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
             "gs_access_h": _kpi_by_name(k, "Average Ground Station Access Time"), "aoi_covered_pct": _kpi_by_name(k, "Percent AOI Covered"),
             "n_satellites": _kpi_by_name(k, "Number of Satellites"), "n_planes": _kpi_by_name(k, "Number of Planes"),
             "altitude_km": _kpi_by_name(k, "Altitude"), "inclination_deg": _kpi_by_name(k, "Inclination"),
+            # 2026-10-18: the family END-001 chose ("Auto" when the call names no orbit type)
+            "orbit_family": ("Sun-synchronous (SSO-RGT)" if d.get("orbit_type") == "SSORGT" else
+                             "Walker delta (inclined RGT)" if str(d.get("orbit_type", "")).startswith("RGT") else str(d.get("orbit_type") or "-"))
+                            + (" - chosen by END-001" if str(d.get("orbit_type_requested", "")).lower() == "auto" else ""),
         }
     p = _first(modules_root, "END-004/*/power_budget_summary.json")
     d = _load(p) if p else None
@@ -121,6 +125,7 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
 
 
 KPI_ROWS = [
+    ("END-001", "orbit_family", "Orbit family", "-"),
     ("END-001", "n_satellites", "Satellites", "-"), ("END-001", "n_planes", "Orbital planes", "-"),
     ("END-001", "altitude_km", "Altitude", "km"), ("END-001", "inclination_deg", "Inclination", "deg"),
     ("END-001", "max_revisit_h", "Maximum revisit time", "h"), ("END-001", "p90_revisit_h", "90th percentile revisit time", "h"),

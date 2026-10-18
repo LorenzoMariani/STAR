@@ -7,7 +7,8 @@ in the chosen run mode (default 'test': every module with its fastest
 settings, results not meaningful), then a table with the status and the time
 of every module. END-007 (Unreal, always in full) is left out unless asked.
 
-    python FrontEnd/star_smoke_test.py                      # test mode, v6 proposal, no END-007
+    python FrontEnd/star_smoke_test.py                      # test mode, v7 proposal, no END-007
+    python FrontEnd/star_smoke_test.py --proposal Input/.../Mission_Proposal_v6.txt --requirements Input/.../Mission_Proposal_v6_requirements.json
     python FrontEnd/star_smoke_test.py --mode full --level 1 --with-end007
     python FrontEnd/star_smoke_test.py --proposal Input/.../Mission_Proposal_v5.txt --requirements none
 
@@ -36,8 +37,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--mode", default="test", choices=["test", "full"], help="STAR run mode (default test)")
     ap.add_argument("--level", type=int, default=3, choices=[1, 2, 3, 4, 5], help="accuracy level of a full run (default 3)")
-    ap.add_argument("--proposal", default=str(SAMPLES / "Mission_Proposal_v6.txt"), help="mission request document (.txt or .docx)")
-    ap.add_argument("--requirements", default=str(SAMPLES / "Mission_Proposal_v6_requirements.json"),
+    ap.add_argument("--proposal", default=str(SAMPLES / "Mission_Proposal_v7.txt"), help="mission request document (.txt or .docx)")
+    ap.add_argument("--requirements", default=str(SAMPLES / "Mission_Proposal_v7_requirements.json"),
                     help="JSON with the reviewed requirements, or 'none' for the rule-based extraction of the document")
     ap.add_argument("--with-end007", action="store_true", help="keep END-007 (Unreal, always in full) in the workflow")
     args = ap.parse_args()

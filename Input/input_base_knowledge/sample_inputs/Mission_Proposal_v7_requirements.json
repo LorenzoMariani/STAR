@@ -1,0 +1,120 @@
+{
+ "source": "Mission_Proposal_v7.txt: the v6 extraction (Ollama qwen2.5:7b, 2026-10-15) with the v7 changes applied by hand (no orbit type, no number of satellites or planes), 2026-10-18; used by FrontEnd/star_smoke_test.py",
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "text": "Each satellite shall re-enter the atmosphere within 5 years of the end of its mission.",
+   "category": "functional"
+  },
+  {
+   "id": "REQ-002",
+   "text": "The satellites shall keep a safe separation from each other.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-003",
+   "text": "The satellites shall orbit between 500 km and 650 km of altitude.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-004",
+   "text": "The mission lifetime shall be three years.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-005",
+   "text": "Each satellite shall be a 6U CubeSat with a mass not exceeding 12 kg.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-006",
+   "text": "Each satellite shall have a drag cross-section of 0.06 m2 and a drag coefficient of 2.2.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-007",
+   "text": "Each satellite shall be three-axis stabilised with a pointing accuracy better than 0.1 deg and point nominally at nadir.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-008",
+   "text": "Each satellite shall carry a visible-spectrum push-broom camera with a panchromatic Ground Sample Distance of 4.0 m and a swath of 30 km at nadir.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-009",
+   "text": "Each satellite shall acquire images in daylight only and send them to the ground through UHF and S-band links.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-010",
+   "text": "The type of orbit, the number of satellites and the number of orbital planes shall be optimised to minimise the revisit time and to maximise the coverage of the monuments.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-011",
+   "text": "The satellites shall propagate the orbits for at least 7 days with the Earth oblateness (J2) and the atmospheric drag.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-012",
+   "text": "The design shall be checked on two reference cases over 48 hours starting on 21 May 2026 at 13:41 UTC.",
+   "category": "verification"
+  },
+  {
+   "id": "REQ-013",
+   "text": "In the first reference case, a satellite shall image the Colosseum in Rome in daylight, above 10 deg of elevation and with the Sun above the horizon at the target, preferably higher than 20 deg.",
+   "category": "verification"
+  },
+  {
+   "id": "REQ-014",
+   "text": "In the second reference case, a satellite shall cross the sky of the ASI Space Geodesy Centre 'G. Colombo' at Matera at night, above 10 deg of elevation and illuminated by the Sun, while the Sun is more than 12 deg below the horizon at the site.",
+   "category": "verification"
+  },
+  {
+   "id": "REQ-015",
+   "text": "Each satellite shall alternate imaging orbits and idle orbits: in a day of 15 orbits, 8 are imaging orbits and 7 are idle orbits, with downlink through the UHF or S-band transmitters.",
+   "category": "functional"
+  },
+  {
+   "id": "REQ-016",
+   "text": "The electrical power budget shall be closed in sunlight and in eclipse for every operating mode (idle, payload acquisition, UHF downlink and S-band downlink), with the duty cycle of each subsystem and a design margin of 10 percent.",
+   "category": "functional"
+  },
+  {
+   "id": "REQ-017",
+   "text": "The daily energy balance shall not be negative and the battery depth of discharge shall not exceed 30 percent in any orbit.",
+   "category": "functional"
+  },
+  {
+   "id": "REQ-018",
+   "text": "The platform components of each 6U CubeSat shall be selected among commercially available CubeSat products documented by vendor datasheets.",
+   "category": "configuration"
+  },
+  {
+   "id": "REQ-019",
+   "text": "The temperatures of the CubeSat faces, solar panels, central body and battery shall be assessed along the orbit and during the daylight reference imaging pass.",
+   "category": "functional"
+  },
+  {
+   "id": "REQ-020",
+   "text": "The battery temperature of the CubeSat shall stay within its operational limit.",
+   "category": "functional"
+  },
+  {
+   "id": "REQ-021",
+   "text": "Compliance shall be verified by simulation and analysis only.",
+   "category": "verification"
+  },
+  {
+   "id": "REQ-022",
+   "text": "The applicant shall provide evidence of the optimised constellation architecture and its revisit-time and coverage performance over the monuments.",
+   "category": "verification"
+  },
+  {
+   "id": "REQ-023",
+   "text": "The applicant shall provide evidence of the propagated orbit and attitude of the satellites and the two reference passes.",
+   "category": "verification"
+  }
+ ]
+}

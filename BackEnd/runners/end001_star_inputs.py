@@ -14,7 +14,10 @@ Inside STAR the MATLAB module runs from its native input JSON: the template
    the user), not from the registry defaults, mapped onto the native fields;
 3. simple rules on the mission requirement texts: number of satellites and of
    orbital planes, altitude range, orbit family, inclination, sensor type,
-   swath, start epoch, spacecraft mass and drag;
+   swath, start epoch, spacecraft mass and drag; with no orbit family in the
+   call Orbit_Type is "Auto" (END-001 optimises a Sun-synchronous and a Walker
+   delta constellation and keeps the better one), with no revisit the revisit
+   thresholds are "auto" (from what the design space achieves), 2026-10-18;
 4. everything else: the template's values (automatic choice), with the GA
    size limits kept inside the surrogate's training domain.
 
@@ -225,9 +228,11 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         opt["Orbit_Type"] = orbit
         note("OptimizerSettings.Orbit_Type", orbit, orbitOrigin)
     else:
-        note("OptimizerSettings.Orbit_Type", opt.get("Orbit_Type"), "automatic (template)")
-    orbit = opt.get("Orbit_Type", "SSORGT")
-    delta = orbit == "RGT (generally inclined)"
+        # 2026-10-18 (user): the orbit type is END-001's choice when the call does not name it
+        opt["Orbit_Type"] = orbit = "Auto"
+        note("OptimizerSettings.Orbit_Type", "Auto", "automatic: the call names no orbit type; END-001 optimises a Sun-synchronous "
+             "and a Walker delta constellation and keeps the one with the better simulated weighted score")
+    families = ["SSORGT", "RGT (generally inclined)"] if orbit == "Auto" else [orbit]
 
     # ---- sensor ------------------------------------------------------------
     sarIn = [n for n in ("sar_frequency", "sar_field_of_regard_deg") if n in inp]
@@ -249,73 +254,78 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     note("SensorSettings.Sun_Constraint", not sar, "fixed (STAR mode): optical sensors image in daylight, SAR does not need it")
 
     # ---- altitude, satellites, planes, inclination: GA limits ----------------
-    dom = DELTA_DOMAIN if delta else SSO_DOMAIN
-    pre = "RGT_" if delta else "SSORGT_"
-    alt = list(dom["alt_km"])
-    if "alt" in found:
-        a = found["alt"][0]
-        alt = [max(dom["alt_km"][0], min(a)), min(dom["alt_km"][1], max(a))]
-        if alt[0] > alt[1]:
-            alt = list(dom["alt_km"])
-            note(pre + "AltitudeRange_km", alt, f"requirement {found['alt'][1]} outside 400-1200 km: full range")
+    # one set of limits per orbit family END-001 searches (both with Orbit_Type "Auto")
+    outside_by_family: dict[str, list[str]] = {}
+    for fam in families:
+        delta = fam == "RGT (generally inclined)"
+        dom = DELTA_DOMAIN if delta else SSO_DOMAIN
+        pre = "RGT_" if delta else "SSORGT_"
+        alt = list(dom["alt_km"])
+        if "alt" in found:
+            a = found["alt"][0]
+            alt = [max(dom["alt_km"][0], min(a)), min(dom["alt_km"][1], max(a))]
+            if alt[0] > alt[1]:
+                alt = list(dom["alt_km"])
+                note(pre + "AltitudeRange_km", alt, f"requirement {found['alt'][1]} outside 400-1200 km: full range")
+            else:
+                note(pre + "AltitudeRange_km", alt, f"requirement {found['alt'][1]}")
         else:
-            note(pre + "AltitudeRange_km", alt, f"requirement {found['alt'][1]}")
-    else:
-        note(pre + "AltitudeRange_km", alt, "automatic (whole orbit table / surrogate domain)")
-    opt[pre + "AltitudeRange_km"] = alt
+            note(pre + "AltitudeRange_km", alt, "automatic (whole orbit table / surrogate domain)")
+        opt[pre + "AltitudeRange_km"] = alt
 
-    # The requirements win over the surrogate training domain (2026-10-17): a range reaching outside it is
-    # searched with the simulation (slower, never an extrapolated surrogate value); without requirements the
-    # ranges are the domain itself.
-    planes, sats, total = list(dom["planes"]), list(dom["sats"]), list(dom["total"])
-    origin = "automatic (surrogate training domain)"
-    if single:
-        planes, sats, total = [1, 1], [1, 1], [1, 1]
-        origin = "single satellite (" + (singleOrigin or "STAR input constellation_type") + ")"
-    else:
-        parts = []
-        if "sats_max" in found:
-            n = found["sats_max"][0]
-            total[1] = min(total[1], n)
-            parts.append(f"requirement {found['sats_max'][1]} (at most {n} satellites)")
-        if "sats_min" in found:
-            total[0] = found["sats_min"][0]
-            parts.append(f"requirement {found['sats_min'][1]} (at least {found['sats_min'][0]})")
-        elif total[0] > total[1]:
-            total[0] = 1                     # "at most N" below the domain minimum, no minimum given
-        if "planes" in found:
-            planes = [found["planes"][0]] * 2
-            parts.append(f"requirement {found['planes'][1]} ({found['planes'][0]} planes)")
-        if total[0] < planes[0] * sats[0]:   # smaller constellations than the domain minimum are allowed
-            sats[0] = 1
+        # The requirements win over the surrogate training domain (2026-10-17): a range reaching outside it is
+        # searched with the simulation (slower, never an extrapolated surrogate value); without requirements the
+        # ranges are the domain itself.
+        planes, sats, total = list(dom["planes"]), list(dom["sats"]), list(dom["total"])
+        origin = "automatic (surrogate training domain)"
+        if single:
+            planes, sats, total = [1, 1], [1, 1], [1, 1]
+            origin = "single satellite (" + (singleOrigin or "STAR input constellation_type") + ")"
+        else:
+            parts = []
+            if "sats_max" in found:
+                n = found["sats_max"][0]
+                total[1] = min(total[1], n)
+                parts.append(f"requirement {found['sats_max'][1]} (at most {n} satellites)")
+            if "sats_min" in found:
+                total[0] = found["sats_min"][0]
+                parts.append(f"requirement {found['sats_min'][1]} (at least {found['sats_min'][0]})")
+            elif total[0] > total[1]:
+                total[0] = 1                     # "at most N" below the domain minimum, no minimum given
+            if "planes" in found:
+                planes = [found["planes"][0]] * 2
+                parts.append(f"requirement {found['planes'][1]} ({found['planes'][0]} planes)")
+            if total[0] < planes[0] * sats[0]:   # smaller constellations than the domain minimum are allowed
+                sats[0] = 1
+                if "planes" not in found:
+                    planes[0] = 1
+            planes[1] = max(planes[0], min(planes[1], total[1])); sats[1] = max(sats[0], min(sats[1], total[1]))
+            if parts:
+                origin = "; ".join(parts)
+        outside = []
+        if planes[0] < dom["planes"][0] or planes[1] > dom["planes"][1]:
+            outside.append(f"planes {planes[0]}-{planes[1]} (trained {dom['planes'][0]}-{dom['planes'][1]})")
+        if sats[0] < dom["sats"][0] or sats[1] > dom["sats"][1]:
+            outside.append(f"satellites per plane {sats[0]}-{sats[1]} (trained {dom['sats'][0]}-{dom['sats'][1]})")
+        if outside and not single and "sats_min" not in found:
+            # simulated anyway: the domain minimum is not a requirement, smaller compliant constellations are searched too
+            total[0], sats[0] = 1, 1
             if "planes" not in found:
                 planes[0] = 1
-        planes[1] = max(planes[0], min(planes[1], total[1])); sats[1] = max(sats[0], min(sats[1], total[1]))
-        if parts:
-            origin = "; ".join(parts)
-    outside = []
-    if planes[0] < dom["planes"][0] or planes[1] > dom["planes"][1]:
-        outside.append(f"planes {planes[0]}-{planes[1]} (trained {dom['planes'][0]}-{dom['planes'][1]})")
-    if sats[0] < dom["sats"][0] or sats[1] > dom["sats"][1]:
-        outside.append(f"satellites per plane {sats[0]}-{sats[1]} (trained {dom['sats'][0]}-{dom['sats'][1]})")
-    if outside and not single and "sats_min" not in found:
-        # simulated anyway: the domain minimum is not a requirement, smaller compliant constellations are searched too
-        total[0], sats[0] = 1, 1
-        if "planes" not in found:
-            planes[0] = 1
-    opt[pre + "PlanesRange"], opt[pre + "SatsPerPlaneRange"], opt[pre + "TotalSatellitesRange"] = planes, sats, total
-    note(pre + "Planes / SatsPerPlane / TotalSatellites ranges", [planes, sats, total], origin)
-    if delta:
-        incl = list(dom["incl_deg"])
-        if "incl" in found:
-            incl = [found["incl"][0]] * 2
-            note("RGT_InclinationRange_deg", incl, f"requirement {found['incl'][1]}")
-            if incl[0] < dom["incl_deg"][0] or incl[1] > dom["incl_deg"][1]:
-                outside.append(f"inclination {incl[0]:g} deg (trained {dom['incl_deg'][0]}-{dom['incl_deg'][1]} deg)")
-        else:
-            note("RGT_InclinationRange_deg", incl, "automatic (surrogate domain)")
-        opt["RGT_InclinationRange_deg"] = incl
-        opt["RGT_RepeatCycleRange_days"] = list(dom["kday"])
+        opt[pre + "PlanesRange"], opt[pre + "SatsPerPlaneRange"], opt[pre + "TotalSatellitesRange"] = planes, sats, total
+        note(pre + "Planes / SatsPerPlane / TotalSatellites ranges", [planes, sats, total], origin)
+        if delta:
+            incl = list(dom["incl_deg"])
+            if "incl" in found:
+                incl = [found["incl"][0]] * 2
+                note("RGT_InclinationRange_deg", incl, f"requirement {found['incl'][1]}")
+                if incl[0] < dom["incl_deg"][0] or incl[1] > dom["incl_deg"][1]:
+                    outside.append(f"inclination {incl[0]:g} deg (trained {dom['incl_deg'][0]}-{dom['incl_deg'][1]} deg)")
+            else:
+                note("RGT_InclinationRange_deg", incl, "automatic (surrogate domain)")
+            opt["RGT_InclinationRange_deg"] = incl
+            opt["RGT_RepeatCycleRange_days"] = list(dom["kday"])
+        outside_by_family[fam] = outside
 
     # ---- field of view ------------------------------------------------------
     fov = inp.get("optical_field_of_view_deg")
@@ -379,7 +389,13 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
                 weights[wkey] = 0
                 note(f"Weights.{wkey}", 0, "not in the call and not bounded by a stated revisit: it does not drive the design")
     else:
-        note("MissionRequirements (revisit)", {f: mreq.get(f) for _, f, _ in keys}, "automatic (template): the call states no revisit")
+        # 2026-10-18: never the template's fixed hours (5.5-6 h max revisit is impossible imaging only in daylight, and
+        # thresholds no design reaches make every design score the same, so the GA just minimised the satellites)
+        for _, field, _ in keys:
+            mreq[field] = "auto"
+        note("MissionRequirements (revisit)", "auto",
+             "automatic: the call states no revisit; END-001 takes the thresholds from what the design space achieves "
+             "(ok = 2nd percentile, bad = 90th percentile of the feasible designs), so the revisit objectives never saturate")
     if "latency_h" in found and found["latency_h"][0]:
         v, rid = found["latency_h"]
         mreq["MaxLatency_h"] = [round(v, 4), round(2 * v, 4)]
@@ -476,14 +492,24 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         from . import star_domain
     except ImportError:
         import star_domain
+    common: list[str] = []
     if cfg.get("RegionSettings", {}).get("AreaofInterest") != "Italy":
-        outside.append("area of interest not the whole of Italy (the surrogate is trained on the Italy grid)")
+        common.append("area of interest not the whole of Italy (the surrogate is trained on the Italy grid)")
     if len(cfg.get("GroundStations", [])) != 1:
-        outside.append(f"{len(cfg.get('GroundStations', []))} ground stations (the surrogate models one)")
+        common.append(f"{len(cfg.get('GroundStations', []))} ground stations (the surrogate models one)")
     elif not star_domain.in_surrogate_area(cfg["GroundStations"][0]["lat"], cfg["GroundStations"][0]["lon"]):
-        outside.append("ground station outside the surrogate Italy outline")
+        common.append("ground station outside the surrogate Italy outline")
     if sens.get("Single_Sensor_Type") not in ("PBS", "RECT"):
-        outside.append(f"sensor {sens.get('Single_Sensor_Type')} (the surrogate covers optical push-broom / rectangular FOV)")
+        common.append(f"sensor {sens.get('Single_Sensor_Type')} (the surrogate covers optical push-broom / rectangular FOV)")
+    if orbit == "Auto":
+        # a family whose limits leave the trained ranges is simulated by END-001 alone (surrogate_domain_check)
+        for fam, out in outside_by_family.items():
+            if out and not common:
+                note(f"Fitness engine ({fam})", "Simulation", "limits outside the surrogate training domain (" + "; ".join(out) +
+                     "): END-001 simulates this family, the other one keeps the surrogate")
+        outside = common
+    else:
+        outside = outside_by_family[orbit] + common
     if outside:
         opt["Fitness_Engine"] = "Simulation"
         note("OptimizerSettings.Fitness_Engine", "Simulation",

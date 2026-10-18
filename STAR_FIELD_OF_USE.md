@@ -27,9 +27,12 @@ the ground stations, coverage, altitude, number of satellites and planes,
 inclination, satellite mass and class, GSD and swath, pointing accuracy, bands,
 delta-v, disposal deadline, battery depth of discharge.
 
-Example of a call in the domain: `Input/input_base_knowledge/sample_inputs/Mission_Proposal_v6.txt`
+Example of a call in the domain: `Input/input_base_knowledge/sample_inputs/Mission_Proposal_v7.txt`
 (ASI PATRIMONIO-CUBE, a CubeSat optical constellation monitoring Italian
-cultural heritage monuments).
+cultural heritage monuments). v7 (2026-10-18) leaves the orbit type and the
+number of satellites and of planes to the design: END-001 optimises a
+Sun-synchronous and a Walker delta constellation and keeps the better one;
+v6 asked for Sun-synchronous orbits and at most 12 satellites.
 
 ## What STAR produces for such a call
 

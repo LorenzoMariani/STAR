@@ -121,6 +121,7 @@ async function loadKpiFromFiles(files,label){
     state.fileStatus.kpi.path=`${fileRelativePath(file)}: ${error.message}`;
   }
   populateKpiTable();
+  if(state.data)populateInputsPanel(state.data);else if(state.input)populateInputsPanel({inputs:state.input});   // orbit family chosen by END-001
 }
 function populateKpiTable(){
   const container=$('kpi-table');
@@ -137,14 +138,32 @@ function populateKpiTable(){
       if(k.unit&&k.unit!=='-'&&valueText!=='—')valueText+=' '+k.unit;
       let thr='';
       if(k.threshold_ok!==null&&k.threshold_ok!==undefined&&k.threshold_bad!==null&&k.threshold_bad!==undefined){
-        thr=`<span class="kpi-threshold">thresholds: ok ${fmtNum(k.threshold_ok)} · bad ${fmtNum(k.threshold_bad)}</span>`;
+        // "auto" (2026-10-18): the call states no requirement, the GA scale comes from the achievable designs
+        const auto=k.threshold_source==='auto';
+        thr=`<span class="kpi-threshold">${auto?'auto, not in the call':'thresholds'}: ok ${fmtNum(k.threshold_ok)} · bad ${fmtNum(k.threshold_bad)}</span>`;
       }
       return `<div class="data-row"><span class="data-label">${escapeHtml(k.id)} · ${escapeHtml(k.name)}</span><span class="data-value ${cls}">${escapeHtml(valueText)}${thr}</span></div>`;
     }).join('');
     return `<div class="kpi-category"><h4>${escapeHtml(catLabels[cat]||cat)}</h4>${rows}</div>`;
-  }).join('');
+  }).join('')+orbitFamilyHtml(state.kpiData);
 }
-function populateInputsPanel(data){const input=data.inputs;if(!input){$('input-status').textContent='missing';$('inputs-panel').innerHTML='<div class="empty-cell">The input configuration file is not available.</div>';return;}$('input-status').textContent='loaded';const sd=readPath(input,'TimeSettings.StartDate',[]);const epoch=Array.isArray(sd)&&sd.length>=3?`${sd.map(v=>String(v).padStart(2,'0')).join('-')} ${String(readPath(input,'TimeSettings.StartHour',0)).padStart(2,'0')}:${String(readPath(input,'TimeSettings.StartMin',0)).padStart(2,'0')}:${String(readPath(input,'TimeSettings.StartSec',0)).padStart(2,'0')}`:'—';$('inputs-panel').innerHTML=`${row('Area of interest',readPath(input,'RegionSettings.AreaofInterest','—'))}${row('Initial epoch',epoch)}${row('Sensor mode',`${readPath(input,'SensorSettings.Operative_Mode','—')} · ${readPath(input,'SensorSettings.Single_Sensor_Type','—')}`)}${row('Optimisation algorithm',readPath(input,'OptimizerSettings.Optimizer_Type','—'))}${row('Orbit family',readPath(input,'OptimizerSettings.Orbit_Type','—'))}${row('Propagation settings',`${readPath(input,'OptimizerSettings.PropagationDays','—')} days · ${readPath(input,'OptimizerSettings.timeStep','—')} s`)}`;}
+// Orbit_Type "Auto" (2026-10-18): END-001 optimised both families and kept the better one
+function orbitFamilyHtml(d){
+  const fams=d&&Array.isArray(d.orbit_family_selection)?d.orbit_family_selection:null;
+  if(!fams||!fams.length)return '';
+  const name=t=>t==='SSORGT'?'Sun-synchronous (SSO-RGT)':(String(t).startsWith('RGT')?'Walker delta (inclined RGT)':t);
+  const rows=fams.map(f=>{
+    const g=f.design||{},k=f.kpi_simulated||{};
+    const size=g.total_satellites?`${g.total_satellites} sat (${g.planes} × ${g.sats_per_plane})`:'—';
+    const orb=Number.isFinite(Number(g.altitude_km))?`${fmtNum(g.altitude_km)} km · ${fmtNum(g.inclination_deg)}°`:'—';
+    const rev=Number.isFinite(Number(k.T_MeanRev_h))?`mean ${fmtNum(k.T_MeanRev_h)} h · P90 ${fmtNum(k.T_P90Rev_h)} h · max ${fmtNum(k.T_MaxRev_h)} h`:'—';
+    const score=Number.isFinite(Number(f.weighted_score_simulated))?Number(f.weighted_score_simulated).toFixed(4):'—';
+    return `<div class="data-row"><span class="data-label">${f.selected?'✔ ':''}${escapeHtml(name(f.orbit_type))}</span><span class="data-value ${f.selected?'ok':'neutral'}">${escapeHtml(size)} · ${escapeHtml(orb)}<span class="kpi-threshold">${escapeHtml(rev)} · weighted score ${score} (lower is better)</span></span></div>`;
+  }).join('');
+  return `<div class="kpi-category"><h4>Orbit family choice (the call names no orbit type)</h4>${rows}</div>`;
+}
+function orbitFamilyLabel(t){const chosen=state.kpiData&&state.kpiData.orbit_type;if(String(t).toLowerCase()==='auto'&&chosen)return `Auto → ${chosen==='SSORGT'?'Sun-synchronous (SSORGT)':'Walker delta ('+chosen+')'}`;return t;}
+function populateInputsPanel(data){const input=data.inputs;if(!input){$('input-status').textContent='missing';$('inputs-panel').innerHTML='<div class="empty-cell">The input configuration file is not available.</div>';return;}$('input-status').textContent='loaded';const sd=readPath(input,'TimeSettings.StartDate',[]);const epoch=Array.isArray(sd)&&sd.length>=3?`${sd.map(v=>String(v).padStart(2,'0')).join('-')} ${String(readPath(input,'TimeSettings.StartHour',0)).padStart(2,'0')}:${String(readPath(input,'TimeSettings.StartMin',0)).padStart(2,'0')}:${String(readPath(input,'TimeSettings.StartSec',0)).padStart(2,'0')}`:'—';$('inputs-panel').innerHTML=`${row('Area of interest',readPath(input,'RegionSettings.AreaofInterest','—'))}${row('Initial epoch',epoch)}${row('Sensor mode',`${readPath(input,'SensorSettings.Operative_Mode','—')} · ${readPath(input,'SensorSettings.Single_Sensor_Type','—')}`)}${row('Optimisation algorithm',readPath(input,'OptimizerSettings.Optimizer_Type','—'))}${row('Orbit family',orbitFamilyLabel(readPath(input,'OptimizerSettings.Orbit_Type','—')))}${row('Propagation settings',`${readPath(input,'OptimizerSettings.PropagationDays','—')} days · ${readPath(input,'OptimizerSettings.timeStep','—')} s`)}`;}
 function populateGroundStationsPanel(data){const panel=$('ground-stations-panel');const inputStations=readPath(data,'inputs.GroundStations',[]);const lon=readPath(data,'ground_stations.lon',[]);const lat=readPath(data,'ground_stations.lat',[]);let stations=[];if(Array.isArray(inputStations)&&inputStations.length){stations=inputStations.map((s,i)=>({name:s.name||`Ground station ${i+1}`,lat:s.lat,lon:s.lon,alt:s.alt,mask:s.mask}));}else if(Array.isArray(lon)&&Array.isArray(lat)&&lon.length){stations=lon.map((longitude,i)=>({name:`Ground station ${i+1}`,lat:lat[i],lon:longitude}));}if(!stations.length){panel.innerHTML='<div class="empty-cell">No ground-station data are available.</div>';return;}panel.innerHTML=`${row('Number of stations',stations.length)}${stations.map(stationCard).join('')}`;}
 function stationCard(s){return `<div class="station-card"><div class="station-name">${escapeHtml(s.name)}</div><div class="station-coordinates"><div><span>Latitude</span><strong>${fmt(s.lat,4)}°</strong></div><div><span>Longitude</span><strong>${fmt(s.lon,4)}°</strong></div><div><span>Altitude</span><strong>${Number.isFinite(Number(s.alt))?`${fmt(s.alt,0)} m`:'—'}</strong></div><div><span>Mask angle</span><strong>${Number.isFinite(Number(s.mask))?`${fmt(s.mask,1)}°`:'—'}</strong></div></div></div>`;}
 function populateArchitecturePanel(data){const a=readPath(data,'summary.architecture',{});$('architecture-panel').innerHTML=`${row('Total spacecraft',a.T??'—')}${row('Orbital planes',a.P??'—')}${row('Walker phasing parameter',a.F??'—')}${row('Spacecraft per plane',a.sat_per_plane??(a.T&&a.P?Math.ceil(a.T/a.P):'—'))}${row('Reference altitude',Number.isFinite(Number(a.altitude_km))?`${fmt(a.altitude_km,2)} km`:'—')}${row('Reference inclination',Number.isFinite(Number(a.inclination_deg))?`${fmt(a.inclination_deg,4)}°`:'—')}`;}
