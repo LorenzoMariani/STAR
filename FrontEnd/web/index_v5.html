@@ -32,15 +32,34 @@
 
       <main class="workflow-control-panel panel">
         <div class="tabs workflow-tabs-with-upload">
-          <button id="upload-button" class="tab-button tabs-upload-button upload-state unloaded" type="button" title="Upload the mission request document (.docx, .txt, .md)">Upload Document</button>
-          <button class="tab-button active" data-tab="requirements">1. Requirements</button>
+          <button id="upload-button" class="tab-button tabs-upload-button upload-state unloaded active" data-tab="upload" type="button" title="Mission request document: select it here (.docx, .txt, .md)">Upload Document</button>
+          <button class="tab-button" data-tab="requirements">1. Requirements</button>
           <button class="tab-button" data-tab="workflow">2. Mission Planning</button>
           <button class="tab-button" data-tab="assumptions">3. Input Resolution</button>
           <button class="tab-button" data-tab="execution">4. Execution</button>
           <button class="tab-button" data-tab="report">5. Report</button>
         </div>
 
-        <section id="tab-requirements-controls" class="tab-controls-content active">
+        <section id="tab-upload-controls" class="tab-controls-content active">
+          <div class="section-header-row">
+            <div>
+              <h2>Mission Request Document</h2>
+              <p>
+                Select the call for proposals or mission request (.docx, .txt, .md): STAR starts a new run and reads its text,
+                shown below; requirement extraction (1. Requirements) uses exactly this text.
+              </p>
+            </div>
+          </div>
+
+          <div class="toolbar-card upload-toolbar">
+            <button id="select-document-button" class="star-select-doc-button" type="button">Select Document</button>
+            <span class="muted">The dialog opens in Input/input_base_knowledge/sample_inputs of STAR.</span>
+          </div>
+
+          <div id="star-doc-slot"></div>
+        </section>
+
+        <section id="tab-requirements-controls" class="tab-controls-content">
           <div class="section-header-row">
             <div>
               <h2>Requirement Extraction</h2>
@@ -189,7 +208,14 @@
     <div id="top-row-resizer" class="row-resizer top-row-resizer" title="Drag to resize upper control panels"></div>
 
     <main class="data-panel panel">
-      <section id="tab-requirements" class="tab-data-content active">
+      <section id="tab-upload" class="tab-data-content active">
+        <div class="star-doc-text-panel">
+          <div class="star-doc-text-head"><span>Text read by STAR from the document</span><span id="star-doc-text-info"></span></div>
+          <pre id="star-doc-text" class="star-doc-text">No mission request document loaded yet: press Select Document.</pre>
+        </div>
+      </section>
+
+      <section id="tab-requirements" class="tab-data-content">
         <div class="table-wrap full-table">
           <table class="data-table" id="requirements-table">
             <thead>

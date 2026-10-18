@@ -2676,3 +2676,86 @@ body[data-theme="light"] .star-doc-modal-foot { border-color: #d9e0eb; color: #6
 .compact-panel-header .muted {
   font-size: 12px !important;
 }
+
+/* v5 (2026-10-18): Upload Document is a tab; the document (bar + text read by STAR) is shown only there */
+#star-v1-initial-hint {
+  display: none !important;
+}
+
+.tab-button.tabs-upload-button.unloaded.active {
+  background: #1768d8 !important;
+  color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+}
+
+.tab-button.tabs-upload-button.unloaded.active::after {
+  display: none;
+}
+
+.upload-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.star-select-doc-button {
+  position: relative;
+  background: linear-gradient(135deg, #e8ff47, #4dffc3) !important;
+  color: #07100d !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding: 8px 18px !important;
+  font: 700 14px Arial, sans-serif !important;
+}
+
+.star-select-doc-button::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 2px solid rgba(77, 255, 195, 0.9);
+  pointer-events: none;
+  animation: star-next-step 1.8s ease-out infinite;
+}
+
+.upload-toolbar[hidden] {
+  display: none !important;
+}
+
+#star-doc-slot .star-doc-bar {
+  margin-top: 4px;
+}
+
+.star-doc-text-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.star-doc-text-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: #9aa3b4;
+  font: 12px "Space Mono", ui-monospace, monospace;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.star-doc-text {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 14px 18px;
+  color: #cbd5e1;
+  font: 13.5px/1.55 "Space Mono", ui-monospace, monospace;
+  white-space: pre-wrap;
+}
+
+#tab-upload.active {
+  height: 100%;
+}
+
+body[data-theme="light"] .star-doc-text { color: #1f2937; }
+body[data-theme="light"] .star-doc-text-head { color: #475467; border-color: #d9e0eb; }

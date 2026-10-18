@@ -245,11 +245,16 @@ function formatDocumentSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// v5 (2026-10-18): the document is shown only in the Upload Document tab: the bar in its control panel and the text read
+// by STAR in its data panel.
 function renderDocumentBar(run) {
-  const tabs = document.querySelector(".workflow-tabs-with-upload");
-  if (!tabs) return;
+  const slot = document.getElementById("star-doc-slot");
+  if (!slot) return;
   let bar = document.getElementById("star-doc-bar");
   const doc = run && run.current_run_id && run.input_document_filename ? (run.input_document || {}) : null;
+  const uploadToolbar = document.querySelector(".upload-toolbar");   // Select Document + folder note; Replace is in the bar once loaded
+  if (uploadToolbar) uploadToolbar.hidden = Boolean(doc);
+  renderDocumentText(run, doc);
   if (!doc) {
     if (bar) bar.remove();
     return;
@@ -258,7 +263,7 @@ function renderDocumentBar(run) {
     bar = document.createElement("div");
     bar.id = "star-doc-bar";
     bar.className = "star-doc-bar";
-    tabs.insertAdjacentElement("afterend", bar);
+    slot.appendChild(bar);
   }
   const meta = [
     formatDocumentSize(doc.size_bytes),
@@ -275,58 +280,40 @@ function renderDocumentBar(run) {
       <div class="star-doc-meta" title="${escapeHtml(meta)}">${escapeHtml(meta)}</div>
     </div>
     <div class="star-doc-actions">
-      <button class="tab-button" type="button" id="star-doc-show-text">Show text</button>
       <button class="tab-button" type="button" id="star-doc-replace">Replace</button>
     </div>`;
-  bar.querySelector("#star-doc-show-text").addEventListener("click", showDocumentText);
   bar.querySelector("#star-doc-replace").addEventListener("click", uploadDocument);
   const hint = document.getElementById("star-v1-initial-hint");
   if (hint) hint.style.display = "none";
 }
 
-function closeDocumentText() {
-  const back = document.getElementById("star-doc-modal");
-  if (back) back.remove();
-}
+let shownDocumentKey = null;
 
-async function showDocumentText() {
+async function renderDocumentText(run, doc) {
+  const pre = document.getElementById("star-doc-text");
+  const info = document.getElementById("star-doc-text-info");
+  if (!pre) return;
+  if (!doc) {
+    shownDocumentKey = null;
+    pre.textContent = "No mission request document loaded yet: press Select Document.";
+    if (info) info.textContent = "";
+    return;
+  }
+  const key = `${run.current_run_id}|${run.input_document_filename}`;
+  if (key === shownDocumentKey) return;
+  shownDocumentKey = key;
   try {
     await waitForPywebview();
     const result = await window.pywebview.api.get_uploaded_document_text();
-    if (!result || !result.ok) {
-      addChatMessage("STAR", (result && result.error) || "The document text is not available.");
-      return;
-    }
-    closeDocumentText();
-    const doc = result.summary || {};
-    const back = document.createElement("div");
-    back.id = "star-doc-modal";
-    back.className = "star-doc-modal-back";
-    const meta = [formatDocumentSize(doc.size_bytes), `${Number(doc.words || 0).toLocaleString("en-US")} words`,
-      `${Number(doc.lines || 0).toLocaleString("en-US")} lines`, doc.saved_relative_to_star].filter(Boolean).join(" · ");
-    back.innerHTML = `
-      <div class="star-doc-modal" role="dialog" aria-modal="true" aria-label="Text of the mission request document">
-        <div class="star-doc-modal-head">
-          <div class="star-doc-icon">${escapeHtml(String(doc.type || "FILE").slice(0, 4))}</div>
-          <div class="star-doc-main">
-            <div class="star-doc-name">${escapeHtml(result.filename)}</div>
-            <div class="star-doc-meta">${escapeHtml(meta)}</div>
-          </div>
-          <div class="star-doc-actions"><button class="tab-button" type="button" id="star-doc-close">Close</button></div>
-        </div>
-        <pre class="star-doc-modal-body"></pre>
-        <div class="star-doc-modal-foot">Text read by STAR from the document: requirement extraction and planning use exactly this text.</div>
-      </div>`;
-    back.querySelector(".star-doc-modal-body").textContent = result.text;
-    back.querySelector("#star-doc-close").addEventListener("click", closeDocumentText);
-    back.addEventListener("click", (event) => { if (event.target === back) closeDocumentText(); });
-    document.body.appendChild(back);
+    if (key !== shownDocumentKey) return;
+    pre.textContent = result && result.ok ? result.text : ((result && result.error) || "The document text is not available.");
+    if (info) info.textContent = result && result.ok
+      ? `${Number(doc.words || 0).toLocaleString("en-US")} words · ${Number(doc.lines || 0).toLocaleString("en-US")} lines` : "";
   } catch (error) {
-    showFrontendError(error);
+    shownDocumentKey = null;
+    pre.textContent = "The document text is not available.";
   }
 }
-
-document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeDocumentText(); });
 
 function renderRun(run) {
   currentRun = run || null;
@@ -2138,7 +2125,7 @@ function setupEvents() {
     });
   }
 
-  getElement("upload-button").addEventListener("click", uploadDocument);
+  getElement("select-document-button").addEventListener("click", uploadDocument);   // v5: Upload Document is a tab
   getElement("extract-button").addEventListener("click", extractRequirements);
   getElement("add-requirement-button").addEventListener("click", addRequirementRow);
   getElement("save-reviewed-button").addEventListener("click", saveReviewedRequirements);
