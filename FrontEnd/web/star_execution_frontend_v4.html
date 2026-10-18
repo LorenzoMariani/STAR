@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAR — Local Desktop App</title>
-  <link rel="stylesheet" href="styles.css?v=1792323567" />
+  <link rel="stylesheet" href="styles.css?v=1792331876" />
 
 <style id="star-v1-execution-ui-patch">
 .star-v1-hidden{display:none!important;visibility:hidden!important;max-height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important;}
@@ -479,7 +479,7 @@
     if (!hint) {
       hint = document.createElement('div');
       hint.id = 'star-v1-initial-hint';
-      hint.textContent = 'Select a mission request document to proceed.';
+      hint.textContent = 'Start here: press Upload Document to load the mission request document.';
       const toolbar = uploadButton.closest('.toolbar,.step-actions,.actions,.controls,section,div') || uploadButton.parentElement;
       if (toolbar && toolbar.parentElement) toolbar.parentElement.insertBefore(hint, toolbar.nextSibling);
       else uploadButton.insertAdjacentElement('afterend', hint);

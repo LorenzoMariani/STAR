@@ -2339,6 +2339,37 @@ body[data-theme="light"] .table-action-button.danger-link {
   white-space: nowrap;
 }
 
+/* First step (2026-10-18): until a mission request document is loaded the upload button is highlighted with the STAR
+   accent of the header buttons (lime-mint gradient, pulsing ring; same size as the other tabs, a different colour from
+   the selected tab); once loaded it looks like the other tab buttons. */
+.tab-button.tabs-upload-button.unloaded {
+  position: relative;
+  background: linear-gradient(135deg, #e8ff47, #4dffc3) !important;
+  color: #07100d !important;
+  border-color: transparent !important;
+}
+.tab-button.tabs-upload-button.unloaded:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f1ff7a, #7dffd5) !important;
+  color: #07100d !important;
+}
+.tab-button.tabs-upload-button.unloaded::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 2px solid rgba(77, 255, 195, 0.9);
+  pointer-events: none;
+  animation: star-next-step 1.8s ease-out infinite;
+}
+@keyframes star-next-step {
+  0% { opacity: 0.95; transform: scale(0.96); }
+  70% { opacity: 0; transform: scale(1.14); }
+  100% { opacity: 0; transform: scale(1.14); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-button.tabs-upload-button.unloaded::after { animation: none; opacity: 0.8; }
+}
+
 /* Document bar (shown after the upload, below the tabs) and the text window of "Show text" */
 .star-doc-bar {
   display: flex;
