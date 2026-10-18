@@ -245,6 +245,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
         <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END019</span><span class="tab-title">Component Selector</span></button>
+        <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
       </div>
@@ -262,6 +263,7 @@ code{color:var(--accent-2)}
       <iframe id="frame-collision" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COLLISION__" title="Collision Avoidance"></iframe>
       <iframe id="frame-thermal" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_THERMAL__" title="Components Thermal Analysis"></iframe>
       <iframe id="frame-compsel" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__" title="Component Selector"></iframe>
+      <iframe id="frame-compliance" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPLIANCE__" title="Requirements and KPIs"></iframe>
       <iframe id="frame-diagnostics" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_DIAGNOSTICS__" title="Run Diagnostics"></iframe>
     </div>
   </section>
@@ -348,7 +350,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -827,6 +829,22 @@ async function loadComponentSelectorFromStarRoot() {
   }
 }
 
+// Requirements & KPIs (2026-10-17): <run>/compliance/compliance.json written by STAR after the workflow
+async function loadComplianceFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-compliance');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveComplianceFilesFromParent !== 'function') return false;
+  try {
+    const path = ['compliance'];
+    const payload = { productFiles: await collectFilesFromSelectedPath(path), resultFiles: [] };
+    await frame.contentWindow.receiveComplianceFilesFromParent(payload, { product: selectedPathLabel(path) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load the compliance data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function getDirectoryHandleIfExists(rootHandle, pathParts) {
   try {
     return await resolveDirectoryHandle(rootHandle, pathParts);
@@ -1009,6 +1027,7 @@ function switchTab(tabName) {
     collision: $('frame-collision'),
     thermal: $('frame-thermal'),
     compsel: $('frame-compsel'),
+    compliance: $('frame-compliance'),
     diagnostics: $('frame-diagnostics')
   };
 
@@ -1045,6 +1064,9 @@ function switchTab(tabName) {
         if (tabName === 'compsel' && hasRunFolderSelection()) {
           await loadComponentSelectorFromStarRoot();
         }
+        if (tabName === 'compliance' && hasRunFolderSelection()) {
+          await loadComplianceFromStarRoot();
+        }
         if (tabName === 'diagnostics') {
           await updateRunDiagnostics();
         }
@@ -1058,6 +1080,7 @@ function switchTab(tabName) {
         if (typeof activeFrame.contentWindow.refreshSyntheticDashboard === 'function') activeFrame.contentWindow.refreshSyntheticDashboard();
         if (typeof activeFrame.contentWindow.refreshReflectanceDashboard === 'function') activeFrame.contentWindow.refreshReflectanceDashboard();
         if (typeof activeFrame.contentWindow.refreshDiagnosticsDashboard === 'function') activeFrame.contentWindow.refreshDiagnosticsDashboard();
+        if (typeof activeFrame.contentWindow.refreshComplianceDashboard === 'function') activeFrame.contentWindow.refreshComplianceDashboard();
         if (activeFrame.contentWindow.Plotly) {
           const ids = ['plotWeights','plotGround','plot3D','plot3DECEF','plotAngularVelocity','plotEulerAngles','plotTorquesLinear','plotTorquesLog','plotEnergy','plotAltitude','plotElevation','plotNadirOffset','plotTargetOffset','plotHMag','plotHDir','plotGroundTrack','plotOrbitECI','plotOrbitECEF'];
           ids.forEach(id => { const el = activeFrame.contentDocument.getElementById(id); if (el && el.data) activeFrame.contentWindow.Plotly.Plots.resize(el); });
@@ -1081,6 +1104,7 @@ function bindEvents() {
       await loadCollisionAvoidanceFromStarRoot();
       await loadThermalAnalysisFromStarRoot();
       await loadComponentSelectorFromStarRoot();
+      await loadComplianceFromStarRoot();
       await updateRunDiagnostics();
       deliverAttitudeDataToFrame();
     } catch (error) {
@@ -1093,7 +1117,7 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
       if (frame.id === 'frame-collision' && hasRunFolderSelection()) {
         loadCollisionAvoidanceFromStarRoot();
@@ -1103,6 +1127,9 @@ function bindEvents() {
       }
       if (frame.id === 'frame-compsel' && hasRunFolderSelection()) {
         loadComponentSelectorFromStarRoot();
+      }
+      if (frame.id === 'frame-compliance' && hasRunFolderSelection()) {
+        loadComplianceFromStarRoot();
       }
       propagateTheme(document.documentElement.dataset.theme || 'dark');
       if (frame.id === 'frame-attitude') {

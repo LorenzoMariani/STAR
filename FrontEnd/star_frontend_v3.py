@@ -497,6 +497,142 @@ class StarApi:
 
         return canonical_modules
 
+    # ------------------------------------------------------------------
+    # STAR domain and executable modules (2026-10-17)
+    # ------------------------------------------------------------------
+    # What each module adds to the plan (requested outputs of the rule-based planner and of the consistency check).
+    MODULE_OUTPUT_TEXT = {
+        "END-001": ("Design the constellation (satellites, planes, altitude, inclination) and estimate its revisit, coverage, latency and "
+                    "ground-station access over the area of interest; select the imaging pass and the first night pass for the "
+                    "downstream modules.", "mission_analysis_result", "high"),
+        "END-003": ("Propagate the attitude of the satellite on the END-001 orbit and the selected passes (attitude description, "
+                    "pointing, eclipses, face illumination).", "simulation_product", "medium"),
+        "END-004": ("Compute the power budget of the CubeSat with the real duty cycles (consumption in sunlight and eclipse, battery depth "
+                    "of discharge, daily energy balance).", "engineering_feasibility", "medium"),
+        "END-007": ("Generate synthetic images of the selected imaging pass.", "simulation_product", "medium"),
+        "END-010": ("Simulate the brightness of the satellite (light curve, apparent magnitude) seen from the observatory during the first "
+                    "useful night pass.", "simulation_product", "high"),
+        "END-016": ("Check the close approaches between the satellites, the orbital lifetime, the disposal rules and the disposal delta-v.",
+                    "engineering_feasibility", "medium"),
+        "END-018": ("Compute the temperatures of the CubeSat faces, panels and internal nodes along the orbit and flag the limits that "
+                    "are exceeded.", "engineering_feasibility", "medium"),
+        "END-019": ("Design the CubeSat every module uses (initial design) and update it with their results (final design): the "
+                    "smallest class whose real components meet the requirements.", "engineering_feasibility", "high"),
+    }
+    # Always in the chain inside the STAR domain: the orbits (END-001) and the CubeSat (END-019) every module uses.
+    CORE_MODULES = ("END-001", "END-019")
+
+    def module_executable(self, module_or_id: Any) -> tuple[bool, str]:
+        """(True, "") when the module has a runner that imports and the programs it needs are on this machine; STAR plans
+        and runs only these modules (a module without them is left out instead of producing placeholder results)."""
+        module = module_or_id if isinstance(module_or_id, dict) else self.get_module_by_id(str(module_or_id))
+        if not module:
+            return False, "not in the module registry"
+        module_id = str(module.get("module_id", "")).upper()
+        cache = self.__dict__.setdefault("_module_executable_cache", {})
+        if module_id in cache:
+            return cache[module_id]
+        execution_cfg = module.get("execution", {}) or {}
+        runner_module = execution_cfg.get("runner_module") or execution_cfg.get("python_module")
+        runner_function = execution_cfg.get("runner_function") or execution_cfg.get("function") or "run"
+        if not runner_module:
+            result = (False, "no runner: the module is not integrated in STAR yet")
+        else:
+            try:
+                import importlib
+                getattr(importlib.import_module(str(runner_module)), str(runner_function))
+                from runners.star_runner_io import module_prerequisites
+                result = module_prerequisites(module_id, self.star_root)
+            except Exception as exc:
+                result = (False, f"runner {runner_module}.{runner_function} cannot be loaded: {exc}")
+        cache[module_id] = result
+        return result
+
+    def executable_modules(self) -> list[dict[str, Any]]:
+        return [module for module in self.modules if self.module_executable(module)[0]]
+
+    def complete_workflow(self, workflow: list[dict[str, Any]], rationale_prefix: str = "Added by STAR") -> list[dict[str, Any]]:
+        """Executable modules only, END-001 and END-019 always (the orbits and the CubeSat of the STAR domain), and the
+        upstream modules each one needs (registry upstream_dependencies), in execution order."""
+        kept = []
+        for step in workflow:
+            ok, why = self.module_executable(str(step.get("module_id", "")))
+            if ok:
+                kept.append(step)
+            else:
+                self.add_log("AI", f"{step.get('module_id')} left out of the workflow: {why}.")
+        present = {str(s.get("module_id", "")).upper() for s in kept}
+
+        def add(module_id: str, reason: str) -> None:
+            module = self.get_module_by_id(module_id)
+            if module and module_id not in present and self.module_executable(module)[0]:
+                step = self.build_workflow_step_for_module(module)
+                step["rationale"] = reason
+                kept.append(step)
+                present.add(module_id)
+
+        for module_id in self.CORE_MODULES:
+            add(module_id, f"{rationale_prefix}: always in the STAR chain ("
+                + ("orbits and passes for every module" if module_id == "END-001" else "the CubeSat every module uses") + ").")
+        changed = True
+        while changed:
+            changed = False
+            for step in list(kept):
+                module = self.get_module_by_id(str(step.get("module_id", ""))) or {}
+                for upstream in (module.get("execution", {}) or {}).get("upstream_dependencies") or []:
+                    upstream = str(upstream).upper()
+                    if upstream.startswith("END-") and upstream not in present:
+                        add(upstream, f"{rationale_prefix}: {step.get('module_id')} needs its data.")
+                        changed = changed or upstream in present
+        return self.sort_and_renumber_workflow(kept)
+
+    PREVIEW_FIELDS = ("RegionSettings", "GroundStations", "PassSelection.LightCurve.Observer", "Single_Sensor_Type", "Orbit_Type",
+                      "AltitudeRange_km", "TotalSatellites", "InclinationRange", "Fitness_Engine", "MissionRequirements", "TimeSettings")
+
+    def star_run_preview(self) -> list[str]:
+        """What END-001 (and through its passes every module) will use: area, ground stations, observatory, sensor, orbit,
+        satellites, requirement thresholds, surrogate or simulation; shown at the input approval and saved in
+        planning/run_preview.json, so a value STAR chose by itself is never silent."""
+        if not any(str(s.get("module_id", "")).upper() == "END-001" for s in self.workflow_steps):
+            return []
+        try:
+            from runners.end001_star_inputs import apply_star_mode
+            template = json.loads((self.star_root / "Input" / "input_constellation_optimizer.json").read_text(encoding="utf-8"))
+            payload = {"resolved_inputs": [i for i in self.missing_information if str(i.get("needed_by_module_id", "")).upper() == "END-001"],
+                       "requirements": self.requirements, "mission_request_text": (self.uploaded_text or "")[:30000],
+                       "run_mode": self.run_mode, "run_level": self.run_level,
+                       "run_output_dir": str(self.current_run_path), "modules_output_root": str(self.get_modules_output_root())}
+            _, report = apply_star_mode(template, payload)
+        except Exception as exc:
+            return [f"preview not available ({exc})"]
+        lines = [f"{r['field']} = {json.dumps(r['value'], ensure_ascii=False)[:140]} ({r['origin']})"
+                 for r in report if any(key in r["field"] for key in self.PREVIEW_FIELDS)]
+        try:
+            path = self.current_run_path / "planning" / "run_preview.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"generated_at": datetime.now().isoformat(), "end001_decisions": report, "summary": lines},
+                                       indent=2, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
+        return lines
+
+    def check_star_domain(self, inputs: bool = False) -> dict[str, Any]:
+        """STAR domain check of the request (or of the approved module inputs); saved in planning/domain_check.json."""
+        from runners import star_domain
+        result = star_domain.check_inputs(self.missing_information) if inputs else star_domain.check_mission(self.uploaded_text or "", self.requirements)
+        try:
+            if self.current_run_path:
+                path = self.current_run_path / "planning" / ("domain_check_inputs.json" if inputs else "domain_check.json")
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({"generated_at": datetime.now().isoformat(), **result}, indent=2, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
+        for note in result.get("notes", []):
+            self.add_log("WARNING", f"STAR domain: {note}.")
+        if not result.get("ok", True):
+            self.add_log("ERROR", star_domain.stop_message(result))
+        return result
+
 
     # ------------------------------------------------------------------
     # Module status API
@@ -1010,89 +1146,30 @@ class StarApi:
         return cubesat and design
 
     def rule_based_requirement_extraction(self, text: str) -> list[dict[str, Any]]:
-        normalized_text = self.normalize_text(text)
-        requirements: list[dict[str, Any]] = []
-
-        def contains_any(keywords: list[str]) -> bool:
-            return any(keyword in normalized_text for keyword in keywords)
-
-        def add_requirement(requirement_text: str, category: str, status: str) -> None:
-            requirement_text = requirement_text.strip()
-            if " shall " not in f" {requirement_text.lower()} ":
-                requirement_text = f"The system shall {requirement_text[0].lower() + requirement_text[1:]}"
-            if not requirement_text.endswith("."):
-                requirement_text += "."
-            if any(req["text"] == requirement_text for req in requirements):
-                return
-            requirements.append(
-                {
-                    "id": f"REQ-{len(requirements) + 1:03d}",
-                    "text": requirement_text,
-                    "category": category,
-                    "status": status,
-                    "source": "mission_request_document",
-                    "standard_reference": "ECSS-E-ST-10-06C-inspired",
-                }
-            )
-
-        if contains_any(["volcanic", "volcano", "etna", "eruptive"]):
-            if "etna" in normalized_text:
-                add_requirement("Monitor volcanic activity over Mount Etna", "mission", "extracted")
-            else:
-                add_requirement("Monitor volcanic activity over the target area", "mission", "under_specified")
-
-        if contains_any(["agricultural", "agriculture", "vegetation", "crop"]):
-            if "southern italy" in normalized_text:
-                add_requirement("Provide Earth observation imaging of agricultural areas in Southern Italy", "mission", "extracted")
-            else:
-                add_requirement("Provide Earth observation imaging of agricultural areas", "mission", "under_specified")
-
-        if "vegetation monitoring" in normalized_text or contains_any(["vegetation index", "ndvi"]):
-            add_requirement("Support vegetation monitoring over the agricultural target areas", "functional", "extracted")
-
-        if (
-            contains_any(["earth observation", "eo mission", "earth-observation"])
-            and "monitor" in normalized_text
-            and not contains_any(["volcanic", "volcano", "etna", "agricultural", "agriculture", "vegetation"])
-        ):
-            if "target area" in normalized_text:
-                add_requirement("Monitor the specified target area with a preliminary Earth observation mission", "mission", "under_specified")
-            else:
-                add_requirement("Monitor the specified target with a preliminary Earth observation mission", "mission", "requires_review")
-
-        if "optical" in normalized_text:
-            add_requirement("Use an optical Earth observation payload", "design", "extracted")
-        if "multispectral" in normalized_text:
-            add_requirement("Use a multispectral Earth observation payload", "design", "extracted")
-        if contains_any(["radar", "sar"]):
-            add_requirement("Use a radar Earth observation payload", "design", "extracted")
-
-        if "weekly" in normalized_text:
-            add_requirement("Provide weekly acquisitions over the target area", "functional", "extracted")
-        if "frequent revisit" in normalized_text or "revisit" in normalized_text:
-            add_requirement("Provide frequent revisit over the target area", "functional", "under_specified")
-        if "frequent acquisitions" in normalized_text:
-            add_requirement("Provide frequent acquisitions over the target area", "functional", "under_specified")
-
-        if "acquisition schedules" in normalized_text or "acquisition schedule" in normalized_text:
-            add_requirement("Generate preliminary acquisition schedules", "functional", "extracted")
-        if "acquisition opportunities" in normalized_text or "data acquisition opportunities" in normalized_text:
-            add_requirement("Generate acquisition opportunities over the target area", "functional", "extracted")
-        if "data acquisition opportunities" in normalized_text and "assessment" in normalized_text:
-            add_requirement("Perform a preliminary assessment of data acquisition opportunities", "functional", "extracted")
-        if "identify missing mission parameters" in normalized_text or "missing mission parameters" in normalized_text:
-            add_requirement("Identify missing mission parameters required to mature the preliminary concept", "functional", "extracted")
-        if "first feasibility assessment" in normalized_text or "preliminary feasibility assessment" in normalized_text:
-            add_requirement("Support a first preliminary feasibility assessment", "functional", "under_specified")
-
-        if "power feasibility" in normalized_text:
-            add_requirement("Perform a preliminary power feasibility assessment", "functional", "extracted")
-        elif contains_any(["battery", "eps", "energy", "solar array", "soh", "rul"]):
-            add_requirement("Assess preliminary electrical power subsystem feasibility", "functional", "under_specified")
-
+        """Rule-based extraction (2026-10-17): every sentence with a modal verb (shall, must, should, dovra', deve...) or a
+        requirement identifier (REQ-04...) becomes a requirement, verbatim with its numbers (runners/star_text_rules.py);
+        administrative sentences (submission, deadline, budget of the proposal...) are left out."""
+        from runners import star_text_rules as rules
+        requirements = [
+            {
+                "id": item["id"],
+                "text": item["text"],
+                "category": item["category"],
+                "status": "extracted",
+                "source": "mission_request_document",
+                "standard_reference": "ECSS-E-ST-10-06C-inspired",
+            }
+            for item in rules.requirement_sentences(text)
+        ]
         if not requirements:
-            add_requirement("Analyze the uploaded mission request and identify candidate mission requirements", "functional", "requires_review")
-
+            requirements.append({
+                "id": "REQ-001",
+                "text": "The system shall analyze the uploaded mission request and identify candidate mission requirements.",
+                "category": "functional",
+                "status": "requires_review",
+                "source": "mission_request_document",
+                "standard_reference": "ECSS-E-ST-10-06C-inspired",
+            })
         return requirements
 
     # ------------------------------------------------------------------
@@ -1495,10 +1572,10 @@ class StarApi:
 
 
     def compact_module_registry_for_llm(self) -> list[dict[str, Any]]:
-        """Return a compact, JSON-serializable registry view for LLM prompts."""
+        """Return a compact, JSON-serializable registry view for LLM prompts (executable modules only, 2026-10-17)."""
         compact = []
 
-        for module in self.modules:
+        for module in self.executable_modules():
             compact.append(
                 {
                     "module_id": module.get("module_id"),
@@ -1657,7 +1734,7 @@ class StarApi:
     def llm_assisted_missing_information_analysis(self, requirements: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Use the local LLM to map requirements onto registry-declared module inputs."""
         registry = self.compact_module_registry_for_llm()
-        module_names = self.get_module_names()
+        module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
 
         system_prompt = (
             "You are STAR's missing-information analysis assistant. "
@@ -1818,7 +1895,7 @@ Return only valid JSON:
     def llm_assisted_workflow_proposal(self) -> list[dict[str, Any]]:
         """Use the local LLM to propose a workflow using only registry modules."""
         registry = self.compact_module_registry_for_llm()
-        module_names = self.get_module_names()
+        module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
 
         approved_assumptions = [
             item for item in self.missing_information
@@ -2145,13 +2222,16 @@ Return only valid JSON:
         module = self.get_module_by_id(module_name_or_id) or self.get_module_by_name(module_name_or_id)
         if not module:
             return {"ok": False, "error": f"Module not found: {module_name_or_id}", **self.state_payload()}
+        executable, why = self.module_executable(module)
+        if not executable:
+            return {"ok": False, "error": f"{module.get('module_name')} cannot run in STAR: {why}.", **self.state_payload()}
 
         module_id = module.get("module_id")
         if any(str(step.get("module_id")) == str(module_id) for step in self.workflow_steps):
             return {"ok": False, "error": f"Module already present in workflow: {module.get('module_name')}", **self.state_payload()}
 
         self.workflow_steps.append(self.build_workflow_step_for_module(module))
-        self.workflow_steps = self.sort_and_renumber_workflow(self.workflow_steps)
+        self.workflow_steps = self.complete_workflow(self.workflow_steps, "Added with the module the user chose")
         self.workflow_review_status = "edited_not_saved"
         self.workflow_approved = False
         self.missing_information = []
@@ -2174,6 +2254,10 @@ Return only valid JSON:
 
         original_count = len(self.workflow_steps)
         target = self.normalize_text(module_name_or_id)
+        core = [m for m in self.CORE_MODULES if target in (self.normalize_text(m), self.normalize_text((self.get_module_by_id(m) or {}).get("module_name", "")))]
+        if core:
+            return {"ok": False, "error": f"{core[0]} is always in the STAR chain (the orbits and the CubeSat every module uses) and cannot be removed.",
+                    **self.state_payload()}
         self.workflow_steps = [
             step for step in self.workflow_steps
             if self.normalize_text(str(step.get("module", ""))) != target
@@ -3520,6 +3604,11 @@ Return only valid JSON:
             return {"ok": False, "error": "No active run is available.", "logs": self.logs}
 
         mode = mode or "Local LLM via Ollama (RAG)"
+        # STAR works only inside its domain (2026-10-17): outside it, stop with the reasons
+        self.domain_check = self.check_star_domain()
+        if not self.domain_check.get("ok", True):
+            from runners import star_domain
+            return {"ok": False, "error": star_domain.stop_message(self.domain_check), "domain_check": self.domain_check, "logs": self.logs}
         self.add_log("AI", f"Generating mission planning using mode: {mode}.")
 
         try:
@@ -3618,7 +3707,7 @@ Return only valid JSON:
         ])[:12000]
         rag_sources = self.retrieve_knowledge_context(query, max_chunks=8)
         registry = self.compact_module_registry_for_llm()
-        module_names = self.get_module_names()
+        module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
 
         system_prompt = (
             "You are STAR's RAG-based mission planning assistant. "
@@ -3712,307 +3801,41 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
         requested_outputs: list[dict[str, Any]],
         workflow: list[dict[str, Any]],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        """Apply light consistency repairs after LLM/RAG planning.
-
-        This is not a deterministic workflow generator. It is a guardrail that
-        checks whether the LLM omitted a module whose registry capabilities are
-        directly required by the already extracted outputs/requirements.
-        """
-        combined_text = self.normalize_text(" ".join(
+        """Consistency check of an LLM/RAG plan (2026-10-17): a small local LLM may omit a module the request asks for.
+        The modules whose keywords the request contains (whole words, English and Italian: runners/star_text_rules.py)
+        are added when missing, then complete_workflow() keeps only executable modules, adds END-001 and END-019 (always
+        in the STAR chain) and the upstream modules each one needs, in execution order."""
+        from runners import star_text_rules as rules
+        combined_text = " ".join(
             [self.uploaded_text or ""]
             + [req.get("text", "") for req in self.requirements]
             + [output.get("description", "") for output in requested_outputs]
-        ))
-
-        def workflow_has(module_id: str) -> bool:
-            return any(str(step.get("module_id", "")).upper() == module_id for step in workflow)
-
-        def append_requested_output(description: str, output_type: str, priority: str, rationale: str, keywords: list[str]) -> None:
-            existing = self.normalize_text(" ".join(output.get("description", "") for output in requested_outputs))
-            if any(self.normalize_text(word) in existing for word in keywords):
-                return
-            derived = [
-                req.get("id", "REQ-???")
-                for req in self.requirements
-                if any(self.normalize_text(word) in self.normalize_text(req.get("text", "")) for word in keywords)
-            ]
-            requested_outputs.append({
-                "id": f"OUT-{len(requested_outputs) + 1:03d}",
-                "description": description,
-                "output_type": output_type,
-                "priority": priority,
-                "derived_from_requirements": derived or [req.get("id", "REQ-001") for req in self.requirements[:1]],
-                "rationale": rationale,
-                "status": "proposed",
-                "reviewed_by_user": False,
-            })
-
-        payload_observation_needed = any(token in combined_text for token in [
-            "optical payload", "payload", "camera", "imager", "image", "imagery",
-            "ground sample distance", "gsd", "spatial resolution", "swath",
-            "footprint", "acquisition geometry", "observation geometry",
-            "data acquisition sequence", "simulated acquisition",
-            "synthetic image", "synthetic data", "payload performance",
-            "sensor viewing", "viewing conditions",
-        ]) and any(token in combined_text for token in [
-            "optical", "visible", "panchromatic", "gsd", "swath",
-            "image", "imagery", "sensor", "payload",
-        ])
-
-        if payload_observation_needed:
-            append_requested_output(
-                "Assess sensor-level optical observation performance, including acquisition geometry, GSD, swath, footprint or simulated payload products when required by the mission concept.",
-                "simulation_product",
-                "high",
-                "The approved requirements or mission request include optical payload, GSD, swath, image acquisition or sensor-level observation performance information.",
-                ["payload", "gsd", "swath", "resolution", "synthetic", "sensor-level"],
-            )
-            if not workflow_has("END-007"):
-                module = self.get_module_by_id("END-007")
-                if module:
-                    workflow.append({
-                        "step": len(workflow) + 1,
-                        "module": module.get("module_name", "Synthetic Data Generation"),
-                        "module_id": "END-007",
-                        "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                        "output_artifacts": self.build_workflow_output_summary(module),
-                        "rationale": "Added by planning consistency check because the approved requirements imply sensor-level optical observation, payload-resolution, GSD, swath, footprint, acquisition-geometry or simulated-observation assessment.",
-                        "status": "proposed",
-                        "reviewed_by_user": False,
-                    })
-                    self.add_log("AI", "Planning consistency check added END-007 Synthetic Data Generation for payload/sensor-level observation assessment.")
-
-        # If END-007 is selected for sensor-level products and attitude/pointing is
-        # explicitly relevant, END-003 should be available upstream.
-        attitude_needed = any(token in combined_text for token in [
-            "attitude", "nadir", "pointing", "line of sight", "viewing geometry",
-            "sensor-target", "quaternion", "pointing error",
-        ])
-        if workflow_has("END-007") and attitude_needed and not workflow_has("END-003"):
-            module = self.get_module_by_id("END-003")
-            if module:
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": module.get("module_name", "Attitude Propagation"),
-                    "module_id": "END-003",
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": "Added by planning consistency check because the selected synthetic/sensor-level observation workflow requires attitude, pointing or line-of-sight information.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
+        )
+        present = {str(step.get("module_id", "")).upper() for step in workflow}
+        for module_id, hits in rules.modules_requested(combined_text).items():
+            if module_id in present or not self.module_executable(module_id)[0]:
+                continue
+            module = self.get_module_by_id(module_id)
+            if not module:
+                continue
+            step = self.build_workflow_step_for_module(module)
+            step["rationale"] = f"Added by planning consistency check: the request mentions {', '.join(hits[:4])}."
+            workflow.append(step)
+            present.add(module_id)
+            self.add_log("AI", f"Planning consistency check added {module_id} ({', '.join(hits[:4])}).")
+        workflow = self.complete_workflow(workflow, "Added by planning consistency check")
+        described = {str(rid).upper() for o in requested_outputs for rid in (o.get("modules") or [])}
+        existing_text = " ".join(str(o.get("description", "")) for o in requested_outputs).lower()
+        for step in workflow:
+            module_id = str(step.get("module_id", "")).upper()
+            text, output_type, priority = self.MODULE_OUTPUT_TEXT.get(module_id, (None, None, None))
+            if text and module_id not in described and text.lower()[:60] not in existing_text:
+                requested_outputs.append({
+                    "id": "", "description": text, "output_type": output_type, "priority": priority,
+                    "derived_from_requirements": [req.get("id", "REQ-001") for req in self.requirements[:1]],
+                    "rationale": f"{module_id} is in the workflow.", "status": "proposed", "reviewed_by_user": False,
+                    "modules": [module_id],
                 })
-                self.add_log("AI", "Planning consistency check added END-003 Attitude Propagation as upstream attitude/pointing provider.")
-
-        reflectance_needed = any(token in combined_text for token in [
-            "reflectance","environmental impact", "light curve", "lightcurve", "flux", "brightness", "photometry",
-            "photometric", "apparent magnitude", "magnitude", "phase angle", "illumination geometry", "optical detectability", "rendered frames", "unity simulation"
-        ])
-
-        if reflectance_needed:
-            append_requested_output(
-                "Generate reflectance, light-curve, flux or photometric simulation products from orbit, attitude, illumination and observer geometry.",
-                "simulation_product", "high",
-                "The approved requirements imply reflectance, light-curve, brightness, photometric, illumination or optical detectability analysis.",
-                ["reflectance", "light curve", "flux", "brightness", "photometry", "phase angle", "illumination"]
-            )
-
-            if not workflow_has("END-003"):
-                module = self.get_module_by_id("END-003")
-                if module:
-                    workflow.append({
-                        "step": len(workflow) + 1,
-                        "module": module.get("module_name", "Attitude Propagation"),
-                        "module_id": "END-003",
-                        "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                        "output_artifacts": self.build_workflow_output_summary(module),
-                        "rationale": "Added because END-010 reflectance simulation requires orbit/attitude or observation geometry inputs.",
-                        "status": "proposed",
-                        "reviewed_by_user": False,
-                    })
-
-            if not workflow_has("END-010"):
-                module = self.get_module_by_id("END-010")
-                if module:
-                    workflow.append({
-                        "step": len(workflow) + 1,
-                        "module": module.get("module_name", "Reflectance Determination"),
-                        "module_id": "END-010",
-                        "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                        "output_artifacts": self.build_workflow_output_summary(module),
-                        "rationale": "Added because the approved requirements imply reflectance, light-curve, photometric, phase-angle or optical detectability products.",
-                        "status": "proposed",
-                        "reviewed_by_user": False,
-                    })
-
-                self.add_log("AI", "Planning consistency check added END-010 Reflectance Determination for reflectance/light-curve simulation.")
-
-        # A small local LLM may omit a module the request explicitly asks for. Add
-        # END-001 (constellation) and END-004 (power budget) when the approved text
-        # clearly requests them; sort_and_renumber_workflow() below then fixes the
-        # execution order (END-001, END-003, END-004, END-007, END-010).
-        constellation_needed = any(token in combined_text for token in [
-            "constellation", "revisit", "walker", "orbital planes", "number of satellites",
-        ])
-        if constellation_needed and not workflow_has("END-001"):
-            module = self.get_module_by_id("END-001")
-            if module:
-                append_requested_output(
-                    "Determine the constellation architecture (number of satellites, orbital planes, altitude and inclination) and its revisit/coverage performance over the area of interest.",
-                    "mission_analysis_result", "high",
-                    "The approved requirements define a satellite constellation whose architecture and revisit/coverage performance must be determined.",
-                    ["constellation", "revisit", "coverage"],
-                )
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": module.get("module_name", "Constellation Optimizer"),
-                    "module_id": "END-001",
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": "Added by planning consistency check because the approved requirements define a satellite constellation whose orbits feed the downstream modules.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                })
-                self.add_log("AI", "Planning consistency check added END-001 Constellation Optimizer for the requested constellation architecture.")
-
-        power_needed = any(token in combined_text for token in [
-            "power budget", "battery", "depth of discharge", "duty cycle", "solar array", "energy balance", "electrical power",
-        ]) or re.search(r"\beps\b", combined_text) is not None
-        if power_needed and not workflow_has("END-004"):
-            module = self.get_module_by_id("END-004")
-            if module:
-                append_requested_output(
-                    "Compute the preliminary power budget (per-mode consumption in sunlight and eclipse, battery depth of discharge and daily energy balance).",
-                    "engineering_feasibility", "medium",
-                    "The approved requirements mention the power budget, battery, duty cycle or energy balance.",
-                    ["power", "battery", "energy", "duty"],
-                )
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": module.get("module_name", "Power Budget"),
-                    "module_id": "END-004",
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": "Added by planning consistency check because the approved requirements request a power/energy budget.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                })
-                self.add_log("AI", "Planning consistency check added END-004 Power Budget for the requested power/energy assessment.")
-                if not workflow_has("END-003"):
-                    upstream = self.get_module_by_id("END-003")
-                    if upstream:
-                        workflow.append({
-                            "step": len(workflow) + 1,
-                            "module": upstream.get("module_name", "Attitude Propagation"),
-                            "module_id": "END-003",
-                            "input_data_artifacts": self.build_workflow_input_summary(upstream, []),
-                            "output_artifacts": self.build_workflow_output_summary(upstream),
-                            "rationale": "Added because END-004 derives orbit period and timing from the END-003 propagation CSV.",
-                            "status": "proposed",
-                            "reviewed_by_user": False,
-                        })
-
-        # END-016 Collision Avoidance: space-safety checks of the END-001 constellation.
-        if self.end016_safety_requested(combined_text) and not workflow_has("END-016"):
-            module = self.get_module_by_id("END-016")
-            if module:
-                append_requested_output(
-                    "Check the close approaches between the satellites of the constellation and the orbital lifetime, disposal rules and disposal delta-v of every orbit.",
-                    "engineering_feasibility", "medium",
-                    "The approved requirements mention collisions, space debris, safe separation, disposal or end of life.",
-                    ["collision", "debris", "separation", "disposal", "re-enter", "end of life", "deorbit"],
-                )
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": module.get("module_name", "Collision Avoidance"),
-                    "module_id": "END-016",
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": "Added by planning consistency check because the approved requirements ask for the space safety of the constellation.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                })
-                self.add_log("AI", "Planning consistency check added END-016 Collision Avoidance for the space safety of the constellation.")
-        if workflow_has("END-016") and not workflow_has("END-001"):
-            upstream = self.get_module_by_id("END-001")
-            if upstream:
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": upstream.get("module_name", "END-001"),
-                    "module_id": "END-001",
-                    "input_data_artifacts": self.build_workflow_input_summary(upstream, []),
-                    "output_artifacts": self.build_workflow_output_summary(upstream),
-                    "rationale": "Added because END-016 checks the orbits and ephemerides of the END-001 constellation.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                })
-                self.add_log("AI", "Planning consistency check added END-001 upstream of END-016.")
-
-        # END-018 Components Thermal Analysis (CubeSats only): add it when the
-        # request asks for the thermal behaviour of a CubeSat, and give it its
-        # upstream END-001 (orbits) and END-003 (imaging passes, attitude).
-        if self.end018_thermal_requested(combined_text) and not workflow_has("END-018"):
-            module = self.get_module_by_id("END-018")
-            if module:
-                append_requested_output(
-                    "Compute the temperatures of the CubeSat faces, solar panels and internal nodes along the orbit and the imaging passes, and flag the limits that are exceeded.",
-                    "engineering_feasibility", "medium",
-                    "The approved requirements describe a CubeSat and mention its thermal behaviour, temperatures or thermal limits.",
-                    ["thermal", "temperature", "overheat", "heat", "battery", "cubesat"],
-                )
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": module.get("module_name", "Components Thermal Analysis"),
-                    "module_id": "END-018",
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": "Added by planning consistency check because the approved requirements ask for the thermal behaviour of a CubeSat.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                })
-                self.add_log("AI", "Planning consistency check added END-018 Components Thermal Analysis for the CubeSat thermal assessment.")
-        if workflow_has("END-018"):
-            for upstream_id, reason in (("END-001", "END-018 analyses the orbits of the END-001 satellites."),
-                                        ("END-003", "END-018 switches the SAR on during the END-003 imaging passes and refines them with the propagated attitude.")):
-                if workflow_has(upstream_id):
-                    continue
-                upstream = self.get_module_by_id(upstream_id)
-                if upstream:
-                    workflow.append({
-                        "step": len(workflow) + 1,
-                        "module": upstream.get("module_name", upstream_id),
-                        "module_id": upstream_id,
-                        "input_data_artifacts": self.build_workflow_input_summary(upstream, []),
-                        "output_artifacts": self.build_workflow_output_summary(upstream),
-                        "rationale": f"Added because {reason}",
-                        "status": "proposed",
-                        "reviewed_by_user": False,
-                    })
-                    self.add_log("AI", f"Planning consistency check added {upstream_id} upstream of END-018.")
-
-        # END-019 Satellite Design Component Selector: add it when the request asks
-        # to choose the components or subsystems of a CubeSat (no upstream module).
-        if self.end019_design_requested(combined_text) and not workflow_has("END-019"):
-            module = self.get_module_by_id("END-019")
-            if module:
-                append_requested_output(
-                    "Select the satellite platform components (structure, OBC, EPS, battery, solar panels, radio, ADCS and payload) from real vendor datasheets and size the design.",
-                    "engineering_feasibility", "medium",
-                    "The approved requirements ask to choose the components or subsystems of a CubeSat.",
-                    ["cubesat", "component", "subsystem", "bill of materials", "form factor"],
-                )
-                workflow.append({
-                    "step": len(workflow) + 1,
-                    "module": module.get("module_name", "Satellite Design Component Selector"),
-                    "module_id": "END-019",
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": "Added by planning consistency check because the approved requirements ask to choose the components of a CubeSat.",
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                })
-                self.add_log("AI", "Planning consistency check added END-019 Satellite Design Component Selector for the CubeSat platform design.")
-
-        workflow = self.sort_and_renumber_workflow(workflow)
         for index, output in enumerate(requested_outputs, start=1):
             output["id"] = f"OUT-{index:03d}"
         return requested_outputs, workflow
@@ -4035,170 +3858,37 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
         return deduplicated
 
     def rule_based_mission_planning(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-        combined_text = self.normalize_text(" ".join([self.uploaded_text or ""] + [req.get("text", "") for req in self.requirements]))
-        rag_sources = self.retrieve_knowledge_context(combined_text, max_chunks=5)
-
-        outputs: list[dict[str, Any]] = []
-        module_ids: list[str] = []
-
-        def add_output(description: str, output_type: str, priority: str, rationale: str, keywords: list[str]) -> None:
-            derived = [req.get("id", "REQ-???") for req in self.requirements if any(word in self.normalize_text(req.get("text", "")) for word in keywords)]
-            outputs.append(
-                {
-                    "id": f"OUT-{len(outputs) + 1:03d}",
-                    "description": description,
-                    "output_type": output_type,
-                    "priority": priority,
-                    "derived_from_requirements": derived or [req.get("id", "REQ-???") for req in self.requirements[:1]],
-                    "rationale": rationale,
-                    "status": "proposed",
-                }
-            )
-
-        if any(word in combined_text for word in ["revisit", "coverage", "access", "acquisition opportun", "observation window", "frequency"]):
-            add_output(
-                "Estimate access opportunities, acquisition frequency, coverage or revisit performance for the target area.",
-                "mission_analysis_result",
-                "high",
-                "The approved requirements mention revisit, coverage, access windows or acquisition opportunities.",
-                ["revisit", "coverage", "access", "acquisition"],
-            )
-            module_ids.append("END-001")
-
-        if any(word in combined_text for word in [
-            "synthetic", "simulated image", "synthetic image", "dataset", "ground truth",
-            "payload resolution", "spatial resolution", "gsd", "ground sampling distance",
-            "swath", "footprint", "sensor performance", "payload verification", "image metadata",
-            "acquisition geometry", "optical payload", "camera", "imager"
-        ]):
-            add_output(
-                "Generate or assess sensor-level EO observation products, payload-resolution quantities, acquisition geometry or synthetic-data metadata.",
-                "simulation_product",
-                "high",
-                "The approved requirements mention synthetic data, image/sensor products, payload resolution, GSD, swath, footprint, acquisition geometry or payload-performance verification.",
-                ["synthetic", "simulated", "dataset", "ground truth", "resolution", "gsd", "swath", "footprint", "sensor", "payload", "image", "acquisition"],
-            )
-            if "END-001" not in module_ids:
-                module_ids.append("END-001")
-            if "END-007" not in module_ids:
-                module_ids.append("END-007")
-
-        if any(word in combined_text for word in ["scenario", "terrain", "dem", "3d", "scene", "volcanic event"]):
-            add_output(
-                "Prepare a target scenario or scene representation required for simulation or synthetic data generation.",
-                "simulation_product",
-                "medium",
-                "The approved requirements or mission request mention scenario, terrain, 3D scene, DEM, or event representation.",
-                ["scenario", "terrain", "dem", "3d", "scene"],
-            )
-            if "END-006" not in module_ids:
-                module_ids.append("END-006")
-
-        if any(word in combined_text for word in ["power", "battery", "energy", "eps", "duty cycle", "power budget", "solar array", "payload duty", "operational power"]):
-            add_output(
-                "Compute the preliminary mission power budget using orbit, attitude-propagation timing and operational duty-cycle assumptions.",
-                "engineering_feasibility",
-                "medium",
-                "The approved requirements mention power, energy, EPS, duty cycle, solar-array generation or operational power feasibility.",
-                ["power", "battery", "energy", "eps", "duty", "solar", "operation"],
-            )
-            for required_module_id in ["END-001", "END-003", "END-004"]:
-                if required_module_id not in module_ids:
-                    module_ids.append(required_module_id)
-
-        if any(word in combined_text for word in ["reflectance", "light curve", "lightcurve",  "flux", "brightness", "photometry", "photometric",
-            "apparent magnitude", "magnitude", "phase angle", "illumination", "optical detectability", "rendered frames", "unity simulation"]):
-            add_output(
-                "Generate reflectance, light-curve, flux or photometric simulation products based on orbit, attitude, illumination and observer geometry.",
-                "simulation_product", "high",
-                "The approved requirements mention reflectance, light-curve, flux, brightness, photometry, phase angle, illumination or optical detectability.",
-                ["reflectance", "light curve", "flux", "brightness", "photometry", "phase angle", "illumination"]
-            )
-
-            if "END-003" not in module_ids:
-                module_ids.append("END-003")
-
-            if "END-010" not in module_ids:
-                module_ids.append("END-010")
-
-        # END-016 Collision Avoidance: space-safety checks of the END-001
-        # constellation (close approaches between its satellites, lifetime and disposal).
-        if self.end016_safety_requested(combined_text):
-            add_output(
-                "Check the close approaches between the satellites of the constellation and the orbital lifetime, disposal rules and disposal delta-v of every orbit.",
-                "engineering_feasibility",
-                "medium",
-                "The approved requirements mention collisions, space debris, safe separation, disposal or end of life.",
-                ["collision", "debris", "separation", "disposal", "re-enter", "end of life", "deorbit"],
-            )
-            if "END-001" not in module_ids:
-                module_ids.append("END-001")
-            module_ids.append("END-016")
-
-        # END-018 Components Thermal Analysis: CubeSats (1U-12U) only, needs the
-        # END-001 orbits and the END-003 imaging passes / attitude upstream.
-        if self.end018_thermal_requested(combined_text):
-            add_output(
-                "Compute the temperatures of the CubeSat faces, solar panels and internal nodes (central body, battery, SAR payload) along the orbit and the imaging passes, and flag the limits that are exceeded.",
-                "engineering_feasibility",
-                "medium",
-                "The approved requirements describe a CubeSat and mention its thermal behaviour, temperatures or thermal limits.",
-                ["thermal", "temperature", "overheat", "heat", "battery", "cubesat"],
-            )
-            for upstream_id in ("END-001", "END-003"):
-                if upstream_id not in module_ids:
-                    module_ids.append(upstream_id)
-            module_ids.append("END-018")
-
-        if any(word in combined_text for word in [
-            "cubesat", "satellite design", "component selection", "select the components", "bill of materials", "form factor",
-            "adcs", "attitude control subsystem", "pointing accuracy", "inter-satellite", "space situational awareness",
-            "space debris", "payload accommodation", "subsystem selection",
-        ]):
-            add_output(
-                "Select the satellite platform components (structure, OBC, EPS, battery, solar panels, radio, ADCS and payload) from real vendor datasheets and size the design.",
-                "engineering_feasibility",
-                "medium",
-                "The approved requirements mention a CubeSat or small-satellite design, component or subsystem selection, an ADCS pointing requirement, payload accommodation or an inter-satellite link.",
-                ["cubesat", "satellite design", "component", "bill of materials", "adcs", "pointing", "inter-satellite", "debris", "payload", "form factor"],
-            )
-            module_ids.append("END-019")
-
-        if not outputs:
-            add_output(
-                "Produce a preliminary mission analysis package traceable to the approved requirements.",
-                "mission_analysis_result",
-                "high",
-                "The approved requirements are generic and require a preliminary STAR analysis package.",
-                [],
-            )
-            module_ids.append("END-001")
-
-        ordered_modules = []
-        seen_ids = set()
-        for module_id in module_ids:
-            if module_id in seen_ids:
-                continue
-            seen_ids.add(module_id)
-            module = self.get_module_by_id(module_id)
-            if module:
-                ordered_modules.append(module)
-
+        """Rule-based planner (2026-10-17): the modules whose keywords the request contains (whole words, English and
+        Italian: runners/star_text_rules.py), END-001 and END-019 always (the orbits and the CubeSat of the STAR domain),
+        the upstream modules they need; only modules STAR can run."""
+        from runners import star_text_rules as rules
+        combined_text = " ".join([self.uploaded_text or ""] + [req.get("text", "") for req in self.requirements])
+        rag_sources = self.retrieve_knowledge_context(self.normalize_text(combined_text), max_chunks=5)
+        requested = rules.modules_requested(combined_text)
         workflow: list[dict[str, Any]] = []
-        for index, module in enumerate(self.order_by_dependencies(ordered_modules), start=1):
-            workflow.append(
-                {
-                    "step": index,
-                    "module": module.get("module_name", module.get("module_id")),
-                    "module_id": module.get("module_id", "unknown"),
-                    "input_data_artifacts": self.build_workflow_input_summary(module, []),
-                    "output_artifacts": self.build_workflow_output_summary(module),
-                    "rationale": self.build_rule_based_planning_rationale(module, outputs),
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                }
-            )
-
+        for module_id, hits in requested.items():
+            module = self.get_module_by_id(module_id)
+            if module and self.module_executable(module)[0]:
+                step = self.build_workflow_step_for_module(module)
+                step["rationale"] = f"Selected during mission planning: the request mentions {', '.join(hits[:4])}."
+                workflow.append(step)
+        workflow = self.complete_workflow(workflow, "Selected during mission planning")
+        outputs: list[dict[str, Any]] = []
+        for step in workflow:
+            module_id = str(step.get("module_id", "")).upper()
+            text, output_type, priority = self.MODULE_OUTPUT_TEXT.get(module_id, (f"Run {module_id}.", "other", "medium"))
+            hits = requested.get(module_id, [])
+            derived = [req.get("id", "REQ-???") for req in self.requirements if hits and rules.has_any(req.get("text", ""), hits)]
+            outputs.append({
+                "id": f"OUT-{len(outputs) + 1:03d}",
+                "description": text,
+                "output_type": output_type,
+                "priority": priority,
+                "derived_from_requirements": derived or [req.get("id", "REQ-???") for req in self.requirements[:1]],
+                "rationale": step.get("rationale", ""),
+                "status": "proposed",
+                "modules": [module_id],
+            })
         return outputs, workflow, rag_sources
 
     def get_module_by_id(self, module_id: str) -> dict[str, Any] | None:
@@ -4316,6 +4006,10 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
                     module = module_by_id.get(match.group(0))
             if module is None:
                 skipped += 1
+                continue
+            executable, why = self.module_executable(module)
+            if not executable:
+                self.add_log("AI", f"{module.get('module_id')} proposed by the planner but left out: {why}.")
                 continue
             module_id = module.get("module_id", "unknown")
             if module_id in seen_module_ids:
@@ -4620,6 +4314,10 @@ Return only valid JSON:
             return {"ok": False, "error": "No workflow is available. Generate mission planning before approving inputs.", "logs": self.logs}
         if not self.missing_information:
             return {"ok": False, "error": "No workflow input resolution is available to approve.", "logs": self.logs}
+        inputs_check = self.check_star_domain(inputs=True)     # values the user typed must stay inside the STAR domain
+        if not inputs_check.get("ok", True):
+            from runners import star_domain
+            return {"ok": False, "error": star_domain.stop_message(inputs_check), "domain_check": inputs_check, "logs": self.logs}
 
         approved_items = []
         for index, item in enumerate(self.missing_information, start=1):
@@ -4648,6 +4346,9 @@ Return only valid JSON:
         self.add_log("USER", "Workflow input resolution and assumptions approved by user.")
         self.add_log("SYSTEM", f"approved_assumptions.json saved: {approved_path}")
         self.add_log("SYSTEM", f"approved_planning_package.json saved: {planning_package_path}")
+        preview = self.star_run_preview()
+        for line in preview:
+            self.add_log("SYSTEM", f"STAR will use: {line}")
         self.add_log("SYSTEM", "Execution is now enabled if the workflow has also been approved.")
 
         return {
@@ -4656,7 +4357,8 @@ Return only valid JSON:
             "approved_assumptions_path": str(approved_path),
             "missing_information_path": str(active_path),
             "approved_planning_package_path": str(planning_package_path),
-            "message": "Workflow input resolution and first-guess assumptions approved.",
+            "run_preview": preview,
+            "message": "Workflow input resolution and first-guess assumptions approved. STAR will use: " + "; ".join(preview[:8]),
         }
 
     def approve_workflow(self) -> dict[str, Any]:
@@ -5011,9 +4713,13 @@ Return only valid JSON:
             self.add_log("EXECUTION", f"Finished step 0: END-019 initial design -> {result.get('status')} ({self.format_duration(duration)}).")
             if result.get("status") in ("failed", "stopped") or self.execution_stop_event.is_set():
                 initial_failed = True
-                self.add_log("ERROR", "Workflow aborted: without the END-019 initial design the modules would not share the same satellite.")
+                self.add_log("ERROR", "END-019 initial design not available: the modules that need the CubeSat ("
+                             + ", ".join(sorted(self.INITIAL_DESIGN_DEPENDENTS)) + ") are skipped, the others run.")
 
-        for workflow_step in ([] if initial_failed else self.workflow_steps):
+        # A failed module stops only the modules that need its data (2026-10-17): registry upstream_dependencies,
+        # also through a skipped module, and the END-019 initial design for the modules using the CubeSat.
+        blocked: dict[str, str] = {}
+        for workflow_step in self.workflow_steps:
             module_name = workflow_step.get("module")
             module_id = workflow_step.get("module_id", "unknown")
 
@@ -5023,6 +4729,20 @@ Return only valid JSON:
                 self.execution_results = execution_results
                 workflow_stopped = True
                 break
+
+            skip_reason = self.blocked_reason(str(module_id).upper(), blocked, initial_failed)
+            if skip_reason:
+                result = self.build_stopped_execution_result(workflow_step, f"Not run: {skip_reason}.")
+                result["status"] = "skipped"
+                result["skipped_because"] = skip_reason
+                execution_results.append(result)
+                self.execution_results = execution_results
+                blocked[str(module_id).upper()] = skip_reason
+                for module in self.modules:
+                    if module.get("module_name") == module_name:
+                        module["status"] = "Stopped"
+                self.add_log("WARNING", f"{module_name} ({module_id}) not run: {skip_reason}.")
+                continue
 
             self.active_module_name = module_name
             self.active_module_id = module_id
@@ -5048,7 +4768,10 @@ Return only valid JSON:
                     result["duration_human"] = self.format_duration(duration)
                 else:
                     self.add_log("ERROR", f"Module {module_name} failed after {self.format_duration(duration)}: {exc}")
-                    raise
+                    now = datetime.now().isoformat()
+                    result = {"step": workflow_step.get("step", ""), "module": module_name, "module_id": module_id,
+                              "status": "failed", "evidence": f"{module_name} raised an error: {exc}", "generated_artifacts": "",
+                              "started_at": now, "completed_at": now, "reviewed_by_user": False}
 
             duration = time.perf_counter() - module_started_perf
             result["duration_seconds"] = round(duration, 3)
@@ -5081,13 +4804,25 @@ Return only valid JSON:
                 workflow_stopped = True
                 break
 
+            if result.get("status") != "completed":
+                blocked[str(module_id).upper()] = f"{module_id} {result.get('status')}: {str(result.get('evidence', ''))[:160]}"
             if result.get("status") == "failed":
-                self.add_log("ERROR", f"Workflow aborted after failed module: {module_name}. Remaining modules were not executed to avoid cascading path/input errors.")
-                break
+                self.add_log("ERROR", f"{module_name} failed: the modules that need its data are skipped, the others run.")
 
         for module in self.modules:
             if module.get("module_name") not in selected_modules:
                 module["status"] = "Idle"
+
+        # requirement compliance with the module results (2026-10-17): compliance/compliance.json, tab "Requirements & KPIs"
+        try:
+            from runners import star_compliance
+            compliance = star_compliance.build(self.current_run_path, self.requirements, self.run_mode, self.workflow_steps)
+            c = compliance["counts"]
+            self.add_log("SYSTEM", f"Requirement compliance: {c['met']} met, {c['not_met']} not met, {c['partially_verified']} partially "
+                                   f"verified, {c['applied']} applied, {c['not_verifiable']} not verifiable (compliance/compliance.json, "
+                                   f"results tab Requirements & KPIs).")
+        except Exception as exc:
+            self.add_log("WARNING", f"Requirement compliance not computed: {exc}")
 
         total_duration = time.perf_counter() - workflow_started_perf
         self.execution_results = execution_results
@@ -5124,6 +4859,25 @@ Return only valid JSON:
             "execution_results_extracted_path": str(extracted_path),
             "message": "Workflow execution stopped by user." if workflow_stopped else f"{len(execution_results)} workflow step(s) executed from approved workflow.",
         }
+
+    # Modules that use the CubeSat of the END-019 initial design (inertia, loads, class, form factor); END-001 and
+    # END-016 can run without it (mass and drag area from the requirements).
+    INITIAL_DESIGN_DEPENDENTS = {"END-003", "END-004", "END-010", "END-018"}
+
+    def blocked_reason(self, module_id: str, blocked: dict[str, str], initial_failed: bool) -> str:
+        """Why a module cannot run: not executable here, an upstream module of the workflow without its data, or the
+        END-019 initial design missing for a module that uses the CubeSat; "" when it can run."""
+        executable, why = self.module_executable(module_id)
+        if not executable:
+            return f"{module_id} cannot run on this machine ({why})"
+        module = self.get_module_by_id(module_id) or {}
+        upstream = [str(u).upper() for u in ((module.get("execution") or {}).get("upstream_dependencies") or [])]
+        missing = [u for u in upstream if u in blocked]
+        if missing:
+            return "; ".join(f"{u} did not produce the data it needs ({blocked[u]})" for u in missing)
+        if initial_failed and module_id in self.INITIAL_DESIGN_DEPENDENTS:
+            return "the END-019 initial design (the CubeSat this module uses) is not available"
+        return ""
 
     def build_stopped_execution_result(self, workflow_step: dict[str, Any], evidence: str) -> dict[str, Any]:
         now = datetime.now().isoformat()
@@ -5283,6 +5037,7 @@ Return only valid JSON:
             "module_results_dir": str(output_layout["module_results_dir"]),
             "requested_outputs": self.requested_outputs,
             "requirements": self.requirements,
+            "mission_request_text": (self.uploaded_text or "")[:30000],   # area of interest and stations named outside the requirements
             "run_mode": self.run_mode,
             "run_level": self.run_level,
         }
@@ -5799,6 +5554,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__": "end001_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__": "end003_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_DIAGNOSTICS__": "run_diagnostics_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_COMPLIANCE__": "star_compliance_results.html",
     }
     for placeholder, filename in frame_files.items():
         content = (modules_dir / filename).read_text(encoding="utf-8")

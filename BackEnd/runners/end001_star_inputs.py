@@ -155,6 +155,13 @@ def _area(value: Any) -> tuple[dict[str, Any] | None, str]:
             if place in low:
                 upd, _ = _area([[lat, lon]])
                 return upd, f"'{place}' ({lat}, {lon}): 1 x 1 deg square around it"
+        try:   # Italian regions, cities and sites (config/italy_places.json), or coordinates in the text
+            from . import star_text_rules as rules
+        except ImportError:
+            import star_text_rules as rules
+        named = rules.area_of_interest([value])
+        if named["region_settings"]:
+            return named["region_settings"], named["why"]
     return None, f"not a known area name or [lat, lon] list: {value!r}"
 
 
@@ -175,8 +182,22 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     inp = provided_inputs(payload)
     reqs = _requirements(payload)
 
+    # ---- requirement texts (2026-10-17: shared English / Italian parsers, runners/star_text_rules.py) -----------
+    try:
+        from . import star_text_rules as rules
+    except ImportError:
+        import star_text_rules as rules
+    found: dict[str, tuple[Any, str]] = dict(rules.mission_parameters(reqs))
+    if "alt" in found:
+        lo, hi = found["alt"][0]
+        if lo is not None and hi is not None and lo == hi:     # a single altitude: a 50 km window around it
+            lo, hi = lo - 25, hi + 25
+        found["alt"] = ([lo if lo is not None else 400.0, hi if hi is not None else 1200.0], found["alt"][1])
+    if "mass" in found:
+        found["mass"] = (found["mass"][0][0], found["mass"][1])
+
     # ---- orbit family -------------------------------------------------------
-    orbit, orbitOrigin, single = None, "", False
+    orbit, orbitOrigin, single, singleOrigin = None, "", False, ""
     ctype = inp.get("constellation_type")
     if ctype:
         t = str(ctype[0]).lower()
@@ -185,14 +206,21 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         elif "star" in t or "single" in t or "train" in t:
             orbit = "SSORGT"
         single = "single" in t
+        if single:
+            singleOrigin = f"STAR input constellation_type = {ctype[0]} ({ctype[1]})"
         if orbit:
             orbitOrigin = f"STAR input constellation_type = {ctype[0]} ({ctype[1]})"
-    for rid, text in reqs:
-        low = text.lower()
-        if orbit is None and re.search(r"sun[- ]synchronous|\bsso\b", low):
-            orbit, orbitOrigin = "SSORGT", f"requirement {rid} (Sun-synchronous)"
-        elif orbit is None and re.search(r"walker[- ]delta|inclined orbit", low):
-            orbit, orbitOrigin = "RGT (generally inclined)", f"requirement {rid} (inclined / Walker delta)"
+    if orbit is None and "orbit" in found:
+        orbit = found["orbit"][0]
+        orbitOrigin = f"requirement {found['orbit'][1]} (" + ("Sun-synchronous" if orbit == "SSORGT" else
+                                                              "inclined / Walker delta or a non Sun-synchronous inclination") + ")"
+    if not single and "single" in found:
+        single, singleOrigin = True, f"requirement {found['single'][1]}"
+    if not single and payload.get("mission_request_text"):
+        # a single satellite stated in the mission request but lost when the requirements were rephrased (LLM extraction)
+        doc = rules.mission_parameters([("mission request", s) for s in rules.sentences(str(payload["mission_request_text"]))])
+        if "single" in doc and "sats_max" not in found and "sats_min" not in found:
+            single, singleOrigin = True, "mission request (a single satellite)"
     if orbit:
         opt["Orbit_Type"] = orbit
         note("OptimizerSettings.Orbit_Type", orbit, orbitOrigin)
@@ -200,56 +228,6 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         note("OptimizerSettings.Orbit_Type", opt.get("Orbit_Type"), "automatic (template)")
     orbit = opt.get("Orbit_Type", "SSORGT")
     delta = orbit == "RGT (generally inclined)"
-
-    # ---- requirement texts --------------------------------------------------
-    found: dict[str, tuple[Any, str]] = {}
-    for rid, text in reqs:
-        low = text.lower().replace("–", "-")
-        m = re.search(r"(?:at most|no more than|not more than|a maximum of|maximum of|up to)\s+(\d+)\s+satellites", low)
-        if m and "sats_max" not in found:
-            found["sats_max"] = (int(m.group(1)), rid)
-        m = re.search(r"(?:at least|a minimum of|minimum of|no fewer than)\s+(\d+)\s+satellites", low)
-        if m and "sats_min" not in found:
-            found["sats_min"] = (int(m.group(1)), rid)
-        m = re.search(r"\b(\d+)\s+(?:orbital\s+)?planes\b", low)
-        if m and "planes" not in found:
-            found["planes"] = (int(m.group(1)), rid)
-        if re.search(r"altitude|orbit|height", low) and "alt" not in found:
-            m = re.search(r"between\s+" + NUM + r"\s*(?:km)?\s+and\s+" + NUM + r"\s*km", low) or \
-                re.search(NUM + r"\s*(?:-|to)\s*" + NUM + r"\s*km", low)
-            if m:
-                found["alt"] = ([float(m.group(1)), float(m.group(2))], rid)
-            else:
-                m = re.search(r"(?:altitude|height) of\s+" + NUM + r"\s*km", low)
-                if m:
-                    h = float(m.group(1))
-                    found["alt"] = ([h - 25, h + 25], rid)
-        m = re.search(r"inclination of\s+" + NUM + r"\s*(?:deg|degrees|°)", low)
-        if m and "incl" not in found:
-            found["incl"] = (float(m.group(1)), rid)
-        if "sensor" not in found:
-            if re.search(r"push[- ]?broom", low):
-                found["sensor"] = ("PBS", rid)
-            elif re.search(r"synthetic aperture|\bsar\b", low):
-                found["sensor"] = ("SAR", rid)
-            elif re.search(r"fram(?:e|ing) camera|area camera|matrix camera", low):
-                found["sensor"] = ("RECT", rid)
-        m = re.search(r"swath(?: width)? of\s+" + NUM + r"\s*km", low)
-        if m and "swath" not in found:
-            found["swath"] = (float(m.group(1)), rid)
-        m = re.search(r"start(?:ing|s)? on\s+(\d{1,2})\s+([a-z]+)\s+(\d{4})(?:\s+at\s+(\d{1,2}):(\d{2}))?", low)
-        if m and m.group(2) in MONTHS and "start" not in found:
-            found["start"] = ([int(m.group(3)), MONTHS[m.group(2)], int(m.group(1)),
-                               int(m.group(4) or 0), int(m.group(5) or 0)], rid)
-        m = re.search(r"mass\s+(?:not exceeding|of|below|up to|lower than|less than)\s+" + NUM + r"\s*kg", low)
-        if m and "mass" not in found:
-            found["mass"] = (float(m.group(1)), rid)
-        m = re.search(r"drag (?:cross[- ]section|area) of\s+" + NUM + r"\s*m", low)
-        if m and "adrag" not in found:
-            found["adrag"] = (float(m.group(1)), rid)
-        m = re.search(r"drag coefficient of\s+" + NUM, low)
-        if m and "cd" not in found:
-            found["cd"] = (float(m.group(1)), rid)
 
     # ---- sensor ------------------------------------------------------------
     sarIn = [n for n in ("sar_frequency", "sar_field_of_regard_deg") if n in inp]
@@ -286,27 +264,45 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         note(pre + "AltitudeRange_km", alt, "automatic (whole orbit table / surrogate domain)")
     opt[pre + "AltitudeRange_km"] = alt
 
+    # The requirements win over the surrogate training domain (2026-10-17): a range reaching outside it is
+    # searched with the simulation (slower, never an extrapolated surrogate value); without requirements the
+    # ranges are the domain itself.
     planes, sats, total = list(dom["planes"]), list(dom["sats"]), list(dom["total"])
     origin = "automatic (surrogate training domain)"
     if single:
         planes, sats, total = [1, 1], [1, 1], [1, 1]
-        origin = "STAR input constellation_type = single_satellite"
+        origin = "single satellite (" + (singleOrigin or "STAR input constellation_type") + ")"
     else:
+        parts = []
         if "sats_max" in found:
             n = found["sats_max"][0]
             total[1] = min(total[1], n)
-            origin = f"requirement {found['sats_max'][1]} (at most {n} satellites)"
+            parts.append(f"requirement {found['sats_max'][1]} (at most {n} satellites)")
         if "sats_min" in found:
-            total[0] = max(total[0], found["sats_min"][0])
-            origin += f"; requirement {found['sats_min'][1]} (at least {found['sats_min'][0]})"
+            total[0] = found["sats_min"][0]
+            parts.append(f"requirement {found['sats_min'][1]} (at least {found['sats_min'][0]})")
+        elif total[0] > total[1]:
+            total[0] = 1                     # "at most N" below the domain minimum, no minimum given
         if "planes" in found:
             planes = [found["planes"][0]] * 2
-            origin += f"; requirement {found['planes'][1]} ({found['planes'][0]} planes)"
-        if total[0] > total[1]:   # outside the surrogate domain: the requirement wins
-            total[0] = 1
-            planes[0], sats[0] = 1, 1
-            origin += " (below the surrogate domain: END-001 will simulate)"
-        planes[1] = min(planes[1], total[1]); sats[1] = min(sats[1], total[1])
+            parts.append(f"requirement {found['planes'][1]} ({found['planes'][0]} planes)")
+        if total[0] < planes[0] * sats[0]:   # smaller constellations than the domain minimum are allowed
+            sats[0] = 1
+            if "planes" not in found:
+                planes[0] = 1
+        planes[1] = max(planes[0], min(planes[1], total[1])); sats[1] = max(sats[0], min(sats[1], total[1]))
+        if parts:
+            origin = "; ".join(parts)
+    outside = []
+    if planes[0] < dom["planes"][0] or planes[1] > dom["planes"][1]:
+        outside.append(f"planes {planes[0]}-{planes[1]} (trained {dom['planes'][0]}-{dom['planes'][1]})")
+    if sats[0] < dom["sats"][0] or sats[1] > dom["sats"][1]:
+        outside.append(f"satellites per plane {sats[0]}-{sats[1]} (trained {dom['sats'][0]}-{dom['sats'][1]})")
+    if outside and not single and "sats_min" not in found:
+        # simulated anyway: the domain minimum is not a requirement, smaller compliant constellations are searched too
+        total[0], sats[0] = 1, 1
+        if "planes" not in found:
+            planes[0] = 1
     opt[pre + "PlanesRange"], opt[pre + "SatsPerPlaneRange"], opt[pre + "TotalSatellitesRange"] = planes, sats, total
     note(pre + "Planes / SatsPerPlane / TotalSatellites ranges", [planes, sats, total], origin)
     if delta:
@@ -314,6 +310,8 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         if "incl" in found:
             incl = [found["incl"][0]] * 2
             note("RGT_InclinationRange_deg", incl, f"requirement {found['incl'][1]}")
+            if incl[0] < dom["incl_deg"][0] or incl[1] > dom["incl_deg"][1]:
+                outside.append(f"inclination {incl[0]:g} deg (trained {dom['incl_deg'][0]}-{dom['incl_deg'][1]} deg)")
         else:
             note("RGT_InclinationRange_deg", incl, "automatic (surrogate domain)")
         opt["RGT_InclinationRange_deg"] = incl
@@ -337,16 +335,57 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
             note("SensorSettings." + field, sens[field], f"STAR input {name} ({inp[name][1]})")
 
     # ---- area of interest -----------------------------------------------------
+    # STAR input first, else the Italian area the requirements or the mission request name (2026-10-17), else the
+    # template (the whole of Italy: the STAR domain check has already stopped requests outside Italy)
     aoi = inp.get("area_of_interest")
-    if aoi:
-        upd, why = _area(aoi[0])
-        if upd:
-            cfg.setdefault("RegionSettings", {}).update(upd)
-            note("RegionSettings", upd, f"STAR input area_of_interest ({aoi[1]}): {why}")
-        else:
-            note("RegionSettings.AreaofInterest", cfg.get("RegionSettings", {}).get("AreaofInterest"), f"automatic (template): {why}")
+    upd, why = _area(aoi[0]) if aoi else (None, "")
+    if upd:
+        cfg.setdefault("RegionSettings", {}).update(upd)
+        note("RegionSettings", upd, f"STAR input area_of_interest ({aoi[1]}): {why}")
     else:
-        note("RegionSettings.AreaofInterest", cfg.get("RegionSettings", {}).get("AreaofInterest"), "automatic (template)")
+        named = rules.area_of_interest([t for _, t in reqs] + [str(payload.get("mission_request_text") or "")])
+        if named["region_settings"]:
+            cfg.setdefault("RegionSettings", {}).update(named["region_settings"])
+            note("RegionSettings", named["region_settings"], f"requirements / mission request: {named['why']}"
+                 + (f" (STAR input area_of_interest not usable: {why})" if aoi else ""))
+        else:
+            note("RegionSettings.AreaofInterest", cfg.get("RegionSettings", {}).get("AreaofInterest"),
+                 "automatic (template): the request names no Italian area" + (f"; STAR input not usable: {why}" if aoi else ""))
+
+    # ---- requirement thresholds (2026-10-17): the revisit / latency the call states drive the optimiser ------------
+    # "ok" = the call value, "bad" = twice it (user rule). A revisit metric the call does not give follows a stated
+    # one that bounds it (mean <= 90th percentile <= maximum), else its weight is 0: it does not drive the design.
+    mreq = cfg.setdefault("MissionRequirements", {})
+    weights = cfg.setdefault("Weights", {})
+    keys = [("revisit_mean_h", "MeanRevisit_h", "MeanRevisitTime"), ("revisit_p90_h", "P90Revisit_h", "Percentile90RevisitTime"),
+            ("revisit_max_h", "MaxRevisit_h", "MaxRevisitTime")]
+    given = {k: found[k] for k, _, _ in keys if k in found and found[k][0]}
+    for k, field, wkey in keys:
+        if k in given:
+            v, rid = given[k]
+            mreq[field] = [round(v, 4), round(2 * v, 4)]
+            note(f"MissionRequirements.{field}", mreq[field], f"requirement {rid}: {v:g} h ok, {2 * v:g} h (twice) bad")
+    if given:
+        order = [k for k, _, _ in keys]
+        for i, (k, field, wkey) in enumerate(keys):
+            if k in given:
+                continue
+            bound = next((order[j] for j in range(i + 1, len(order)) if order[j] in given), None)
+            if bound:
+                bf = dict((kk, ff) for kk, ff, _ in keys)[bound]
+                mreq[field] = list(mreq[bf])
+                note(f"MissionRequirements.{field}", mreq[field], f"not in the call: the thresholds of {bf} (stated, and always larger)")
+            else:
+                weights[wkey] = 0
+                note(f"Weights.{wkey}", 0, "not in the call and not bounded by a stated revisit: it does not drive the design")
+    else:
+        note("MissionRequirements (revisit)", {f: mreq.get(f) for _, f, _ in keys}, "automatic (template): the call states no revisit")
+    if "latency_h" in found and found["latency_h"][0]:
+        v, rid = found["latency_h"]
+        mreq["MaxLatency_h"] = [round(v, 4), round(2 * v, 4)]
+        note("MissionRequirements.MaxLatency_h", mreq["MaxLatency_h"], f"requirement {rid}: {v:g} h ok, {2 * v:g} h (twice) bad")
+    else:
+        note("MissionRequirements.MaxLatency_h", mreq.get("MaxLatency_h"), "automatic (template): the call states no latency")
 
     # ---- epoch, spacecraft, evaluation -----------------------------------------
     start = inp.get("simulation_start_date")
@@ -389,6 +428,29 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     if pert and any(str(p).lower() not in ("j2", "none") for p in (pert[0] if isinstance(pert[0], list) else [pert[0]])):
         note("perturbations", pert[0], "END-001 propagates with J2 only: other perturbations are not modelled")
 
+    # ---- ground stations (2026-10-17): Italian stations, never the template one by default ------------------------
+    try:
+        from . import star_ground_stations as gsl
+    except ImportError:
+        import star_ground_stations as gsl
+    texts = [t for _, t in reqs] + [str(payload.get("mission_request_text") or "")]
+    gs_in = inp.get("ground_stations")
+    chosen, gs_origin = [], ""
+    if gs_in:
+        chosen, missing = gsl.lookup(gs_in[0], "communication")
+        gs_origin = f"STAR input ground_stations ({gs_in[1]})" + (f"; {missing}" if missing else "")
+    if not chosen:
+        named_gs = gsl.named_in_request(texts, "communication")
+        if named_gs:
+            chosen, gs_origin = named_gs, "named in the mission request"
+    if not chosen:
+        bands = [str(r.get("band") or "") for r in ((sat or {}).get("radios") or {}).values()]
+        best, why = gsl.choose_communication(cfg.get("RegionSettings"), bands)
+        chosen, gs_origin = [best], "automatic: " + why
+    cfg["GroundStations"] = [gsl.end001_station(s) for s in chosen]
+    note("GroundStations", cfg["GroundStations"], gs_origin + ("" if len(chosen) == 1 else
+                                                              "; several stations: END-001 simulates (the surrogate models one)"))
+
     # ---- run mode (test by default inside STAR) ---------------------------------
     try:
         from .star_runner_io import FULL_LEVELS, star_run_level, star_run_mode
@@ -408,9 +470,30 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         note("OptimizerSettings." + field, value, origin)
 
     # ---- fixed settings (STAR mode) ---------------------------------------------
-    opt["Fitness_Engine"] = "Surrogate"
-    note("OptimizerSettings.Fitness_Engine", "Surrogate",
-         "fixed (STAR mode); END-001 falls back to the simulation outside the surrogate domain and records why")
+    # what END-001 would find outside the surrogate scenario itself (surrogate_domain_check), said here so that the
+    # STAR preview is exact: a sub-area of Italy, several or off-outline stations, a SAR sensor are simulated
+    try:
+        from . import star_domain
+    except ImportError:
+        import star_domain
+    if cfg.get("RegionSettings", {}).get("AreaofInterest") != "Italy":
+        outside.append("area of interest not the whole of Italy (the surrogate is trained on the Italy grid)")
+    if len(cfg.get("GroundStations", [])) != 1:
+        outside.append(f"{len(cfg.get('GroundStations', []))} ground stations (the surrogate models one)")
+    elif not star_domain.in_surrogate_area(cfg["GroundStations"][0]["lat"], cfg["GroundStations"][0]["lon"]):
+        outside.append("ground station outside the surrogate Italy outline")
+    if sens.get("Single_Sensor_Type") not in ("PBS", "RECT"):
+        outside.append(f"sensor {sens.get('Single_Sensor_Type')} (the surrogate covers optical push-broom / rectangular FOV)")
+    if outside:
+        opt["Fitness_Engine"] = "Simulation"
+        note("OptimizerSettings.Fitness_Engine", "Simulation",
+             "the requirements reach outside the surrogate training domain (" + "; ".join(outside) +
+             "): full simulation, slower but never an extrapolated value")
+    else:
+        opt["Fitness_Engine"] = "Surrogate"
+        note("OptimizerSettings.Fitness_Engine", "Surrogate",
+             "fixed (STAR mode); END-001 falls back to the simulation outside the surrogate domain (AOI, sensor, "
+             "ground stations, FOV) and records why")
     opt["PropagationDays"] = "auto"
     note("OptimizerSettings.PropagationDays", "auto",
          "fixed (STAR mode): one repeat cycle (Sun-synchronous) or a whole lighting-drift cycle (inclined orbits)")
@@ -425,11 +508,21 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     lc = cfg.setdefault("PassSelection", {}).setdefault("LightCurve", {})
     obs_in = inp.get("observatory")
     obs, why = _observatory(obs_in[0]) if obs_in else (None, "")
+    lc.pop("Candidates", None)
     if obs:
         lc["Observer"] = obs
         note("PassSelection.LightCurve.Observer", obs, f"STAR input observatory ({obs_in[1]}): {why}")
     else:
-        note("PassSelection.LightCurve.Observer", lc.get("Observer"), "automatic (template)" + (f": {why}" if why else ""))
+        named_obs = gsl.named_in_request(texts, "optical")
+        if named_obs:
+            lc["Observer"] = gsl.observer(named_obs[0])
+            note("PassSelection.LightCurve.Observer", lc["Observer"], "named in the mission request"
+                 + (f" (STAR input observatory not usable: {why})" if why else ""))
+        else:
+            lc["Candidates"] = gsl.observer_candidates()
+            note("PassSelection.LightCurve.Candidates", [c["name"] for c in lc["Candidates"]],
+                 "automatic: no observatory named; END-001 keeps the Italian telescope with the most convenient first night pass "
+                 "(darkest sky, then earliest, then highest)" + (f"; STAR input observatory not usable: {why}" if why else ""))
     return cfg, report
 
 
@@ -462,6 +555,13 @@ def _observatory(value: Any) -> tuple[dict[str, Any] | None, str]:
     if len(nums) >= 2 and -90 <= float(nums[0]) <= 90:
         return {"name": text[:60], "lat_deg": float(nums[0]), "lon_deg": float(nums[1]), "alt_m": 0.0}, "coordinates"
     low = text.lower()
+    try:   # Italian telescopes (config/italian_ground_stations.json) first
+        from . import star_ground_stations as gsl
+    except ImportError:
+        import star_ground_stations as gsl
+    hits = [h for h in gsl.lookup(text, "optical")[0] if not str(h.get("name", "")).startswith("Station (")] if text else []
+    if hits:
+        return gsl.observer(hits[0]), "Italian telescope list (italian_ground_stations.json)"
     for name, st in _stations().items():
         city = str(st.get("city", ""))
         if low and (low == name.lower() or low in city.lower() or name.lower() in low):

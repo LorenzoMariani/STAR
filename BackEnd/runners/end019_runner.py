@@ -250,6 +250,13 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
         generated.append(str(path))
 
     out_of_scope = mapping["out_of_scope"]
+    # Inside STAR the domain check has already accepted the mission as a CubeSat one (2026-10-17): a maximum mass above
+    # 24 kg ("mass not exceeding 100 kg") is met by any CubeSat, so it is a note, not a reason to skip.
+    upper_mass = [m for m in out_of_scope if m.startswith("satellite mass up to")]
+    if upper_mass:
+        out_of_scope = [m for m in out_of_scope if m not in upper_mass]
+        notes = list(notes) + [m.split(":")[0] + ": the request sets only a maximum, met by a CubeSat (STAR domain: CubeSat up to 24 kg)"
+                               for m in upper_mass]
     result: dict[str, Any]
     if out_of_scope:
         result = {"ok": True, "error": None, "within_limits": False, "subsystems": [], "messages": out_of_scope}

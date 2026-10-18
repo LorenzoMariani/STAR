@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable
 
@@ -84,7 +85,7 @@ def select(*args: Any, **kwargs: Any) -> Selection:
 
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
              "fifteen": 15, "twenty": 20, "twenty-five": 25, "thirty": 30}
-BANDS = (("UHF", r"\buhf\b"), ("VHF", r"\bvhf\b"), ("S", r"\bs[- ]band\b"), ("X", r"\bx[- ]band\b"))
+BANDS = (("UHF", r"\buhf\b"), ("VHF", r"\bvhf\b"), ("S", r"\bs[- ]band\b|\bbanda s\b"), ("X", r"\bx[- ]band\b|\bbanda x\b"))
 BAND_ORDER = {"VHF": 0, "UHF": 1, "S": 2, "X": 3, "COMMS": 1}     # dalla frequenza piu' bassa; "comms" = una sola radio senza banda nominata
 BUS = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna")
 # esiti del controllo di ingombro con cui una classe e' accettata: "undetermined" = a un componente mancano le quote pubblicate (massa,
@@ -94,30 +95,36 @@ ADCS_PARTS = ("magnetorquer", "reaction_wheel", "star_tracker", "sun_sensor")
 NUM = r"(\d+(?:\.\d+)?)"
 
 RULES: dict[str, tuple[str, str]] = {   # sottosistema -> (espressione sul testo dei requisiti, motivo)
-    "adcs": (r"\b(three-axis|3-axis|stabili[sz]\w*|pointing|point\w* (nominally )?at nadir|nadir[- ]pointing|attitude)\b",
+    "adcs": (r"\b(three-axis|3-axis|stabili[sz]\w*|pointing|point\w* (nominally )?at nadir|nadir[- ]pointing|attitude|assetto|puntament\w*|"
+             r"a tre assi|stabilizzat\w*)\b",
              "the mission asks for attitude control"),
-    "payload_imager": (r"\b(camera|imager|images?|imaging|push-?broom|ground sample distance|gsd|swath|multispectral|hyperspectral|panchromatic)\b",
+    "payload_imager": (r"\b(camera|imager|images?|imaging|push-?broom|ground sample distance|gsd|swath|multispectral|hyperspectral|panchromatic|"
+                       r"immagin[ei]|fotocamera|telecamera|risoluzione (spaziale|a terra|al suolo)|strisciata|multispettral\w*|"
+                       r"iperspettral\w*|pancromatic\w*)\b",
                        "the mission takes images"),
-    "payload_optical": (r"\b(optical|laser)[- ](communication|terminal|link|downlink)s?\b|\blasercom\b", "the mission asks for an optical link"),
+    "payload_optical": (r"\b(optical|laser)[- ](communication|terminal|link|downlink)s?\b|\blasercom\b|"
+                        r"\b(collegamento|comunicazion[ei]|terminale) (ottic[oa]|laser)\b", "the mission asks for an optical link"),
     "propulsion": (r"\b(man(o)?euv\w*|orbit (maintenance|raising|lowering|transfer|control)|station[- ]keeping|drag (compensation|make-?up)|"
-                   r"phasing|formation[- ](flying|keeping)|delta-?v|controlled re-?entry|de-?orbit\w* (burn|manoeuvre|maneuver))\b",
+                   r"phasing|formation[- ](flying|keeping)|delta-?v|controlled re-?entry|de-?orbit\w* (burn|manoeuvre|maneuver)|"
+                   r"manovr\w*|mantenimento (dell')?orbit\w*|controllo (dell')?orbit\w*|rientro controllato|volo in formazione)\b",
                    "the mission asks for manoeuvres"),
     "gps": (r"\b(gnss|gps|position knowledge|on-?board position|orbit determination|geolocat\w*|georeferenc\w*|time[- ]tagg\w*|"
-            r"formation|safe separation|collision\w*|close approach\w*)\b", "the mission needs the satellite position on board"),
-    "magnetorquer": (r"\b(magnetorquer|magnetic torquer|torque rod)s?\b", "named in the requirements"),
-    "reaction_wheel": (r"\breaction wheels?\b", "named in the requirements"),
-    "star_tracker": (r"\bstar trackers?\b", "named in the requirements"),
-    "sun_sensor": (r"\bsun sensors?\b", "named in the requirements"),
+            r"formation|safe separation|collision\w*|close approach\w*|posizione a bordo|determinazione (dell')?orbit\w*|"
+            r"georeferenzi\w*|formazione|separazione sicura|collision[ei]|avvicinament\w*)\b", "the mission needs the satellite position on board"),
+    "magnetorquer": (r"\b(magnetorquer|magnetic torquer|torque rod)s?\b|\b(magnetotorquer|barre magnetiche|bobine magnetiche)\b", "named in the requirements"),
+    "reaction_wheel": (r"\breaction wheels?\b|\bruot[ae] di reazione\b", "named in the requirements"),
+    "star_tracker": (r"\bstar trackers?\b|\bsensor[ei] stellar[ei]\b", "named in the requirements"),
+    "sun_sensor": (r"\bsun sensors?\b|\bsensor[ei] solar[ei]\b", "named in the requirements"),
 }
 # tipo di immagine chiesto dai requisiti -> bande spettrali pubblicate che lo danno (specs.spectral_bands del catalogo)
 IMAGE_TYPES = (
-    (r"\bpanchromatic\b", {"PAN", "MONO"}, "panchromatic channel"),
-    (r"\bvisible\b", {"PAN", "RGB", "VNIR", "MONO", "MS", "HS"}, "visible spectrum"),
-    (r"\bmulti-?spectral\b", {"MS"}, "multispectral bands"),
-    (r"\bhyper-?spectral\b", {"HS"}, "hyperspectral bands"),
-    (r"\bswir\b|\bshort-?wave infra-?red\b", {"SWIR"}, "short-wave infrared"),
-    (r"\bthermal infra-?red\b|\btir\b|\blwir\b|\blong-?wave infra-?red\b", {"TIR", "LWIR"}, "thermal infrared"),
-    (r"\brgb\b|\bcolou?r (images?|camera)\b", {"RGB"}, "colour (RGB)"),
+    (r"\bpanchromatic\b|\bpancromatic\w*", {"PAN", "MONO"}, "panchromatic channel"),
+    (r"\bvisible\b|\bvisibile\b|\bspettro visibile\b", {"PAN", "RGB", "VNIR", "MONO", "MS", "HS"}, "visible spectrum"),
+    (r"\bmulti-?spectral\b|\bmultispettral\w*", {"MS"}, "multispectral bands"),
+    (r"\bhyper-?spectral\b|\biperspettral\w*", {"HS"}, "hyperspectral bands"),
+    (r"\bswir\b|\bshort-?wave infra-?red\b|\binfrarosso a onde corte\b", {"SWIR"}, "short-wave infrared"),
+    (r"\bthermal infra-?red\b|\btir\b|\blwir\b|\blong-?wave infra-?red\b|\binfrarosso termico\b", {"TIR", "LWIR"}, "thermal infrared"),
+    (r"\brgb\b|\bcolou?r (images?|camera)\b|\b(immagini|camera) a colori\b", {"RGB"}, "colour (RGB)"),
     (r"\bvideo\b", {"VIDEO"}, "video"),
 )
 NOUNS = {"payload_imager": "payload imager", "payload_optical": "optical terminal", "comms": "radio", "antenna": "antenna", "adcs": "ADCS unit",
@@ -138,7 +145,11 @@ class Req:
 
     @property
     def low(self) -> str:
-        return re.sub(r"\s+", " ", self.text.lower())
+        # lower case, accents removed and typographic quotes / dashes replaced (Italian requirements, 2026-10-17)
+        t = unicodedata.normalize("NFKD", self.text)
+        t = "".join(ch for ch in t if not unicodedata.combining(ch))
+        t = t.replace("\u2019", "'").replace("\u2018", "'").replace("\u2013", "-").replace("\u2014", "-")
+        return re.sub(r"\s+", " ", t.lower())
 
     def as_dict(self) -> dict[str, str]:
         return {"id": self.id, "text": self.text}
@@ -228,13 +239,14 @@ def dump_dipole_per_nms(altitude_km: float) -> float:
 
 def altitude_from_requirements(reqs: list[Req]) -> tuple[float, float, Req] | None:
     for r in reqs:
-        if "altitude" not in r.low and "orbit" not in r.low:
+        if not re.search(r"altitude|orbit|quota|altitudine|altezza|orbita", r.low):
             continue
-        m = re.search(rf"{NUM}\s*km\s*(?:and|to|-|–)\s*{NUM}\s*km", r.low) or re.search(rf"between {NUM} and {NUM}\s*km", r.low)
+        m = re.search(rf"{NUM}\s*km\s*(?:and|to|-|–|e|a)\s*{NUM}\s*km", r.low) or re.search(rf"(?:between|tra|fra) {NUM} (?:and|e) {NUM}\s*km", r.low)
         if m:
             a, b = float(m.group(1)), float(m.group(2))
             return min(a, b), max(a, b), r
-        m = re.search(rf"(?:altitude of|at an altitude of|at) {NUM}\s*km", r.low) or re.search(rf"{NUM}\s*km (?:of )?altitude", r.low)
+        m = re.search(rf"(?:altitude of|at an altitude of|at|quota di|altitudine di|a una quota di) {NUM}\s*km", r.low) or \
+            re.search(rf"{NUM}\s*km (?:of )?altitude|{NUM}\s*km di quota", r.low)
         if m:
             return float(m.group(1)), float(m.group(1)), r
     return None
@@ -302,7 +314,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     ttc_radio = radio_slots[0] if radio_slots else None
     data_radio = radio_slots[-1] if radio_slots and "payload_imager" in needs else None
     if ttc_radio:
-        hit = _find(reqs, r"\b(uplink|telecommand\w*|tele-?command\w*|commanded|commands)\b")
+        hit = _find(reqs, r"\b(uplink|telecommand\w*|tele-?command\w*|commanded|commands|telecomand\w*|comandi)\b")
         ttc_radio.checks.append(Check("receiver", ttc_radio.slot.id, hit[0] if hit else None, "receiver for the telecommands",
                                       lambda c: None if c.spec("has_receiver") is None else bool(c.spec("has_receiver")),
                                       lambda c: None if c.spec("has_receiver") is None else ("transceiver" if c.spec("has_receiver") else "transmitter only")))
@@ -310,7 +322,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             ttc_radio.why += "; it receives the telecommands"
     data_rate = None
     if data_radio:
-        if (hit := _find(reqs, rf"(?:data rate|downlink rate|bit rate)[^.\d]{{0,30}}?{NUM}\s*(kbps|kbit/s|mbps|mbit/s|gbps|gbit/s)")):
+        if (hit := _find(reqs, rf"(?:data rate|downlink rate|bit rate|velocita (?:di trasmissione|dei dati|di scarico)|bit-?rate)[^.\d]{{0,30}}?{NUM}\s*(kbps|kbit/s|mbps|mbit/s|gbps|gbit/s)")):
             kbps = float(hit[1].group(1)) * {"k": 1.0, "m": 1e3, "g": 1e6}[hit[1].group(2)[0]]
             data_rate = {"kbps": kbps, "req": hit[0]}
             data_radio.checks.append(Check("data_rate", data_radio.slot.id, hit[0], f"data rate >= {kbps / 1e3:g} Mbps",
@@ -327,7 +339,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     if dv is None and e16:
         k = e16.get("kpis") or {}
         total, parts, req = 0.0, [], None
-        hit = _find(reqs, r"(?:re-?enter|de-?orbit|dispos)\w*[^.]*?within (\d+|[a-z-]+) years")
+        hit = _find(reqs, r"(?:re-?enter|de-?orbit|dispos)\w*[^.]*?within (\d+|[a-z-]+) years") or \
+            _find(reqs, r"(?:rientr|deorbit|smaltiment)\w*[^.]*?entro (\d+|[a-z-]+) anni")
         if hit and (years := _num(hit[1].group(1))):
             d = k.get(f"disposal_dv_m_s_{int(years)}y_rule_mean_activity")
             if isinstance(d, (int, float)) and d > 0:
@@ -368,7 +381,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             img.checks.append(Check("pushbroom", img.slot.id, hit[0], "push-broom camera (not a snapshot camera)",
                                     lambda c: "snapshot" not in str(c.raw.get("name", "")).lower(),
                                     lambda c: "snapshot camera" if "snapshot" in str(c.raw.get("name", "")).lower() else "not a snapshot camera"))
-        if (hit := _find(reqs, rf"(?:ground sample distance|gsd)[^.\d]{{0,40}}?{NUM}\s*m\b")):
+        if (hit := _find(reqs, rf"(?:ground sample distance|gsd|risoluzione (?:spaziale|a terra|al suolo))[^.\d]{{0,40}}?{NUM}\s*m\b")):
             g = float(hit[1].group(1))
             if alt:
                 h = alt["max_km"]
@@ -379,7 +392,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             else:
                 img.checks.append(Check("gsd", img.slot.id, hit[0], f"GSD <= {g:g} m", status="not_verifiable",
                                         message=f"{hit[0].id}: GSD {g:g} m not verifiable: the orbit altitude is not known (no END-001 orbits, no altitude in the requirements)."))
-        if (hit := _find(reqs, rf"swath[^.\d]{{0,30}}?{NUM}\s*km")):
+        if (hit := _find(reqs, rf"(?:swath|strisciata|larghezza della (?:fascia|striscia))[^.\d]{{0,30}}?{NUM}\s*km")):
             s = float(hit[1].group(1))
             if alt:
                 h = alt["min_km"]
@@ -391,7 +404,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
                 img.checks.append(Check("swath", img.slot.id, hit[0], f"swath >= {s:g} km", status="not_verifiable",
                                         message=f"{hit[0].id}: swath {s:g} km not verifiable: the orbit altitude is not known."))
     # OBC: dose totale di radiazione dei requisiti <= quella pubblicata (tid_krad)
-    if (hit := _find(reqs, rf"(?:total ionizing dose|total ionising dose|\btid\b|radiation)[^.\d]{{0,40}}?{NUM}\s*krad")):
+    if (hit := _find(reqs, rf"(?:total ionizing dose|total ionising dose|\btid\b|radiation|dose (?:totale|ionizzante)|radiazion\w*)[^.\d]{{0,40}}?{NUM}\s*krad")):
         krad = float(hit[1].group(1))
         ob = needs["obc"]
         ob.checks.append(Check("tid", ob.slot.id, hit[0], f"radiation tolerance >= {krad:g} krad (TID)",
@@ -400,7 +413,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
                                metric=lambda c: None if c.raw.get("tid_krad") is None else float(c.raw["tid_krad"])))
     if "payload_optical" in needs:      # terminale ottico: tipo di collegamento e velocita' pubblicati
         op = needs["payload_optical"]
-        if (hit := _find(reqs, r"\binter-?satellite\b|\bcross-?links?\b|\bsatellite-to-satellite\b")):
+        if (hit := _find(reqs, r"\binter-?satellite\b|\bcross-?links?\b|\bsatellite-to-satellite\b|\binter-?satellitar\w*|\btra satelliti\b")):
             op.checks.append(Check("link", op.slot.id, hit[0], "inter-satellite optical link",
                                    lambda c: None if not c.spec("link_type") else c.spec("link_type") in ("inter_satellite", "both"),
                                    lambda c: str(c.spec("link_type") or "").replace("_", " ") or None))
@@ -418,8 +431,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     # sull'asse peggiore <= puntamento e conoscenza d'assetto richiesti; una testa ottica senza la sua elettronica solo se non c'e' altro;
     # frequenza di aggiornamento richiesta; due se i requisiti li vogliono ridondanti
     stk_checks: list[Check] = []
-    for rx, what in ((rf"pointing accuracy[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)", "pointing"),
-                     (rf"(?:attitude )?knowledge[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)", "attitude knowledge")):
+    for rx, what in ((rf"(?:pointing accuracy|(?:accuratezza|precisione) di puntamento)[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?|gradi|grado|secondi d'arco)", "pointing"),
+                     (rf"(?:(?:attitude )?knowledge|conoscenza (?:dell')?assetto)[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?|gradi|grado|secondi d'arco)", "attitude knowledge")):
         if (hit := _find(reqs, rx)):
             arcsec = float(hit[1].group(1)) * (1.0 if hit[1].group(2).startswith("arc") else 3600.0)
             stk_checks.append(Check("stk_accuracy", "star_tracker", hit[0], f"attitude accuracy (3-sigma, worst axis) <= {arcsec:g} arcsec ({what})",
@@ -435,13 +448,14 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
                                 lambda c, h=hz: None if c.spec("update_rate_hz") is None else float(c.spec("update_rate_hz")) >= h - 1e-9,
                                 lambda c: None if c.spec("update_rate_hz") is None else f"{c.spec('update_rate_hz'):g} Hz",
                                 metric=lambda c: None if c.spec("update_rate_hz") is None else float(c.spec("update_rate_hz"))))
-    stk_quantity = 2 if _find(reqs, r"\b(two|2|dual|redundant)\s+star\s+trackers?\b") else 1
+    stk_quantity = 2 if _find(reqs, r"\b(two|2|dual|redundant)\s+star\s+trackers?\b|\b(due|2)\s+(star\s+trackers?|sensori\s+stellari)\b|"
+                              r"\bsensori\s+stellari\s+ridondanti\b") else 1
     if "star_tracker" in needs:
         needs["star_tracker"].checks.extend(stk_checks)
         needs["star_tracker"].slot = replace(needs["star_tracker"].slot, quantity=stk_quantity)
     if "adcs" in needs:
         ad = needs["adcs"]
-        if (hit := _find(reqs, rf"pointing accuracy[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?)")):
+        if (hit := _find(reqs, rf"(?:pointing accuracy|(?:accuratezza|precisione) di puntamento)[^.\d]{{0,30}}?{NUM}\s*(deg|degrees?|arcsec|arc-?seconds?|gradi|grado|secondi d'arco)")):
             acc = float(hit[1].group(1)) / (3600.0 if hit[1].group(2).startswith("arc") else 1.0)
             ad.checks.append(Check("pointing", ad.slot.id, hit[0], f"pointing accuracy <= {acc:g} deg",
                                    lambda c, a=acc: None if c.spec("pointing_accuracy_deg") is None else float(c.spec("pointing_accuracy_deg")) <= a + 1e-12,
@@ -451,7 +465,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
             ad.checks.append(Check("three_axis", ad.slot.id, hit[0], "three-axis control",
                                    lambda c: "y-momentum" not in str(c.raw.get("name", "")).lower(),
                                    lambda c: "single-wheel momentum bias" if "y-momentum" in str(c.raw.get("name", "")).lower() else "three-axis"))
-    if (hit := _find(reqs, r"deployable (solar )?(panel|array)s?|solar (panel|array)s?[^.]{0,40}deployable")):
+    if (hit := _find(reqs, r"deployable (solar )?(panel|array)s?|solar (panel|array)s?[^.]{0,40}deployable|pannell[oi] solar[ei] dispiegabil[ei]|"
+                           r"pannell[oi][^.]{0,40}dispiegabil[ei]")):
         sp = needs["solar_panel"]       # il pannello e' gia' quello della faccia della classe (selector.CLASS_PANEL_FACES); qui: dispiegabile
         sp.checks.append(Check("deployable", sp.slot.id, hit[0], "deployable solar panel",
                                lambda c: "deployable" in str(c.raw.get("name", "")).lower(),
@@ -459,7 +474,7 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     # batteria: energia che deve dare in un'orbita (END-004 della stessa run, con il suo margine) e profondita' di scarica massima dei
     # requisiti: capacita' x min(DoD dei requisiti, DoD massima pubblicata) >= energia per orbita
     dod = None
-    if (hit := _find(reqs, rf"depth of discharge[^.\d]{{0,40}}?{NUM}\s*(?:%|percent|per cent)")):
+    if (hit := _find(reqs, rf"(?:depth of discharge|profondita di scarica)[^.\d]{{0,50}}?{NUM}\s*(?:%|percent|per cent|per cento)")):
         dod = {"fraction": float(hit[1].group(1)) / 100.0, "req": hit[0]}
     battery = None
     e4 = ctx.get("end004") or None
@@ -484,7 +499,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
         bat.checks.append(Check("battery", bat.slot.id, dod["req"], f"depth of discharge <= {100 * dod['fraction']:g}%", status="not_verifiable",
                                 message=f"{dod['req'].id}: the battery capacity is not verifiable: the energy per orbit comes from END-004 Power Budget, "
                                         "which is not in this run."))
-    if "propulsion" in needs and (hit := _find(reqs, r"\b(non-?toxic|green) propellants?|\bhydrazine[- ]free\b|\bno hydrazine\b|\bwithout hydrazine\b")):
+    if "propulsion" in needs and (hit := _find(reqs, r"\b(non-?toxic|green) propellants?|\bhydrazine[- ]free\b|\bno hydrazine\b|\bwithout hydrazine\b|"
+                                               r"\bpropellente (non tossico|verde)\b|\bsenza idrazina\b")):
         needs["propulsion"].checks.append(Check("green", "propulsion", hit[0], "non-toxic propellant (no hydrazine)",
                                                 lambda c: None if c.spec("propellant") is None else "hydrazine" not in str(c.spec("propellant")).lower(),
                                                 lambda c: c.spec("propellant")))
@@ -493,7 +509,8 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
                                                 lambda c: None if total_impulse_ns(c) is None else True,
                                                 lambda c: None if total_impulse_ns(c) is None else f"total impulse {total_impulse_ns(c):g} N·s"))
     mass_limit = None
-    if (hit := _find(reqs, rf"mass[^.\d]{{0,40}}?(?:not exceeding|not exceed|of at most|at most|no more than|below|up to|less than|<=?)\s*{NUM}\s*kg")):
+    if (hit := _find(reqs, rf"mass[^.\d]{{0,40}}?(?:not exceeding|not exceed|of at most|at most|no more than|below|up to|less than|<=?|non superiore a|"
+                           rf"inferiore a|al massimo|fino a|non oltre)\s*{NUM}\s*kg")):
         mass_limit = {"kg": float(hit[1].group(1)), "req": hit[0]}
 
     stated = None

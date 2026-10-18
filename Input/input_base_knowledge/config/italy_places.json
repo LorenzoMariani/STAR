@@ -1,0 +1,854 @@
+{
+  "description": "Italian places STAR recognises in a mission request (area of interest of END-001), 2026-10-17. Regions and macro areas: approximate bounding boxes [lat_min, lat_max, lon_min, lon_max] in degrees (about 0.1 deg, minor islands left out), used as Custom AOI polygons; cities and sites: coordinates [lat, lon] in degrees, used as point targets (END-001 builds a 1 x 1 deg square around a point). Names are matched as whole words, Italian and English forms, accents ignored. Names with case_sensitive true are matched only with the capital letter of names_case (Potenza: potenza is the Italian word for power).",
+  "italy": {
+    "names": [
+      "italy",
+      "italia",
+      "italian territory",
+      "territorio italiano",
+      "territorio nazionale",
+      "national territory",
+      "italian peninsula",
+      "penisola italiana",
+      "whole of italy",
+      "tutta italia",
+      "intero territorio nazionale"
+    ],
+    "end001_area": "Italy"
+  },
+  "italian_coasts": {
+    "names": [
+      "italian coasts",
+      "italian coastline",
+      "coste italiane",
+      "litorale italiano",
+      "fascia costiera italiana"
+    ],
+    "end001_area": "Italian Coasts"
+  },
+  "macro_areas": {
+    "northern italy": {
+      "names": [
+        "northern italy",
+        "north of italy",
+        "nord italia",
+        "italia settentrionale",
+        "nord del paese"
+      ],
+      "bbox": [
+        43.7,
+        47.1,
+        6.6,
+        13.9
+      ]
+    },
+    "central italy": {
+      "names": [
+        "central italy",
+        "centre of italy",
+        "italia centrale",
+        "centro italia"
+      ],
+      "bbox": [
+        40.8,
+        44.5,
+        9.7,
+        14.0
+      ]
+    },
+    "southern italy": {
+      "names": [
+        "southern italy",
+        "south of italy",
+        "sud italia",
+        "italia meridionale",
+        "mezzogiorno",
+        "meridione"
+      ],
+      "bbox": [
+        36.6,
+        42.9,
+        8.1,
+        18.5
+      ]
+    },
+    "italian islands": {
+      "names": [
+        "italian islands",
+        "isole maggiori",
+        "major islands"
+      ],
+      "bbox": [
+        36.6,
+        41.3,
+        8.1,
+        15.7
+      ]
+    }
+  },
+  "regions": {
+    "valle d'aosta": {
+      "names": [
+        "valle d'aosta",
+        "valle d aosta",
+        "aosta valley",
+        "vallee d'aoste"
+      ],
+      "bbox": [
+        45.47,
+        45.99,
+        6.8,
+        7.94
+      ]
+    },
+    "piemonte": {
+      "names": [
+        "piemonte",
+        "piedmont"
+      ],
+      "bbox": [
+        44.06,
+        46.46,
+        6.63,
+        9.21
+      ]
+    },
+    "lombardia": {
+      "names": [
+        "lombardia",
+        "lombardy"
+      ],
+      "bbox": [
+        44.68,
+        46.64,
+        8.5,
+        11.43
+      ]
+    },
+    "trentino-alto adige": {
+      "names": [
+        "trentino-alto adige",
+        "trentino alto adige",
+        "trentino",
+        "alto adige",
+        "south tyrol",
+        "sudtirol"
+      ],
+      "bbox": [
+        45.67,
+        47.09,
+        10.38,
+        12.48
+      ]
+    },
+    "veneto": {
+      "names": [
+        "veneto"
+      ],
+      "bbox": [
+        44.79,
+        46.68,
+        10.62,
+        13.1
+      ]
+    },
+    "friuli-venezia giulia": {
+      "names": [
+        "friuli-venezia giulia",
+        "friuli venezia giulia",
+        "friuli"
+      ],
+      "bbox": [
+        45.58,
+        46.65,
+        12.32,
+        13.92
+      ]
+    },
+    "liguria": {
+      "names": [
+        "liguria"
+      ],
+      "bbox": [
+        43.78,
+        44.68,
+        7.49,
+        10.07
+      ]
+    },
+    "emilia-romagna": {
+      "names": [
+        "emilia-romagna",
+        "emilia romagna",
+        "emilia",
+        "romagna"
+      ],
+      "bbox": [
+        43.73,
+        45.14,
+        9.2,
+        12.76
+      ]
+    },
+    "toscana": {
+      "names": [
+        "toscana",
+        "tuscany"
+      ],
+      "bbox": [
+        42.24,
+        44.47,
+        9.69,
+        12.37
+      ]
+    },
+    "umbria": {
+      "names": [
+        "umbria"
+      ],
+      "bbox": [
+        42.36,
+        43.62,
+        11.89,
+        13.26
+      ]
+    },
+    "marche": {
+      "names": [
+        "marche",
+        "the marches"
+      ],
+      "bbox": [
+        42.69,
+        43.97,
+        12.19,
+        13.92
+      ]
+    },
+    "lazio": {
+      "names": [
+        "lazio",
+        "latium"
+      ],
+      "bbox": [
+        40.78,
+        42.84,
+        11.45,
+        14.03
+      ]
+    },
+    "abruzzo": {
+      "names": [
+        "abruzzo"
+      ],
+      "bbox": [
+        41.68,
+        42.9,
+        13.02,
+        14.79
+      ]
+    },
+    "molise": {
+      "names": [
+        "molise"
+      ],
+      "bbox": [
+        41.36,
+        42.07,
+        13.94,
+        15.16
+      ]
+    },
+    "campania": {
+      "names": [
+        "campania"
+      ],
+      "bbox": [
+        39.99,
+        41.51,
+        13.76,
+        15.81
+      ]
+    },
+    "puglia": {
+      "names": [
+        "puglia",
+        "apulia"
+      ],
+      "bbox": [
+        39.79,
+        42.23,
+        14.93,
+        18.52
+      ]
+    },
+    "basilicata": {
+      "names": [
+        "basilicata",
+        "lucania"
+      ],
+      "bbox": [
+        39.9,
+        41.14,
+        15.33,
+        16.87
+      ]
+    },
+    "calabria": {
+      "names": [
+        "calabria"
+      ],
+      "bbox": [
+        37.92,
+        40.14,
+        15.63,
+        17.21
+      ]
+    },
+    "sicilia": {
+      "names": [
+        "sicilia",
+        "sicily"
+      ],
+      "bbox": [
+        36.64,
+        38.81,
+        12.42,
+        15.65
+      ]
+    },
+    "sardegna": {
+      "names": [
+        "sardegna",
+        "sardinia"
+      ],
+      "bbox": [
+        38.86,
+        41.31,
+        8.13,
+        9.83
+      ]
+    }
+  },
+  "cities": {
+    "roma": {
+      "names": [
+        "roma",
+        "rome"
+      ],
+      "lat_lon": [
+        41.9028,
+        12.4964
+      ]
+    },
+    "milano": {
+      "names": [
+        "milano",
+        "milan"
+      ],
+      "lat_lon": [
+        45.4642,
+        9.19
+      ]
+    },
+    "napoli": {
+      "names": [
+        "napoli",
+        "naples"
+      ],
+      "lat_lon": [
+        40.8518,
+        14.2681
+      ]
+    },
+    "torino": {
+      "names": [
+        "torino",
+        "turin"
+      ],
+      "lat_lon": [
+        45.0703,
+        7.6869
+      ]
+    },
+    "palermo": {
+      "names": [
+        "palermo"
+      ],
+      "lat_lon": [
+        38.1157,
+        13.3615
+      ]
+    },
+    "genova": {
+      "names": [
+        "genova",
+        "genoa"
+      ],
+      "lat_lon": [
+        44.4056,
+        8.9463
+      ]
+    },
+    "bologna": {
+      "names": [
+        "bologna"
+      ],
+      "lat_lon": [
+        44.4949,
+        11.3426
+      ]
+    },
+    "firenze": {
+      "names": [
+        "firenze",
+        "florence"
+      ],
+      "lat_lon": [
+        43.7696,
+        11.2558
+      ]
+    },
+    "bari": {
+      "names": [
+        "bari"
+      ],
+      "lat_lon": [
+        41.1171,
+        16.8719
+      ]
+    },
+    "catania": {
+      "names": [
+        "catania"
+      ],
+      "lat_lon": [
+        37.5079,
+        15.083
+      ]
+    },
+    "venezia": {
+      "names": [
+        "venezia",
+        "venice"
+      ],
+      "lat_lon": [
+        45.4408,
+        12.3155
+      ]
+    },
+    "verona": {
+      "names": [
+        "verona"
+      ],
+      "lat_lon": [
+        45.4384,
+        10.9916
+      ]
+    },
+    "messina": {
+      "names": [
+        "messina"
+      ],
+      "lat_lon": [
+        38.1938,
+        15.554
+      ]
+    },
+    "padova": {
+      "names": [
+        "padova",
+        "padua"
+      ],
+      "lat_lon": [
+        45.4064,
+        11.8768
+      ]
+    },
+    "trieste": {
+      "names": [
+        "trieste"
+      ],
+      "lat_lon": [
+        45.6495,
+        13.7768
+      ]
+    },
+    "taranto": {
+      "names": [
+        "taranto"
+      ],
+      "lat_lon": [
+        40.4644,
+        17.247
+      ]
+    },
+    "brescia": {
+      "names": [
+        "brescia"
+      ],
+      "lat_lon": [
+        45.5416,
+        10.2118
+      ]
+    },
+    "reggio calabria": {
+      "names": [
+        "reggio calabria"
+      ],
+      "lat_lon": [
+        38.1144,
+        15.65
+      ]
+    },
+    "perugia": {
+      "names": [
+        "perugia"
+      ],
+      "lat_lon": [
+        43.1107,
+        12.3908
+      ]
+    },
+    "cagliari": {
+      "names": [
+        "cagliari"
+      ],
+      "lat_lon": [
+        39.2238,
+        9.1217
+      ]
+    },
+    "l'aquila": {
+      "names": [
+        "l'aquila",
+        "l aquila"
+      ],
+      "lat_lon": [
+        42.3498,
+        13.3995
+      ]
+    },
+    "ancona": {
+      "names": [
+        "ancona"
+      ],
+      "lat_lon": [
+        43.6158,
+        13.5189
+      ]
+    },
+    "potenza": {
+      "names": [
+        "potenza"
+      ],
+      "lat_lon": [
+        40.6404,
+        15.8056
+      ],
+      "case_sensitive": true,
+      "names_case": [
+        "Potenza"
+      ]
+    },
+    "campobasso": {
+      "names": [
+        "campobasso"
+      ],
+      "lat_lon": [
+        41.5603,
+        14.6627
+      ]
+    },
+    "catanzaro": {
+      "names": [
+        "catanzaro"
+      ],
+      "lat_lon": [
+        38.9098,
+        16.5877
+      ]
+    },
+    "trento": {
+      "names": [
+        "trento"
+      ],
+      "lat_lon": [
+        46.0748,
+        11.1217
+      ]
+    },
+    "bolzano": {
+      "names": [
+        "bolzano",
+        "bozen"
+      ],
+      "lat_lon": [
+        46.4983,
+        11.3548
+      ]
+    },
+    "aosta": {
+      "names": [
+        "aosta"
+      ],
+      "lat_lon": [
+        45.7372,
+        7.3201
+      ]
+    },
+    "matera": {
+      "names": [
+        "matera"
+      ],
+      "lat_lon": [
+        40.6664,
+        16.6043
+      ]
+    },
+    "pisa": {
+      "names": [
+        "pisa"
+      ],
+      "lat_lon": [
+        43.7228,
+        10.4017
+      ]
+    },
+    "siena": {
+      "names": [
+        "siena"
+      ],
+      "lat_lon": [
+        43.3188,
+        11.3308
+      ]
+    },
+    "lecce": {
+      "names": [
+        "lecce"
+      ],
+      "lat_lon": [
+        40.3515,
+        18.175
+      ]
+    },
+    "sassari": {
+      "names": [
+        "sassari"
+      ],
+      "lat_lon": [
+        40.7259,
+        8.5557
+      ]
+    },
+    "pescara": {
+      "names": [
+        "pescara"
+      ],
+      "lat_lon": [
+        42.4618,
+        14.2161
+      ]
+    },
+    "salerno": {
+      "names": [
+        "salerno"
+      ],
+      "lat_lon": [
+        40.6824,
+        14.7681
+      ]
+    },
+    "foggia": {
+      "names": [
+        "foggia"
+      ],
+      "lat_lon": [
+        41.4622,
+        15.5446
+      ]
+    },
+    "rimini": {
+      "names": [
+        "rimini"
+      ],
+      "lat_lon": [
+        44.0678,
+        12.5695
+      ]
+    },
+    "ravenna": {
+      "names": [
+        "ravenna"
+      ],
+      "lat_lon": [
+        44.4184,
+        12.2035
+      ]
+    },
+    "udine": {
+      "names": [
+        "udine"
+      ],
+      "lat_lon": [
+        46.0711,
+        13.2346
+      ]
+    },
+    "siracusa": {
+      "names": [
+        "siracusa",
+        "syracuse"
+      ],
+      "lat_lon": [
+        37.0755,
+        15.2866
+      ]
+    }
+  },
+  "sites": {
+    "etna": {
+      "names": [
+        "etna",
+        "mount etna",
+        "monte etna",
+        "mongibello"
+      ],
+      "lat_lon": [
+        37.748,
+        14.999
+      ]
+    },
+    "vesuvio": {
+      "names": [
+        "vesuvio",
+        "vesuvius",
+        "mount vesuvius"
+      ],
+      "lat_lon": [
+        40.8214,
+        14.4263
+      ]
+    },
+    "campi flegrei": {
+      "names": [
+        "campi flegrei",
+        "phlegraean fields"
+      ],
+      "lat_lon": [
+        40.827,
+        14.139
+      ]
+    },
+    "stromboli": {
+      "names": [
+        "stromboli"
+      ],
+      "lat_lon": [
+        38.789,
+        15.213
+      ]
+    },
+    "laguna di venezia": {
+      "names": [
+        "laguna di venezia",
+        "venetian lagoon",
+        "venice lagoon"
+      ],
+      "lat_lon": [
+        45.4,
+        12.33
+      ]
+    },
+    "pompei": {
+      "names": [
+        "pompei",
+        "pompeii"
+      ],
+      "lat_lon": [
+        40.7509,
+        14.4869
+      ]
+    },
+    "colosseo": {
+      "names": [
+        "colosseo",
+        "colosseum"
+      ],
+      "lat_lon": [
+        41.8902,
+        12.4922
+      ]
+    },
+    "delta del po": {
+      "names": [
+        "delta del po",
+        "po delta",
+        "po river delta"
+      ],
+      "lat_lon": [
+        44.95,
+        12.4
+      ]
+    },
+    "gran sasso": {
+      "names": [
+        "gran sasso"
+      ],
+      "lat_lon": [
+        42.4697,
+        13.5656
+      ]
+    },
+    "monte bianco": {
+      "names": [
+        "monte bianco",
+        "mont blanc"
+      ],
+      "lat_lon": [
+        45.8326,
+        6.8652
+      ]
+    },
+    "lago di garda": {
+      "names": [
+        "lago di garda",
+        "lake garda"
+      ],
+      "lat_lon": [
+        45.6,
+        10.65
+      ]
+    },
+    "dolomiti": {
+      "names": [
+        "dolomiti",
+        "dolomites"
+      ],
+      "lat_lon": [
+        46.4,
+        11.85
+      ]
+    },
+    "cinque terre": {
+      "names": [
+        "cinque terre"
+      ],
+      "lat_lon": [
+        44.12,
+        9.71
+      ]
+    },
+    "costiera amalfitana": {
+      "names": [
+        "costiera amalfitana",
+        "amalfi coast"
+      ],
+      "lat_lon": [
+        40.63,
+        14.6
+      ]
+    }
+  }
+}

@@ -1311,3 +1311,47 @@ def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_outp
         except Exception:
             continue
     return None
+
+
+# ---------------------------------------------------------------------------
+# Which modules STAR can run on this machine (2026-10-17): the planner proposes
+# only these (a module without a runner, or whose programs are missing, is left
+# out of the chain instead of producing placeholder results).
+MODULE_FOLDERS = {"END-001": "END001-ConstellationOptimizer", "END-003": "END003-AttitudePropagation",
+                  "END-004": "END004-PowerBudget", "END-007": "END007-SyntheticDataGeneration",
+                  "END-010": "END010-ReflectanceDetermination", "END-016": "END016-CollisionAvoidance",
+                  "END-018": "END018-ComponentsThermalAnalysis", "END-019": "END019-ComponentSelector"}
+MATLAB_MODULES = {"END-001", "END-003", "END-004", "END-010", "END-016"}
+
+
+def _matlab_available() -> bool:
+    import os
+    exe = os.environ.get("MATLAB_EXECUTABLE", "matlab")
+    return shutil.which(exe) is not None or Path(exe).is_file()
+
+
+def module_prerequisites(module_id: str, star_root: str | Path | None = None) -> tuple[bool, str]:
+    """(True, "") when the module folder and the programs it needs are on this machine, else (False, reason)."""
+    import os
+    root = Path(star_root) if star_root else Path(__file__).resolve().parents[2]
+    mid = str(module_id).upper()
+    folder = MODULE_FOLDERS.get(mid)
+    if folder is None:
+        return False, "no module folder known to STAR"
+    if not (root / folder).is_dir():
+        return False, f"module folder {folder} not found"
+    if mid in MATLAB_MODULES and not _matlab_available():
+        return False, "MATLAB not found (set MATLAB_EXECUTABLE)"
+    if mid == "END-007":
+        if not (root / folder / "run_simulation.py").is_file():
+            return False, "END-007 run_simulation.py not found"
+        if not list((root / folder / "Unreal").glob("*/*.uproject")):
+            return False, "END-007 Unreal project (Unreal/*/*.uproject) not found"
+    if mid == "END-018":
+        exe = os.environ.get("STAR_END018_EXECUTABLE", "").strip()
+        compiled = (Path(exe) if exe else root / folder / "blackbox_build" / "star_thermal.exe").is_file()
+        if not compiled and not _matlab_available():
+            return False, "END-018 star_thermal.exe and MATLAB not found"
+    if mid == "END-019" and not (root / folder / "star_component_selector" / "star_selector").is_dir():
+        return False, "END-019 star_component_selector package not found"
+    return True, ""

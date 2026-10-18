@@ -58,3 +58,5 @@ The rules that decide which subsystems are needed are keyword rules on the requi
 - Last step: final design with the results of the modules (altitude, energy per orbit, delta-v); usual products,
   spacecraft_definition_final.json and design_changes (class, mass, components, battery). The modules are not re-run.
 - The results page shows the two designs as tabs of the same panel ("Initial design", "Final design") with the changes.
+
+**Italian requirements (2026-10-17).** The requirement rules of star_selector/mission.py read Italian texts too (accents removed): risoluzione spaziale (GSD), strisciata (swath), banda S / X, assetto / puntamento, immagini / fotocamera, manovre, posizione a bordo / collisioni, profondita di scarica, massa non superiore a, rientro entro N anni, quota tra X e Y km, ruote di reazione, sensori stellari / solari, pannelli solari dispiegabili, tipi di immagine (pancromatico, visibile, multispettrale, iperspettrale, infrarosso termico, a colori). Inside STAR every workflow has END-019 (the CubeSat of the STAR domain).

@@ -301,3 +301,10 @@ The following matrix describes the file access maps, including specific read/wri
   excluded), the orbits per day with acquisitions, the contacts with the END-001 ground stations (seconds per day, orbits per
   day, sunlit and eclipse seconds per contact orbit) and the orbits with both. Upper bound of the operations (no tasking, no
   data-volume model); per-day values over the ephemeris window (48 h).
+
+**STAR domain, area, stations, thresholds (2026-10-17).**
+- STAR works only inside its domain (config/star_domain.json): area of interest in Italy, Earth orbit 400-1200 km, CubeSat 1U-12U up to 24 kg, Italian stations and observatories; outside it STAR stops before planning and gives the reasons (runners/star_domain.py).
+- Area of interest: STAR input, else the Italian area the requirements or the mission request name (Italy, Italian Coasts, regions, macro areas, cities and sites of config/italy_places.json, or coordinates); a sub-area of Italy is simulated (the surrogate is trained on the whole Italy grid).
+- Ground stations: STAR input ground_stations, else those the request names, else the Italian station (config/italian_ground_stations.json) nearest to the area of interest among those supporting the downlink band of the CubeSat radios. Observatory: STAR input, else named, else LightCurve.Candidates (every confirmed Italian telescope): select_downstream_passes keeps the darkest-sky, earliest, highest first night pass.
+- Requirement thresholds: a revisit (maximum, mean, 90th percentile) or latency the call states drives MissionRequirements with ok = the value and bad = twice it; a revisit metric not stated follows a stated one that bounds it, else its weight is 0.
+- Surrogate safety: surrogate_domain_check also rejects GA ranges outside the trained ones (planes, satellites per plane, Walker inclination / altitude / repeat cycle); STAR asks for the simulation when the requirements reach outside the domain (fewer satellites than the trained minimum, a single satellite, 2 planes, a 97 deg Walker inclination, a sub-area of Italy, several stations, SAR) instead of clipping them.

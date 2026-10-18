@@ -7,9 +7,9 @@
     },
     "GroundStations": [
         {
-            "name": "Matera",
-            "lat": 40.6486,
-            "lon": 16.5528,
+            "name": "Matera - ASI Centro di Geodesia Spaziale",
+            "lat": 40.6492,
+            "lon": 16.7042,
             "alt": 536,
             "mask": 5
         }
