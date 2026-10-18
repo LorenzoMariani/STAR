@@ -209,6 +209,24 @@ code{color:var(--accent-2)}
 .frame-wrap{height:calc(100vh - 64px)!important;min-height:660px!important;}
 @media(max-width:980px){.frame-wrap{height:78vh!important;min-height:620px!important}.tab-button{height:32px!important;min-height:32px!important}.run-folder-action{height:32px!important;min-height:32px!important}}
 
+
+/* ==================================================================
+   STAR frontend v5 (2026-10-18): module tabs styled like the workflow tabs of the execution page (light-blue pills,
+   selected one in blue), larger text; the content of the module tabs is shown 12% larger (RESULTS_CONTENT_ZOOM).
+   ================================================================== */
+.tab-bar{gap:8px!important;align-items:center!important}
+.tab-buttons{gap:8px!important}
+.tab-button{background:#dbeafe!important;color:#0f172a!important;border:1px solid rgba(47,140,255,.30)!important;border-radius:999px!important;
+  padding:6px 13px!important;min-height:0!important;height:auto!important;font-family:Arial,sans-serif!important;font-size:13px!important;
+  font-weight:700!important;text-transform:none!important;letter-spacing:0!important;box-shadow:none!important}
+.tab-button:hover{background:#bfdbfe!important}
+.tab-button .tab-code,.tab-button .tab-title{font-family:Arial,sans-serif!important;font-size:13px!important;text-transform:none!important;
+  letter-spacing:0!important;color:inherit!important}
+.tab-button .tab-code{font-weight:800!important;margin-right:6px!important}
+.tab-button .tab-title{font-weight:600!important}
+.tab-button.active{background:#1768d8!important;color:#ffffff!important;border-color:rgba(15,23,42,.16)!important}
+#star-root-button{font-size:13px!important;padding:7px 15px!important;border-radius:999px!important}
+#root-status-text{font-size:12.5px!important}
 </style>
 
 <script src="./modules_output/END-003/results_attitude_propagator/attitude_propagation_plots_data.js"></script>
@@ -237,14 +255,14 @@ code{color:var(--accent-2)}
       <div class="tab-buttons" role="tablist" aria-label="STAR result modules">
         <button id="star-root-button" class="primary-action run-folder-action" type="button">Select RUN Folder</button>
         <input id="star-root-folder-input" class="star-hidden-file-input" type="file" webkitdirectory directory multiple hidden />
-        <button class="tab-button active" id="tab-constellation" data-tab="constellation" type="button"><span class="tab-code">END001</span><span class="tab-title">Constellation Optimization</span></button>
-        <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END0003</span><span class="tab-title">Attitude Propagation</span></button>
-        <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Budget</span></button>
-        <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END006</span><span class="tab-title">Component Selector</span></button>
-        <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
-        <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
-        <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
-        <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
+        <button class="tab-button active" id="tab-constellation" data-tab="constellation" type="button"><span class="tab-code">END-001</span><span class="tab-title">Constellation Optimization</span></button>
+        <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END-003</span><span class="tab-title">Attitude Propagation</span></button>
+        <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END-004</span><span class="tab-title">Power Budget</span></button>
+        <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END-006</span><span class="tab-title">Component Selector</span></button>
+        <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END-007</span><span class="tab-title">Synthetic Data Generation</span></button>
+        <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END-010</span><span class="tab-title">Reflectance Determination</span></button>
+        <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END-016</span><span class="tab-title">Collision Avoidance</span></button>
+        <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END-018</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
@@ -5966,6 +5984,18 @@ function patchServedObjectUrls(win) {
   }
 }
 
+// v5: the content of every module tab is shown larger (the module pages are shared with frontend v4, so the zoom is
+// applied from here, on each load of their frame)
+const RESULTS_CONTENT_ZOOM = '1.12';
+function applyResultsContentZoom(frame) {
+  try {
+    const doc = frame && frame.contentDocument;
+    if (doc && doc.documentElement) doc.documentElement.style.zoom = RESULTS_CONTENT_ZOOM;
+  } catch (error) {
+    console.warn('Unable to zoom a result frame:', error);
+  }
+}
+
 function patchAllServedObjectUrls() {
   patchServedObjectUrls(window);
   for (const frame of document.querySelectorAll('iframe.tab-frame')) patchServedObjectUrls(frame.contentWindow);
@@ -6617,7 +6647,9 @@ function bindEvents() {
   }
 
   for (const [tabName, frameId] of Object.entries(TAB_FRAMES)) {
+    applyResultsContentZoom($(frameId));
     $(frameId).addEventListener('load', () => {
+      applyResultsContentZoom($(frameId));
       patchServedObjectUrls($(frameId).contentWindow);
       propagateTheme(document.documentElement.dataset.theme || 'dark');
       invalidateTabData(tabName);       // a (re)loaded frame holds no RUN data

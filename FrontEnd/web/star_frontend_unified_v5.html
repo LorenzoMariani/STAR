@@ -167,6 +167,13 @@ code{color:var(--accent-2)}
 .header-logo-star{height:56px;width:56px;flex:0 0 auto;display:block}
 .header-logo-siu{height:56px;flex:0 0 auto;background:#fff;border-radius:12px;padding:4px 8px;display:flex;align-items:center;border:1px solid var(--border)}
 .header-logo-siu img{height:100%;width:auto;display:block}
+
+/* v5 (2026-10-18): workspace buttons in the header, title on one line */
+.workspace-tabs{display:none!important}
+.header-workspace-tabs{display:flex;gap:8px;margin-right:10px}
+.header .workspace-tab{min-height:38px!important;padding:8px 16px!important}
+.header .workspace-tab .tab-title{font-size:13px!important}
+.header h1{font-size:clamp(18px,1.35vw,26px)!important}
 </style>
 </head>
 <body>
@@ -176,6 +183,10 @@ code{color:var(--accent-2)}
       <h1>Space mission Twin for Architecture Representation (STAR) FrontEnd</h1>
     </div>
     <div class="header-actions">
+      <div class="tab-buttons header-workspace-tabs" role="tablist" aria-label="STAR workspaces">
+        <button id="tab-execution" class="workspace-tab active" data-workspace="execution" type="button"><span class="tab-title">Workflow Execution</span></button>
+        <button id="tab-results" class="workspace-tab" data-workspace="results" type="button"><span class="tab-title">Outputs Results Visualisation</span></button>
+      </div>
       <div class="run-mode-switch" role="group" aria-label="STAR run mode" title="Run mode of the next workflow execution">
         <button type="button" class="run-mode-btn active" data-mode="test">Test</button>
         <button type="button" class="run-mode-btn" data-mode="full">Full</button>
@@ -199,16 +210,12 @@ code{color:var(--accent-2)}
 
   <section class="workspace">
     <div class="workspace-tabs">
-      <div class="tab-buttons" role="tablist" aria-label="STAR workspaces">
-        <button id="tab-execution" class="workspace-tab active" data-workspace="execution" type="button"><span class="tab-title">Workflow Execution</span></button>
-        <button id="tab-results" class="workspace-tab" data-workspace="results" type="button"><span class="tab-title">Outputs Results Visualisation</span></button>
-      </div>
       <div class="status-strip"><span class="status-dot"></span><span id="workspace-status">Execution workspace active.</span></div>
     </div>
     <div class="frame-stage">
-      <iframe id="execution-frame" class="workspace-frame active" allow="file-system-access" src="star_execution_frontend_v4.html?v=2" title="STAR Execution Workspace"></iframe>
-      <iframe id="results-frame" class="workspace-frame" allow="file-system-access" src="star_results_frontend_v4.html?v=2" title="STAR Results Workspace"></iframe>
-      <div id="execution-placeholder" class="placeholder"><div class="placeholder-card"><h2>Execution interface unavailable</h2><p>The file <code>web/index.html</code> was not found. Keep the original <code>web</code> folder next to this Python entry point.</p></div></div>
+      <iframe id="execution-frame" class="workspace-frame active" allow="file-system-access" src="star_execution_frontend_v5.html?v=2" title="STAR Execution Workspace"></iframe>
+      <iframe id="results-frame" class="workspace-frame" allow="file-system-access" src="star_results_frontend_v5.html?v=2" title="STAR Results Workspace"></iframe>
+      <div id="execution-placeholder" class="placeholder"><div class="placeholder-card"><h2>Execution interface unavailable</h2><p>The file <code>web/index_v5.html</code> was not found. Keep the original <code>web</code> folder next to this Python entry point.</p></div></div>
     </div>
   </section>
 </div>
@@ -287,7 +294,7 @@ code{color:var(--accent-2)}
   }
 
   function checkExecutionFile() {
-    fetch('star_execution_frontend_v4.html', { cache: 'no-store' }).catch(() => {
+    fetch('star_execution_frontend_v5.html', { cache: 'no-store' }).catch(() => {
       $('execution-placeholder').classList.add('visible');
     });
   }

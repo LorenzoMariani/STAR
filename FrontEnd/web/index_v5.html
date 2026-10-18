@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAR — Local Desktop App</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles_v5.css" />
 </head>
 <body>
   <div class="app-shell">
@@ -29,32 +29,6 @@
     </header>
 
     <section class="top-workbench">
-      <div class="panel communication-panel">
-        <div class="comm-tabs" role="tablist" aria-label="Console and chat selector">
-          <button class="comm-tab-button" data-comm-tab="chat">Interactive Chat</button>
-          <button class="comm-tab-button active" data-comm-tab="log">Technical Log</button>
-        </div>
-
-        <div id="comm-chat" class="comm-tab-content">
-          <div class="panel-header compact-panel-header">
-            <span class="muted">human-in-the-loop</span>
-          </div>
-          <div id="chat-box" class="chat-box"></div>
-          <div class="chat-input-row">
-            <textarea id="chat-input" placeholder="Type a message to STAR... Enter to send, Shift+Enter for new line"></textarea>
-            <button id="send-button">Send</button>
-          </div>
-        </div>
-
-        <div id="comm-log" class="comm-tab-content active">
-          <div class="panel-header compact-panel-header">
-            <span class="muted">backend events</span>
-          </div>
-          <pre id="log-console" class="log-console" tabindex="0" aria-label="Technical log output"></pre>
-        </div>
-      </div>
-
-      <div id="top-column-resizer" class="column-resizer top-column-resizer" title="Drag to resize communication and mission-control panels"></div>
 
       <main class="workflow-control-panel panel">
         <div class="tabs workflow-tabs-with-upload">
@@ -338,22 +312,51 @@
 
     <div id="module-row-resizer" class="row-resizer module-row-resizer" title="Drag upward to expand Module Bay"></div>
 
-    <section class="module-bay panel expanded-modules">
-      <div class="panel-header">
-        <h2>STAR Modules</h2>
-        <span class="muted">registry-driven</span>
-      </div>
-      <div id="module-grid" class="module-grid"></div>
-      <div class="legend">
-        <span><i class="dot idle"></i> Idle</span>
-        <span><i class="dot ready"></i> Ready</span>
-        <span><i class="dot running"></i> Running</span>
-        <span><i class="dot completed"></i> Completed</span>
-        <span><i class="dot error"></i> Error</span>
-      </div>
+    <section class="bottom-workbench">
+        <div class="panel communication-panel">
+          <div class="comm-tabs" role="tablist" aria-label="Console and chat selector">
+            <button class="comm-tab-button" data-comm-tab="chat">Interactive Chat</button>
+            <button class="comm-tab-button active" data-comm-tab="log">Technical Log</button>
+          </div>
+
+          <div id="comm-chat" class="comm-tab-content">
+            <div class="panel-header compact-panel-header">
+              <span class="muted">human-in-the-loop</span>
+            </div>
+            <div id="chat-box" class="chat-box"></div>
+            <div class="chat-input-row">
+              <textarea id="chat-input" placeholder="Type a message to STAR... Enter to send, Shift+Enter for new line"></textarea>
+              <button id="send-button">Send</button>
+            </div>
+          </div>
+
+          <div id="comm-log" class="comm-tab-content active">
+            <div class="panel-header compact-panel-header">
+              <span class="muted">backend events</span>
+            </div>
+            <pre id="log-console" class="log-console" tabindex="0" aria-label="Technical log output"></pre>
+          </div>
+        </div>
+
+      <div id="bottom-column-resizer" class="column-resizer bottom-column-resizer" title="Drag to resize the terminal and the STAR modules"></div>
+
+      <section class="module-bay panel expanded-modules">
+        <div class="panel-header">
+          <h2>STAR Modules</h2>
+          <div class="legend">
+            <span><i class="dot idle"></i> Idle</span>
+            <span><i class="dot ready"></i> Ready</span>
+            <span><i class="dot running"></i> Running</span>
+            <span><i class="dot completed"></i> Completed</span>
+            <span><i class="dot error"></i> Error</span>
+          </div>
+          <span class="muted">registry-driven</span>
+        </div>
+        <div id="module-grid" class="module-grid"></div>
+      </section>
     </section>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app_v5.js"></script>
 </body>
 </html>

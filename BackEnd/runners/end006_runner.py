@@ -1,6 +1,6 @@
 """STAR runner for END-006 Satellite Design Component Selector.
 
-Called by the orchestrator (FrontEnd/star_frontend_v4.py -> StarApi.call_module_runner_or_placeholder) as
+Called by the orchestrator (FrontEnd/star_frontend_v5.py -> StarApi.call_module_runner_or_placeholder) as
 `runners.end006_runner.run_end006(input_file=..., output_dir=..., ...)`. Place this file in BackEnd/runners/.
 
 The selector package (star_component_selector) is located through, in order:

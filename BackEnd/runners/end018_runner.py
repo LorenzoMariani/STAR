@@ -10,7 +10,7 @@ output_thermal_SAT-XX.csv (temperature of every face, panel and internal node,
 SAR on, eclipse), thermal_summary_SAT-XX.json and
 thermal_constellation_output.csv.
 
-Called by the orchestrator (FrontEnd/star_frontend_v4.py ->
+Called by the orchestrator (FrontEnd/star_frontend_v5.py ->
 StarApi.call_module_runner_or_placeholder) as run_end018(input_file=..., ...).
 The runner
 1. checks the domain: a CubeSat of 1U-12U; a satellite above 24 kg, or a mission

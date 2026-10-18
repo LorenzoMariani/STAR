@@ -2533,3 +2533,146 @@ body[data-theme="light"] .star-doc-modal-foot { border-color: #d9e0eb; color: #6
 .module-grid.module-grid-wrapped {
   grid-template-columns: repeat(auto-fill, minmax(var(--module-card-width, 142px), 1fr));
 }
+
+/* ==================================================================
+   STAR frontend v5 (2026-10-18): terminal in the bottom row on the left of the STAR modules, workflow panel on the
+   full width, Copy log on the terminal (shown on hover), larger text.
+   ================================================================== */
+:root {
+  --top-row-height: 285px;
+  --bottom-left-width: 26%;
+}
+
+.app-shell > .header {
+  display: none !important;
+}
+
+.app-shell {
+  grid-template-rows: var(--top-row-height) var(--resizer-size) minmax(0, 1fr) var(--resizer-size) var(--module-row-height) !important;
+}
+
+.top-workbench {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+
+.bottom-workbench {
+  display: grid;
+  grid-template-columns: minmax(300px, var(--bottom-left-width)) var(--resizer-size) minmax(520px, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bottom-workbench > .communication-panel,
+.bottom-workbench > .module-bay {
+  min-height: 0;
+  margin: 0 !important;
+}
+
+.bottom-column-resizer {
+  cursor: col-resize;
+  width: var(--resizer-size);
+  min-width: var(--resizer-size);
+}
+
+.module-bay .panel-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.module-bay .panel-header h2 {
+  font-size: 18px !important;
+  margin: 0 !important;
+}
+
+.module-bay .panel-header .legend {
+  display: flex;
+  gap: 14px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 13px !important;
+}
+
+.module-bay .panel-header > .muted {
+  margin-left: auto;
+}
+
+/* Copy log: top right of the terminal, visible while the mouse is on it */
+#comm-log {
+  position: relative;
+}
+
+#comm-log .star-v1-copy-log-button {
+  position: absolute;
+  top: 34px;
+  right: 14px;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin: 0 !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  font-size: 12px !important;
+}
+
+#comm-log:hover .star-v1-copy-log-button,
+#comm-log .star-v1-copy-log-button:focus-visible {
+  opacity: 1;
+}
+
+/* Larger text */
+.tab-button,
+.comm-tab-button {
+  font-size: 13px !important;
+  padding: 6px 13px !important;
+}
+
+.log-console {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.chat-box,
+.chat-input-row textarea {
+  font-size: 13px !important;
+}
+
+#star-v1-initial-hint {
+  font-size: 13.5px !important;
+}
+
+.star-doc-name { font-size: 15px !important; }
+.star-doc-meta { font-size: 12.5px !important; }
+
+.section-header-row h2 { font-size: 28px !important; }
+
+.section-header-row p,
+.tab-controls-content p {
+  font-size: 14px !important;
+}
+
+.toolbar-card button,
+.toolbar-card select,
+.toolbar-card label,
+.toolbar-card span {
+  font-size: 13px !important;
+}
+
+.run-chip { font-size: 12.5px !important; }
+
+.data-panel table th,
+.data-panel table td {
+  font-size: 14px !important;
+}
+
+.module-code { font-size: 16px !important; }
+.module-name-small { font-size: 12px !important; line-height: 1.2 !important; }
+.module-owner-small { font-size: 10.5px !important; }
+.status-pill { font-size: 10px !important; }
+
+.module-bay .muted,
+.compact-panel-header .muted {
+  font-size: 12px !important;
+}

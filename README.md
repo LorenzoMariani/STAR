@@ -5,11 +5,15 @@ a Python / pywebview orchestrator (`FrontEnd/`, `BackEnd/`) that plans a mission
 from its requirements and runs the simulation modules `END0XX-*` (MATLAB,
 Python, Unity / Unreal). This repository holds only what running STAR needs.
 
-- `FrontEnd/` - `star_frontend_v4.py` (entry point) and the `web/` assets; it
-  writes its own `web/star_*_v4.html` pages. STAR has 18 END since v4
-  (2026-10-18): Scenario Generation (the former END-006) is part of END-007,
-  and the component selector (END-019 until then) is END-006.
-  `star_frontend_v2.py` was moved to `FrontEnd/_old_frontend/` (not in git).
+- `FrontEnd/` - `star_frontend_v5.py` (entry point) and the `web/` assets; it
+  writes its own `web/star_*_v5.html` pages from `web/index_v5.html`,
+  `app_v5.js`, `styles_v5.css` and `web/star_results_shell_template_v5.html`.
+  v5 (2026-10-18) has the workflow panel on the full width, the terminal in the
+  bottom row on the left of the STAR modules, the workspace buttons in the window
+  header, results tabs like the workflow tabs and larger text.
+  STAR has 18 END since v4: Scenario Generation (the former END-006) is part of
+  END-007, and the component selector (END-019 until then) is END-006.
+  Older versions (v0-v4) are in `FrontEnd/_old_frontend/` (not in git).
   In the results workspace "Select RUN Folder" opens a folder dialog in
   `Output/` of STAR (found from where STAR is); STAR serves the chosen RUN
   read-only on 127.0.0.1 and the tabs read its files when they need them.
@@ -85,7 +89,7 @@ CubeSat 1U-12U up to 24 kg, optical payload) is described in
 
 ## Run modes and smoke test
 
-FrontEnd v4 (as v3) has two **Test / Full** buttons next to the theme switch (default
+FrontEnd v5 (as v3 and v4) has two **Test / Full** buttons next to the theme switch (default
 `test`; `STAR_RUN_MODE` sets the default at start-up; locked while a workflow
 runs). With Full, an **accuracy bar** (levels 1-5: Low, Medium, High, Extra
 high, Max; default 3 = the module templates, `STAR_RUN_LEVEL`) sets how long

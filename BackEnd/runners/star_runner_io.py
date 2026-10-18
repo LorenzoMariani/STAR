@@ -54,7 +54,7 @@ MODULE_OUTPUT_LAYOUT: dict[str, tuple[str, str]] = {
     "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
     "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
     "END-006": ("output_component_selector", "results_component_selector"),
-}   # same names as StarApi.get_module_output_layout (FrontEnd/star_frontend_v4.py)
+}   # same names as StarApi.get_module_output_layout (FrontEnd/star_frontend_v5.py)
 
 RESULT_SUFFIXES = {
     ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".gif",

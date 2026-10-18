@@ -1925,25 +1925,28 @@ function syncModuleBayLayout() {
   moduleGrid.classList.toggle('module-grid-wrapped', expanded);
 }
 
+// Frontend v5 (2026-10-18): the terminal (log + chat) is in the bottom row, on the left of the STAR modules; the column
+// resizer of that row sets --bottom-left-width. Sizes are saved under star5_* keys (the v4 sizes do not apply).
 function setupResizableLayout() {
   const root = document.documentElement;
   const topGrid = document.querySelector('.top-workbench');
+  const bottomGrid = document.querySelector('.bottom-workbench');
   const moduleBay = document.querySelector('.module-bay');
   const topRowResizer = document.getElementById('top-row-resizer');
   const moduleRowResizer = document.getElementById('module-row-resizer');
-  const topColumnResizer = document.getElementById('top-column-resizer');
+  const bottomColumnResizer = document.getElementById('bottom-column-resizer');
 
-  const savedTop = Number(localStorage.getItem('star_top_row_height'));
-  const savedModule = Number(localStorage.getItem('star_module_row_height'));
-  const savedLeft = Number(localStorage.getItem('star_top_left_width'));
+  const savedTop = Number(localStorage.getItem('star5_top_row_height'));
+  const savedModule = Number(localStorage.getItem('star5_module_row_height'));
+  const savedLeft = Number(localStorage.getItem('star5_bottom_left_width'));
 
   if (Number.isFinite(savedTop) && savedTop > 0) setLayoutVar('--top-row-height', savedTop);
   if (Number.isFinite(savedModule) && savedModule > 0) {
     setLayoutVar('--module-row-height', savedModule);
   } else {
-    setLayoutVar('--module-row-height', Math.max(210, Math.min(270, window.innerHeight * 0.28)));
+    setLayoutVar('--module-row-height', Math.max(260, Math.min(340, window.innerHeight * 0.30)));
   }
-  if (Number.isFinite(savedLeft) && savedLeft > 0) setLayoutVar('--top-left-width', savedLeft);
+  if (Number.isFinite(savedLeft) && savedLeft > 0) setLayoutVar('--bottom-left-width', savedLeft);
 
   syncModuleBayLayout();
 
@@ -1956,10 +1959,10 @@ function setupResizableLayout() {
       const startHeight = topGrid.getBoundingClientRect().height;
 
       const onMove = (moveEvent) => {
-        const maxHeight = Math.max(120, window.innerHeight * 0.42);
-        const newHeight = clamp(startHeight + (moveEvent.clientY - startY), 72, maxHeight);
+        const maxHeight = Math.max(160, window.innerHeight * 0.55);
+        const newHeight = clamp(startHeight + (moveEvent.clientY - startY), 120, maxHeight);
         setLayoutVar('--top-row-height', newHeight);
-        localStorage.setItem('star_top_row_height', String(Math.round(newHeight)));
+        localStorage.setItem('star5_top_row_height', String(Math.round(newHeight)));
       };
 
       const onUp = () => {
@@ -1974,7 +1977,7 @@ function setupResizableLayout() {
 
     topRowResizer.addEventListener('dblclick', () => {
       root.style.removeProperty('--top-row-height');
-      localStorage.removeItem('star_top_row_height');
+      localStorage.removeItem('star5_top_row_height');
     });
   }
 
@@ -1990,7 +1993,7 @@ function setupResizableLayout() {
         const maxHeight = Math.max(210, window.innerHeight * 0.62);
         const newHeight = clamp(startHeight - (moveEvent.clientY - startY), 84, maxHeight);
         setLayoutVar('--module-row-height', newHeight);
-        localStorage.setItem('star_module_row_height', String(Math.round(newHeight)));
+        localStorage.setItem('star5_module_row_height', String(Math.round(newHeight)));
         syncModuleBayLayout();
       };
 
@@ -2007,27 +2010,28 @@ function setupResizableLayout() {
 
     moduleRowResizer.addEventListener('dblclick', () => {
       root.style.removeProperty('--module-row-height');
-      localStorage.removeItem('star_module_row_height');
+      localStorage.removeItem('star5_module_row_height');
       syncModuleBayLayout();
     });
   }
 
-  if (topColumnResizer && topGrid) {
-    topColumnResizer.addEventListener('mousedown', (event) => {
+  if (bottomColumnResizer && bottomGrid) {
+    bottomColumnResizer.addEventListener('mousedown', (event) => {
       event.preventDefault();
       document.body.classList.add('is-resizing', 'is-resizing-horizontal');
 
       const startX = event.clientX;
-      const firstPanel = topGrid.querySelector('.communication-panel');
-      const startWidth = firstPanel ? firstPanel.getBoundingClientRect().width : topGrid.getBoundingClientRect().width * 0.34;
+      const firstPanel = bottomGrid.querySelector('.communication-panel');
+      const startWidth = firstPanel ? firstPanel.getBoundingClientRect().width : bottomGrid.getBoundingClientRect().width * 0.26;
 
       const onMove = (moveEvent) => {
-        const gridWidth = topGrid.getBoundingClientRect().width;
-        const minLeft = 240;
-        const minRight = 360;
+        const gridWidth = bottomGrid.getBoundingClientRect().width;
+        const minLeft = 300;
+        const minRight = 520;
         const newWidth = clamp(startWidth + (moveEvent.clientX - startX), minLeft, gridWidth - minRight);
-        setLayoutVar('--top-left-width', newWidth);
-        localStorage.setItem('star_top_left_width', String(Math.round(newWidth)));
+        setLayoutVar('--bottom-left-width', newWidth);
+        localStorage.setItem('star5_bottom_left_width', String(Math.round(newWidth)));
+        syncAdaptiveModuleCardSize();
       };
 
       const onUp = () => {
@@ -2040,9 +2044,10 @@ function setupResizableLayout() {
       window.addEventListener('mouseup', onUp);
     });
 
-    topColumnResizer.addEventListener('dblclick', () => {
-      root.style.removeProperty('--top-left-width');
-      localStorage.removeItem('star_top_left_width');
+    bottomColumnResizer.addEventListener('dblclick', () => {
+      root.style.removeProperty('--bottom-left-width');
+      localStorage.removeItem('star5_bottom_left_width');
+      syncAdaptiveModuleCardSize();
     });
   }
 
