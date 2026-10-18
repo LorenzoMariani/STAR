@@ -1,7 +1,7 @@
 """STAR requirement compliance and KPI summary (2026-10-17).
 
 After the workflow, every requirement with a number STAR can read (runners/star_text_rules.py) is compared with the
-KPI of the module that computes it; END-019's own per-requirement checks are added. Each requirement gets
+KPI of the module that computes it; END-006's own per-requirement checks are added. Each requirement gets
 met / not met / not verifiable (with the reason), and the KPIs of every module are collected in one table.
 Files: <run>/compliance/compliance.json and compliance_data.js (window.starComplianceData, read by the results tab).
 """
@@ -102,13 +102,13 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
                           "imaging_pass_found": _kpi_by_name(k, "Ground Station Pass Found"),
                           "night_pass_found": _kpi_by_name(k, "Night Light-Curve Pass Found"),
                           "max_body_rate_deg_s": _kpi_by_name(k, "Max Body Rate During Imaging Pass")}
-    p = modules_root / "END-019" / "output_component_selector" / "component_selector_results.json"
+    p = modules_root / "END-006" / "output_component_selector" / "component_selector_results.json"
     d = _load(p)
     if d:
         res = d.get("result") or {}
         mission = res.get("mission") or {}
         sc = d.get("spacecraft") or {}
-        out["END-019"] = {"_source": str(p), "phase": d.get("phase"), "status": d.get("status"),
+        out["END-006"] = {"_source": str(p), "phase": d.get("phase"), "status": d.get("status"),
                           "class_u": mission.get("chosen_class_u") or (res.get("cubesat") or {}).get("form_factor_u"),
                           "mass_kg": (res.get("totals") or {}).get("mass_kg"),
                           "mass_limit_kg": (res.get("totals") or {}).get("mass_limit_kg"),
@@ -137,7 +137,7 @@ KPI_ROWS = [
     ("END-016", "disposal_dv_m_s_5y_rule_mean_activity", "Disposal delta-v (5-year rule)", "m/s"),
     ("END-018", "battery_max_C", "Battery max temperature", "C"), ("END-018", "battery_min_C", "Battery min temperature", "C"),
     ("END-018", "central_body_max_C", "Central body max temperature", "C"),
-    ("END-019", "class_u", "CubeSat class", "U"), ("END-019", "mass_kg", "Satellite mass", "kg"),
+    ("END-006", "class_u", "CubeSat class", "U"), ("END-006", "mass_kg", "Satellite mass", "kg"),
 ]
 
 
@@ -210,11 +210,11 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
     if "incl" in p:
         checks.append(_check("END-001", "inclination_deg", "in", [p["incl"] - 0.5, p["incl"] + 0.5], "deg", kpis, "Inclination"))
     if "mass" in p:
-        checks.append(_check("END-019", "mass_kg", "<=", p["mass"][0], "kg", kpis, "Satellite mass"))
+        checks.append(_check("END-006", "mass_kg", "<=", p["mass"][0], "kg", kpis, "Satellite mass"))
     if "class_u" in p:
-        c = _check("END-019", "class_u", "in", [min(p["class_u"]), max(p["class_u"])], "U", kpis, "CubeSat class")
+        c = _check("END-006", "class_u", "in", [min(p["class_u"]), max(p["class_u"])], "U", kpis, "CubeSat class")
         if c["status"] == "not_met":
-            c["reason"] = "END-019 chooses the smallest class whose components meet the performance requirements (stated class only reported)"
+            c["reason"] = "END-006 chooses the smallest class whose components meet the performance requirements (stated class only reported)"
         checks.append(c)
     if "dod_max_pct" in p:
         checks.append(_check("END-004", "max_dod_pct", "<=", p["dod_max_pct"], "%", kpis, "Depth of discharge per orbit"))
@@ -227,7 +227,7 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
     if "reentry_years" in p:
         c = _check("END-016", "passive_lifetime_years_mean_activity", "<=", p["reentry_years"], "years", kpis, "Passive orbital lifetime")
         if c["status"] == "not_met":
-            dv = [x for x in (kpis.get("END-019") or {}).get("checks", []) if "delta-v" in str(x.get("what", "")).lower() and x.get("status") == "met"]
+            dv = [x for x in (kpis.get("END-006") or {}).get("checks", []) if "delta-v" in str(x.get("what", "")).lower() and x.get("status") == "met"]
             if dv:
                 c.update({"status": "met", "reason": "disposal manoeuvre: " + str(dv[0].get("what"))})
             else:
@@ -274,10 +274,10 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
             if module_id in kpis and not any(c["module"] == module_id for c in checks):
                 checks.append({"module": module_id, "metric": "Analysis produced", "operator": "", "threshold": None, "unit": "", "value": True,
                                "status": "met", "reason": f"{module_id} produced its results"})
-    for x in (kpis.get("END-019") or {}).get("checks", []):
+    for x in (kpis.get("END-006") or {}).get("checks", []):
         if (x.get("requirement") or {}).get("id") == rid:
             st = str(x.get("status", "")).replace("-", "_")
-            checks.append({"module": "END-019", "metric": str(x.get("what", "")), "operator": "", "threshold": None, "unit": "",
+            checks.append({"module": "END-006", "metric": str(x.get("what", "")), "operator": "", "threshold": None, "unit": "",
                            "value": None, "status": st if st in ("met", "not_met", "not_verifiable") else "not_verifiable",
                            "reason": str(x.get("message", ""))})
     statuses = [c["status"] for c in checks]

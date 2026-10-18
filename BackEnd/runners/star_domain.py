@@ -2,7 +2,7 @@
 
 STAR gives valid results only inside its domain (Input/input_base_knowledge/config/star_domain.json): an area of
 interest in Italy (the END-001 surrogate is trained there), Earth orbits from 400 to 1200 km, a CubeSat of 1U-12U up
-to 24 kg (END-019 designs the satellite every module uses), Italian ground stations and observatories. Outside it
+to 24 kg (END-006 designs the satellite every module uses), Italian ground stations and observatories. Outside it
 STAR stops and gives the reasons (user decision) instead of running the modules on default values.
 
 ``check_mission(document_text, requirements)`` reads the request; ``check_inputs(resolved_inputs)`` the module inputs
@@ -126,7 +126,7 @@ def check_mission(document_text: str, requirements) -> dict[str, Any]:
         bad = [c for c in params["class_u"][0] if c not in d["spacecraft"]["classes_u"]]
         if bad and not [c for c in params["class_u"][0] if c in d["spacecraft"]["classes_u"]]:
             rid = params["class_u"][1]
-            violate("spacecraft", f"CubeSat class {', '.join(str(c) + 'U' for c in bad)} not available: END-019 designs "
+            violate("spacecraft", f"CubeSat class {', '.join(str(c) + 'U' for c in bad)} not available: END-006 designs "
                                   f"{'/'.join(str(c) + 'U' for c in d['spacecraft']['classes_u'])} CubeSats", f"{rid}: " + dict(reqs).get(rid, ""))
     if "mass" in params:
         value, kind = params["mass"][0]
@@ -139,13 +139,13 @@ def check_mission(document_text: str, requirements) -> dict[str, Any]:
         for s in texts:
             hits = R.find_all(s, d["outside_spacecraft_words"])
             if hits and R.has_any(s, MISSION_CONTEXT + tuple(d["outside_spacecraft_words"])):
-                violate("spacecraft", f"the satellite is a {hits[0]}, not a CubeSat: END-019 designs only CubeSats up to "
+                violate("spacecraft", f"the satellite is a {hits[0]}, not a CubeSat: END-006 designs only CubeSats up to "
                                       f"{d['spacecraft']['max_mass_kg']} kg", s)
                 break
         if "mass" in params and params["mass"][0][1] == "max" and params["mass"][0][0] > d["spacecraft"]["max_mass_kg"] and \
                 not any(v["kind"] == "spacecraft" for v in violations):
             notes.append(f"the request allows up to {params['mass'][0][0]:g} kg and names no CubeSat: STAR designs a CubeSat up to "
-                         f"{d['spacecraft']['max_mass_kg']} kg (END-019)")
+                         f"{d['spacecraft']['max_mass_kg']} kg (END-006)")
     # area of interest
     for s in texts:
         if R.has_any(s, R.AOI_CONTEXT) and not R.has_any(s, R.STATION_CONTEXT):

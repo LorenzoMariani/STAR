@@ -35,7 +35,7 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 ## Relationship with other modules
 
 - END-001 provides the orbits, END-003 the imaging passes and the attitude.
-- END-019 Satellite Design Component Selector chooses the CubeSat class and components; END-018 takes the class from the requirements or from the user.
+- END-006 Satellite Design Component Selector chooses the CubeSat class and components; END-018 takes the class from the requirements or from the user.
 - END-004 Power Budget and END-018 share the battery and payload duty assumptions only through the requirements.
 
 ## Known limits
@@ -46,5 +46,5 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 
 1. ## **Satellite of the run (2026-10-17)**
 
-The CubeSat class is the one of the END-019 initial design (spacecraft_definition.json), shared by all the modules of the
+The CubeSat class is the one of the END-006 initial design (spacecraft_definition.json), shared by all the modules of the
 workflow; a class written in the requirements is only reported when it differs.

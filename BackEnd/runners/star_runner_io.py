@@ -53,8 +53,8 @@ MODULE_OUTPUT_LAYOUT: dict[str, tuple[str, str]] = {
     "END-010": ("output_reflectance_determination", "results_reflectance_determination"),
     "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
     "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
-    "END-019": ("output_component_selector", "results_component_selector"),
-}   # same names as StarApi.get_module_output_layout (FrontEnd/star_frontend_v3.py)
+    "END-006": ("output_component_selector", "results_component_selector"),
+}   # same names as StarApi.get_module_output_layout (FrontEnd/star_frontend_v4.py)
 
 RESULT_SUFFIXES = {
     ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".gif",
@@ -1059,7 +1059,7 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
     # star_root rather than trusted verbatim from a packaged/template JSON,
     # which may have been captured on a different machine or STAR install path.
     data_dir = star_root / "END010-ReflectanceDetermination" / "lib" / "data"
-    # Unity player: the CubeSat build (unity_project, StarCubeSatBuild) renders the NASA-style CDS model of the class END-019 chose;
+    # Unity player: the CubeSat build (unity_project, StarCubeSatBuild) renders the NASA-style CDS model of the class END-006 chose;
     # the old Aqua build is used only if the CubeSat build is not on this machine
     cubesat_exe = star_root / "END010-ReflectanceDetermination" / "lib" / "BuildCubeSat" / "UnityLightCurveInversion.exe"
     aqua_exe = star_root / "END010-ReflectanceDetermination" / "lib" / "BuildAqua" / "UnityLightCurveInversion.exe"
@@ -1067,7 +1067,7 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
     cubesat = end010_cubesat_options(star_payload, product_dir) if cubesat_exe.exists() or not aqua_exe.exists() else None
     if cubesat:
         cfg.setdefault("unityOpts", {}).update(cubesat["unityOpts"])
-    # reference area of the magnitude estimate: the mean projected area of the satellite of the run (END-019)
+    # reference area of the magnitude estimate: the mean projected area of the satellite of the run (END-006)
     sat = load_spacecraft_definition(star_payload, next((p for p in Path(product_dir).resolve().parents if p.name == "modules_output"), None))
     if sat and sat.get("area_mean_projected_m2"):
         cfg.setdefault("sat", {})["A_ref"] = round(float(sat["area_mean_projected_m2"]), 6)
@@ -1125,21 +1125,21 @@ END010_SCENE_SCALE = 100.0      # STAR csv positions are in km: divided by 100 t
 
 
 def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> dict[str, Any]:
-    """Unity options for the CubeSat of the run: the class chosen by END-019 when it ran before END-010 (registry: optional upstream),
+    """Unity options for the CubeSat of the run: the class chosen by END-006 when it ran before END-010 (registry: optional upstream),
     otherwise END010_DEFAULT_CLASS_U. camSize (orthographic half-height, m) = half the diagonal of the class envelope x 1.1, so the
     model stays in the frame whatever its attitude; sceneScale divides the km positions of the csv."""
     class_u, source = None, None
-    # the satellite of the run: END-019 initial design (spacecraft_definition.json, step 0 of the workflow)
+    # the satellite of the run: END-006 initial design (spacecraft_definition.json, step 0 of the workflow)
     modules_output = next((p for p in Path(product_dir).resolve().parents if p.name == "modules_output"), None)
     sat = load_spacecraft_definition(star_payload, modules_output)
     if sat and int(sat.get("class_u") or 0) in CUBESAT_ENVELOPE_MM:
-        class_u, source = int(sat["class_u"]), "END-019 initial design of this run (spacecraft_definition.json)"
+        class_u, source = int(sat["class_u"]), "END-006 initial design of this run (spacecraft_definition.json)"
     found = None if class_u else find_upstream_artifact(star_payload, ["component_selector_results.json"], [".json"])
     candidates = [found] if found else []
-    # modules_output/<END-010>/output_... -> modules_output/END-019/output_component_selector/component_selector_results.json
+    # modules_output/<END-010>/output_... -> modules_output/END-006/output_component_selector/component_selector_results.json
     for parent in Path(product_dir).resolve().parents:
         if parent.name == "modules_output":
-            candidates.append(parent / "END-019" / "output_component_selector" / "component_selector_results.json")
+            candidates.append(parent / "END-006" / "output_component_selector" / "component_selector_results.json")
             break
     for path in ([] if class_u else candidates):
         try:
@@ -1148,10 +1148,10 @@ def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> d
         except Exception:
             continue
         if u in CUBESAT_ENVELOPE_MM:
-            class_u, source = u, f"END-019 of this run ({Path(path).name})"
+            class_u, source = u, f"END-006 of this run ({Path(path).name})"
             break
     if class_u is None:
-        class_u, source = END010_DEFAULT_CLASS_U, f"default {END010_DEFAULT_CLASS_U}U (END-019 is not in this run)"
+        class_u, source = END010_DEFAULT_CLASS_U, f"default {END010_DEFAULT_CLASS_U}U (END-006 is not in this run)"
     x, y, z = CUBESAT_ENVELOPE_MM[class_u]
     half_diagonal_m = 0.5 * math.sqrt(x * x + y * y + z * z) / 1000.0
     cam_size = round(1.1 * half_diagonal_m, 4)
@@ -1288,9 +1288,9 @@ SPACECRAFT_DEFINITION_FILENAME = "spacecraft_definition.json"
 
 
 def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_output: Path | str | None = None) -> dict[str, Any] | None:
-    """The satellite of the END-019 initial design (modules_output/END-019/output_component_selector/spacecraft_definition.json,
+    """The satellite of the END-006 initial design (modules_output/END-006/output_component_selector/spacecraft_definition.json,
     written at step 0 before the other modules): class, envelope, mass, inertia, areas, Cd/Cr, solar panels, battery and
-    declared powers. None when the workflow has no END-019 (the modules keep their own templates then)."""
+    declared powers. None when the workflow has no END-006 (the modules keep their own templates then)."""
     candidates: list[Path] = []
     if star_payload:
         found = find_upstream_artifact(star_payload, [SPACECRAFT_DEFINITION_FILENAME], [".json"])
@@ -1298,9 +1298,9 @@ def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_outp
             candidates.append(Path(found))
         root = star_payload.get("modules_output_root")
         if root:
-            candidates.append(Path(root) / "END-019" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
+            candidates.append(Path(root) / "END-006" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
     if modules_output:
-        candidates.append(Path(modules_output) / "END-019" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
+        candidates.append(Path(modules_output) / "END-006" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
     for path in candidates:
         try:
             if path.is_file():
@@ -1320,7 +1320,7 @@ def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_outp
 MODULE_FOLDERS = {"END-001": "END001-ConstellationOptimizer", "END-003": "END003-AttitudePropagation",
                   "END-004": "END004-PowerBudget", "END-007": "END007-SyntheticDataGeneration",
                   "END-010": "END010-ReflectanceDetermination", "END-016": "END016-CollisionAvoidance",
-                  "END-018": "END018-ComponentsThermalAnalysis", "END-019": "END019-ComponentSelector"}
+                  "END-018": "END018-ComponentsThermalAnalysis", "END-006": "END006-ComponentSelector"}
 MATLAB_MODULES = {"END-001", "END-003", "END-004", "END-010", "END-016"}
 
 
@@ -1352,6 +1352,6 @@ def module_prerequisites(module_id: str, star_root: str | Path | None = None) ->
         compiled = (Path(exe) if exe else root / folder / "blackbox_build" / "star_thermal.exe").is_file()
         if not compiled and not _matlab_available():
             return False, "END-018 star_thermal.exe and MATLAB not found"
-    if mid == "END-019" and not (root / folder / "star_component_selector" / "star_selector").is_dir():
-        return False, "END-019 star_component_selector package not found"
+    if mid == "END-006" and not (root / folder / "star_component_selector" / "star_selector").is_dir():
+        return False, "END-006 star_component_selector package not found"
     return True, ""

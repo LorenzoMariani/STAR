@@ -30,7 +30,7 @@ termica, a valle di END-001 ed END-003):
    (`MATLAB_EXECUTABLE`, `STAR_END018_MATLAB_SOURCE` per cambiare comando e
    cartella; con `STAR_END018_EXECUTABLE` usa invece la black box);
 4. gli output (`output_thermal_SAT-XX.csv`, `thermal_summary_SAT-XX.json`,
-   `thermal_constellation_output.csv`) vanno nella scheda END018 del frontend v3.
+   `thermal_constellation_output.csv`) vanno nella scheda END018 del frontend v4.
 
 ## Uso diretto in MATLAB
 

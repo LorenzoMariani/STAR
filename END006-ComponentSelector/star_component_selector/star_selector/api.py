@@ -270,7 +270,7 @@ def bom_rows(result: dict[str, Any]) -> list[dict[str, Any]]:
 
 def power_handoff(result: dict[str, Any]) -> dict[str, Any]:
     """Potenze dichiarate dai fornitori dei componenti scelti (per END-004 Power Budget). Nessun consumo e' stato stimato: i componenti senza dato sono elencati."""
-    return {"source": "END-019 Component Selector", "kind": "declared maximum power per subsystem, from vendor documents only (no estimates)",
+    return {"source": "END-006 Component Selector", "kind": "declared maximum power per subsystem, from vendor documents only (no estimates)",
             "subsystems_declared_peak_power_W": result["breakdown"]["power_w"], "sum_declared_peak_W": result["totals"]["power_w_declared_peak"],
             "not_publicly_available": result["totals"]["power_unknown"]}
 

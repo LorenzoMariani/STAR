@@ -1,9 +1,11 @@
-﻿|![](Aspose.Words.daca9b4f-3c28-4d57-a190-9631b18958ec.001.png)|<p>PROGETTO: “SPACE IT UP !”</p><p>Contratto n. 2024-5-E.0. – CUP: I53D24000060005</p><p>Interface Definition Document (IDD)</p><p>END-006: SCENARIO GENERATION</p>|<p>DOCUMENT ID:</p><p>DX.X.X\_Spoke2\_XXX\_2026</p><p></p><p>DATE OF DELIVERY: XX/XX/2026</p><p></p><p>REV.: V0.1</p><p></p><p>Pag: 9 di 34</p>|
+﻿|![](Aspose.Words.daca9b4f-3c28-4d57-a190-9631b18958ec.001.png)|<p>PROGETTO: “SPACE IT UP !”</p><p>Contratto n. 2024-5-E.0. – CUP: I53D24000060005</p><p>Interface Definition Document (IDD)</p><p>END-007: SYNTHETIC DATA GENERATION</p>|<p>DOCUMENT ID:</p><p>DX.X.X\_Spoke2\_XXX\_2026</p><p></p><p>DATE OF DELIVERY: XX/XX/2026</p><p></p><p>REV.: V0.1</p><p></p><p>Pag: 9 di 34</p>|
 | :-: | :-: | :- |
 
 **Interface Definition Document (IDD)**
 
 **END-007: SYNTHETIC DATA GENERATION**
+
+> **STAR note (2026-10-18).** Scenario generation (the former END-006 Scenario Generation module, TELESPAZIO) is part of END-007: the scenario package, terrain mesh and scene metadata are END-007 products built from the terrain, texture, 3D model and event data provided by the user. The number END-006 now belongs to the Satellite Design Component Selector (formerly END-019).
 
 # **List of Contents**
 
@@ -94,7 +96,7 @@ For IOS, RPO, and SSA applications, END-007 can generate synthetic image sequen
 
 1. ## <a name="_toc230170165"></a>**Responsibility**
 
-Responsible for END-006:
+Responsible for END-007 (scenario generation included):
 
 - Alessia De Matteis (TELESPAZIO) Leader
 - Mascia Bucciarelli (UNIRM1) Co-Leader
@@ -179,7 +181,7 @@ Angles are required to be in degrees
 
 Interfaces in STAR: 
 
-- IF-006: SCENARIO GENERATION (END-006) – SYNTETIC DATA GENERATION (END-007) 
+- IF-006: SCENARIO GENERATION – SYNTETIC DATA GENERATION (END-007), internal to END-007 since 2026-10-18 
 - IF-002: ATTITUDE PROPAGATION (END-003) – SYNTHETIC DATA GENERATION (END-007) 
 - IF-005: CONSTELLATION OPTIMIZER (END-001) – SYNTHETIC DATA GENERATION (END-007) 
 

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CATALOG = load_catalog(ROOT / "data" / "catalog.json")
 BY_ID = {c.id: c for c in CATALOG}
 
-V6 = [  # requisiti della proposta STAR v6 (PATRIMONIO-CUBE) rilevanti per END-019
+V6 = [  # requisiti della proposta STAR v6 (PATRIMONIO-CUBE) rilevanti per END-006
     {"id": "REQ-002", "text": "Each satellite shall re-enter the atmosphere within 5 years of the end of its mission."},
     {"id": "REQ-003", "text": "The satellites shall keep a safe separation from each other."},
     {"id": "REQ-004", "text": "The constellation shall have sun-synchronous orbits between 500 km and 650 km of altitude."},

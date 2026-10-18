@@ -79,7 +79,7 @@ For each operational mode, it computes:
 1. ## **Orbit and satellite of the run (2026-10-17)**
 
 The runner writes into end004_runtime_input.json: period from the END-001 altitude of the selected satellite, eclipse from the
-END-003 shadow fraction, orbits per day from the period (idle orbits = orbits per day - the other modes); the loads of the END-019
+END-003 shadow fraction, orbits per day from the period (idle orbits = orbits per day - the other modes); the loads of the END-006
 initial design (template entries of the subsystems it selected with the declared peak powers, heaters kept, other subsystems with a
 declared power added), its battery, and the solar generation = panel peak power x mean cosine of the Sun incidence on the panel
 faces (END-003 illumination) x sunlight time (beginning of life, no losses). Values the user gave or edited in STAR win.

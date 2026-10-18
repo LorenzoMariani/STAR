@@ -63,8 +63,8 @@ def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, 
     return out
 
 
-# Template loads (Input/input_power_budget.json) of the subsystems END-019 selects; the entry of the transmitter takes
-# the peak power END-019 declares, the other ones keep the template power and duty cycles.
+# Template loads (Input/input_power_budget.json) of the subsystems END-006 selects; the entry of the transmitter takes
+# the peak power END-006 declares, the other ones keep the template power and duty cycles.
 ROLE_TEMPLATE = {"obc": ["OBDH"], "eps": ["EPS"], "comms_uhf": ["RX UHF", "TX UHF", "BEACON UHF"],
                  "comms_s": ["RX S BAND", "TX S BAND"], "adcs": ["ADCS"], "payload_imager": ["CAMERAS"]}
 ROLE_POWER_ENTRY = {"comms_uhf": "TX UHF", "comms_s": "TX S BAND"}
@@ -74,7 +74,7 @@ FACE_KEYS = {"+X": "x_plus", "-X": "x_minus", "+Y": "y_plus", "-Y": "y_minus", "
 
 
 def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
-    """Power loads of the END-019 satellite: template entries of the subsystems it has (with the declared powers), the heaters,
+    """Power loads of the END-006 satellite: template entries of the subsystems it has (with the declared powers), the heaters,
     and its other subsystems with a declared power; template entries of subsystems it does not have are dropped."""
     by_name = {str(s.get("name")): s for s in template}
     comps = sat.get("components") or {}
@@ -92,7 +92,7 @@ def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, An
             entry = json.loads(json.dumps(by_name[name]))
             if name == target and powers.get(role) is not None:
                 entry["powerW"] = float(powers[role])
-                entry["source"] = f"END-019 {comps[role]} (declared peak power)"
+                entry["source"] = f"END-006 {comps[role]} (declared peak power)"
             elif name == target:
                 entry["source"] = f"template (power of {comps[role]} not published)"
                 notes.append(f"{name}: power of {comps[role]} not published, template {entry.get('powerW')} W kept")
@@ -100,7 +100,7 @@ def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, An
                 entry["source"] = "template"
             out.append(entry)
     if "THERMAL" in by_name:
-        out.append({**json.loads(json.dumps(by_name["THERMAL"])), "source": "template (heaters, not a subsystem END-019 selects)"})
+        out.append({**json.loads(json.dumps(by_name["THERMAL"])), "source": "template (heaters, not a subsystem END-006 selects)"})
     camera_duty = (by_name.get("CAMERAS") or {}).get("duty")
     tx_duty = (by_name.get("TX S BAND") or {}).get("duty")
     for role, comp in comps.items():
@@ -121,7 +121,7 @@ def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, An
         else:
             duty = {m: {"sun": 1, "eclipse": 1} for m in modes}
         out.append({"name": role.upper().replace("_", " "), "powerW": float(power), "duty": duty,
-                    "source": f"END-019 {comp} (declared peak power)" + ("; fires only for manoeuvres" if role == "propulsion" else "")})
+                    "source": f"END-006 {comp} (declared peak power)" + ("; fires only for manoeuvres" if role == "propulsion" else "")})
     return out, notes
 
 
@@ -193,10 +193,10 @@ def _apply_duty_cycles(runtime_data: dict[str, Any], ops: dict[str, Any] | None,
         # published idle / transmit powers of the selected radios replace the template powers
         for slot, entry in (("comms_s", "RX S BAND"), ("comms_uhf", "RX UHF")):
             if name == entry and (radios.get(slot) or {}).get("power_w_idle") is not None:
-                s["powerW"] = float(radios[slot]["power_w_idle"]); s["source"] = f"END-019 {radios[slot]['component']} (published receive/idle power)"
+                s["powerW"] = float(radios[slot]["power_w_idle"]); s["source"] = f"END-006 {radios[slot]['component']} (published receive/idle power)"
         for slot, entry in (("comms_s", "TX S BAND"), ("comms_uhf", "TX UHF")):
             if name == entry and (radios.get(slot) or {}).get("power_w_tx") is not None:
-                s["powerW"] = float(radios[slot]["power_w_tx"]); s["source"] = f"END-019 {radios[slot]['component']} (published transmit power)"
+                s["powerW"] = float(radios[slot]["power_w_tx"]); s["source"] = f"END-006 {radios[slot]['component']} (published transmit power)"
         rules[name] = rule
         out.append(s)
     runtime_data["subsystems"] = out
@@ -225,18 +225,18 @@ def _illumination(star_payload: dict[str, Any]) -> dict[str, float] | None:
 
 
 def _apply_satellite(runtime_data: dict[str, Any], star_payload: dict[str, Any], sat: dict[str, Any] | None, report: dict[str, Any]) -> None:
-    """Loads, battery and solar generation of the END-019 satellite (the inputs approved in STAR win, see _apply_star_inputs)."""
+    """Loads, battery and solar generation of the END-006 satellite (the inputs approved in STAR win, see _apply_star_inputs)."""
     if not sat:
-        report["satellite"] = {"source": "template (no END-019 in the workflow)"}
+        report["satellite"] = {"source": "template (no END-006 in the workflow)"}
         return
     subs, notes = _subsystems_from_satellite(list(runtime_data.get("subsystems") or []), sat)
     if subs:
         runtime_data["subsystems"] = subs
     report["subsystems"] = {"value": [{k: s.get(k) for k in ("name", "powerW", "source")} for s in subs], "notes": notes,
-                            "source": f"END-019 initial design ({sat.get('form_factor')})"}
+                            "source": f"END-006 initial design ({sat.get('form_factor')})"}
     if sat.get("battery_wh"):
         runtime_data.setdefault("battery", {})["capacity_Wh"] = float(sat["battery_wh"])
-        report["battery_capacity_Wh"] = {"value": float(sat["battery_wh"]), "source": "END-019 initial design (battery / EPS integrated battery)"}
+        report["battery_capacity_Wh"] = {"value": float(sat["battery_wh"]), "source": "END-006 initial design (battery / EPS integrated battery)"}
     _apply_duty_cycles(runtime_data, _operations(star_payload), sat, report)
     panels = sat.get("solar_panels") or {}
     illum = _illumination(star_payload)
@@ -249,7 +249,7 @@ def _apply_satellite(runtime_data: dict[str, Any], star_payload: dict[str, Any],
         runtime_data["generation"]["solar_power_W"] = None
         report["power_generated_per_orbit_Wh"] = {
             "value": round(energy, 4),
-            "source": (f"END-019 panels {panels.get('component')} ({panels.get('peak_power_w_per_panel')} W peak on {', '.join(panels['body_faces'])}) "
+            "source": (f"END-006 panels {panels.get('component')} ({panels.get('peak_power_w_per_panel')} W peak on {', '.join(panels['body_faces'])}) "
                        f"x illumination of those faces in the END-003 attitude (sum of mean cosines {factor:.3f}) x sunlight "
                        f"{float(orbit['sunlight_min']):.1f} min; beginning of life, no temperature or wiring losses")}
     else:

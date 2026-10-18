@@ -105,5 +105,5 @@ interface_notes: >
   through MATLAB command-line execution. If STAR/END010-ReflectanceDetermination/Input/input_reflectance_determination.json
   exists, it is passed to MATLAB through STAR_END010_INPUT_FILE. Otherwise, the MATLAB script uses its standalone default input path.
   The Unity player lib/BuildCubeSat renders the NASA-style CDS CubeSat model of the satellite of the run: the class of the
-  END-019 initial design (spacecraft_definition.json, written at step 0 before the other modules; 6U without it), whose mean
+  END-006 initial design (spacecraft_definition.json, written at step 0 before the other modules; 6U without it), whose mean
   projected area is the reference area of the magnitude estimate; see END010-ReflectanceDetermination/unity_project/README_STAR.md.

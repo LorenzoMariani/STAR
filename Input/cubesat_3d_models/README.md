@@ -1,6 +1,6 @@
 # Modelli 3D di CubeSat per il modulo Reflectance Determination (END-010)
 
-**In uso (2026-10-16)**: solo i modelli della sezione 4, `cds_nasa_style_1U_2U_3U_6U_12U/` (scelta dell'utente). Sono gli unici nel repository STAR; END-010 li usa nella build Unity `lib/BuildCubeSat` (vedi `END010-ReflectanceDetermination/unity_project/README_STAR.md`) con la classe scelta da END-019. Le sezioni 1-3 restano solo su questa macchina (`.gitignore`).
+**In uso (2026-10-16)**: solo i modelli della sezione 4, `cds_nasa_style_1U_2U_3U_6U_12U/` (scelta dell'utente). Sono gli unici nel repository STAR; END-010 li usa nella build Unity `lib/BuildCubeSat` (vedi `END010-ReflectanceDetermination/unity_project/README_STAR.md`) con la classe scelta da END-006. Le sezioni 1-3 restano solo su questa macchina (`.gitignore`).
 
 Cartella raccolta il 2026-10-16. Quattro gruppi di modelli: due scaricati da fonti pubbliche (NASA, Pumpkin) e due generati da me dalle quote della CubeSat Design Specification Rev. 14.1 (scatole semplici e modelli dettagliati in stile NASA). **Non esiste (o non ho trovato) un modello 3D gratuito e scaricabile di un 6U e di un 12U da un fornitore o da un'agenzia**: per queste due classi ci sono la scatola CDS generata (sezione 1) e i modelli dettagliati in stile NASA generati per 1U, 2U, 3U, 6U e 12U (sezione 4, i piu' completi).
 
@@ -19,7 +19,7 @@ Scatola piena con l'inviluppo CDS Rev. 14.1, **una faccia = un gruppo e un mater
 | `CDS_6U_envelope` | 100 x 226.3 x 366.0 |
 | `CDS_12U_envelope` | 226.3 x 226.3 x 366.0 |
 
-Sono volutamente senza guide, pannelli incassati, antenne o pannelli dispiegati: nessun dettaglio non pubblicato e' stato inventato. Sono le stesse quote usate dal selettore END-019.
+Sono volutamente senza guide, pannelli incassati, antenne o pannelli dispiegati: nessun dettaglio non pubblicato e' stato inventato. Sono le stesse quote usate dal selettore END-006.
 
 ## 2. `nasa/` (scaricati da NASA 3D Resources, GitHub `nasa/NASA-3D-Resources`)
 

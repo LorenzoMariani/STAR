@@ -492,7 +492,11 @@ MODULE_KEYWORDS: dict[str, tuple[str, ...]] = {
     "END-007": ("synthetic image", "synthetic images", "synthetic imagery", "simulated image", "simulated images", "simulated imagery",
                 "simulated acquisition", "simulated acquisitions", "image simulation", "synthetic data", "synthetic dataset", "training dataset",
                 "ground truth", "rendering", "rendered images", "immagini sintetiche", "immagini simulate", "simulazione delle immagini",
-                "dati sintetici", "dataset sintetico"),
+                "dati sintetici", "dataset sintetico",
+                # scenario generation, part of END-007 since 2026-10-18 (the former END-006 Scenario Generation)
+                "scenario generation", "scene generation", "terrain model", "digital terrain model", "digital elevation model",
+                "3d scene", "generazione dello scenario", "generazione della scena", "modello del terreno",
+                "modello digitale del terreno", "scena 3d"),
     "END-010": ("brightness", "apparent magnitude", "magnitude", "light curve", "light curves", "lightcurve", "photometry", "photometric",
                 "reflectance", "albedo", "dark sky", "dark skies", "quiet skies", "light pollution", "astronomical observations",
                 "astronomical observatory", "astronomical observatories", "night sky", "luminosita", "magnitudine", "curva di luce",
@@ -504,7 +508,7 @@ MODULE_KEYWORDS: dict[str, tuple[str, ...]] = {
                 "rientro", "rientrare", "fine vita", "smaltimento", "deorbitazione", "avvicinamenti", "separazione sicura", "vita orbitale"),
     "END-018": ("thermal", "temperature", "temperatures", "overheating", "heat dissipation", "heat load", "termico", "termica", "termici",
                 "termiche", "temperatura", "temperature", "surriscaldamento"),
-    "END-019": ("cubesat", "cubesats", "satellite design", "component", "components", "subsystem", "subsystems", "bill of materials",
+    "END-006": ("cubesat", "cubesats", "satellite design", "component", "components", "subsystem", "subsystems", "bill of materials",
                 "form factor", "platform", "componenti", "sottosistemi", "piattaforma"),
 }
 

@@ -38,7 +38,7 @@ REGISTRY_SOURCES = {"module_registry_default", "module_registry_required_input"}
 NAMED_AREAS = ["Italy and Med", "Italian Coasts", "Mediterranean Area", "Mediterranean", "Europe (High Lat)",
                "Europe", "Italy", "Qatar", "Malaysia", "Artic"]
 
-# Point targets the STAR planner names (FrontEnd star_frontend_v3.py), same
+# Point targets the STAR planner names (FrontEnd star_frontend_v4.py), same
 # coordinates as star_runner_io.target_lat_lon.
 POINT_TARGETS = {"etna": (37.748, 14.999)}
 
@@ -403,7 +403,7 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     else:
         note("TimeSettings", cfg.get("TimeSettings"), "automatic (template)")
     sc = cfg.setdefault("SpacecraftProperties", {})
-    # the satellite of the END-019 initial design (2026-10-17): the same mass, area and Cd for every module
+    # the satellite of the END-006 initial design (2026-10-17): the same mass, area and Cd for every module
     try:
         from .star_runner_io import load_spacecraft_definition
     except ImportError:
@@ -416,7 +416,7 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
             sc[field] = float(inp[name][0]); note("SpacecraftProperties." + field, sc[field], f"STAR input {name} ({inp[name][1]})")
         elif key in sat_vals:
             sc[field] = round(float(sat_vals[key]), 6)
-            note("SpacecraftProperties." + field, sc[field], f"END-019 initial design ({sat.get('form_factor')}, spacecraft_definition.json)")
+            note("SpacecraftProperties." + field, sc[field], f"END-006 initial design ({sat.get('form_factor')}, spacecraft_definition.json)")
         elif key in found:
             sc[field] = found[key][0]; note("SpacecraftProperties." + field, sc[field], f"requirement {found[key][1]}")
     for name, field in (("evaluation_mode", "Evaluation_Mode"), ("surrogate_verify_top_k", "Surrogate_VerifyTopK"),

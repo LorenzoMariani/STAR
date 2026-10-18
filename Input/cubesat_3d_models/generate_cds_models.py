@@ -12,7 +12,7 @@ CONVENZIONI MIE (non date dalla CDS), da cambiare in cima al file se servono alt
   - pannelli solari su 5 facce: le 4 facce lunghe e il tappo +Z; il tappo -Z e' una piastra di struttura (la faccia inserita per prima nel dispenser);
   - pannelli modulari: n. moduli lungo Z = 1, 2, 3, 3, 3 per 1U, 2U, 3U, 6U, 12U; due moduli affiancati sulle facce larghe 226.3 mm;
     tra i moduli fasce di struttura larghe 6 mm lungo Z e 3 mm in larghezza, fasce di 4 mm alle estremita';
-  - spessore totale del pannello 2.5 mm (quello dichiarato per il pannello ISIS 1U/3U del catalogo END-019): 2.2 mm di substrato, bordo di cella 0.1 mm, cella 0.2 mm;
+  - spessore totale del pannello 2.5 mm (quello dichiarato per il pannello ISIS 1U/3U del catalogo END-006): 2.2 mm di substrato, bordo di cella 0.1 mm, cella 0.2 mm;
     la superficie delle celle e' a filo del piano delle guide;
   - celle da 40 x 80 mm con angoli smussati di 3 mm (dimensione tipica di una cella a tripla giunzione da circa 30 cm2: il valore NON e' scritto nei datasheet del catalogo),
     lato lungo lungo Z, spazio tra le celle 1 mm, margine 1 mm, griglia centrata; il bordo di cella (rame/oro) sporge 0.4 mm attorno alla cella;

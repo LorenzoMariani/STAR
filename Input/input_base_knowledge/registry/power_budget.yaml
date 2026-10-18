@@ -141,7 +141,7 @@ interface_notes: >
   and heaters keep the template duty.
   Since 2026-10-17: orbit period from the END-001 altitude of the satellite END-003 selected and eclipse from the END-003 shadow
   fraction (KPI-14), orbits per day from the period (the template values are only a fallback); loads, battery and solar generation of
-  the END-019 initial design (spacecraft_definition.json): the template entries of the subsystems it selected with their declared
+  the END-006 initial design (spacecraft_definition.json): the template entries of the subsystems it selected with their declared
   peak powers, generation = panel peak power x mean cosine of the Sun incidence on the panel faces in the END-003 attitude
   (attitude_summary.json "illumination") x sunlight time. Inputs the user gave or edited in STAR win; registry first guesses do not.
   The Python runner resolves the current RUN folder, finds the END-003

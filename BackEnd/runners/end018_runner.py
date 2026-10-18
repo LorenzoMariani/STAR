@@ -10,7 +10,7 @@ output_thermal_SAT-XX.csv (temperature of every face, panel and internal node,
 SAR on, eclipse), thermal_summary_SAT-XX.json and
 thermal_constellation_output.csv.
 
-Called by the orchestrator (FrontEnd/star_frontend_v3.py ->
+Called by the orchestrator (FrontEnd/star_frontend_v4.py ->
 StarApi.call_module_runner_or_placeholder) as run_end018(input_file=..., ...).
 The runner
 1. checks the domain: a CubeSat of 1U-12U; a satellite above 24 kg, or a mission
@@ -243,15 +243,15 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
             config[k] = v
             provenance[k] = source
     notes: list[str] = []
-    # the satellite of the run (2026-10-17): the class of the END-019 initial design, the one every module uses;
+    # the satellite of the run (2026-10-17): the class of the END-006 initial design, the one every module uses;
     # only a class the user approved explicitly wins, a class written in the requirements is only reported
     sat = load_spacecraft_definition(payload, Path(output_dir).resolve().parent)
     if sat and sat.get("form_factor") in CLASSES and "form_factor" not in approved:
         if req_params.get("form_factor") and req_params["form_factor"] != sat["form_factor"]:
-            notes.append(f"The requirements state a {req_params['form_factor']} CubeSat; the END-019 design of the run is a "
+            notes.append(f"The requirements state a {req_params['form_factor']} CubeSat; the END-006 design of the run is a "
                          f"{sat['form_factor']} (the class that meets the required performance), used here")
         config["form_factor"] = sat["form_factor"]
-        provenance["form_factor"] = f"END-019 initial design of the run (spacecraft_definition.json, {sat.get('mass_kg', 0):.2f} kg)"
+        provenance["form_factor"] = f"END-006 initial design of the run (spacecraft_definition.json, {sat.get('mass_kg', 0):.2f} kg)"
     if config.get("form_factor") not in CLASSES:
         config.pop("form_factor", None)
         provenance.pop("form_factor", None)

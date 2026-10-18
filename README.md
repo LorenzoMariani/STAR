@@ -5,9 +5,11 @@ a Python / pywebview orchestrator (`FrontEnd/`, `BackEnd/`) that plans a mission
 from its requirements and runs the simulation modules `END0XX-*` (MATLAB,
 Python, Unity / Unreal). This repository holds only what running STAR needs.
 
-- `FrontEnd/` - `star_frontend_v3.py` (entry point) and the `web/` assets; it
-  writes its own `web/star_*_v3.html` pages. `star_frontend_v2.py` (without
-  END-018 and END-019) was moved to `FrontEnd/_old_frontend/` (not in git).
+- `FrontEnd/` - `star_frontend_v4.py` (entry point) and the `web/` assets; it
+  writes its own `web/star_*_v4.html` pages. STAR has 18 END since v4
+  (2026-10-18): Scenario Generation (the former END-006) is part of END-007,
+  and the component selector (END-019 until then) is END-006.
+  `star_frontend_v2.py` was moved to `FrontEnd/_old_frontend/` (not in git).
 - `BackEnd/` - `ai/` (LLM providers), `modules/`, `runners/` (one runner per
   module; they find STAR's root from their own location).
 - `Input/` - `input_base_knowledge/` (module registry, AI config, knowledge
@@ -16,17 +18,17 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
   (github.com/LorenzoMariani/matlabConstellationOptimizer), see its `USAGE.md`.
 - `END018-ComponentsThermalAnalysis/` - CubeSat thermal model, MATLAB sources
   in `src/` (see its `README.md`; runner `BackEnd/runners/end018_runner.py`,
-  results tab in frontend v3).
+  results tab in frontend v4).
 - `END016-CollisionAvoidance/` - space safety of the END-001 constellation
   inside STAR (close approaches between its satellites with collision
   probability, orbital lifetime and post-mission disposal; MATLAB
   `lib/star_collision_main.m`, runner `BackEnd/runners/end016_runner.py`,
-  results tab in frontend v3). Its operational CDM / space-track tools are not
+  results tab in frontend v4). Its operational CDM / space-track tools are not
   used by STAR.
 - `END003`, `END004`, `END010` - the other modules.
-- `END019-ComponentSelector/star_component_selector/` - CubeSat component
-  selector (Python standard library only; runner `BackEnd/runners/end019_runner.py`,
-  results tab in frontend v3). Since 2026-10-15 it designs the CubeSat for the
+- `END006-ComponentSelector/star_component_selector/` - CubeSat component
+  selector (Python standard library only; runner `BackEnd/runners/end006_runner.py`,
+  results tab in frontend v4). Since 2026-10-15 it designs the CubeSat for the
   mission: only the subsystems the requirements ask for (propulsion only for
   manoeuvres or the END-016 disposal delta-v), the smallest class that carries
   them, the mission requirements checked with the published data ("Does not
@@ -46,7 +48,7 @@ git clone --recursive https://github.com/LorenzoMariani/STAR.git
 
 ## Run modes and smoke test
 
-FrontEnd v3 has two **Test / Full** buttons next to the theme switch (default
+FrontEnd v4 (as v3) has two **Test / Full** buttons next to the theme switch (default
 `test`; `STAR_RUN_MODE` sets the default at start-up; locked while a workflow
 runs). With Full, an **accuracy bar** (levels 1-5: Low, Medium, High, Extra
 high, Max; default 3 = the module templates, `STAR_RUN_LEVEL`) sets how long
@@ -59,7 +61,7 @@ tooltip). The mode and level go into every module input file (`run_mode`,
 |---|---|---|
 | END-001 | surrogate GA 20 x 5, top 1 re-simulated, no parallel pool (~1 min) | by level, see below |
 | END-016 | mean solar activity | low, mean and high solar activity |
-| END-003, END-004, END-010, END-018, END-019 | complete settings (each takes 1-60 s, mostly MATLAB / Unity start-up) | same |
+| END-003, END-004, END-006, END-010, END-018 | complete settings (each takes 1-60 s, mostly MATLAB / Unity start-up) | same |
 | END-007 (Unreal) | always complete | always complete |
 
 END-001 by level (surrogate GA population x generations x restarts, best
@@ -113,4 +115,4 @@ python FrontEnd/star_smoke_test.py --mode full --level 1 --with-end007
 | `END016-CollisionAvoidance/lib/loginSpaceTrack.m` | space-track.org credentials | keep your own copy locally |
 | `Documentation/`, presentations and documents (`*.pptx`, `*.pdf`, `*.docx`, ...; the sample mission requests in `Input/` stay), `DEMO_WorkshopASI.pptx`, `folder_tree.py`, `struttura_cartelle.txt`, `.claude/`, `.vscode/` | not needed to run STAR | - |
 | documentation and example results of the CARA tools in `END016-CollisionAvoidance/CARA_Analysis_Tools/` | not needed to run STAR | - |
-| `_old_versions/`, `_old*/` folders, `END019-ComponentSelector.zip` | superseded / not integrated | - |
+| `_old_versions/`, `_old*/` folders, `END0*-ComponentSelector.zip` (deliveries of the selector) | superseded / not integrated | - |

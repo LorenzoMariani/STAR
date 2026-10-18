@@ -1,6 +1,6 @@
 """STAR smoke test (2026-10-15): the whole STAR pipeline, headless, in a few minutes.
 
-It drives the same StarApi as the window (FrontEnd/star_frontend_v3.py), step by
+It drives the same StarApi as the window (FrontEnd/star_frontend_v4.py), step by
 step as the user does: new run, reviewed requirements, rule-based mission
 planning, approved workflow, resolved and approved module inputs, execution
 in the chosen run mode (default 'test': every module with its fastest
@@ -42,7 +42,7 @@ def main() -> int:
     ap.add_argument("--with-end007", action="store_true", help="keep END-007 (Unreal, always in full) in the workflow")
     args = ap.parse_args()
 
-    import star_frontend_v3 as fe  # noqa: PLC0415  (the window module; no window is opened)
+    import star_frontend_v4 as fe  # noqa: PLC0415  (the window module; no window is opened)
 
     api = fe.StarApi()
     api.add_log = lambda kind, msg: print(f"[{kind}] {msg}"[:240], flush=True) if kind in ("ERROR", "WARNING") else None

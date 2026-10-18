@@ -117,7 +117,7 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
     if hours > 0:
         config["sim_hours"] = hours
         report["simulation_duration_hours"] = {"value": hours, "source": "STAR input (limited to the END-001 ephemeris span)"}
-    # mass, inertia and areas: the STAR input, otherwise the END-019 initial design (the satellite of every module)
+    # mass, inertia and areas: the STAR input, otherwise the END-006 initial design (the satellite of every module)
     props = input_value(star_payload, "spacecraft_physical_properties", None)
     sat_def = load_spacecraft_definition(star_payload)
     if isinstance(props, dict) and props:
@@ -132,9 +132,9 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
         sat.update({"m": sat_def["mass_kg"], "Ix": ix, "Iy": iy, "Iz": iz, "A_ref": sat_def["area_mean_projected_m2"],
                     "Cd": sat_def.get("cd", sat.get("Cd")), "Cr": sat_def.get("cr", sat.get("Cr"))})
         report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Cr", "Cd", "Ix", "Iy", "Iz")},
-                                "source": f"END-019 initial design ({sat_def.get('form_factor')}, {SPACECRAFT_NOTE})"}
+                                "source": f"END-006 initial design ({sat_def.get('form_factor')}, {SPACECRAFT_NOTE})"}
     else:
-        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Ix", "Iy", "Iz")}, "source": "template (no END-019 in the workflow)"}
+        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Ix", "Iy", "Iz")}, "source": "template (no END-006 in the workflow)"}
     return report
 
 

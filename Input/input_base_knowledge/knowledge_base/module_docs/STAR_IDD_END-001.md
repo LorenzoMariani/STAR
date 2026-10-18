@@ -285,7 +285,7 @@ The following matrix describes the file access maps, including specific read/wri
 
 1. ## **STAR workflow, 2026-10-17**
 
-- **Spacecraft properties** (SpacecraftProperties Mass, ADrag, CD): from the END-019 initial design of the run
+- **Spacecraft properties** (SpacecraftProperties Mass, ADrag, CD): from the END-006 initial design of the run
   (spacecraft_definition.json: mass of the selected components, mean projected area = surface / 4, Cd 2.2) unless the user gives
   them in STAR; END-016 reads them from END-001.
 - **Passes for the downstream modules** (before chosen by END-003): after writing satellite_NN_ephemeris.csv END-001 runs

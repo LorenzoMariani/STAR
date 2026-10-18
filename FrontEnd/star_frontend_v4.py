@@ -1,8 +1,9 @@
-"""STAR FrontEnd v3 (2026-10-15): star_frontend_v2.py plus END-019 Satellite
-Design Component Selector (canonical module, default runner, planner rule,
-output folders, live selector API for its results tab). It writes its own
-pages (web/star_*_v3.html, from web/star_results_shell_template_v3.html).
-star_frontend_v2.py was moved to FrontEnd/_old_frontend/ on 2026-10-18 (not in git).
+"""STAR FrontEnd v4 (2026-10-18): star_frontend_v3.py with 18 END. Scenario
+Generation (the former END-006) is part of END-007 Synthetic Data Generation, and
+the Satellite Design Component Selector (formerly END-019) is END-006: module
+folder END006-ComponentSelector, runner runners.end006_runner, outputs under
+modules_output/END-006. It writes its own pages (web/star_*_v4.html, from
+web/star_results_shell_template_v4.html).
 """
 from __future__ import annotations
 
@@ -94,7 +95,9 @@ CANONICAL_MODULE_CATALOG = [
     {"module_id": "END-003", "module_name": "Attitude Propagation", "owner": "UNIRM1"},
     {"module_id": "END-004", "module_name": "Power Budget", "owner": "UNIRM1"},
     {"module_id": "END-005", "module_name": "CMG Healt Monitoring", "owner": "TASI-POLIBA"},
-    {"module_id": "END-006", "module_name": "Scenario Generation", "owner": "TELESPAZIO"},
+    # 2026-10-18: END-006 Scenario Generation (TELESPAZIO) merged into END-007; the component selector (END-019 until then)
+    # took the number END-006, so STAR has 18 END
+    {"module_id": "END-006", "module_name": "Satellite Design Component Selector", "owner": "UNIRM1"},
     {"module_id": "END-007", "module_name": "Synthetic Data Generation", "owner": "TELESPAZIO"},
     {"module_id": "END-008", "module_name": "Battery Healt Monitorying", "owner": "UNIRM1"},
     {"module_id": "END-009", "module_name": "Solar Array Wings", "owner": "TASI-POLIBA"},
@@ -107,7 +110,6 @@ CANONICAL_MODULE_CATALOG = [
     {"module_id": "END-016", "module_name": "Collision Avoidance", "owner": "UNIRM1"},
     {"module_id": "END-017", "module_name": "Clock Anomalies Detection", "owner": "INRIM"},
     {"module_id": "END-018", "module_name": "Components Thermal Analysis", "owner": "UNIRM1"},   # Sapienza (user, 2026-10-16); "ABEP" (SITAEL) until 2026-10-15, then TBD
-    {"module_id": "END-019", "module_name": "Satellite Design Component Selector", "owner": "UNIRM1"},
 ]
 
 
@@ -144,7 +146,7 @@ STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
     "END-010": {"test": 49},
     "END-016": {"test": 6, "full": 9},
     "END-018": {"test": 7},
-    "END-019": {"test": 1},
+    "END-006": {"test": 1},
 }
 STAR_MODULE_TIME_DEFAULT_S = 5     # modules without a runner (placeholders)
 
@@ -365,8 +367,14 @@ class StarApi:
                 return module
         return None
 
+    # 2026-10-18: the component selector (END-006, END-019 until then) is the last step of the workflow, the final design
+    # with the results of the other modules (its initial design runs as step 0); by number it would run before END-007.
+    LAST_MODULES = {"END-006": 900}
+
     def get_module_order_score(self, module: dict[str, Any]) -> int:
         module_id = str(module.get("module_id", "")).upper()
+        if module_id in self.LAST_MODULES:
+            return self.LAST_MODULES[module_id]
         match = re.search(r"END-(\d+)", module_id)
         if match:
             return int(match.group(1))
@@ -376,7 +384,7 @@ class StarApi:
 
     def order_by_dependencies(self, modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """END order, except that a module runs after the modules of the same workflow it depends on: upstream_dependencies and
-        optional_upstream_dependencies of the registry (2026-10-16: END-010 renders the CubeSat class chosen by END-019, so it runs after it).
+        optional_upstream_dependencies of the registry (2026-10-16: END-010 renders the CubeSat class chosen by END-006, so it runs after it).
         A dependency cycle keeps the END order for the modules involved."""
         ordered = sorted(modules, key=self.get_module_order_score)
         ids = [str(m.get("module_id", "")).upper() for m in ordered]
@@ -484,7 +492,7 @@ class StarApi:
                 "END-010": ("runners.end010_runner", "run_end010"),
                 "END-016": ("runners.end016_runner", "run_end016"),
                 "END-018": ("runners.end018_runner", "run_end018"),
-                "END-019": ("runners.end019_runner", "run_end019"),
+                "END-006": ("runners.end006_runner", "run_end006"),
             }
             if module_id in default_runner_by_id:
                 runner_module, runner_function = default_runner_by_id[module_id]
@@ -516,11 +524,11 @@ class StarApi:
                     "engineering_feasibility", "medium"),
         "END-018": ("Compute the temperatures of the CubeSat faces, panels and internal nodes along the orbit and flag the limits that "
                     "are exceeded.", "engineering_feasibility", "medium"),
-        "END-019": ("Design the CubeSat every module uses (initial design) and update it with their results (final design): the "
+        "END-006": ("Design the CubeSat every module uses (initial design) and update it with their results (final design): the "
                     "smallest class whose real components meet the requirements.", "engineering_feasibility", "high"),
     }
-    # Always in the chain inside the STAR domain: the orbits (END-001) and the CubeSat (END-019) every module uses.
-    CORE_MODULES = ("END-001", "END-019")
+    # Always in the chain inside the STAR domain: the orbits (END-001) and the CubeSat (END-006) every module uses.
+    CORE_MODULES = ("END-001", "END-006")
 
     def module_executable(self, module_or_id: Any) -> tuple[bool, str]:
         """(True, "") when the module has a runner that imports and the programs it needs are on this machine; STAR plans
@@ -552,7 +560,7 @@ class StarApi:
         return [module for module in self.modules if self.module_executable(module)[0]]
 
     def complete_workflow(self, workflow: list[dict[str, Any]], rationale_prefix: str = "Added by STAR") -> list[dict[str, Any]]:
-        """Executable modules only, END-001 and END-019 always (the orbits and the CubeSat of the STAR domain), and the
+        """Executable modules only, END-001 and END-006 always (the orbits and the CubeSat of the STAR domain), and the
         upstream modules each one needs (registry upstream_dependencies), in execution order."""
         kept = []
         for step in workflow:
@@ -1135,8 +1143,8 @@ class StarApi:
         ])
         return cubesat and thermal
 
-    def end019_design_requested(self, normalized_text: str) -> bool:
-        """END-019 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose platform
+    def end006_design_requested(self, normalized_text: str) -> bool:
+        """END-006 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose platform
         components or subsystems are to be chosen; used by the consistency check of
         LLM plans (the rule-based planner has its own, broader keyword list)."""
         cubesat = "cubesat" in normalized_text or re.search(r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)", normalized_text) is not None
@@ -3803,7 +3811,7 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Consistency check of an LLM/RAG plan (2026-10-17): a small local LLM may omit a module the request asks for.
         The modules whose keywords the request contains (whole words, English and Italian: runners/star_text_rules.py)
-        are added when missing, then complete_workflow() keeps only executable modules, adds END-001 and END-019 (always
+        are added when missing, then complete_workflow() keeps only executable modules, adds END-001 and END-006 (always
         in the STAR chain) and the upstream modules each one needs, in execution order."""
         from runners import star_text_rules as rules
         combined_text = " ".join(
@@ -3859,7 +3867,7 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
 
     def rule_based_mission_planning(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
         """Rule-based planner (2026-10-17): the modules whose keywords the request contains (whole words, English and
-        Italian: runners/star_text_rules.py), END-001 and END-019 always (the orbits and the CubeSat of the STAR domain),
+        Italian: runners/star_text_rules.py), END-001 and END-006 always (the orbits and the CubeSat of the STAR domain),
         the upstream modules they need; only modules STAR can run."""
         from runners import star_text_rules as rules
         combined_text = " ".join([self.uploaded_text or ""] + [req.get("text", "") for req in self.requirements])
@@ -4683,15 +4691,15 @@ Return only valid JSON:
         workflow_stopped = False
         initial_failed = False
 
-        # END-019 initial design (2026-10-17): the satellite every module of the workflow uses
-        # (modules_output/END-019/output_component_selector/spacecraft_definition.json), run as step 0
-        # before the other modules; the END-019 step of the workflow, the last one, is the final design
+        # END-006 initial design (2026-10-17): the satellite every module of the workflow uses
+        # (modules_output/END-006/output_component_selector/spacecraft_definition.json), run as step 0
+        # before the other modules; the END-006 step of the workflow, the last one, is the final design
         # made with their results.
-        end019_step = next((s for s in self.workflow_steps if str(s.get("module_id", "")).upper() == "END-019"), None)
-        if end019_step is not None and not self.execution_stop_event.is_set():
-            initial_step = {**end019_step, "step": 0, "phase": "initial"}
-            name019 = end019_step.get("module")
-            self.add_log("EXECUTION", f"Starting step 0: {name019} (END-019) initial design, the satellite the other modules use.")
+        end006_step = next((s for s in self.workflow_steps if str(s.get("module_id", "")).upper() == "END-006"), None)
+        if end006_step is not None and not self.execution_stop_event.is_set():
+            initial_step = {**end006_step, "step": 0, "phase": "initial"}
+            name019 = end006_step.get("module")
+            self.add_log("EXECUTION", f"Starting step 0: {name019} (END-006) initial design, the satellite the other modules use.")
             for module in self.modules:
                 if module.get("module_name") == name019:
                     module["status"] = "Running"
@@ -4699,8 +4707,8 @@ Return only valid JSON:
             try:
                 result = self.execute_workflow_step(initial_step)
             except Exception as exc:
-                result = {"step": 0, "module": name019, "module_id": "END-019", "status": "failed",
-                          "evidence": f"END-019 initial design failed: {exc}", "generated_artifacts": "",
+                result = {"step": 0, "module": name019, "module_id": "END-006", "status": "failed",
+                          "evidence": f"END-006 initial design failed: {exc}", "generated_artifacts": "",
                           "started_at": datetime.now().isoformat(), "completed_at": datetime.now().isoformat(), "reviewed_by_user": False}
             duration = time.perf_counter() - started_perf
             result.update({"phase": "initial", "module": f"{name019} (initial design)",
@@ -4710,14 +4718,14 @@ Return only valid JSON:
             for module in self.modules:
                 if module.get("module_name") == name019:
                     module["status"] = "Ready"
-            self.add_log("EXECUTION", f"Finished step 0: END-019 initial design -> {result.get('status')} ({self.format_duration(duration)}).")
+            self.add_log("EXECUTION", f"Finished step 0: END-006 initial design -> {result.get('status')} ({self.format_duration(duration)}).")
             if result.get("status") in ("failed", "stopped") or self.execution_stop_event.is_set():
                 initial_failed = True
-                self.add_log("ERROR", "END-019 initial design not available: the modules that need the CubeSat ("
+                self.add_log("ERROR", "END-006 initial design not available: the modules that need the CubeSat ("
                              + ", ".join(sorted(self.INITIAL_DESIGN_DEPENDENTS)) + ") are skipped, the others run.")
 
         # A failed module stops only the modules that need its data (2026-10-17): registry upstream_dependencies,
-        # also through a skipped module, and the END-019 initial design for the modules using the CubeSat.
+        # also through a skipped module, and the END-006 initial design for the modules using the CubeSat.
         blocked: dict[str, str] = {}
         for workflow_step in self.workflow_steps:
             module_name = workflow_step.get("module")
@@ -4860,13 +4868,13 @@ Return only valid JSON:
             "message": "Workflow execution stopped by user." if workflow_stopped else f"{len(execution_results)} workflow step(s) executed from approved workflow.",
         }
 
-    # Modules that use the CubeSat of the END-019 initial design (inertia, loads, class, form factor); END-001 and
+    # Modules that use the CubeSat of the END-006 initial design (inertia, loads, class, form factor); END-001 and
     # END-016 can run without it (mass and drag area from the requirements).
     INITIAL_DESIGN_DEPENDENTS = {"END-003", "END-004", "END-010", "END-018"}
 
     def blocked_reason(self, module_id: str, blocked: dict[str, str], initial_failed: bool) -> str:
         """Why a module cannot run: not executable here, an upstream module of the workflow without its data, or the
-        END-019 initial design missing for a module that uses the CubeSat; "" when it can run."""
+        END-006 initial design missing for a module that uses the CubeSat; "" when it can run."""
         executable, why = self.module_executable(module_id)
         if not executable:
             return f"{module_id} cannot run on this machine ({why})"
@@ -4876,7 +4884,7 @@ Return only valid JSON:
         if missing:
             return "; ".join(f"{u} did not produce the data it needs ({blocked[u]})" for u in missing)
         if initial_failed and module_id in self.INITIAL_DESIGN_DEPENDENTS:
-            return "the END-019 initial design (the CubeSat this module uses) is not available"
+            return "the END-006 initial design (the CubeSat this module uses) is not available"
         return ""
 
     def build_stopped_execution_result(self, workflow_step: dict[str, Any], evidence: str) -> dict[str, Any]:
@@ -4975,7 +4983,7 @@ Return only valid JSON:
             "END-010": ("output_reflectance_determination", "results_reflectance_determination"),
             "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
             "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
-            "END-019": ("output_component_selector", "results_component_selector"),
+            "END-006": ("output_component_selector", "results_component_selector"),
         }
         clean_id = str(module_id or "UNKNOWN").upper()
         output_name, results_name = layout_names.get(
@@ -5390,7 +5398,7 @@ Return only valid JSON:
     # Chat
     # ------------------------------------------------------------------
     # ------------------------------------------------------------------
-    # END-019 Satellite Design Component Selector (live GUI + orchestrator hooks)
+    # END-006 Satellite Design Component Selector (live GUI + orchestrator hooks)
     # ------------------------------------------------------------------
     def _component_selector_service(self):
         """Load the star_component_selector package once (STAR_COMPONENT_SELECTOR_ROOT, or a folder next to STAR)."""
@@ -5402,7 +5410,7 @@ Return only valid JSON:
         if env_root:
             candidates.append(Path(env_root).expanduser())
         # the module folder inside STAR, like the other END0XX modules
-        candidates.append(self.star_root / "END019-ComponentSelector" / "star_component_selector")
+        candidates.append(self.star_root / "END006-ComponentSelector" / "star_component_selector")
         for base in [self.project_dir, self.star_root]:
             for parent in [base, *base.parents]:
                 candidates.append(parent / "star_component_selector")
@@ -5418,7 +5426,7 @@ Return only valid JSON:
         return self._comp_selector_service
 
     def component_selector_catalog(self) -> dict[str, Any]:
-        """Catalogue overview for the END-019 GUI (CubeSat classes, subsystems, vendors)."""
+        """Catalogue overview for the END-006 GUI (CubeSat classes, subsystems, vendors)."""
         try:
             return self._component_selector_service().overview()
         except Exception as exc:
@@ -5436,10 +5444,10 @@ Return only valid JSON:
             return {"ok": False, "error": str(exc), "subsystems": []}
 
     def component_selector_design(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Design for the mission of the current run (live END-019 GUI), as the runner does: the requirements, the END-001 orbits and the
+        """Design for the mission of the current run (live END-006 GUI), as the runner does: the requirements, the END-001 orbits and the
         END-016 delta-v of this run, the class the user chose in the input-resolution step; otherwise the smallest class that fits."""
         try:
-            from runners.end019_runner import _approved_inputs, mission_context
+            from runners.end006_runner import _approved_inputs, mission_context
 
             params = dict(params or {})
             service = self._component_selector_service()
@@ -5455,7 +5463,7 @@ Return only valid JSON:
             return {"ok": False, "error": str(exc), "subsystems": []}
 
     def component_selector_datasheet(self, component_id: str) -> dict[str, Any]:
-        """Datasheet (PDF, base64) of a component for the END-019 drawer: the GUI runs without an HTTP server inside STAR."""
+        """Datasheet (PDF, base64) of a component for the END-006 drawer: the GUI runs without an HTTP server inside STAR."""
         try:
             return self._component_selector_service().datasheet_data(str(component_id))
         except KeyError:
@@ -5476,10 +5484,10 @@ Return only valid JSON:
             return {"params": {}, "evidence": {}, "notes": [str(exc)], "out_of_scope": [], "applicable": False}
 
     def component_selector_save(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Save the design chosen in the GUI under the current RUN (modules_output/END-019/output_component_selector)."""
+        """Save the design chosen in the GUI under the current RUN (modules_output/END-006/output_component_selector)."""
         if not self.current_run_path:
             return {"ok": False, "error": "No active run folder: the design was not saved."}
-        out = self.get_module_output_layout("END-019")["module_product_output_dir"] / "component_selector_user_design.json"
+        out = self.get_module_output_layout("END-006")["module_product_output_dir"] / "component_selector_user_design.json"
         out.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
         self.add_log("EXECUTION", f"Component selector design saved to {out}.")
         return {"ok": True, "path": self.make_run_relative_or_absolute(out)}
@@ -5529,7 +5537,7 @@ Return only valid JSON:
 
 def build_results_frontend_html(web_dir: Path) -> str:
     """Assemble the results-workspace HTML from the on-disk shell template
-    and per-module iframe files (web/star_results_shell_template_v3.html and
+    and per-module iframe files (web/star_results_shell_template_v4.html and
     web/modules/*.html), instead of one giant embedded Python string.
 
     Each module's HTML lives in its own real, editable file; this function
@@ -5540,7 +5548,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
     every iframe is byte-identical to the pre-split original, so the
     rendered page is unchanged.
     """
-    shell_path = web_dir / "star_results_shell_template_v3.html"
+    shell_path = web_dir / "star_results_shell_template_v4.html"
     modules_dir = web_dir / "modules"
     shell = shell_path.read_text(encoding="utf-8")
 
@@ -5550,7 +5558,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__": "end010_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COLLISION__": "end016_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_THERMAL__": "end018_results.html",
-        "__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__": "end019_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__": "end006_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__": "end001_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__": "end003_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_DIAGNOSTICS__": "run_diagnostics_results.html",
@@ -5566,7 +5574,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
 
 
 
-STAR_UNIFIED_SHELL_HTML = '<!DOCTYPE html>\n<html lang="en" data-theme="dark">\n<head>\n<meta charset="UTF-8" />\n<meta name="viewport" content="width=device-width, initial-scale=1.0" />\n<title>Space mission Twin for Architecture Representation (STAR) FrontEnd</title>\n<style>\n@import url(\'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap\');\n\n:root{\n  --bg:#090a0d;\n  --panel:#11141c;\n  --panel-strong:#151925;\n  --panel-muted:#0d1017;\n  --border:#232838;\n  --border-soft:rgba(114,125,151,.22);\n  --text:#d7dde9;\n  --text-strong:#ffffff;\n  --muted:#7d879a;\n  --muted-2:#9aa3b4;\n  --accent:#e8ff47;\n  --accent-2:#4dffc3;\n  --danger:#ff5c7a;\n  --success:#61f6a8;\n  --shadow:0 24px 80px rgba(0,0,0,.32);\n  color-scheme:dark;\n}\n:root[data-theme="light"]{\n  --bg:#f3f5f8;\n  --panel:#ffffff;\n  --panel-strong:#f8fafc;\n  --panel-muted:#eef2f7;\n  --border:#d9e0eb;\n  --border-soft:rgba(45,55,72,.13);\n  --text:#222b3b;\n  --text-strong:#070b12;\n  --muted:#667085;\n  --muted-2:#475467;\n  --accent:#667c00;\n  --accent-2:#007a66;\n  --danger:#bd2450;\n  --success:#047857;\n  --shadow:0 18px 60px rgba(31,41,55,.12);\n  color-scheme:light;\n}\n*{box-sizing:border-box}\nhtml,body{height:100%;min-height:100%}\nbody{\n  margin:0;\n  background:\n    radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),\n    radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),\n    var(--bg);\n  color:var(--text);\n  font-family:\'Space Mono\',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;\n  font-size:13px;\n  line-height:1.5;\n  overflow:hidden;\n}\nbutton{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 13px;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease}\nbutton:hover{transform:translateY(-1px);border-color:var(--accent-2)}\nbutton.active{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:800}\n.app-shell{height:100%;display:flex;flex-direction:column;width:min(1920px,100%);margin:0 auto;padding:18px;gap:18px}\n.header{\n  display:flex;\n  align-items:center;\n  justify-content:space-between;\n  gap:18px;\n  padding:16px 20px;\n  border:1px solid var(--border);\n  border-radius:22px;\n  background:color-mix(in srgb,var(--panel) 92%,transparent);\n  box-shadow:var(--shadow);\n  backdrop-filter:blur(18px);\n  flex:0 0 auto;\n}\n.header h1{\n  margin:0;\n  font-family:\'Syne\',Inter,system-ui,sans-serif;\n  font-size:clamp(20px,1.85vw,28px);\n  line-height:1.05;\n  color:var(--text-strong);\n  letter-spacing:-.03em;\n}\n.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}\n.theme-toggle{display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:var(--panel-muted);color:var(--muted-2);user-select:none}\n.switch{position:relative;width:48px;height:26px;display:inline-flex;align-items:center}\n.switch input{opacity:0;width:0;height:0}\n.slider-switch{position:absolute;inset:0;border-radius:999px;background:var(--border);transition:.22s ease;box-shadow:inset 0 0 0 1px var(--border-soft)}\n.slider-switch:before{content:\'\';position:absolute;width:20px;height:20px;left:3px;top:3px;border-radius:50%;background:var(--text-strong);transition:.22s ease}\n.switch input:checked+.slider-switch{background:linear-gradient(135deg,var(--accent),var(--accent-2))}\n.switch input:checked+.slider-switch:before{transform:translateX(22px);background:#07100d}\n.workspace{\n  min-height:0;\n  flex:1 1 auto;\n  border:1px solid var(--border);\n  border-radius:22px;\n  background:color-mix(in srgb,var(--panel) 95%,transparent);\n  box-shadow:var(--shadow);\n  overflow:hidden;\n  display:flex;\n  flex-direction:column;\n}\n.workspace-tabs{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px;border-bottom:1px solid var(--border);background:var(--panel-strong);flex:0 0 auto;flex-wrap:wrap}\n.tab-buttons{display:flex;gap:8px;flex-wrap:wrap}\n.workspace-tab{\n  display:inline-flex;\n  flex-direction:row;\n  align-items:center;\n  justify-content:center;\n  min-width:auto;\n  min-height:38px;\n  padding:8px 16px;\n  font-family:\'Space Mono\',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;\n  text-transform:none;\n  letter-spacing:.01em;\n  font-size:12px;\n  line-height:1;\n  white-space:nowrap;\n  color:var(--muted-2);\n  background:var(--panel-muted);\n}\n.workspace-tab .tab-title{font-size:12px;font-weight:700;letter-spacing:.01em;white-space:nowrap}\n.status-strip{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;flex-wrap:wrap}\n.status-dot{width:10px;height:10px;border-radius:999px;background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}\n.frame-stage{min-height:0;flex:1 1 auto;background:var(--bg);position:relative}\n.workspace-frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:transparent}\n.workspace-frame.active{display:block}\n.placeholder{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:30px;text-align:center;color:var(--muted)}\n.placeholder.visible{display:flex}\n.placeholder-card{max-width:720px;border:1px dashed var(--border);border-radius:18px;background:var(--panel-muted);padding:22px;box-shadow:var(--shadow)}\n.placeholder-card h2{margin:0 0 10px;color:var(--text-strong);font-family:\'Syne\',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:16px}\ncode{color:var(--accent-2)}\n@media(max-width:980px){\n  body{overflow:auto}.app-shell{min-height:100%;height:auto;padding:10px}.header{align-items:flex-start;flex-direction:column}.header-actions{justify-content:flex-start;width:100%}.workspace{height:78vh;min-height:720px}.workspace-tab{font-size:11px;padding:8px 12px}\n}\n\n/* STAR v2 compact shell patch */\n.app-shell{padding:12px!important;gap:12px!important;}\n.header{padding:12px 16px!important;border-radius:18px!important;}\n.workspace{border-radius:18px!important;}\n.workspace-tabs{padding:7px 8px!important;gap:8px!important;}\n.workspace-tab{min-height:32px!important;padding:6px 12px!important;border-radius:10px!important;}\n.workspace-tab .tab-title{font-size:11px!important;}\n.frame-stage{min-height:0!important;}\n\n</style>\n</head>\n<body>\n<div class="app-shell">\n  <header class="header">\n    <div>\n      <h1>Space mission Twin for Architecture Representation (STAR) FrontEnd</h1>\n    </div>\n    <div class="header-actions">\n      <label class="theme-toggle" title="Switch interface theme">\n        <span id="theme-label">Dark</span>\n        <span class="switch">\n          <input id="theme-switch" type="checkbox" aria-label="Toggle light theme" />\n          <span class="slider-switch"></span>\n        </span>\n      </label>\n    </div>\n  </header>\n\n  <section class="workspace">\n    <div class="workspace-tabs">\n      <div class="tab-buttons" role="tablist" aria-label="STAR workspaces">\n        <button id="tab-execution" class="workspace-tab active" data-workspace="execution" type="button"><span class="tab-title">Workflow Execution</span></button>\n        <button id="tab-results" class="workspace-tab" data-workspace="results" type="button"><span class="tab-title">Outputs Results Visualisation</span></button>\n      </div>\n      <div class="status-strip"><span class="status-dot"></span><span id="workspace-status">Execution workspace active.</span></div>\n    </div>\n    <div class="frame-stage">\n      <iframe id="execution-frame" class="workspace-frame active" allow="file-system-access" src="star_execution_frontend_v3.html?v=2" title="STAR Execution Workspace"></iframe>\n      <iframe id="results-frame" class="workspace-frame" allow="file-system-access" src="star_results_frontend_v3.html?v=2" title="STAR Results Workspace"></iframe>\n      <div id="execution-placeholder" class="placeholder"><div class="placeholder-card"><h2>Execution interface unavailable</h2><p>The file <code>web/index.html</code> was not found. Keep the original <code>web</code> folder next to this Python entry point.</p></div></div>\n    </div>\n  </section>\n</div>\n<script>\n(() => {\n  \'use strict\';\n  const $ = id => document.getElementById(id);\n  const state = { active: \'execution\' };\n  const executionFrame = $(\'execution-frame\');\n  const resultsFrame = $(\'results-frame\');\n  const statusText = $(\'workspace-status\');\n\n  function setTheme(theme) {\n    const value = theme === \'light\' ? \'light\' : \'dark\';\n    document.documentElement.dataset.theme = value;\n    localStorage.setItem(\'star-integrated-theme\', value);\n    $(\'theme-switch\').checked = value === \'light\';\n    $(\'theme-label\').textContent = value === \'light\' ? \'Light\' : \'Dark\';\n    try { localStorage.setItem(\'star-ui-theme\', value); } catch (_) {}\n    try { localStorage.setItem(\'star-unified-theme\', value); } catch (_) {}\n    for (const frame of [executionFrame, resultsFrame]) {\n      try {\n        const doc = frame.contentDocument;\n        const win = frame.contentWindow;\n        if (doc && doc.documentElement) {\n          doc.documentElement.dataset.theme = value;\n          if (doc.body) doc.body.dataset.theme = value;\n        }\n        if (win && typeof win.setTheme === \'function\') { win.setTheme(value, false); }\n        else if (win && typeof win.applyTheme === \'function\') { win.applyTheme(value); }\n      } catch (_) {}\n    }\n  }\n\n  function initialiseTheme() {\n    setTheme(localStorage.getItem(\'star-integrated-theme\') || \'dark\');\n    $(\'theme-switch\').addEventListener(\'change\', event => setTheme(event.target.checked ? \'light\' : \'dark\'));\n  }\n\n  function injectPywebviewApi() {\n    try {\n      if (executionFrame.contentWindow && window.pywebview) {\n        executionFrame.contentWindow.pywebview = window.pywebview;\n        executionFrame.contentWindow.dispatchEvent(new Event(\'pywebviewready\'));\n      }\n    } catch (error) {\n      console.warn(\'Unable to expose the pywebview API to the execution workspace:\', error);\n    }\n  }\n\n  function activateWorkspace(name) {\n    state.active = name;\n    document.querySelectorAll(\'.workspace-tab\').forEach(button => {\n      button.classList.toggle(\'active\', button.dataset.workspace === name);\n    });\n    executionFrame.classList.toggle(\'active\', name === \'execution\');\n    resultsFrame.classList.toggle(\'active\', name === \'results\');\n    statusText.textContent = name === \'execution\'\n      ? \'Execution workspace active.\'\n      : \'Results workspace active. Select the required RUN_XXXXX folder inside the Results workspace.\';\n\n    if (name === \'execution\') {\n      setTimeout(injectPywebviewApi, 50);\n    } else {\n      try {\n        const w = resultsFrame.contentWindow;\n        if (w && typeof w.refreshAllDashboards === \'function\') w.refreshAllDashboards();\n      } catch (_) {}\n    }\n  }\n\n  function bindTabs() {\n    document.querySelectorAll(\'.workspace-tab\').forEach(button => {\n      button.addEventListener(\'click\', () => activateWorkspace(button.dataset.workspace));\n    });\n  }\n\n  function checkExecutionFile() {\n    fetch(\'star_execution_frontend_v3.html\', { cache: \'no-store\' }).catch(() => {\n      $(\'execution-placeholder\').classList.add(\'visible\');\n    });\n  }\n\n  window.addEventListener(\'pywebviewready\', () => {\n    injectPywebviewApi();\n    setTimeout(injectPywebviewApi, 200);\n  });\n  executionFrame.addEventListener(\'load\', () => {\n    injectPywebviewApi();\n    setTimeout(injectPywebviewApi, 100);\n    setTimeout(injectPywebviewApi, 500);\n    setTheme(localStorage.getItem(\'star-integrated-theme\') || \'dark\');\n  });\n  resultsFrame.addEventListener(\'load\', () => setTheme(localStorage.getItem(\'star-integrated-theme\') || \'dark\'));\n\n  document.addEventListener(\'DOMContentLoaded\', () => {\n    initialiseTheme();\n    bindTabs();\n    checkExecutionFile();\n    activateWorkspace(\'execution\');\n  });\n})();\n</script>\n</body>\n</html>\n'
+STAR_UNIFIED_SHELL_HTML = '<!DOCTYPE html>\n<html lang="en" data-theme="dark">\n<head>\n<meta charset="UTF-8" />\n<meta name="viewport" content="width=device-width, initial-scale=1.0" />\n<title>Space mission Twin for Architecture Representation (STAR) FrontEnd</title>\n<style>\n@import url(\'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap\');\n\n:root{\n  --bg:#090a0d;\n  --panel:#11141c;\n  --panel-strong:#151925;\n  --panel-muted:#0d1017;\n  --border:#232838;\n  --border-soft:rgba(114,125,151,.22);\n  --text:#d7dde9;\n  --text-strong:#ffffff;\n  --muted:#7d879a;\n  --muted-2:#9aa3b4;\n  --accent:#e8ff47;\n  --accent-2:#4dffc3;\n  --danger:#ff5c7a;\n  --success:#61f6a8;\n  --shadow:0 24px 80px rgba(0,0,0,.32);\n  color-scheme:dark;\n}\n:root[data-theme="light"]{\n  --bg:#f3f5f8;\n  --panel:#ffffff;\n  --panel-strong:#f8fafc;\n  --panel-muted:#eef2f7;\n  --border:#d9e0eb;\n  --border-soft:rgba(45,55,72,.13);\n  --text:#222b3b;\n  --text-strong:#070b12;\n  --muted:#667085;\n  --muted-2:#475467;\n  --accent:#667c00;\n  --accent-2:#007a66;\n  --danger:#bd2450;\n  --success:#047857;\n  --shadow:0 18px 60px rgba(31,41,55,.12);\n  color-scheme:light;\n}\n*{box-sizing:border-box}\nhtml,body{height:100%;min-height:100%}\nbody{\n  margin:0;\n  background:\n    radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),\n    radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),\n    var(--bg);\n  color:var(--text);\n  font-family:\'Space Mono\',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;\n  font-size:13px;\n  line-height:1.5;\n  overflow:hidden;\n}\nbutton{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 13px;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease}\nbutton:hover{transform:translateY(-1px);border-color:var(--accent-2)}\nbutton.active{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:800}\n.app-shell{height:100%;display:flex;flex-direction:column;width:min(1920px,100%);margin:0 auto;padding:18px;gap:18px}\n.header{\n  display:flex;\n  align-items:center;\n  justify-content:space-between;\n  gap:18px;\n  padding:16px 20px;\n  border:1px solid var(--border);\n  border-radius:22px;\n  background:color-mix(in srgb,var(--panel) 92%,transparent);\n  box-shadow:var(--shadow);\n  backdrop-filter:blur(18px);\n  flex:0 0 auto;\n}\n.header h1{\n  margin:0;\n  font-family:\'Syne\',Inter,system-ui,sans-serif;\n  font-size:clamp(20px,1.85vw,28px);\n  line-height:1.05;\n  color:var(--text-strong);\n  letter-spacing:-.03em;\n}\n.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}\n.theme-toggle{display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:var(--panel-muted);color:var(--muted-2);user-select:none}\n.switch{position:relative;width:48px;height:26px;display:inline-flex;align-items:center}\n.switch input{opacity:0;width:0;height:0}\n.slider-switch{position:absolute;inset:0;border-radius:999px;background:var(--border);transition:.22s ease;box-shadow:inset 0 0 0 1px var(--border-soft)}\n.slider-switch:before{content:\'\';position:absolute;width:20px;height:20px;left:3px;top:3px;border-radius:50%;background:var(--text-strong);transition:.22s ease}\n.switch input:checked+.slider-switch{background:linear-gradient(135deg,var(--accent),var(--accent-2))}\n.switch input:checked+.slider-switch:before{transform:translateX(22px);background:#07100d}\n.workspace{\n  min-height:0;\n  flex:1 1 auto;\n  border:1px solid var(--border);\n  border-radius:22px;\n  background:color-mix(in srgb,var(--panel) 95%,transparent);\n  box-shadow:var(--shadow);\n  overflow:hidden;\n  display:flex;\n  flex-direction:column;\n}\n.workspace-tabs{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px;border-bottom:1px solid var(--border);background:var(--panel-strong);flex:0 0 auto;flex-wrap:wrap}\n.tab-buttons{display:flex;gap:8px;flex-wrap:wrap}\n.workspace-tab{\n  display:inline-flex;\n  flex-direction:row;\n  align-items:center;\n  justify-content:center;\n  min-width:auto;\n  min-height:38px;\n  padding:8px 16px;\n  font-family:\'Space Mono\',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;\n  text-transform:none;\n  letter-spacing:.01em;\n  font-size:12px;\n  line-height:1;\n  white-space:nowrap;\n  color:var(--muted-2);\n  background:var(--panel-muted);\n}\n.workspace-tab .tab-title{font-size:12px;font-weight:700;letter-spacing:.01em;white-space:nowrap}\n.status-strip{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;flex-wrap:wrap}\n.status-dot{width:10px;height:10px;border-radius:999px;background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}\n.frame-stage{min-height:0;flex:1 1 auto;background:var(--bg);position:relative}\n.workspace-frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:transparent}\n.workspace-frame.active{display:block}\n.placeholder{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:30px;text-align:center;color:var(--muted)}\n.placeholder.visible{display:flex}\n.placeholder-card{max-width:720px;border:1px dashed var(--border);border-radius:18px;background:var(--panel-muted);padding:22px;box-shadow:var(--shadow)}\n.placeholder-card h2{margin:0 0 10px;color:var(--text-strong);font-family:\'Syne\',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:16px}\ncode{color:var(--accent-2)}\n@media(max-width:980px){\n  body{overflow:auto}.app-shell{min-height:100%;height:auto;padding:10px}.header{align-items:flex-start;flex-direction:column}.header-actions{justify-content:flex-start;width:100%}.workspace{height:78vh;min-height:720px}.workspace-tab{font-size:11px;padding:8px 12px}\n}\n\n/* STAR v2 compact shell patch */\n.app-shell{padding:12px!important;gap:12px!important;}\n.header{padding:12px 16px!important;border-radius:18px!important;}\n.workspace{border-radius:18px!important;}\n.workspace-tabs{padding:7px 8px!important;gap:8px!important;}\n.workspace-tab{min-height:32px!important;padding:6px 12px!important;border-radius:10px!important;}\n.workspace-tab .tab-title{font-size:11px!important;}\n.frame-stage{min-height:0!important;}\n\n</style>\n</head>\n<body>\n<div class="app-shell">\n  <header class="header">\n    <div>\n      <h1>Space mission Twin for Architecture Representation (STAR) FrontEnd</h1>\n    </div>\n    <div class="header-actions">\n      <label class="theme-toggle" title="Switch interface theme">\n        <span id="theme-label">Dark</span>\n        <span class="switch">\n          <input id="theme-switch" type="checkbox" aria-label="Toggle light theme" />\n          <span class="slider-switch"></span>\n        </span>\n      </label>\n    </div>\n  </header>\n\n  <section class="workspace">\n    <div class="workspace-tabs">\n      <div class="tab-buttons" role="tablist" aria-label="STAR workspaces">\n        <button id="tab-execution" class="workspace-tab active" data-workspace="execution" type="button"><span class="tab-title">Workflow Execution</span></button>\n        <button id="tab-results" class="workspace-tab" data-workspace="results" type="button"><span class="tab-title">Outputs Results Visualisation</span></button>\n      </div>\n      <div class="status-strip"><span class="status-dot"></span><span id="workspace-status">Execution workspace active.</span></div>\n    </div>\n    <div class="frame-stage">\n      <iframe id="execution-frame" class="workspace-frame active" allow="file-system-access" src="star_execution_frontend_v4.html?v=2" title="STAR Execution Workspace"></iframe>\n      <iframe id="results-frame" class="workspace-frame" allow="file-system-access" src="star_results_frontend_v4.html?v=2" title="STAR Results Workspace"></iframe>\n      <div id="execution-placeholder" class="placeholder"><div class="placeholder-card"><h2>Execution interface unavailable</h2><p>The file <code>web/index.html</code> was not found. Keep the original <code>web</code> folder next to this Python entry point.</p></div></div>\n    </div>\n  </section>\n</div>\n<script>\n(() => {\n  \'use strict\';\n  const $ = id => document.getElementById(id);\n  const state = { active: \'execution\' };\n  const executionFrame = $(\'execution-frame\');\n  const resultsFrame = $(\'results-frame\');\n  const statusText = $(\'workspace-status\');\n\n  function setTheme(theme) {\n    const value = theme === \'light\' ? \'light\' : \'dark\';\n    document.documentElement.dataset.theme = value;\n    localStorage.setItem(\'star-integrated-theme\', value);\n    $(\'theme-switch\').checked = value === \'light\';\n    $(\'theme-label\').textContent = value === \'light\' ? \'Light\' : \'Dark\';\n    try { localStorage.setItem(\'star-ui-theme\', value); } catch (_) {}\n    try { localStorage.setItem(\'star-unified-theme\', value); } catch (_) {}\n    for (const frame of [executionFrame, resultsFrame]) {\n      try {\n        const doc = frame.contentDocument;\n        const win = frame.contentWindow;\n        if (doc && doc.documentElement) {\n          doc.documentElement.dataset.theme = value;\n          if (doc.body) doc.body.dataset.theme = value;\n        }\n        if (win && typeof win.setTheme === \'function\') { win.setTheme(value, false); }\n        else if (win && typeof win.applyTheme === \'function\') { win.applyTheme(value); }\n      } catch (_) {}\n    }\n  }\n\n  function initialiseTheme() {\n    setTheme(localStorage.getItem(\'star-integrated-theme\') || \'dark\');\n    $(\'theme-switch\').addEventListener(\'change\', event => setTheme(event.target.checked ? \'light\' : \'dark\'));\n  }\n\n  function injectPywebviewApi() {\n    try {\n      if (executionFrame.contentWindow && window.pywebview) {\n        executionFrame.contentWindow.pywebview = window.pywebview;\n        executionFrame.contentWindow.dispatchEvent(new Event(\'pywebviewready\'));\n      }\n    } catch (error) {\n      console.warn(\'Unable to expose the pywebview API to the execution workspace:\', error);\n    }\n  }\n\n  function activateWorkspace(name) {\n    state.active = name;\n    document.querySelectorAll(\'.workspace-tab\').forEach(button => {\n      button.classList.toggle(\'active\', button.dataset.workspace === name);\n    });\n    executionFrame.classList.toggle(\'active\', name === \'execution\');\n    resultsFrame.classList.toggle(\'active\', name === \'results\');\n    statusText.textContent = name === \'execution\'\n      ? \'Execution workspace active.\'\n      : \'Results workspace active. Select the required RUN_XXXXX folder inside the Results workspace.\';\n\n    if (name === \'execution\') {\n      setTimeout(injectPywebviewApi, 50);\n    } else {\n      try {\n        const w = resultsFrame.contentWindow;\n        if (w && typeof w.refreshAllDashboards === \'function\') w.refreshAllDashboards();\n      } catch (_) {}\n    }\n  }\n\n  function bindTabs() {\n    document.querySelectorAll(\'.workspace-tab\').forEach(button => {\n      button.addEventListener(\'click\', () => activateWorkspace(button.dataset.workspace));\n    });\n  }\n\n  function checkExecutionFile() {\n    fetch(\'star_execution_frontend_v4.html\', { cache: \'no-store\' }).catch(() => {\n      $(\'execution-placeholder\').classList.add(\'visible\');\n    });\n  }\n\n  window.addEventListener(\'pywebviewready\', () => {\n    injectPywebviewApi();\n    setTimeout(injectPywebviewApi, 200);\n  });\n  executionFrame.addEventListener(\'load\', () => {\n    injectPywebviewApi();\n    setTimeout(injectPywebviewApi, 100);\n    setTimeout(injectPywebviewApi, 500);\n    setTheme(localStorage.getItem(\'star-integrated-theme\') || \'dark\');\n  });\n  resultsFrame.addEventListener(\'load\', () => setTheme(localStorage.getItem(\'star-integrated-theme\') || \'dark\'));\n\n  document.addEventListener(\'DOMContentLoaded\', () => {\n    initialiseTheme();\n    bindTabs();\n    checkExecutionFile();\n    activateWorkspace(\'execution\');\n  });\n})();\n</script>\n</body>\n</html>\n'
 
 STAR_EXECUTION_FRONTEND_PATCH_CSS = '\n<style id="star-v1-execution-ui-patch">\n.star-v1-hidden{display:none!important;visibility:hidden!important;max-height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important;}\n.star-v1-upload-normalized{\n  min-height:32px!important;\n  height:32px!important;\n  padding:0 14px!important;\n  border-radius:999px!important;\n  display:inline-flex!important;\n  align-items:center!important;\n  justify-content:center!important;\n  font-size:12px!important;\n  line-height:1!important;\n  white-space:nowrap!important;\n  flex:0 0 auto!important;\n}\n#star-v1-initial-hint{\n  margin:10px 0 0 0!important;\n  padding:10px 12px!important;\n  border:1px dashed rgba(140,156,190,.40)!important;\n  border-radius:12px!important;\n  background:rgba(10,14,22,.65)!important;\n  color:#9aa3b4!important;\n  font-size:12px!important;\n  line-height:1.4!important;\n  font-family:\'Space Mono\',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace!important;\n}\n.star-v1-copy-log-button{\n  min-height:24px!important;\n  height:24px!important;\n  padding:0 9px!important;\n  margin-left:8px!important;\n  border-radius:999px!important;\n  font-size:10px!important;\n  line-height:1!important;\n  white-space:nowrap!important;\n  vertical-align:middle!important;\n}\n.star-v1-log-tab-parent{display:flex!important;align-items:center!important;gap:6px!important;}\n.star-v1-hide-title{display:none!important;}\n</style>\n'
 
@@ -5663,10 +5671,10 @@ STAR_V3_PARTNER_LOGOS_PATCH = """
 """
 
 
-def write_execution_frontend_v3(web_dir: Path) -> Path | None:
+def write_execution_frontend_v4(web_dir: Path) -> Path | None:
     """Create a non-destructive patched copy of web/index.html for the execution tab."""
     source_path = web_dir / "index.html"
-    target_path = web_dir / "star_execution_frontend_v3.html"
+    target_path = web_dir / "star_execution_frontend_v4.html"
 
     if not source_path.exists():
         return None
@@ -5823,12 +5831,12 @@ def write_unified_frontend_files() -> Path:
     web_dir = Path(__file__).resolve().parent / "web"
     web_dir.mkdir(parents=True, exist_ok=True)
 
-    write_execution_frontend_v3(web_dir)
+    write_execution_frontend_v4(web_dir)
 
-    results_path = web_dir / "star_results_frontend_v3.html"
+    results_path = web_dir / "star_results_frontend_v4.html"
     results_path.write_text(build_results_frontend_html(web_dir), encoding="utf-8")
 
-    shell_path = web_dir / "star_frontend_unified_v3.html"
+    shell_path = web_dir / "star_frontend_unified_v4.html"
     shell_path.write_text(star_v3_shell_html(), encoding="utf-8")
 
     return shell_path
@@ -5839,7 +5847,7 @@ def main() -> None:
     shell_path = write_unified_frontend_files()
 
     webview.create_window(
-        title="Space mission Twin for Architecture Representation (STAR) FrontEnd v3",
+        title="Space mission Twin for Architecture Representation (STAR) FrontEnd v4",
         url=str(shell_path),
         js_api=api,
         width=1580,

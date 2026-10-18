@@ -4,7 +4,7 @@ The list is Input/input_base_knowledge/config/italian_ground_stations.json (sour
 1. STAR input (ground_stations / observatory): names or aliases of the list, coordinates, or {name, lat, lon};
 2. stations or telescopes the mission request names (names, aliases or coordinates in a station / observatory sentence);
 3. automatic choice: the communication station nearest to the area of interest among those supporting the downlink band
-   of the CubeSat radios (END-019 spacecraft_definition.json; a single station also keeps the END-001 surrogate usable
+   of the CubeSat radios (END-006 spacecraft_definition.json; a single station also keeps the END-001 surrogate usable
    when it lies inside its Italy outline); every confirmed telescope as LightCurve.Candidates, END-001 keeping the one
    with the most convenient first night pass (darkest sky, earliest, highest).
 """

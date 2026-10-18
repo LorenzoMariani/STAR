@@ -247,6 +247,6 @@ STAR runs `star_attitude_propagation_star(configFile, outputFolder)` (END003-Att
 
 END-003 no longer selects the passes: it reads END-001's pass_selection.json (cfg.end001_pass_selection; error when missing) and
 computes the attitude on the imaging pass and on the first night pass from the observatory. Mass, inertia (uniform box of the
-class envelope) and reference area come from the END-019 initial design (spacecraft_definition.json) unless the user gives
+class envelope) and reference area come from the END-006 initial design (spacecraft_definition.json) unless the user gives
 spacecraft_physical_properties. attitude_summary.json also gives "illumination": the mean cosine of the Sun incidence on each body
 face (+X ... -Z) over the sunlit time, used by END-004 for the solar generation.

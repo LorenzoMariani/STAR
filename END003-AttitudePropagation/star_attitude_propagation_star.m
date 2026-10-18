@@ -998,7 +998,7 @@ function D = dashboard_series(A, td, S, ctx, site, E)
     D.energy = 0.5*sum(D.w.*D.H_body, 2);
     [D.start_idx, D.end_idx] = find_runs(D.el > S.elev_threshold);
     % illumination of the body faces (+X -X +Y -Y +Z -Z): mean cosine of the Sun
-    % incidence over the sunlit time, for the solar panels of END-019 (END-004)
+    % incidence over the sunlit time, for the solar panels of END-006 (END-004)
     s_b = quat_rotate([-D.q(:, 1:3), D.q(:, 4)], Sun);
     cosf = max(0, s_b*[1 0 0; -1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1]');
     D.face_illum = mean(cosf(D.sunlit, :), 1);

@@ -33,7 +33,7 @@
       12
     ],
     "max_mass_kg": 24,
-    "reason": "END-019 designs the satellite every module uses and its catalogue has only 1U-12U CubeSats (CubeSat Design Specification, at most 24 kg)"
+    "reason": "END-006 designs the satellite every module uses and its catalogue has only 1U-12U CubeSats (CubeSat Design Specification, at most 24 kg)"
   },
   "outside_orbit_words": [
     "geostationary",

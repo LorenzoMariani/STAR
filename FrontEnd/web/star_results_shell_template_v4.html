@@ -240,11 +240,11 @@ code{color:var(--accent-2)}
         <button class="tab-button active" id="tab-constellation" data-tab="constellation" type="button"><span class="tab-code">END001</span><span class="tab-title">Constellation Optimization</span></button>
         <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END0003</span><span class="tab-title">Attitude Propagation</span></button>
         <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END004</span><span class="tab-title">Power Budget</span></button>
+        <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END006</span><span class="tab-title">Component Selector</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END010</span><span class="tab-title">Reflectance Determination</span></button>
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
         <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
-        <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END019</span><span class="tab-title">Component Selector</span></button>
         <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
@@ -327,9 +327,9 @@ const STAR_KIND_PATHS = {
     results: ['modules_output', 'END-018', 'results_components_thermal_analysis']
   },
   compsel: {
-    all: ['modules_output', 'END-019'],
-    product: ['modules_output', 'END-019', 'output_component_selector'],
-    results: ['modules_output', 'END-019', 'results_component_selector']
+    all: ['modules_output', 'END-006'],
+    product: ['modules_output', 'END-006', 'output_component_selector'],
+    results: ['modules_output', 'END-006', 'results_component_selector']
   }
 };
 
@@ -815,8 +815,8 @@ async function loadComponentSelectorFromStarRoot() {
   const frame = $('frame-compsel');
   if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveComponentSelectorFilesFromParent !== 'function') return false;
   try {
-    const productPath = ['modules_output','END-019','output_component_selector'];
-    const resultsPath = ['modules_output','END-019','results_component_selector'];
+    const productPath = ['modules_output','END-006','output_component_selector'];
+    const resultsPath = ['modules_output','END-006','results_component_selector'];
     const payload = {
       productFiles: await collectFilesFromSelectedPath(productPath),
       resultFiles: await collectFilesFromSelectedPath(resultsPath)
@@ -824,7 +824,7 @@ async function loadComponentSelectorFromStarRoot() {
     await frame.contentWindow.receiveComponentSelectorFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
     return true;
   } catch (error) {
-    console.warn('Unable to load END-019 component-selector data from the selected RUN folder:', error);
+    console.warn('Unable to load END-006 component-selector data from the selected RUN folder:', error);
     return false;
   }
 }
@@ -882,12 +882,11 @@ function moduleDisplayName(moduleId) {
     'END-001': 'Constellation Optimizer',
     'END-003': 'Attitude Propagation',
     'END-004': 'Power Budget',
-    'END-006': 'Scenario Generation',
     'END-007': 'Synthetic Data Generation',
     'END-010': 'Reflectance Determination',
     'END-016': 'Collision Avoidance',
     'END-018': 'Components Thermal Analysis',
-    'END-019': 'Satellite Design Component Selector'
+    'END-006': 'Satellite Design Component Selector'
   };
   return names[moduleId] || moduleId;
 }
@@ -916,8 +915,8 @@ async function buildRunDiagnostics() {
     { module:'END-016', artifact:'Collision-avoidance run information', path:['modules_output','END-016','results_collision_avoidance'], matcher:name=>/^collision_run_info\.json$/i },
     { module:'END-018', artifact:'Thermal time series and summaries', path:['modules_output','END-018','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
     { module:'END-018', artifact:'Thermal run information', path:['modules_output','END-018','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
-    { module:'END-019', artifact:'Component-selector results', path:['modules_output','END-019','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
-    { module:'END-019', artifact:'Component-selector frontend data and report', path:['modules_output','END-019','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
+    { module:'END-006', artifact:'Component-selector results', path:['modules_output','END-006','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
+    { module:'END-006', artifact:'Component-selector frontend data and report', path:['modules_output','END-006','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
   ];
 
   const checks = [];
@@ -958,7 +957,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-007','END-010','END-016','END-018','END-019']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-018']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {
@@ -1014,7 +1013,7 @@ function scheduleAttitudeDataDelivery() {
 }
 
 // 2026-10-18: each tab reads its RUN data once, the first time it is shown (visible) after the RUN selection. Before,
-// every click re-read the files and the module re-processed them (thousands of END-007 frames, ~13 MB of END-019 data)
+// every click re-read the files and the module re-processed them (thousands of END-007 frames, ~13 MB of END-006 data)
 // and selecting the RUN read every tab at once, freezing the window. Later clicks only show the tab, redrawn when its
 // size changed while it was hidden (window resized). "Select RUN Folder" pressed again reads the data again (outputs of
 // a run still in progress).

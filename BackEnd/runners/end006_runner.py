@@ -1,11 +1,11 @@
-"""STAR runner for END-019 Satellite Design Component Selector.
+"""STAR runner for END-006 Satellite Design Component Selector.
 
-Called by the orchestrator (FrontEnd/star_frontend_v3.py -> StarApi.call_module_runner_or_placeholder) as
-`runners.end019_runner.run_end019(input_file=..., output_dir=..., ...)`. Place this file in BackEnd/runners/.
+Called by the orchestrator (FrontEnd/star_frontend_v4.py -> StarApi.call_module_runner_or_placeholder) as
+`runners.end006_runner.run_end006(input_file=..., output_dir=..., ...)`. Place this file in BackEnd/runners/.
 
 The selector package (star_component_selector) is located through, in order:
   1. the STAR_COMPONENT_SELECTOR_ROOT environment variable;
-  2. STAR/END019-ComponentSelector/star_component_selector (the module folder inside STAR, like the other
+  2. STAR/END006-ComponentSelector/star_component_selector (the module folder inside STAR, like the other
      END0XX modules), or a folder named `star_component_selector` next to or above this file, the STAR root
      or the run folder.
 """
@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-MODULE_ID = "END-019"
+MODULE_ID = "END-006"
 OUTPUT_DIRNAME = "output_component_selector"
 RESULTS_DIRNAME = "results_component_selector"
 SELECTOR_DIRNAME = "star_component_selector"
@@ -35,7 +35,7 @@ def _find_selector_root(extra: list[str | Path]) -> Path:
     here = Path(__file__).resolve()
     for base in [here, *[Path(p).resolve() for p in extra if p]]:
         for parent in [base, *base.parents]:
-            candidates.append(parent / "END019-ComponentSelector" / SELECTOR_DIRNAME)   # module folder inside STAR
+            candidates.append(parent / "END006-ComponentSelector" / SELECTOR_DIRNAME)   # module folder inside STAR
             candidates.append(parent / SELECTOR_DIRNAME)
             candidates.append(parent.parent / SELECTOR_DIRNAME)
     for c in candidates:
@@ -53,7 +53,7 @@ def _number(value: Any) -> float | None:
 
 
 def _approved_inputs(items: list[dict[str, Any]], defaults_only: bool | None = None) -> dict[str, Any]:
-    """Values resolved in the missing-information step for END-019 (field proposed_value); empty values are ignored.
+    """Values resolved in the missing-information step for END-006 (field proposed_value); empty values are ignored.
 
     defaults_only=True keeps only first-guess values (source module_registry_default, not edited by the user): they must not override what
     the requirements say; False keeps only values the user provided or edited; None keeps all."""
@@ -76,7 +76,7 @@ def _approved_inputs(items: list[dict[str, Any]], defaults_only: bool | None = N
     return out
 
 
-# Satellite shared by the STAR modules (2026-10-17): END-019 runs first (initial design, step 0 of the
+# Satellite shared by the STAR modules (2026-10-17): END-006 runs first (initial design, step 0 of the
 # workflow) and writes spacecraft_definition.json, which END-001, END-003, END-004, END-010, END-016 and
 # END-018 use; at the end of the workflow it runs again with their results (final design).
 SPACECRAFT_FILE = "spacecraft_definition.json"
@@ -159,7 +159,7 @@ def design_changes(initial: dict[str, Any] | None, final: dict[str, Any]) -> lis
 
 
 def mission_context(modules_output: Path | None) -> dict[str, Any]:
-    """Products of the same run that END-019 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers),
+    """Products of the same run that END-006 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers),
     the END-004 power budget (energy the battery gives in an orbit -> battery capacity) and the END-016 space-safety summary
     (disposal delta-v -> propulsion)."""
     ctx: dict[str, Any] = {}
@@ -185,7 +185,7 @@ def mission_context(modules_output: Path | None) -> dict[str, Any]:
     return ctx
 
 
-def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
+def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
                log_callback: Callable[[str, str], Any] | None = None, stop_event: Any = None,
                star_root: str | None = None, run_output_dir: str | None = None,
                module_product_output_dir: str | None = None, module_results_dir: str | None = None, **_: Any) -> dict[str, Any]:
@@ -224,7 +224,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     params: dict[str, Any] = {}
     if defaults_path:
         params = {k: v for k, v in json.loads(defaults_path.read_text(encoding="utf-8")).items() if k == "form_factor_u"}
-        log("EXECUTION", f"END-019 defaults loaded from {defaults_path}")
+        log("EXECUTION", f"END-006 defaults loaded from {defaults_path}")
     mapping = requirements_to_params(requirements)
     first_guess = _approved_inputs(payload.get("resolved_inputs") or [], defaults_only=True)
     params.update(first_guess)
@@ -239,7 +239,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
         notes.append(f"CubeSat class chosen by the user: {forced}U")
     context = mission_context(Path(output_dir).resolve().parent) if phase == "final" else {}
     used = [k for k in ("altitude_km", "end004", "end016") if k in context]
-    log("EXECUTION", f"END-019 {phase} design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
+    log("EXECUTION", f"END-006 {phase} design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
 
     service = SelectorService()
     generated: list[str] = []
@@ -294,7 +294,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
             record["design_changes"] = changes
             write(product_dir / "spacecraft_definition_final.json", dumps({**sc, "changes_from_initial": changes}))
             if initial is None:
-                note = "no initial design in this run: the other modules did not use an END-019 satellite"
+                note = "no initial design in this run: the other modules did not use an END-006 satellite"
             elif changes:
                 note = "the final design differs from the initial one the modules used: " + "; ".join(changes)
             else:
@@ -317,10 +317,10 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     var = "componentSelectorDataInitial" if phase == "initial" else "componentSelectorData"
     data = {**record}
     write(results_dir / f"component_selector_data{sfx}.js", f"window.{var} = " + dumps(data) + ";\n")
-    gui_html = Path(__file__).resolve().parents[2] / "FrontEnd" / "web" / "modules" / "end019_results.html"   # the END-019 tab (only copy of the GUI)
+    gui_html = Path(__file__).resolve().parents[2] / "FrontEnd" / "web" / "modules" / "end006_results.html"   # the END-006 tab (only copy of the GUI)
     if gui_html.is_file():
         page = gui_html.read_text(encoding="utf-8")
         embedded = "<script>window.componentSelectorData = " + dumps(data).replace("</", "<\\/") + ";</script>\n"
         write(results_dir / f"component_selector_report{sfx}.html", page.replace("<script>\n(() => {", embedded + "<script>\n(() => {", 1))
-    log("EXECUTION", f"END-019 {status}: {evidence}")
+    log("EXECUTION", f"END-006 {status}: {evidence}")
     return {"status": status, "generated_artifacts": generated, "evidence": evidence}

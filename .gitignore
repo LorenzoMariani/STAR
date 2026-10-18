@@ -16,7 +16,7 @@ _old*/
 /END010-ReflectanceDetermination/lib/data/DE440.mat
 /END010-ReflectanceDetermination/lib/BuildAqua/
 /END010-ReflectanceDetermination/lib/BuildCubeSat/
-/END019-ComponentSelector.zip
+/END0*-ComponentSelector.zip
 
 # END-010 Unity project (STAR copy of unityLightCurveInversion): only the sources;
 # Unity regenerates these folders when it opens or builds the project
@@ -58,13 +58,13 @@ _old*/
 /END016-CollisionAvoidance/CARA_Analysis_Tools/**/Documentation/
 /END016-CollisionAvoidance/CARA_Analysis_Tools/DistributedMatlab/EvaluateLightPollution/output_with_distribution/
 /END016-CollisionAvoidance/lib/*.png
-# END-019: the vendor datasheets are PDFs (left out above; GomSpace's carry a
+# END-006: the vendor datasheets are PDFs (left out above; GomSpace's carry a
 # confidentiality notice); its STAR integration kit (now copied into STAR),
 # installation guide, conversation transcript and hand-over notes
-/END019-ComponentSelector/docs/
-/END019-ComponentSelector/star_integration/
-/END019-ComponentSelector/CONTINUARE_LA_CONVERSAZIONE.md
-/END019-ComponentSelector/LEGGIMI_INSTALLAZIONE.md
+/END006-ComponentSelector/docs/
+/END006-ComponentSelector/star_integration/
+/END006-ComponentSelector/CONTINUARE_LA_CONVERSAZIONE.md
+/END006-ComponentSelector/LEGGIMI_INSTALLAZIONE.md
 # END-018: outputs of the example configurations (examples/input_*.json)
 /END018-ComponentsThermalAnalysis/examples/output_*/
 

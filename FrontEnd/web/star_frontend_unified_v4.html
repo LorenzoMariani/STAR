@@ -206,8 +206,8 @@ code{color:var(--accent-2)}
       <div class="status-strip"><span class="status-dot"></span><span id="workspace-status">Execution workspace active.</span></div>
     </div>
     <div class="frame-stage">
-      <iframe id="execution-frame" class="workspace-frame active" allow="file-system-access" src="star_execution_frontend_v3.html?v=2" title="STAR Execution Workspace"></iframe>
-      <iframe id="results-frame" class="workspace-frame" allow="file-system-access" src="star_results_frontend_v3.html?v=2" title="STAR Results Workspace"></iframe>
+      <iframe id="execution-frame" class="workspace-frame active" allow="file-system-access" src="star_execution_frontend_v4.html?v=2" title="STAR Execution Workspace"></iframe>
+      <iframe id="results-frame" class="workspace-frame" allow="file-system-access" src="star_results_frontend_v4.html?v=2" title="STAR Results Workspace"></iframe>
       <div id="execution-placeholder" class="placeholder"><div class="placeholder-card"><h2>Execution interface unavailable</h2><p>The file <code>web/index.html</code> was not found. Keep the original <code>web</code> folder next to this Python entry point.</p></div></div>
     </div>
   </section>
@@ -287,7 +287,7 @@ code{color:var(--accent-2)}
   }
 
   function checkExecutionFile() {
-    fetch('star_execution_frontend_v3.html', { cache: 'no-store' }).catch(() => {
+    fetch('star_execution_frontend_v4.html', { cache: 'no-store' }).catch(() => {
       $('execution-placeholder').classList.add('visible');
     });
   }

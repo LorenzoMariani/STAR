@@ -36,7 +36,7 @@ Status: `completed`; `failed` when the END-001 products (or its ephemerides) are
 ## Relationship with other modules
 
 - END-001 provides the orbits, the ephemerides and the spacecraft mass and drag; its own collision objective `J_collav` is a geometric proxy of the crossings inside the constellation, END-016 measures them.
-- The disposal and drag make-up delta-v are inputs for the propulsion choice (END-019) and the mission budgets.
+- The disposal and drag make-up delta-v are inputs for the propulsion choice (END-006) and the mission budgets.
 
 ## Known limits
 
