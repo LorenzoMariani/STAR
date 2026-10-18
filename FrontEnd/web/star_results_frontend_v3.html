@@ -245,6 +245,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END016</span><span class="tab-title">Collision Avoidance</span></button>
         <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END018</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END019</span><span class="tab-title">Component Selector</span></button>
+        <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
       </div>
@@ -984,15 +985,19 @@ button,input,select{font:inherit}button{border:1px solid var(--border);backgroun
 &#x27;use strict&#x27;;
 const DEFAULT_RESULTS_PATH = &#x27;./modules_output/END-007/results_synthetic_data_generation&#x27;;
 const $ = id =&gt; document.getElementById(id);
-const state = { files: [], urls: [], cache: [], loaded:false, path:DEFAULT_RESULTS_PATH, current:-1 };
+const state = { files: [], urls: [], cache: [], loaded:false, path:DEFAULT_RESULTS_PATH, current:-1, total:0 };
 let isPlaying=false, playRequest=null, lastPlayTS=0, accumulated=0, baseFrameInterval=1000/24, speedMultiplier=1, loopPlayback=true;
 let imgScale=1, imgPanX=0, imgPanY=0, isPanning=false, startPanX=0, startPanY=0;
 function escapeHtml(value){return String(value ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;).replaceAll(&quot;&#x27;&quot;,&#x27;&amp;#039;&#x27;);}
 function fileRelativePath(file){return file.relativeDisplayPath || file.webkitRelativePath || file.name;}
 async function collectFilesFromDirectoryHandle(handle, prefix=&#x27;&#x27;) { const files=[]; for await (const [name,entry] of handle.entries()) { if (entry.kind === &#x27;file&#x27;) { const file=await entry.getFile(); file.relativeDisplayPath = `${prefix}${name}`; files.push(file); } else if (entry.kind === &#x27;directory&#x27;) { files.push(...await collectFilesFromDirectoryHandle(entry, `${prefix}${name}/`)); } } return files; }
-function updateStatus(){ $(&#x27;load-status&#x27;).textContent = state.loaded ? &#x27;loaded&#x27; : &#x27;pending&#x27;; $(&#x27;image-count&#x27;).textContent = state.files.length || &#x27;—&#x27;; $(&#x27;source-folder&#x27;).textContent = state.path || &#x27;—&#x27;; $(&#x27;current-frame-summary&#x27;).textContent = state.current &gt;= 0 ? `${state.current+1}/${state.files.length}` : &#x27;—&#x27;; $(&#x27;file-access-panel&#x27;).innerHTML = `&lt;div class=&quot;file-status-row&quot;&gt;&lt;span class=&quot;status-dot ${state.loaded ? &#x27;loaded&#x27; : &#x27;&#x27;}&quot;&gt;&lt;/span&gt;&lt;div&gt;&lt;div class=&quot;file-title&quot;&gt;Synthetic PNG frames · ${state.loaded ? &#x27;Loaded&#x27; : &#x27;Missing&#x27;}&lt;/div&gt;&lt;div class=&quot;file-path&quot;&gt;${escapeHtml(state.path)}&lt;/div&gt;&lt;/div&gt;&lt;button id=&quot;synthetic-folder-button&quot; class=&quot;file-row-button&quot; type=&quot;button&quot;&gt;Select Results Folder&lt;/button&gt;&lt;/div&gt;`; const btn=$(&#x27;synthetic-folder-button&#x27;); if(btn) btn.onclick=requestSyntheticFolder; }
+function updateStatus(){ $(&#x27;load-status&#x27;).textContent = state.loaded ? &#x27;loaded&#x27; : &#x27;pending&#x27;; $(&#x27;image-count&#x27;).textContent = state.files.length ? (state.total&gt;state.files.length ? `${state.files.length} of ${state.total}` : state.files.length) : &#x27;—&#x27;; $(&#x27;source-folder&#x27;).textContent = state.path || &#x27;—&#x27;; $(&#x27;current-frame-summary&#x27;).textContent = state.current &gt;= 0 ? `${state.current+1}/${state.files.length}` : &#x27;—&#x27;; $(&#x27;file-access-panel&#x27;).innerHTML = `&lt;div class=&quot;file-status-row&quot;&gt;&lt;span class=&quot;status-dot ${state.loaded ? &#x27;loaded&#x27; : &#x27;&#x27;}&quot;&gt;&lt;/span&gt;&lt;div&gt;&lt;div class=&quot;file-title&quot;&gt;Synthetic PNG frames · ${state.loaded ? &#x27;Loaded&#x27; : &#x27;Missing&#x27;}&lt;/div&gt;&lt;div class=&quot;file-path&quot;&gt;${escapeHtml(state.path)}&lt;/div&gt;&lt;/div&gt;&lt;button id=&quot;synthetic-folder-button&quot; class=&quot;file-row-button&quot; type=&quot;button&quot;&gt;Select Results Folder&lt;/button&gt;&lt;/div&gt;`; const btn=$(&#x27;synthetic-folder-button&#x27;); if(btn) btn.onclick=requestSyntheticFolder; }
 function revokeImages(){ state.urls.forEach(url =&gt; { if(String(url).startsWith(&#x27;blob:&#x27;)) URL.revokeObjectURL(url); }); state.urls=[]; state.cache=[]; }
-function loadSyntheticFiles(files, label=&#x27;Selected folder&#x27;){ const pngs=Array.from(files||[]).filter(f=&gt;/\.png$/i.test(f.name)).sort((a,b)=&gt;a.name.localeCompare(b.name,undefined,{numeric:true})); revokeImages(); state.files=pngs; state.urls=pngs.map(f=&gt;URL.createObjectURL(f)); state.cache=new Array(state.urls.length).fill(null); state.current=-1; state.loaded=pngs.length&gt;0; state.path = state.loaded ? `${label}: ${pngs.length} PNG frame(s)` : `${label}: no PNG frames found`; preloadImages(); if(state.loaded) showFrame(0,{force:true}); else resetViewerOnly(); updateStatus(); }
+// 2026-10-18: only MAX_DISPLAYED_FRAMES frames, evenly spaced from the first to the last, are decoded and shown; the full
+// Unreal sequence (~10 fps, thousands of 2 MB PNGs per pass) froze the results window
+const MAX_DISPLAYED_FRAMES=24;
+function pickDisplayedFrames(pngs){ const n=pngs.length; if(n&lt;=MAX_DISPLAYED_FRAMES) return pngs; return Array.from({length:MAX_DISPLAYED_FRAMES},(_,k)=&gt;pngs[Math.round(k*(n-1)/(MAX_DISPLAYED_FRAMES-1))]); }
+function loadSyntheticFiles(files, label=&#x27;Selected folder&#x27;){ const pngs=Array.from(files||[]).filter(f=&gt;/\.png$/i.test(f.name)).sort((a,b)=&gt;a.name.localeCompare(b.name,undefined,{numeric:true})); revokeImages(); const shown=pickDisplayedFrames(pngs); state.total=pngs.length; state.files=shown; state.urls=shown.map(f=&gt;URL.createObjectURL(f)); state.cache=new Array(state.urls.length).fill(null); state.current=-1; state.loaded=shown.length&gt;0; state.path = state.loaded ? (shown.length&lt;pngs.length ? `${label}: ${shown.length} of ${pngs.length} PNG frame(s), evenly spaced` : `${label}: ${pngs.length} PNG frame(s)`) : `${label}: no PNG frames found`; preloadImages(); if(state.loaded) showFrame(0,{force:true}); else resetViewerOnly(); updateStatus(); }
 async function requestSyntheticFolder(){ if(window.parent &amp;&amp; window.parent !== window &amp;&amp; typeof window.parent.STAR_PICK_DIRECTORY === &#x27;function&#x27;){ const picked=await window.parent.STAR_PICK_DIRECTORY(&#x27;synthetic&#x27;,&#x27;png&#x27;); if(picked &amp;&amp; picked.files){ loadSyntheticFiles(picked.files, picked.label || &#x27;RUN_XXXXX/modules_output/END-007/results_synthetic_data_generation&#x27;); return; } } if(&#x27;showDirectoryPicker&#x27; in window){ try{ const handle=await window.showDirectoryPicker({mode:&#x27;read&#x27;,id:&#x27;star-synthetic-results&#x27;}); const files=await collectFilesFromDirectoryHandle(handle, `${handle.name}/`); loadSyntheticFiles(files, handle.name); return; } catch(error){ if(error &amp;&amp; error.name === &#x27;AbortError&#x27;) return; console.warn(error); } } $(&#x27;syntheticFolderInput&#x27;).click(); }
 function preloadImages(){ let loaded=0; $(&#x27;loadProgress&#x27;).style.width=&#x27;0%&#x27;; state.urls.forEach((url,i)=&gt;{ const img=new Image(); img.decoding=&#x27;async&#x27;; img.src=url; img.onload=()=&gt;{ state.cache[i]=img; loaded++; $(&#x27;loadProgress&#x27;).style.width=`${Math.round(loaded/state.urls.length*100)}%`; if(loaded===state.urls.length) setTimeout(()=&gt;{$(&#x27;loadProgress&#x27;).style.width=&#x27;0%&#x27;},250); }; img.onerror=()=&gt;{ loaded++; $(&#x27;loadProgress&#x27;).style.width=`${Math.round(loaded/state.urls.length*100)}%`; }; }); }
 function ensureDisplayedImg(){ let img=$(&#x27;displayed-img&#x27;); if(img) return img; img=document.createElement(&#x27;img&#x27;); img.id=&#x27;displayed-img&#x27;; img.alt=&#x27;synthetic frame&#x27;; const placeholder=$(&#x27;no-image-placeholder&#x27;); if(placeholder) placeholder.style.display=&#x27;none&#x27;; $(&#x27;frame-display&#x27;).appendChild(img); return img; }
@@ -3049,6 +3054,21 @@ header.header{display:none!important;}
 .pass-table-wrap th,.pass-table-wrap td{border-bottom:1px solid var(--border-soft);padding:5px 8px;text-align:right;white-space:nowrap}
 .pass-table-wrap th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase}
 .pass-table-wrap tr.sel td{color:var(--accent-2);font-weight:700}
+/* attitude description from the AEM (STAR version of END-003, 2026-10-17) */
+.aem-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.aem-tab{border:1px solid var(--border-soft);background:var(--panel-muted);color:var(--text);border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer}
+.aem-tab.active{border-color:var(--accent);color:var(--text-strong);background:var(--panel-strong)}
+.aem-file{font-size:11px;color:var(--muted);margin-bottom:8px;word-break:break-all}
+.aem-table{width:100%;border-collapse:collapse;font-size:12px}
+.aem-table td{border-bottom:1px solid var(--border-soft);padding:6px 8px;vertical-align:top;color:var(--text)}
+.aem-table td:first-child{color:var(--muted);width:36%}
+.aem-figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.aem-fig{margin:0;border:1px solid var(--border-soft);border-radius:16px;overflow:hidden;background:var(--panel-muted)}
+.aem-fig.wide{grid-column:1/-1}
+.aem-fig img{display:block;width:100%;height:auto;cursor:zoom-in;background:#fff}
+.aem-fig figcaption{padding:8px 12px;font-size:11px;line-height:1.45;color:var(--muted)}
+.aem-fig figcaption b{color:var(--text-strong)}
+@media(max-width:980px){.aem-figs{grid-template-columns:1fr}}
 details.pass-details&gt;summary{cursor:pointer;color:var(--muted-2);font-size:11px;margin-top:8px}
 &lt;/style&gt;
 &lt;/head&gt;
@@ -3091,6 +3111,8 @@ details.pass-details&gt;summary{cursor:pointer;color:var(--muted-2);font-size:11
 
     &lt;main class=&quot;main-content&quot;&gt;
       &lt;article class=&quot;card&quot; id=&quot;passes-card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Selected Passes · Satellite, Date, Start/End&lt;/h3&gt;&lt;span class=&quot;small&quot; id=&quot;passes-status&quot;&gt;Pending&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;passes-panel&quot;&gt;&lt;div class=&quot;empty-cell&quot;&gt;Load the propagation results to show the satellite and pass selected by END-003.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;
+
+      &lt;article class=&quot;card&quot; id=&quot;aem-card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Attitude Description · AEM of the Selected Passes&lt;/h3&gt;&lt;span class=&quot;small&quot; id=&quot;aem-status&quot;&gt;Pending&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;aem-panel&quot;&gt;&lt;div class=&quot;empty-cell&quot;&gt;Load the propagation results to show the attitude figures made from the AEM of the selected passes.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;
 
       &lt;section class=&quot;plot-grid two-col&quot;&gt;
         &lt;article class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Angular Velocity&lt;/h3&gt;&lt;/div&gt;&lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotAngularVelocity&quot; class=&quot;plot small&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;
@@ -3434,6 +3456,32 @@ function populatePassesCard() {
   if (status) status.textContent = &#x27;Loaded&#x27;;
   panel.innerHTML = blocks.join(&#x27;&#x27;) + table;
 }
+function aemPasses() {
+  const a = state.data &amp;&amp; state.data.aem;
+  if (!a) return [];
+  return Array.isArray(a) ? a : [a];
+}
+function asList(x) { return Array.isArray(x) ? x : (x ? [x] : []); }
+function populateAemCard() {
+  const panel = $(&#x27;aem-panel&#x27;);
+  const status = $(&#x27;aem-status&#x27;);
+  if (!panel) return;
+  const list = aemPasses();
+  if (!list.length) {
+    if (status) status.textContent = &#x27;Not available&#x27;;
+    panel.innerHTML = &#x27;&lt;div class=&quot;empty-cell&quot;&gt;No AEM in this run (written by the STAR version of END-003, which takes the orbit from END-001).&lt;/div&gt;&#x27;;
+    return;
+  }
+  if (!(state.aemIndex &gt;= 0 &amp;&amp; state.aemIndex &lt; list.length)) state.aemIndex = 0;
+  const p = list[state.aemIndex];
+  const tabs = list.map((x, i) =&gt; `&lt;button type=&quot;button&quot; class=&quot;aem-tab ${i === state.aemIndex ? &#x27;active&#x27; : &#x27;&#x27;}&quot; data-i=&quot;${i}&quot;&gt;${escapeHtml(x.label || x.key || (&#x27;Pass &#x27; + (i + 1)))}&lt;/button&gt;`).join(&#x27;&#x27;);
+  const rows = asList(p.rotational_state).map((r) =&gt; `&lt;tr&gt;&lt;td&gt;${escapeHtml(r.quantity)}&lt;/td&gt;&lt;td&gt;${escapeHtml(r.value)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
+  const figs = asList(p.figures).map((f) =&gt; `&lt;figure class=&quot;aem-fig${/_[AB]_[a-z_]+\.png$/i.test(f.file) ? &#x27; wide&#x27; : &#x27;&#x27;}&quot;&gt;&lt;img src=&quot;${state.pngFiles.get(f.file) || (AUTO_DATA_DIR + f.file)}&quot; alt=&quot;${escapeHtml(f.title)}&quot; data-name=&quot;${escapeHtml(f.title)}&quot;&gt;&lt;figcaption&gt;&lt;b&gt;${escapeHtml(f.title)}.&lt;/b&gt; ${escapeHtml(f.caption)}&lt;/figcaption&gt;&lt;/figure&gt;`).join(&#x27;&#x27;);
+  if (status) status.textContent = `${list.length} pass${list.length &gt; 1 ? &#x27;es&#x27; : &#x27;&#x27;}`;
+  panel.innerHTML = `&lt;div class=&quot;aem-tabs&quot;&gt;${tabs}&lt;/div&gt;&lt;div class=&quot;aem-file&quot;&gt;CCSDS AEM (quaternion J2000 → body, scalar last; body angular velocity in rad/s): output_attitude_propagation/${escapeHtml(p.file || &#x27;—&#x27;)}&lt;/div&gt;&lt;table class=&quot;aem-table&quot;&gt;&lt;tbody&gt;${rows}&lt;/tbody&gt;&lt;/table&gt;&lt;div class=&quot;aem-figs&quot;&gt;${figs}&lt;/div&gt;`;
+  panel.querySelectorAll(&#x27;.aem-tab&#x27;).forEach((b) =&gt; b.addEventListener(&#x27;click&#x27;, () =&gt; { state.aemIndex = Number(b.dataset.i); populateAemCard(); }));
+  panel.querySelectorAll(&#x27;.aem-fig img&#x27;).forEach((img) =&gt; img.addEventListener(&#x27;click&#x27;, () =&gt; openImageModal(img.src, img.dataset.name || img.alt || &#x27;AEM figure&#x27;)));
+}
 function populateKpiTable() {
   const container = $(&#x27;kpi-table&#x27;);
   if (!container) return;
@@ -3584,6 +3632,7 @@ window.receiveAttitudeFilesFromParent = async function(payload = {}, labels = {}
 };
 window.refreshAttitudeDashboard = function() {
   populatePassesCard();
+  populateAemCard();
   updateFileAccessPanel();
   drawDashboard();
 };
@@ -3851,7 +3900,7 @@ function populatePngGallery() {
     gallery.innerHTML = &#x27;&lt;div class=&quot;empty-cell&quot;&gt;No PNG files loaded.&lt;/div&gt;&#x27;;
     return;
   }
-  gallery.innerHTML = Array.from(state.pngFiles.entries()).map(([name,url]) =&gt; `&lt;div class=&quot;gallery-item&quot;&gt;&lt;img src=&quot;${url}&quot; alt=&quot;${escapeHtml(name)}&quot; data-name=&quot;${escapeHtml(name)}&quot;&gt;&lt;div class=&quot;gallery-caption&quot;&gt;${escapeHtml(name)}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
+  gallery.innerHTML = Array.from(state.pngFiles.entries()).filter(([name]) =&gt; !/^07_aem_/i.test(name)).map(([name,url]) =&gt; `&lt;div class=&quot;gallery-item&quot;&gt;&lt;img src=&quot;${url}&quot; alt=&quot;${escapeHtml(name)}&quot; data-name=&quot;${escapeHtml(name)}&quot;&gt;&lt;div class=&quot;gallery-caption&quot;&gt;${escapeHtml(name)}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
   gallery.querySelectorAll(&#x27;img&#x27;).forEach(img =&gt; img.addEventListener(&#x27;click&#x27;, () =&gt; openImageModal(img.src, img.dataset.name || img.alt || &#x27;MATLAB figure&#x27;)));
 }
 
@@ -3869,6 +3918,7 @@ function drawDashboard() {
   populateInputsPanel();
   populateSummary();
   populatePngGallery();
+  populateAemCard();
   populateKpiTable();
 
   if (!state.data) {
@@ -4846,6 +4896,11 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .rq-row.not_verifiable .i,.rq-row.not_verifiable .m{color:var(--warn)}.rq-row .id{color:var(--text-strong);font-weight:700}.rq-row .t{color:var(--muted-2)}
 .xgrid .sub{opacity:.8;border-style:dashed}.xgrid .reason{color:var(--warn);font-size:10.5px;margin:0 0 6px}
 .xgrid .fitw{font-size:10.5px;color:var(--muted-2);border-top:1px solid var(--border-soft);padding-top:5px;margin-top:6px}
+.dtabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px 2px}
+.dtabs button{border:1px solid var(--border);background:var(--panel-muted);color:var(--text);border-radius:999px;padding:6px 14px;font-size:11.5px;cursor:pointer}
+.dtabs button.on{border-color:var(--accent);color:var(--text-strong);background:var(--panel-strong);font-weight:700}
+.dtabs button:disabled{opacity:.45;cursor:default}
+.dchg{padding:2px 12px 6px;font-size:11px;color:var(--muted-2)}.dchg.diff{color:var(--warn)}.dchg b{color:var(--text-strong)}
 @media(max-width:900px){.plwrap{grid-template-columns:1fr}.dual{grid-template-columns:1fr}body{overflow:auto}.app,.app.drawer-open{grid-template-columns:1fr;height:auto}}
 @media print{body{overflow:visible;background:#fff;color:#000}.drawer{display:none!important}.app{display:block}.card{box-shadow:none;border:1px solid #999}}
 &lt;/style&gt;
@@ -4854,6 +4909,7 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 &lt;div class=&quot;app&quot; id=&quot;app&quot;&gt;
   &lt;section class=&quot;main&quot;&gt;
     &lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h2&gt;Component Selector&lt;/h2&gt;&lt;span class=&quot;pill&quot; id=&quot;mode-pill&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;dtabs&quot; id=&quot;dtabs&quot; style=&quot;display:none&quot;&gt;&lt;/div&gt;&lt;div class=&quot;dchg&quot; id=&quot;dchg&quot; style=&quot;display:none&quot;&gt;&lt;/div&gt;
       &lt;div class=&quot;inputs&quot; id=&quot;inputs&quot;&gt;&lt;/div&gt;&lt;div class=&quot;search&quot; id=&quot;search&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot; id=&quot;db-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Database&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;db-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div id=&quot;db&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Indicators&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;std&quot;&gt;&lt;/span&gt;&lt;/div&gt;
@@ -4881,7 +4937,7 @@ const sci = (v, d = 3) =&gt; { if (v == null) return NA; if (v === 0) return &#x
 const f = (v, d = 3) =&gt; v == null ? NA : (+v.toFixed(d)).toString();
 const clamp = (v, lo, hi) =&gt; Math.max(lo, Math.min(hi, v));
 const store = {get(k){try{return localStorage.getItem(k)}catch(_){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(_){}}};
-const S = {mode:&#x27;viewer&#x27;, base:&#x27;&#x27;, result:null, sel:null, params:{form_factor_u: 6}, imgs:{}};
+const S = {mode:&#x27;viewer&#x27;, base:&#x27;&#x27;, result:null, sel:null, params:{form_factor_u: 6}, imgs:{}, designs:{initial:null, final:null}, design:null};
 
 /* ---------------- transport: HTTP server, pywebview (STAR) or view-only ---------------- */
 function findPywebview() {
@@ -4991,7 +5047,35 @@ function iconSvg(id) {
 }
 
 /* ---------------- rendering ---------------- */
+/* ---------------- STAR run: initial design (used by the other modules) and final design (after them) ---------------- */
+function designLabel(p) {
+  const r = p &amp;&amp; (p.result || p); const sc = p &amp;&amp; p.spacecraft;
+  if (!r || !r.cubesat) return &#x27;&#x27;;
+  const m = sc ? sc.mass_kg : (r.totals || {}).mass_kg;
+  return `${r.cubesat.class_u}U${m != null ? &#x27;, &#x27; + f(m, 2) + &#x27; kg&#x27; : &#x27;&#x27;}`;
+}
+function renderDesignTabs() {
+  const D = S.designs, has = D.initial || D.final;
+  $(&#x27;dtabs&#x27;).style.display = has &amp;&amp; D.initial ? &#x27;&#x27; : &#x27;none&#x27;;
+  $(&#x27;dchg&#x27;).style.display = has &amp;&amp; D.initial ? &#x27;&#x27; : &#x27;none&#x27;;
+  if (!(has &amp;&amp; D.initial)) return;
+  const tab = (key, title, sub) =&gt; `&lt;button type=&quot;button&quot; data-d=&quot;${key}&quot; class=&quot;${S.design === key ? &#x27;on&#x27; : &#x27;&#x27;}&quot; ${D[key] ? &#x27;&#x27; : &#x27;disabled&#x27;}&gt;${title}${D[key] ? &#x27; · &#x27; + esc(designLabel(D[key])) : &#x27;&#x27;}${sub ? &#x27; &lt;span class=&quot;hint&quot;&gt;&#x27; + sub + &#x27;&lt;/span&gt;&#x27; : &#x27;&#x27;}&lt;/button&gt;`;
+  $(&#x27;dtabs&#x27;).innerHTML = tab(&#x27;initial&#x27;, &#x27;Initial design&#x27;, &#x27;used by the modules of the run&#x27;) + tab(&#x27;final&#x27;, &#x27;Final design&#x27;, D.final ? &#x27;with their results&#x27; : &#x27;not run&#x27;);
+  const ch = D.final &amp;&amp; Array.isArray(D.final.design_changes) ? D.final.design_changes : null;
+  const el = $(&#x27;dchg&#x27;);
+  el.className = &#x27;dchg&#x27; + (ch &amp;&amp; ch.length ? &#x27; diff&#x27; : &#x27;&#x27;);
+  el.innerHTML = !D.final ? &#x27;The final design was not made in this run.&#x27;
+    : (ch &amp;&amp; ch.length ? &#x27;&lt;b&gt;The final design differs from the initial one the modules used:&lt;/b&gt; &#x27; + ch.map(esc).join(&#x27; · &#x27;)
+       : &#x27;The final design is the same satellite as the initial one the modules used.&#x27;);
+  $(&#x27;dtabs&#x27;).querySelectorAll(&#x27;button[data-d]&#x27;).forEach(b =&gt; b.onclick = () =&gt; { if (S.designs[b.dataset.d]) { S.design = b.dataset.d; loadResult(S.designs[S.design]); } });
+}
+function loadDesigns(initial, final) {
+  S.designs = {initial: initial || null, final: final || null};
+  S.design = final ? &#x27;final&#x27; : (initial ? &#x27;initial&#x27; : null);
+  if (S.design) loadResult(S.designs[S.design]); else render();
+}
 function render() {
+  renderDesignTabs();
   const r = S.result;
   $(&#x27;mode-pill&#x27;).textContent = S.mode === &#x27;http&#x27; ? &#x27;live (server)&#x27; : S.mode === &#x27;star&#x27; ? &#x27;live (STAR)&#x27; : &#x27;view only (RUN results)&#x27;;
   $(&#x27;app&#x27;).classList.toggle(&#x27;drawer-open&#x27;, !!S.sel);
@@ -5349,14 +5433,15 @@ function loadResult(payload) {
 async function readRunFile(files, re) {
   const fl = Array.from(files || []).find(x =&gt; re.test(x.name)); if (!fl) return null;
   const txt = await fl.text();
-  const m = /componentSelectorData\s*=\s*([\s\S]*?)\s*;?\s*$/.exec(txt);
+  const m = /componentSelectorData(?:Initial)?\s*=\s*([\s\S]*?)\s*;?\s*$/.exec(txt);
   return JSON.parse(m &amp;&amp; /\.js$/i.test(fl.name) ? m[1] : txt);
 }
 window.receiveComponentSelectorFilesFromParent = async function (payload = {}) {
   try {
     const files = [...(payload.productFiles || []), ...(payload.resultFiles || [])];
     const data = await readRunFile(files, /component_selector_data\.js$/i) || await readRunFile(files, /component_selector_results\.json$/i);
-    if (data) loadResult(data);
+    const initial = await readRunFile(files, /component_selector_data_initial\.js$/i) || await readRunFile(files, /component_selector_results_initial\.json$/i);
+    if (data || initial) loadDesigns(initial, data);
   } catch (e) { console.warn(&#x27;component selector: unable to read run files&#x27;, e); }
 };
 window.receiveComponentSelectorDataFromParent = data =&gt; loadResult(data);
@@ -5382,7 +5467,7 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
 (async function boot() {
   setTheme(store.get(&#x27;star-unified-theme&#x27;) || store.get(&#x27;star-cs-theme&#x27;) || (document.documentElement.dataset.theme || &#x27;dark&#x27;));
   await API.detect();
-  if (S.mode === &#x27;viewer&#x27; &amp;&amp; window.componentSelectorData) { loadResult(window.componentSelectorData); return; }
+  if (S.mode === &#x27;viewer&#x27; &amp;&amp; window.componentSelectorData) { loadDesigns(window.componentSelectorDataInitial || null, window.componentSelectorData); return; }
   const fromUrl = new URLSearchParams(location.search).get(&#x27;form_factor_u&#x27;);
   if (fromUrl) S.params.form_factor_u = +fromUrl;
   else if (S.mode === &#x27;star&#x27;) await classFromStar();
@@ -5394,6 +5479,135 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
 &lt;/body&gt;
 &lt;/html&gt;
 " title="Component Selector"></iframe>
+      <iframe id="frame-compliance" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+&lt;title&gt;STAR — Requirements &amp;amp; KPIs&lt;/title&gt;
+&lt;style&gt;
+@import url(&#x27;https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap&#x27;);
+:root{--bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);--text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;--danger:#ff5c7a;--warning:#ffc857;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);color-scheme:dark}
+:root[data-theme=&quot;light&quot;]{--bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);--text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;--danger:#bd2450;--warning:#936000;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:&#x27;Space Mono&#x27;,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}.app-shell{padding:0;width:100%;margin:0}.dashboard{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:18px}.panel,.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}.panel-header,.card-header{padding:16px 18px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-header h2,.card-header h3,.section-title{margin:0;color:var(--text-strong);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:13px}.panel-body,.card-body{padding:18px}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.summary-card{border:1px solid var(--border-soft);background:var(--panel-muted);border-radius:16px;padding:14px}.summary-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.summary-value{font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;color:var(--accent);font-weight:800;font-size:24px;line-height:1.1;margin-top:6px}.summary-note{color:var(--muted);font-size:11px;margin-top:6px;overflow-wrap:anywhere}.status-dot{width:11px;height:11px;margin-top:4px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}.status-dot.warning{background:var(--warning);box-shadow:0 0 0 4px color-mix(in srgb,var(--warning) 18%,transparent)}.file-status-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--border-soft)}.file-title{color:var(--text-strong);font-weight:700}.file-path{color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:3px}.badge{display:inline-flex;align-items:center;border:1px solid var(--border-soft);border-radius:999px;padding:3px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.05em}.badge.ok{color:var(--success)}.badge.warning{color:var(--warning)}.badge.error{color:var(--danger)}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 12px;border-bottom:1px solid var(--border-soft);text-align:left;vertical-align:top}th{background:var(--panel-strong);color:var(--muted-2);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.045em;font-size:11px;position:sticky;top:0}.table-wrap{overflow:auto;max-height:calc(100vh - 230px);border:1px solid var(--border-soft);border-radius:16px}.muted{color:var(--muted)}.empty{color:var(--muted);padding:24px;text-align:center}.path{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.issues-list{display:flex;flex-direction:column;gap:10px}.issue{border:1px solid var(--border-soft);border-left:4px solid var(--warning);background:var(--panel-muted);border-radius:12px;padding:10px 12px}.issue.error{border-left-color:var(--danger)}.issue.ok{border-left-color:var(--success)}@media(max-width:1180px){.dashboard{grid-template-columns:1fr}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.summary-grid{grid-template-columns:1fr}.file-status-row{grid-template-columns:18px minmax(0,1fr)}}
+&lt;/style&gt;
+&lt;style&gt;
+.cmp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.cmp-head h2{margin:0;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:20px;color:var(--text-strong);letter-spacing:-.02em}
+.cmp-note{margin-top:6px;color:var(--muted);font-size:11px;max-width:900px}
+.cmp-note.warn{color:var(--accent)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-size:11px;background:var(--panel-muted);color:var(--muted-2);cursor:pointer;user-select:none}
+.chip b{color:var(--text-strong);margin-left:4px}
+.chip.on{border-color:var(--accent-2);color:var(--text-strong)}
+.st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.st.met{background:color-mix(in srgb,var(--success) 20%,transparent);color:var(--success)}
+.st.not_met{background:color-mix(in srgb,var(--danger) 22%,transparent);color:var(--danger)}
+.st.partially_verified{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.st.applied{background:color-mix(in srgb,var(--accent-2) 18%,transparent);color:var(--accent-2)}
+.st.not_verifiable{background:var(--panel-muted);color:var(--muted)}
+.req-text{color:var(--text);max-width:560px}
+.req-reason{color:var(--muted);font-size:11px;margin-top:3px}
+.checks{margin:0;padding:0;list-style:none}
+.checks li{display:flex;gap:8px;align-items:baseline;font-size:11px;padding:2px 0;color:var(--muted-2)}
+.checks li .mod{color:var(--accent-2);min-width:58px}
+.checks li .why{color:var(--muted)}
+.kpi-mod td:first-child{color:var(--accent-2);font-weight:700}
+.two-col{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
+@media(max-width:1100px){.two-col{grid-template-columns:1fr}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;app-shell&quot;&gt;
+  &lt;div class=&quot;cmp-head&quot;&gt;
+    &lt;div&gt;
+      &lt;h2&gt;Requirements &amp;amp; KPIs&lt;/h2&gt;
+      &lt;div class=&quot;cmp-note&quot; id=&quot;cmp-note&quot;&gt;Select a RUN folder: the compliance of the requirements with the module results is read from compliance/compliance.json.&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;chips&quot; id=&quot;cmp-chips&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;two-col&quot;&gt;
+    &lt;main class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Requirement compliance&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;cmp-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;
+        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Requirement&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Checks (module · quantity · threshold · value)&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody id=&quot;cmp-table&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;No compliance data loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/main&gt;
+    &lt;aside class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Key performance indicators&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;kpi-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;
+        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Module&lt;/th&gt;&lt;th&gt;KPI&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody id=&quot;kpi-table&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;3&quot; class=&quot;empty&quot;&gt;No KPI loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+        &lt;h3 class=&quot;section-title&quot; style=&quot;margin-top:16px&quot;&gt;Sources&lt;/h3&gt;
+        &lt;div id=&quot;cmp-sources&quot; class=&quot;cmp-note&quot;&gt;—&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/aside&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+(() =&gt; {
+&#x27;use strict&#x27;;
+const $ = id =&gt; document.getElementById(id);
+const LABEL = {met: &#x27;Met&#x27;, not_met: &#x27;Not met&#x27;, partially_verified: &#x27;Partially verified&#x27;, applied: &#x27;Applied&#x27;, not_verifiable: &#x27;Not verifiable&#x27;};
+const ORDER = [&#x27;met&#x27;, &#x27;not_met&#x27;, &#x27;partially_verified&#x27;, &#x27;applied&#x27;, &#x27;not_verifiable&#x27;];
+let DATA = null;
+let FILTER = null;
+function esc(v){return String(v ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;);}
+function fmt(v){
+  if (v === null || v === undefined || v === &#x27;&#x27;) return &#x27;—&#x27;;
+  if (typeof v === &#x27;number&#x27;) return Math.abs(v) &gt;= 1000 || Number.isInteger(v) ? String(Math.round(v * 100) / 100) : v.toPrecision(4).replace(/\.?0+$/,&#x27;&#x27;);
+  if (typeof v === &#x27;boolean&#x27;) return v ? &#x27;yes&#x27; : &#x27;no&#x27;;
+  if (Array.isArray(v)) return v.map(fmt).join(&#x27;–&#x27;);
+  return String(v);
+}
+function badge(s){return `&lt;span class=&quot;st ${esc(s)}&quot;&gt;${esc(LABEL[s] || s)}&lt;/span&gt;`;}
+function checkLine(c){
+  const thr = c.threshold === null || c.threshold === undefined ? &#x27;&#x27; : `${esc(c.operator || &#x27;&#x27;)} ${esc(fmt(c.threshold))} ${esc(c.unit || &#x27;&#x27;)}`;
+  const val = c.value === null || c.value === undefined ? &#x27;&#x27; : ` → ${esc(fmt(c.value))} ${esc(c.unit || &#x27;&#x27;)}`;
+  return `&lt;li&gt;&lt;span class=&quot;mod&quot;&gt;${esc(c.module)}&lt;/span&gt;${badge(c.status)}&lt;span&gt;${esc(c.metric)} ${thr}${val}&lt;/span&gt;${c.reason ? `&lt;span class=&quot;why&quot;&gt;· ${esc(c.reason)}&lt;/span&gt;` : &#x27;&#x27;}&lt;/li&gt;`;
+}
+function render(data){
+  DATA = data || null;
+  if (!DATA) return;
+  const counts = DATA.counts || {};
+  const total = (DATA.requirements || []).length;
+  $(&#x27;cmp-chips&#x27;).innerHTML = ORDER.map(s =&gt; `&lt;span class=&quot;chip ${FILTER === s ? &#x27;on&#x27; : &#x27;&#x27;}&quot; data-s=&quot;${s}&quot;&gt;${LABEL[s]}&lt;b&gt;${counts[s] || 0}&lt;/b&gt;&lt;/span&gt;`).join(&#x27;&#x27;);
+  document.querySelectorAll(&#x27;.chip&#x27;).forEach(ch =&gt; ch.addEventListener(&#x27;click&#x27;, () =&gt; { FILTER = FILTER === ch.dataset.s ? null : ch.dataset.s; render(DATA); }));
+  const note = [];
+  if (DATA.note) note.push(`&lt;span class=&quot;warn&quot;&gt;${esc(DATA.note)}&lt;/span&gt;`);
+  note.push(`Modules with results: ${esc((DATA.modules_run || []).join(&#x27;, &#x27;) || &#x27;none&#x27;)}. Generated ${esc(String(DATA.generated_at || &#x27;&#x27;).replace(&#x27;T&#x27;, &#x27; &#x27;).slice(0, 19))}.`);
+  $(&#x27;cmp-note&#x27;).innerHTML = note.join(&#x27; &#x27;);
+  $(&#x27;cmp-note&#x27;).classList.toggle(&#x27;warn&#x27;, false);
+  const rows = (DATA.requirements || []).filter(r =&gt; !FILTER || r.status === FILTER);
+  $(&#x27;cmp-count&#x27;).textContent = `${rows.length} of ${total} requirements`;
+  $(&#x27;cmp-table&#x27;).innerHTML = rows.length ? rows.map(r =&gt; `&lt;tr&gt;&lt;td&gt;${esc(r.id)}&lt;/td&gt;&lt;td&gt;&lt;div class=&quot;req-text&quot;&gt;${esc(r.text)}&lt;/div&gt;${r.reason ? `&lt;div class=&quot;req-reason&quot;&gt;${esc(r.reason)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/td&gt;&lt;td&gt;${badge(r.status)}&lt;/td&gt;&lt;td&gt;&lt;ul class=&quot;checks&quot;&gt;${(r.checks || []).map(checkLine).join(&#x27;&#x27;) || &#x27;&lt;li&gt;&lt;span class=&quot;why&quot;&gt;no check&lt;/span&gt;&lt;/li&gt;&#x27;}&lt;/ul&gt;&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)
+    : &#x27;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;No requirement with this status.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+  const kpis = DATA.kpis || [];
+  $(&#x27;kpi-count&#x27;).textContent = `${kpis.length} KPI`;
+  $(&#x27;kpi-table&#x27;).innerHTML = kpis.length ? kpis.map(k =&gt; `&lt;tr class=&quot;kpi-mod&quot;&gt;&lt;td&gt;${esc(k.module)}&lt;/td&gt;&lt;td&gt;${esc(k.name)}&lt;/td&gt;&lt;td&gt;${esc(fmt(k.value))} ${k.unit &amp;&amp; k.unit !== &#x27;-&#x27; ? esc(k.unit) : &#x27;&#x27;}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)
+    : &#x27;&lt;tr&gt;&lt;td colspan=&quot;3&quot; class=&quot;empty&quot;&gt;No KPI available.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+  const src = DATA.sources || {};
+  $(&#x27;cmp-sources&#x27;).innerHTML = Object.keys(src).length ? Object.entries(src).map(([m, p]) =&gt; `&lt;div&gt;&lt;b&gt;${esc(m)}&lt;/b&gt; ${esc(String(p || &#x27;&#x27;).split(/[\\/]modules_output[\\/]/).pop())}&lt;/div&gt;`).join(&#x27;&#x27;) : &#x27;—&#x27;;
+}
+async function fileText(f){ if (!f) return null; if (typeof f.text === &#x27;function&#x27;) return await f.text(); return null; }
+window.receiveComplianceFilesFromParent = async function(payload, labels){
+  const files = [...(payload &amp;&amp; payload.productFiles || []), ...(payload &amp;&amp; payload.resultFiles || [])];
+  const json = files.find(f =&gt; String(f.name || &#x27;&#x27;).toLowerCase() === &#x27;compliance.json&#x27;);
+  if (!json) {
+    $(&#x27;cmp-note&#x27;).textContent = &#x27;No compliance/compliance.json in the selected RUN folder (runs made before 2026-10-17 have no compliance check).&#x27;;
+    return;
+  }
+  try { render(JSON.parse(await fileText(json))); } catch (e) { $(&#x27;cmp-note&#x27;).textContent = &#x27;compliance.json could not be read: &#x27; + e; }
+};
+window.refreshComplianceDashboard = function(){ if (DATA) render(DATA); };
+window.setTheme = function(theme){ document.documentElement.dataset.theme = theme === &#x27;light&#x27; ? &#x27;light&#x27; : &#x27;dark&#x27;; };
+if (window.starComplianceData) render(window.starComplianceData);
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" title="Requirements and KPIs"></iframe>
       <iframe id="frame-diagnostics" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -5551,7 +5765,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -6030,6 +6244,22 @@ async function loadComponentSelectorFromStarRoot() {
   }
 }
 
+// Requirements & KPIs (2026-10-17): <run>/compliance/compliance.json written by STAR after the workflow
+async function loadComplianceFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-compliance');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveComplianceFilesFromParent !== 'function') return false;
+  try {
+    const path = ['compliance'];
+    const payload = { productFiles: await collectFilesFromSelectedPath(path), resultFiles: [] };
+    await frame.contentWindow.receiveComplianceFilesFromParent(payload, { product: selectedPathLabel(path) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load the compliance data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function getDirectoryHandleIfExists(rootHandle, pathParts) {
   try {
     return await resolveDirectoryHandle(rootHandle, pathParts);
@@ -6212,6 +6442,7 @@ function switchTab(tabName) {
     collision: $('frame-collision'),
     thermal: $('frame-thermal'),
     compsel: $('frame-compsel'),
+    compliance: $('frame-compliance'),
     diagnostics: $('frame-diagnostics')
   };
 
@@ -6248,6 +6479,9 @@ function switchTab(tabName) {
         if (tabName === 'compsel' && hasRunFolderSelection()) {
           await loadComponentSelectorFromStarRoot();
         }
+        if (tabName === 'compliance' && hasRunFolderSelection()) {
+          await loadComplianceFromStarRoot();
+        }
         if (tabName === 'diagnostics') {
           await updateRunDiagnostics();
         }
@@ -6261,6 +6495,7 @@ function switchTab(tabName) {
         if (typeof activeFrame.contentWindow.refreshSyntheticDashboard === 'function') activeFrame.contentWindow.refreshSyntheticDashboard();
         if (typeof activeFrame.contentWindow.refreshReflectanceDashboard === 'function') activeFrame.contentWindow.refreshReflectanceDashboard();
         if (typeof activeFrame.contentWindow.refreshDiagnosticsDashboard === 'function') activeFrame.contentWindow.refreshDiagnosticsDashboard();
+        if (typeof activeFrame.contentWindow.refreshComplianceDashboard === 'function') activeFrame.contentWindow.refreshComplianceDashboard();
         if (activeFrame.contentWindow.Plotly) {
           const ids = ['plotWeights','plotGround','plot3D','plot3DECEF','plotAngularVelocity','plotEulerAngles','plotTorquesLinear','plotTorquesLog','plotEnergy','plotAltitude','plotElevation','plotNadirOffset','plotTargetOffset','plotHMag','plotHDir','plotGroundTrack','plotOrbitECI','plotOrbitECEF'];
           ids.forEach(id => { const el = activeFrame.contentDocument.getElementById(id); if (el && el.data) activeFrame.contentWindow.Plotly.Plots.resize(el); });
@@ -6284,6 +6519,7 @@ function bindEvents() {
       await loadCollisionAvoidanceFromStarRoot();
       await loadThermalAnalysisFromStarRoot();
       await loadComponentSelectorFromStarRoot();
+      await loadComplianceFromStarRoot();
       await updateRunDiagnostics();
       deliverAttitudeDataToFrame();
     } catch (error) {
@@ -6296,7 +6532,7 @@ function bindEvents() {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
   }
 
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
     frame.addEventListener('load', () => {
       if (frame.id === 'frame-collision' && hasRunFolderSelection()) {
         loadCollisionAvoidanceFromStarRoot();
@@ -6306,6 +6542,9 @@ function bindEvents() {
       }
       if (frame.id === 'frame-compsel' && hasRunFolderSelection()) {
         loadComponentSelectorFromStarRoot();
+      }
+      if (frame.id === 'frame-compliance' && hasRunFolderSelection()) {
+        loadComplianceFromStarRoot();
       }
       propagateTheme(document.documentElement.dataset.theme || 'dark');
       if (frame.id === 'frame-attitude') {
