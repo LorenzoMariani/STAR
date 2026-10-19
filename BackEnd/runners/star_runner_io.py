@@ -590,187 +590,6 @@ def create_reflectance_bridge_outputs(
     return [str(p) for p in sorted(product_dir.rglob("*")) if p.is_file()] + [str(p) for p in sorted(results_dir.rglob("*")) if p.is_file()]
 
 
-def build_end001_config(star_payload: dict[str, Any]) -> dict[str, Any]:
-    lat, lon = target_lat_lon(star_payload)
-    start = parse_datetime_like(input_value(star_payload, "simulation_start_date", None))
-    try:
-        dt = datetime.fromisoformat(start)
-    except Exception:
-        dt = datetime(2026, 1, 1)
-    fov = coerce_float(input_value(star_payload, "optical_field_of_view_deg", 5.0), 5.0)
-    return {
-        "TimeSettings": {
-            "StartDate": [dt.year, dt.month, dt.day],
-            "StartHour": dt.hour,
-            "StartMin": dt.minute,
-            "StartSec": dt.second,
-        },
-        "RegionSettings": {
-            # Keep the legacy END-001 ROI_2.m interface happy.
-            # ROI_2 first reads RegionSettings.AreaofInterest; older STAR
-            # examples used this exact mixed-case field name.
-            "AreaofInterest": "Point",
-            "RegionType": "Point",
-            "AreaType": "Point",
-            "Name": "STAR target",
-            "TargetName": "STAR target",
-            # Multiple aliases are intentional because ROI_2 versions used in
-            # different END-001 drops are not fully schema-stable.
-            "lat": lat,
-            "lon": lon,
-            "latitude": lat,
-            "longitude": lon,
-            "Lat": lat,
-            "Lon": lon,
-            "Latitude": lat,
-            "Longitude": lon,
-            "CenterLat": lat,
-            "CenterLon": lon,
-            "TargetLat": lat,
-            "TargetLon": lon,
-            "Alt": 0.0,
-            "alt": 0.0,
-            "Mask": 10.0,
-            "mask": 10.0,
-            "Sites": [{"name": "STAR target", "lat": lat, "lon": lon, "alt": 0.0}],
-            "Targets": [{"name": "STAR target", "lat": lat, "lon": lon, "alt": 0.0}],
-            "Points": [{"name": "STAR target", "lat": lat, "lon": lon, "alt": 0.0}],
-        },
-        "GroundStations": [{"name": "STAR target", "lat": lat, "lon": lon, "alt": 0.0, "mask": 10.0}],
-        "SensorSettings": {
-            "Sun_Constraint": False,
-            "Operative_Mode": "Single Sensor",
-            "Single_Sensor_Type": "CON",
-            "CON_FOV": fov,
-            "PBS_FOV": fov,
-            "SAR_LeftButton": False,
-            "SAR_LeftRightButton": True,
-            "SAR_RightButton": False,
-            "SAR_theta_min": 20,
-            "SAR_theta_max": 45,
-        },
-        "Weights": {
-            "MaxRevisitTime": 1,
-            "Percentile90RevisitTime": 1,
-            "NumSatellites": 1,
-            "NumPlanes": 1,
-            "MaxLatency": 1,
-            "Robustness": 1,
-            "CollisionAvoidance": 1,
-            "Launch": 1,
-            "EndOfLife": 1,
-            "AvgGSAccessTime": 1,
-        },
-        "OptimizerSettings": {
-            "Population": 8,
-            "Iterations": 2,
-            "PlatEMO_Algorithm": "NSGAII",
-            "Orbit_Type": "SSORGT",
-            "Optimizer_Type": "MOGA NSGA-II",
-        },
-        "star_runtime": {
-            "generated_from": "STAR module input payload",
-            "note": "Runtime config generated because the STAR orchestration JSON is not the native MATLAB schema.",
-        },
-    }
-
-
-def build_end003_config(star_payload: dict[str, Any]) -> dict[str, Any]:
-    orbit = read_constellation_first_orbit(star_payload)
-    lat, lon = target_lat_lon(star_payload)
-    env_flags = input_value(star_payload, "environmental_flags", {}) or {}
-    if not isinstance(env_flags, dict):
-        env_flags = {}
-    att_state = input_value(star_payload, "initial_attitude_state", {}) or {}
-    if not isinstance(att_state, dict):
-        att_state = {}
-    return {
-        "sim_start_date": parse_datetime_like(input_value(star_payload, "simulation_start_date", orbit.get("sim_start_date"))),
-        "sim_hours": coerce_float(input_value(star_payload, "simulation_duration_hours", orbit.get("sim_hours", 48.0)), 48.0),
-        "orbit": {
-            "alt_perigee_m": coerce_float(orbit.get("alt_perigee_m"), 550000.0),
-            "alt_apogee_m": coerce_float(orbit.get("alt_apogee_m"), 550000.0),
-            "inclination_deg": coerce_float(orbit.get("inclination_deg"), 97.6),
-            "raan_deg": coerce_float(orbit.get("raan_deg"), 0.0),
-            "omega_deg": coerce_float(orbit.get("omega_deg"), 0.0),
-            "nu_deg": coerce_float(orbit.get("nu_deg"), 0.0),
-        },
-        "target": {
-            "site_lat_deg": lat,
-            "site_lon_deg": lon,
-            "elev_threshold": 10.0,
-            "Sun_Constraint": False,
-            "Sun_Constraint_Mode": "none",
-            "Sun_Elevation_Threshold_Deg": -90.0,
-        },
-        "sat": {
-            "attitude_mode": str(input_value(star_payload, "attitude_mode", "nadir") or "nadir"),
-            "q0": att_state.get("q0", [1.0, 0.0, 0.0, 0.0]),
-            "w0": att_state.get("w0_rad_s", att_state.get("w0", [0.0, 0.0, 0.0])),
-            "m": 100.0,
-            "A_ref": 1.0,
-            "Cd": 2.2,
-            "Cr": 1.5,
-            "Ix": 10.0,
-            "Iy": 10.0,
-            "Iz": 10.0,
-            "r_cp": [0.0, 0.0, 0.0],
-        },
-        "env": {
-            "Re": 6378137.0,
-            "flags": {
-                "gg": coerce_bool(env_flags.get("gg"), True),
-                "srp": coerce_bool(env_flags.get("srp"), False),
-                "drag": coerce_bool(env_flags.get("drag"), False),
-                "pert": coerce_bool(env_flags.get("pert"), True),
-                "j2": coerce_bool(env_flags.get("j2"), True),
-                "j3": coerce_bool(env_flags.get("j3"), False),
-            },
-        },
-        "star_runtime": {"generated_from": "STAR module input payload"},
-    }
-
-
-def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results_dir: Path, end003_csv: Path | None, star_root: Path) -> dict[str, Any]:
-    # These defaults are intentionally conservative. If local data files exist in
-    # the END-010 tree, MATLAB can use them; otherwise the runner will create a
-    # deterministic bridge output instead of breaking the whole workflow.
-    data_dir = star_root / "END010-ReflectanceDetermination" / "lib" / "data"
-    start = parse_datetime_like(input_value(star_payload, "simulation_start_date", None))
-    return {
-        "paths": {
-            "inputCsv": str(end003_csv) if end003_csv else "",
-            "nutData": str(data_dir / "nut80.mat"),
-            "deData": str(data_dir / "DE440Coeff.mat"),
-            "stationsJson": str(data_dir / "stations.json"),
-            "tleFile": str(data_dir / "tle.txt"),
-            "eopFile": str(data_dir / "eop.txt"),
-            "unityExe": "",
-        },
-        "flags": {
-            "useInputCsv": bool(end003_csv),
-            "orbitEphemeris": False,
-            "sunEphemeris": False,
-            "obsEphemeris": False,
-            "attEphemeris": False,
-        },
-        "simulation": {
-            "debug": False,
-            "delta": 60,
-            "duration": 3600,
-            "mask": 10,
-            "observatory": "default",
-            "start": start,
-        },
-        "unityOpts": {"logFile": str(results_dir / "unity.log")},
-        "star_runtime": {
-            "module_product_output_dir": str(product_dir),
-            "module_results_dir": str(results_dir),
-            "end003_output_csv": str(end003_csv) if end003_csv else None,
-        },
-    }
-
-
 def move_result_files_from_product(product_dir: Path, results_dir: Path) -> list[str]:
     moved: list[str] = []
     for path in list(product_dir.iterdir()) if product_dir.exists() else []:
@@ -905,11 +724,11 @@ def _attach_runtime_metadata_v6(
     return out
 
 
-def build_end001_config(star_payload: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
+def build_end001_config(star_payload: dict[str, Any]) -> dict[str, Any]:
     """Return a native END-001 JSON config.
 
-    Prefer the previous working input_constellation_optimizer.json.  The old
-    generated adapter is used only as a last-resort fallback and is explicitly
+    Prefer the previous working input_constellation_optimizer.json.  A minimal
+    generated config is used only as a last-resort fallback and is explicitly
     marked as generated in star_runtime.
     """
     template, template_path = _load_native_template_v6(
@@ -936,29 +755,24 @@ def build_end001_config(star_payload: dict[str, Any]) -> dict[str, Any]:  # type
 
     # Emergency fallback only. This path should not be used on the workstation if
     # STAR/Input/input_constellation_optimizer.json exists or the packaged runner
-    # templates were installed correctly.
-    cfg = globals().get("_build_end001_config_fallback_v6")
-    if cfg is None:
-        # The previous implementation was overwritten by this definition; rebuild
-        # the minimal safe config here rather than creating fake output products.
-        lat, lon = target_lat_lon(star_payload)
-        start = parse_datetime_like(input_value(star_payload, "simulation_start_date", None))
-        try:
-            dt = datetime.fromisoformat(start)
-        except Exception:
-            dt = datetime(2026, 5, 21, 13, 41, 10)
-        return _attach_runtime_metadata_v6({
-            "TimeSettings": {"StartDate": [dt.year, dt.month, dt.day], "StartHour": dt.hour, "StartMin": dt.minute, "StartSec": dt.second},
-            "GroundStations": [{"name": "Matera", "lat": 40.6486, "lon": 16.5528, "alt": 536, "mask": 5}],
-            "RegionSettings": {"AreaofInterest": "Italy", "Default_LATkm": 25, "Default_LONkm": 25, "CustomCoordinates": [[lat, lon]]},
-            "SensorSettings": {"SAR_Configuration": "Left & Right", "SAR_Theta_min": 15, "SAR_Theta_max": 50, "Optic_Steerable": "Field of View", "Optic_CON_FOV": 15, "Optic_PBS_FOV": 10, "Operative_Mode": "Single Sensor", "Single_Sensor_Type": "PBS", "Sun_Constraint": True},
-            "OptimizerSettings": {"Optimizer_Type": "MOGA NSGA-II", "Population": 10, "Iterations": 2, "PlatEMO_Algorithm": "NSGA-III", "Parallelize": True, "Num_Coworkers": 8, "Orbit_Type": "SSORGT", "PropagationDays": 7, "timeStep": 10},
-            "Weights": {"MaxRevisitTime": 5, "Percentile90RevisitTime": 10, "NumSatellites": 8, "NumPlanes": 8, "MaxLatency": 5, "Robustness": 6, "CollisionAvoidance": 10, "Launch": 10, "EndOfLife": 8, "AvgGSAccessTime": 9},
-        }, star_payload, "END-001", None, {"warning": "native input template not found; generated conservative fallback config"})
-    return cfg(star_payload)
+    # templates were installed correctly: a minimal safe config, no fake output products.
+    lat, lon = target_lat_lon(star_payload)
+    start = parse_datetime_like(input_value(star_payload, "simulation_start_date", None))
+    try:
+        dt = datetime.fromisoformat(start)
+    except Exception:
+        dt = datetime(2026, 5, 21, 13, 41, 10)
+    return _attach_runtime_metadata_v6({
+        "TimeSettings": {"StartDate": [dt.year, dt.month, dt.day], "StartHour": dt.hour, "StartMin": dt.minute, "StartSec": dt.second},
+        "GroundStations": [{"name": "Matera", "lat": 40.6486, "lon": 16.5528, "alt": 536, "mask": 5}],
+        "RegionSettings": {"AreaofInterest": "Italy", "Default_LATkm": 25, "Default_LONkm": 25, "CustomCoordinates": [[lat, lon]]},
+        "SensorSettings": {"SAR_Configuration": "Left & Right", "SAR_Theta_min": 15, "SAR_Theta_max": 50, "Optic_Steerable": "Field of View", "Optic_CON_FOV": 15, "Optic_PBS_FOV": 10, "Operative_Mode": "Single Sensor", "Single_Sensor_Type": "PBS", "Sun_Constraint": True},
+        "OptimizerSettings": {"Optimizer_Type": "MOGA NSGA-II", "Population": 10, "Iterations": 2, "PlatEMO_Algorithm": "NSGA-III", "Parallelize": True, "Num_Coworkers": 8, "Orbit_Type": "SSORGT", "PropagationDays": 7, "timeStep": 10},
+        "Weights": {"MaxRevisitTime": 5, "Percentile90RevisitTime": 10, "NumSatellites": 8, "NumPlanes": 8, "MaxLatency": 5, "Robustness": 6, "CollisionAvoidance": 10, "Launch": 10, "EndOfLife": 8, "AvgGSAccessTime": 9},
+    }, star_payload, "END-001", None, {"warning": "native input template not found; generated conservative fallback config"})
 
 
-def build_end003_config(star_payload: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
+def build_end003_config(star_payload: dict[str, Any]) -> dict[str, Any]:
     """Return a native END-003 JSON config based on input_attitude_propagator.json."""
     template, template_path = _load_native_template_v6(
         star_payload=star_payload,
@@ -1018,7 +832,7 @@ def _end003_target_site_v6(end003_csv: Path) -> dict[str, float] | None:
         return None
 
 
-def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results_dir: Path, end003_csv: Path | None, star_root: Path, selected_passes: dict[str, Any] | None = None) -> dict[str, Any]:  # type: ignore[override]
+def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results_dir: Path, end003_csv: Path | None, star_root: Path, selected_passes: dict[str, Any] | None = None) -> dict[str, Any]:
     """Return a native END-010 JSON config based on input_reflectance_determination.json.
 
     Besides paths.inputCsv, this also aligns END-010's observation ground site
