@@ -86,6 +86,7 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
         "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
         "wheel_momentum_mnms": ("num", "Momento di ciascuna ruota di reazione integrata, una per asse [mN m s] (tools/add_adcs_wheels.py)", False),
         "wheel_max_torque_mnm": ("num", "Coppia massima di ciascuna ruota integrata [mN m] (tools/add_adcs_wheels.py)", False),
+        "magnetorquer_dipole_am2": ("num", "Momento di dipolo per asse dei magnetorquer integrati [A m2] (tools/add_adcs_magnetorquers.py)", False),
     },
     # Star tracker (opzionale): accuratezza di conoscenza dell'assetto. I fornitori usano basi statistiche diverse
     # (1-sigma, 3-sigma, RMS): il valore e' riportato com'e' e la base e' dichiarata in `accuracy_basis`.

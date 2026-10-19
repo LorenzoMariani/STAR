@@ -143,7 +143,9 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
 def attitude_control(chosen: dict[str, Any]) -> dict[str, Any]:
     """Actuators and attitude knowledge of the design for the END-003 attitude control (2026-10-19): the reaction wheels (the
     selected wheel, otherwise the wheels integrated in the ADCS unit), one per body axis, with the momentum and the maximum
-    torque of each wheel as the vendor declares them; the pointing accuracy of the ADCS unit and the star tracker accuracy."""
+    torque of each wheel as the vendor declares them; the magnetorquers that dump the wheel momentum (the selected
+    magnetorquer, otherwise those of the ADCS unit), dipole per body axis; the pointing accuracy of the ADCS unit and the
+    star tracker accuracy."""
     def num(specs: dict[str, Any], key: str) -> float | None:
         v = (specs or {}).get(key)
         return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
@@ -157,15 +159,25 @@ def attitude_control(chosen: dict[str, Any]) -> dict[str, Any]:
         wheels = {"source": "adcs", "component": adcs.get("id"), "name": adcs.get("name"), "quantity": 3,
                   "momentum_nms": num(adcs["specs"], "wheel_momentum_mnms") / 1000.0,
                   "max_torque_nm": num(adcs["specs"], "wheel_max_torque_mnm") / 1000.0}
+    magnetorquers = None
+    mtq = chosen.get("magnetorquer")
+    if mtq and num(mtq.get("specs"), "magnetic_moment_am2"):
+        # a three-axis board, or single-axis rods: one per body axis when the design has three of them
+        axes = int(num(mtq["specs"], "axes") or 1) * int(mtq.get("quantity") or 1)
+        magnetorquers = {"source": "magnetorquer", "component": mtq.get("id"), "name": mtq.get("name"), "axes": min(axes, 3),
+                         "dipole_am2": num(mtq["specs"], "magnetic_moment_am2")}
+    elif adcs and num(adcs.get("specs"), "magnetorquer_dipole_am2"):
+        magnetorquers = {"source": "adcs", "component": adcs.get("id"), "name": adcs.get("name"), "axes": 3,
+                         "dipole_am2": num(adcs["specs"], "magnetorquer_dipole_am2")}
     st = chosen.get("star_tracker")
     tracker = None
     if st and num(st.get("specs"), "accuracy_cross_arcsec"):
         tracker = {"component": st.get("id"), "accuracy_cross_arcsec": num(st["specs"], "accuracy_cross_arcsec"),
                    "accuracy_roll_arcsec": num(st["specs"], "accuracy_roll_arcsec"), "accuracy_basis": st["specs"].get("accuracy_basis")}
-    return {"wheels": wheels, "adcs_unit": adcs.get("id") if adcs else None,
+    return {"wheels": wheels, "magnetorquers": magnetorquers, "adcs_unit": adcs.get("id") if adcs else None,
             "pointing_accuracy_deg": num(adcs.get("specs"), "pointing_accuracy_deg") if adcs else None, "star_tracker": tracker,
-            "note": "wheels: one per body axis, momentum and maximum torque of each wheel (vendor values, END-006 catalog); "
-                    "null when the design has no wheel data"}
+            "note": "wheels: one per body axis, momentum and maximum torque of each wheel; magnetorquers: dipole per body axis "
+                    "(vendor values, END-006 catalog); null when the design has no such data"}
 
 
 def design_changes(initial: dict[str, Any] | None, final: dict[str, Any]) -> list[str]:

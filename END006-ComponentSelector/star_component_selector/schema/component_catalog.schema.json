@@ -789,6 +789,17 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "magnetorquer_dipole_am2": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Momento di dipolo per asse dei magnetorquer integrati [A m2] (tools/add_adcs_magnetorquers.py)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -797,7 +808,8 @@
                     "data_interfaces",
                     "supply_voltage_ranges_v",
                     "wheel_momentum_mnms",
-                    "wheel_max_torque_mnm"
+                    "wheel_max_torque_mnm",
+                    "magnetorquer_dipole_am2"
                   ],
                   "additionalProperties": false
                 }

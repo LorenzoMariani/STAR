@@ -37,6 +37,11 @@ DEFAULT_END003_DIR = STAR_ROOT / "END003-AttitudePropagation"
 STAR_SCRIPT_NAME = "star_attitude_propagation_star.m"
 ATTITUDE_MODES = ("nadir", "follow_site", "dynamics")
 SPACECRAFT_NOTE = "uniform box of the class envelope, mean projected area as reference area"
+# Centre of pressure from the centre of mass (2026-10-19): the uniform box puts both at the geometric centre, so the offset is the
+# centre-of-gravity tolerance of the CubeSat Design Specification, about 20% of each side (2 cm on the 10 cm sides, 7 cm on the
+# 34 cm side of a 3U): a conservative lever arm for SRP and drag, used unless the STAR input gives r_cp.
+R_CP_FRACTION = 0.2
+R_CP_NOTE = "r_cp = 20% of each side of the envelope (CubeSat Design Specification centre-of-gravity tolerance)"
 LogCallback = Callable[[str, str], Any]
 
 
@@ -131,8 +136,11 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
         ix, iy, iz = sat_def["inertia_kg_m2"]
         sat.update({"m": sat_def["mass_kg"], "Ix": ix, "Iy": iy, "Iz": iz, "A_ref": sat_def["area_mean_projected_m2"],
                     "Cd": sat_def.get("cd", sat.get("Cd")), "Cr": sat_def.get("cr", sat.get("Cr"))})
-        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Cr", "Cd", "Ix", "Iy", "Iz")},
-                                "source": f"END-006 initial design ({sat_def.get('form_factor')}, {SPACECRAFT_NOTE})"}
+        dims = sat_def.get("dims_m")
+        if isinstance(dims, list) and len(dims) == 3:
+            sat["r_cp"] = [R_CP_FRACTION * float(d) for d in dims]
+        report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Cr", "Cd", "Ix", "Iy", "Iz", "r_cp")},
+                                "source": f"END-006 initial design ({sat_def.get('form_factor')}, {SPACECRAFT_NOTE}; {R_CP_NOTE})"}
     else:
         report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Ix", "Iy", "Iz")}, "source": "template (no END-006 in the workflow)"}
     report["attitude_control"] = _apply_attitude_control(sat, sat_def)
@@ -140,9 +148,10 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
 
 
 def _apply_attitude_control(sat: dict[str, Any], sat_def: dict[str, Any] | None) -> dict[str, Any]:
-    """Wheel limits and attitude knowledge of the PD control (sat.control) from the END-006 design (2026-10-19):
-    momentum and maximum torque of the wheels (one per body axis), knowledge error from the star tracker or from the
-    pointing accuracy of the ADCS unit; the template values stay when the design does not give them."""
+    """Wheel limits, magnetorquer dipole and attitude knowledge of the PD control (sat.control) from the END-006 design
+    (2026-10-19): momentum and maximum torque of the wheels (one per body axis), dipole per axis of the magnetorquers that
+    dump them, knowledge error from the star tracker or from the pointing accuracy of the ADCS unit; the template values stay
+    when the design does not give them."""
     control = sat.setdefault("control", {})
     ac = (sat_def or {}).get("attitude_control") or {}
     wheels = ac.get("wheels") or {}
@@ -163,8 +172,16 @@ def _apply_attitude_control(sat: dict[str, Any], sat_def: dict[str, Any] | None)
         control["knowledge_source"] = f"END-006 ADCS unit {ac.get('adcs_unit')} (declared pointing accuracy as 1-sigma knowledge error)"
     else:
         control.setdefault("knowledge_source", "END-003 template")
-    return {"value": {k: control.get(k) for k in ("enabled", "wheel_momentum_Nms", "wheel_torque_Nm", "attitude_knowledge_deg")},
-            "wheels_source": control.get("wheels_source"), "knowledge_source": control.get("knowledge_source")}
+    mtq = ac.get("magnetorquers") or {}
+    if mtq.get("dipole_am2") and int(mtq.get("axes") or 0) >= 3:
+        control["magnetorquer_dipole_Am2"] = float(mtq["dipole_am2"])
+        kind = "magnetorquer" if mtq.get("source") == "magnetorquer" else "magnetorquers of the ADCS unit"
+        control["magnetorquer_source"] = f"END-006 {mtq.get('name') or mtq.get('component')} ({kind}, dipole per body axis)"
+    # otherwise END-003 sizes the dipole with the END-006 rule (a full wheel dumped in one orbit)
+    return {"value": {k: control.get(k) for k in ("enabled", "wheel_momentum_Nms", "wheel_torque_Nm", "attitude_knowledge_deg",
+                                                  "magnetorquer_dipole_Am2")},
+            "wheels_source": control.get("wheels_source"), "knowledge_source": control.get("knowledge_source"),
+            "magnetorquer_source": control.get("magnetorquer_source", "END-003: END-006 sizing rule (dipole that dumps a full wheel in one orbit)")}
 
 
 def _terminate(proc: subprocess.Popen, cb: LogCallback | None) -> None:
