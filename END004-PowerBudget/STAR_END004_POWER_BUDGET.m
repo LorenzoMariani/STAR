@@ -76,11 +76,12 @@ function status = STAR_END004_POWER_BUDGET(configFile, outputFolder)
         sunMargin = sunNoMargin * (1.0 + marginFraction);
         eclipseMargin = eclipseNoMargin * (1.0 + marginFraction);
         overallMargin = sunMargin + eclipseMargin;
-        powerSaved = orbit.powerGeneratedPerOrbitWh - overallMargin;
-        if orbit.powerGeneratedPerOrbitWh > sunNoMargin
+        generatedWh = modeGeneration(cfg, mode.key, orbit);
+        powerSaved = generatedWh - overallMargin;
+        if generatedWh > sunNoMargin
             orbitalDoD = eclipseNoMargin / orbit.batteryCapacityWh;
         else
-            orbitalDoD = (overallMargin - orbit.powerGeneratedPerOrbitWh) / orbit.batteryCapacityWh;
+            orbitalDoD = (overallMargin - generatedWh) / orbit.batteryCapacityWh;
         end
         orbitalDoD = max(0.0, orbitalDoD);
 
@@ -93,7 +94,7 @@ function status = STAR_END004_POWER_BUDGET(configFile, outputFolder)
         modeSummaries(m).sun_consumption_margin_Wh = sunMargin;
         modeSummaries(m).eclipse_consumption_margin_Wh = eclipseMargin;
         modeSummaries(m).total_consumption_margin_Wh = overallMargin;
-        modeSummaries(m).power_generated_per_orbit_Wh = orbit.powerGeneratedPerOrbitWh;
+        modeSummaries(m).power_generated_per_orbit_Wh = generatedWh;
         modeSummaries(m).power_saved_per_orbit_Wh = powerSaved;
         modeSummaries(m).peak_power_W = peakPower;
         modeSummaries(m).orbital_DoD = orbitalDoD;
@@ -463,6 +464,21 @@ function counts = readModeOrbitCounts(cfg, modes, dailyOrbits)
     end
 end
 
+function value = modeGeneration(cfg, modeKey, orbit)
+    % Solar generation per orbit of a mode (2026-10-19): generation.power_generated_per_orbit_Wh_by_mode (the STAR runner
+    % computes it from the attitude of each mode), otherwise the single generation.power_generated_per_orbit_Wh. A given
+    % solar_power_W applies to every mode.
+    value = orbit.powerGeneratedPerOrbitWh;
+    solarPowerW = getNestedNumber(cfg, {'generation','solar_power_W'}, NaN);
+    if isfinite(solarPowerW) && solarPowerW > 0
+        return;
+    end
+    byMode = getNestedNumber(cfg, {'generation','power_generated_per_orbit_Wh_by_mode', modeKey}, NaN);
+    if isfinite(byMode) && byMode >= 0
+        value = byMode;
+    end
+end
+
 function balance = getModeBalance(modeSummaries, key)
     balance = NaN;
     for i = 1:numel(modeSummaries)
@@ -521,11 +537,13 @@ function sheet = buildSheet1Cell(subsystems, modes, modeSummaries, orbit, margin
         sheet(r+2,csum+2) = {'Eclipse'};
         sheet(r+2,csum+3) = {'Power saved [Wh]'};
         sheet(r+2,csum+4) = {'DoD'};
+        sheet(r+2,csum+5) = {'Generated [Wh]'};
         sheet(r+3,csum) = {modeSummaries(m).total_consumption_Wh};
         sheet(r+3,csum+1) = {modeSummaries(m).sun_consumption_Wh};
         sheet(r+3,csum+2) = {modeSummaries(m).eclipse_consumption_Wh};
         sheet(r+3,csum+3) = {modeSummaries(m).power_saved_per_orbit_Wh};
         sheet(r+3,csum+4) = {modeSummaries(m).orbital_DoD};
+        sheet(r+3,csum+5) = {modeSummaries(m).power_generated_per_orbit_Wh};
     end
     infoCol = cols - 1;
     sheet(3,infoCol) = {'Orbit'};
@@ -593,6 +611,8 @@ function sheet = buildFoglio1Cell(subsystems, modes, modeSummaries, orbit, modeO
         sheet(base+8,c) = {modeSummaries(m).peak_power_W};
         sheet(base+9,4) = {'Orbital DoD'};
         sheet(base+9,c) = {modeSummaries(m).orbital_DoD};
+        sheet(base+10,4) = {'Power generated per orbit [Wh]'};
+        sheet(base+10,c) = {modeSummaries(m).power_generated_per_orbit_Wh};
         sheet(base+12,4) = {'# of IDLE mode orbits to recharge batteries'};
         sheet(base+12,c) = {modeSummaries(m).idle_orbits_to_recharge};
         sheet(base+14,4) = {'# of TX S-band mode orbits to recharge batteries'};
@@ -660,37 +680,73 @@ function txt = prettyJson(payload)
 end
 
 function createFigures(summaryTable, productDir, resultsDir, summary)
+    % Figures on a light theme, bars only (the modes are categories: no line between them), in the order of the modes,
+    % only the modes the day flies (orbits per day > 0); every bar carries its value (2026-10-19).
+    flown = summaryTable.orbits_per_day > 0;
+    if ~any(flown)
+        flown = true(height(summaryTable), 1);
+    end
+    T = summaryTable(flown, :);
+    n = height(T);
+    x = 1:n;
+    labels = cell(1, n);
+    for i = 1:n
+        labels{i} = sprintf('%s\\newline%s orbits/day', char(string(T.mode(i))), num2str(T.orbits_per_day(i), '%.3g'));   % TeX tick labels
+    end
+    blue = [0.165 0.471 0.839]; green = [0.106 0.686 0.478]; amber = [0.929 0.631 0.0]; purple = [0.290 0.227 0.655];
+    hidden = summaryTable.mode(~flown);
+    note = '';
+    if ~isempty(hidden)
+        note = ['Not flown (0 orbits/day): ' strjoin(cellstr(string(hidden)), ', ')];
+    end
     try
-        f1 = figure('Visible','off');
-        bar(categorical(summaryTable.mode), summaryTable.power_saved_per_orbit_Wh);
-        grid on;
-        ylabel('Power balance [Wh/orbit]');
-        title('Power Balance per Operational Mode');
+        f1 = lightFigure('Energy per orbit by operating mode', note);
+        b = bar(x, [T.power_generated_per_orbit_Wh, T.total_consumption_margin_Wh], 'grouped');
+        b(1).FaceColor = green; b(2).FaceColor = blue;
+        set(b, 'EdgeColor', 'none');
+        hold on;
+        top = max([T.power_generated_per_orbit_Wh; T.total_consumption_margin_Wh; 0]);
+        for i = 1:n
+            text(b(1).XEndPoints(i), b(1).YEndPoints(i), sprintf('%.2f', T.power_generated_per_orbit_Wh(i)), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 9);
+            text(b(2).XEndPoints(i), b(2).YEndPoints(i), sprintf('%.2f', T.total_consumption_margin_Wh(i)), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 9);
+            text(x(i), top * 1.13, sprintf('balance %+.2f Wh', T.power_saved_per_orbit_Wh(i)), 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 9);
+        end
+        styleAxes(gca, x, labels, top * 1.22);
+        ylabel('Energy per orbit [Wh]');
+        legend({'Generated', 'Consumed (incl. margin)'}, 'Location', 'northoutside', 'Orientation', 'horizontal', 'Box', 'off');
         exportgraphics(f1, fullfile(resultsDir, '01_power_balance.png'), 'Resolution', 200);
         close(f1);
     catch figureError
         warning('STAR:END004:FigureFailed', 'Could not generate power balance figure: %s', figureError.message);
     end
     try
-        f2 = figure('Visible','off');
-        data = [summaryTable.sun_consumption_margin_Wh, summaryTable.eclipse_consumption_margin_Wh];
-        bar(categorical(summaryTable.mode), data, 'stacked');
-        grid on;
-        ylabel('Consumption with margin [Wh/orbit]');
-        legend({'Sunlight','Eclipse'}, 'Location','best');
-        title('Mode Consumption Split');
+        f2 = lightFigure('Consumption per orbit: sunlight and eclipse', note);
+        b = bar(x, [T.sun_consumption_margin_Wh, T.eclipse_consumption_margin_Wh], 'stacked');
+        b(1).FaceColor = amber; b(2).FaceColor = purple;
+        set(b, 'EdgeColor', 'w', 'LineWidth', 1);
+        hold on;
+        tot = T.sun_consumption_margin_Wh + T.eclipse_consumption_margin_Wh;
+        for i = 1:n
+            text(x(i), tot(i), sprintf('%.2f Wh', tot(i)), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 9);
+        end
+        styleAxes(gca, x, labels, max([tot; 0]) * 1.15);
+        ylabel('Consumption incl. margin [Wh/orbit]');
+        legend({'Sunlight', 'Eclipse'}, 'Location', 'northoutside', 'Orientation', 'horizontal', 'Box', 'off');
         exportgraphics(f2, fullfile(resultsDir, '02_mode_consumption.png'), 'Resolution', 200);
         close(f2);
     catch figureError
         warning('STAR:END004:FigureFailed', 'Could not generate consumption figure: %s', figureError.message);
     end
     try
-        f3 = figure('Visible','off');
-        labels = categorical(summaryTable.mode);
-        plot(labels, summaryTable.orbital_DoD * 100, '-o', 'LineWidth', 1.5);
-        grid on;
-        ylabel('Depth of discharge [%]');
-        title(sprintf('Orbital DoD — daily balance %.3f Wh', summary.analysis.daily_balance_Wh));
+        f3 = lightFigure(sprintf('Battery depth of discharge per orbit (daily balance %+.1f Wh)', summary.analysis.daily_balance_Wh), note);
+        dod = T.orbital_DoD * 100;
+        bar(x, dod, 0.55, 'FaceColor', blue, 'EdgeColor', 'none');
+        hold on;
+        for i = 1:n
+            text(x(i), dod(i), sprintf('%.2f%%', dod(i)), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'FontSize', 9);
+        end
+        styleAxes(gca, x, labels, max([dod; 1]) * 1.18);
+        ylabel('Depth of discharge per orbit [%]');
         exportgraphics(f3, fullfile(resultsDir, '03_orbital_dod.png'), 'Resolution', 200);
         close(f3);
     catch figureError
@@ -699,5 +755,30 @@ function createFigures(summaryTable, productDir, resultsDir, summary)
     try
         copyfile(fullfile(productDir, 'power_budget_summary.json'), fullfile(resultsDir, 'power_budget_summary_copy.json'));
     catch
+    end
+end
+
+function f = lightFigure(titleText, note)
+    % One axes in a tiled layout: the title on top, the note below it, then the legend (northoutside) and the axes.
+    f = figure('Visible', 'off', 'Color', 'w', 'Position', [100 100 900 560]);
+    try
+        theme(f, 'light');          % R2025a+: the desktop dark theme would otherwise reach the exported figure
+    catch
+    end
+    tl = tiledlayout(f, 1, 1, 'Padding', 'compact');
+    nexttile(tl);
+    title(tl, titleText, 'FontWeight', 'bold', 'FontSize', 12);
+    if ~isempty(note)
+        subtitle(tl, note, 'FontSize', 9, 'Color', [0.4 0.4 0.4]);
+    end
+end
+
+function styleAxes(ax, x, labels, yTop)
+    set(ax, 'XTick', x, 'XTickLabel', labels, 'XLim', [0.4, numel(x) + 0.6], 'Color', 'w', 'XColor', [0.2 0.2 0.2], 'YColor', [0.2 0.2 0.2], ...
+        'GridColor', [0.85 0.85 0.85], 'GridAlpha', 1, 'Box', 'off', 'TickLength', [0 0], 'FontSize', 10);
+    ax.YGrid = 'on';
+    ax.XGrid = 'off';
+    if isfinite(yTop) && yTop > 0
+        ax.YLim = [0, yTop];
     end
 end

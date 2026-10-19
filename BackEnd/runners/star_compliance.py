@@ -61,9 +61,12 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
     d = _load(p) if p else None
     if d:
         flown = [m for m in d.get("mode_summaries", []) if (m.get("orbits_per_day") or 0) > 0]
+        n_flown = sum(float(m.get("orbits_per_day") or 0) for m in flown)
         out["END-004"] = {"_source": str(p), "daily_balance_Wh": (d.get("analysis") or {}).get("daily_balance_Wh"),
                           "max_dod_pct": 100 * max((m.get("orbital_DoD") or 0) for m in flown) if flown else None,
-                          "generation_per_orbit_Wh": flown[0].get("power_generated_per_orbit_Wh") if flown else None,
+                          # generation per mode since 2026-10-19 (attitude of each mode): the mean over the orbits of the day
+                          "generation_per_orbit_Wh": sum(float(m.get("orbits_per_day") or 0) * float(m.get("power_generated_per_orbit_Wh") or 0)
+                                                         for m in flown) / n_flown if flown else None,
                           "peak_power_W": max((m.get("peak_power_W") or 0) for m in flown) if flown else None}
     p = _first(modules_root, "END-016/*/space_safety_summary.json")
     d = _load(p) if p else None
@@ -134,7 +137,7 @@ KPI_ROWS = [
     ("END-001", "fitness_engine", "Fitness engine used", "-"),
     ("END-003", "eclipse_pct", "Eclipse fraction", "%"), ("END-003", "max_body_rate_deg_s", "Max body rate (imaging pass)", "deg/s"),
     ("END-004", "daily_balance_Wh", "Daily energy balance", "Wh"), ("END-004", "max_dod_pct", "Max depth of discharge per orbit", "%"),
-    ("END-004", "generation_per_orbit_Wh", "Generation per orbit", "Wh"),
+    ("END-004", "generation_per_orbit_Wh", "Generation per orbit (mean of the day)", "Wh"),
     ("END-010", "peak_magnitude", "Peak apparent magnitude", "mag"), ("END-010", "observatory", "Observatory", "-"),
     ("END-016", "min_separation_km", "Minimum separation between satellites", "km"),
     ("END-016", "n_events_below_screening", "Close approaches below screening", "-"),

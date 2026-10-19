@@ -91,6 +91,27 @@ def _end001_ephemerides(end001_csv: Path | None) -> list[dict[str, Any]]:
     return sorted(found, key=lambda item: item["satellite_index"])
 
 
+def _end001_ground_stations(star_payload: dict[str, Any], end001_csv: Path | None) -> list[dict[str, Any]]:
+    """Ground stations of the END-001 run (end001_runtime_input.json GroundStations): END-003 computes the face
+    illumination during their contacts for the END-004 solar generation (2026-10-19)."""
+    path = find_upstream_artifact(star_payload, ["end001_runtime_input"], [".json"])
+    if not path and end001_csv:
+        path = Path(end001_csv).parent.parent / "end001_runtime_input.json"
+    if not path or not Path(path).exists():
+        return []
+    stations = (load_json(Path(path)) or {}).get("GroundStations") or []
+    if isinstance(stations, dict):
+        stations = [stations]
+    out = []
+    for i, gs in enumerate(stations, 1):
+        try:
+            out.append({"name": str(gs.get("name") or f"GS {i}"), "lat": float(gs["lat"]), "lon": float(gs["lon"]),
+                        "alt": float(gs.get("alt") or 0.0), "mask": float(gs["mask"] if gs.get("mask") is not None else 5.0)})   # 5 deg: END-001 default
+        except (AttributeError, KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
 def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> dict[str, Any]:
     """STAR inputs over the native template; returns the decisions (star_runtime.end003_inputs)."""
     report: dict[str, Any] = {}
@@ -290,6 +311,9 @@ def run_end003(
         write_json(process_info_path, {"run_id": run_id, "status": "failed", "reason": reason})
         return {"status": "failed", "evidence": reason, "generated_artifacts": _collect(output_path)}
     config["end001_pass_selection"] = str(pass_selection)
+    stations = _end001_ground_stations(star_payload, end001_csv)
+    if stations:
+        config["ground_stations"] = stations
     config.pop("target_selection", None)
     if constellation:
         first = constellation[0]

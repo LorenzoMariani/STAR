@@ -124,6 +124,7 @@ function star_attitude_propagation_star(configFile, outputFolder)
     %% == FULL-SPAN SERIES (dashboard grid) ====================================
     td = (0:S.dash_step:T)';
     D = dashboard_series(A_img, td, S, ctx, site, eph(ki));
+    D.contacts = contact_illumination(A_img, S, ctx, cfg_get(cfg, 'ground_stations', []));
     fprintf('\n--- Disturbance torques [Nm] (%s, whole window): mean of the simulated attitude | worst case over all attitudes ---\n', eph(ki).label);
     fprintf('GG %.2e | %.2e   SRP %.2e | %.2e   Drag %.2e | %.2e\n', mean(D.M(:,1)), max(D.Mmax(:,1)), ...
         mean(D.M(:,2)), max(D.Mmax(:,2)), mean(D.M(:,4)), max(D.Mmax(:,3)));
@@ -1303,6 +1304,59 @@ function D = dashboard_series(A, td, S, ctx, site, E)
     D.face_illum = mean(cosf(D.sunlit, :), 1);
 end
 
+function C = contact_illumination(A, S, ctx, gs)
+    % Illumination of the body faces during the contacts with the END-001 ground stations (2026-10-19, END-004 solar
+    % generation per operating mode): mean cosine of the Sun incidence on each face over the sunlit contact time, in
+    % the attitude of this run and in ground-station pointing (+Z to the station above its mask, the highest one when
+    % several are; +X as close to the velocity as possible: the follow_site construction, without the slew limit).
+    % 10 s grid. Empty when the run has no ground station.
+    C = [];
+    if isempty(gs)
+        return;
+    end
+    step = 10;
+    idx = (1:round(step/S.base_step):numel(A.t))';
+    t = A.t(idx); r = A.r(idx, :); v = A.v(idx, :); q = A.q(idx, :);
+    n = numel(t);
+    th = gmst_rad(ctx.jd0 + t/86400);
+    r_ecef = rot_eci2ecef(r, th);
+    best = -inf(n, 1);
+    los = zeros(n, 3);
+    names = cell(1, numel(gs));
+    for k = 1:numel(gs)
+        names{k} = char(string(cfg_get(gs(k), 'name', sprintf('GS %d', k))));
+        [p, up] = geodetic_ecef(deg2rad(gs(k).lat), deg2rad(gs(k).lon), cfg_get(gs(k), 'alt', 0));
+        el = elevation_deg(r_ecef, p, up);
+        use = el >= cfg_get(gs(k), 'mask', 0) & el > best;
+        if any(use)
+            los(use, :) = rot_ecef2eci(repmat(p, nnz(use), 1), th(use)) - r(use, :);
+            best(use) = el(use);
+        end
+    end
+    con = isfinite(best);
+    Sun = sun_vectors_eci(ctx.jd0 + t/86400);
+    m = con & sunlit_flags(r, Sun, S.Re);
+    N = [1 0 0; -1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1]';
+    C.stations = names;
+    C.contact_s = nnz(con)*step;
+    C.sunlit_contact_s = nnz(m)*step;
+    C.run = NaN(1, 6);
+    C.ground_station_pointing = NaN(1, 6);
+    if ~any(m)
+        return;
+    end
+    s_run = quat_rotate([-q(m, 1:3), q(m, 4)], Sun(m, :));
+    C.run = mean(max(0, s_run*N), 1);
+    if ~strcmp(S.mode, 'dynamics')                    % uncontrolled attitude: no pointing
+        zb = los(m, :)./vecnorm(los(m, :), 2, 2);
+        xb = v(m, :) - sum(v(m, :).*zb, 2).*zb; xb = xb./vecnorm(xb, 2, 2);
+        yb = cross(zb, xb, 2); yb = yb./vecnorm(yb, 2, 2);
+        xb = cross(yb, zb, 2);
+        s_gs = [sum(xb.*Sun(m, :), 2), sum(yb.*Sun(m, :), 2), sum(zb.*Sun(m, :), 2)];
+        C.ground_station_pointing = mean(max(0, s_gs*N), 1);
+    end
+end
+
 function png = make_standard_plots(out_dir, D, S, site, A, plan)
     set(groot, 'DefaultFigureColor', 'w'); set(groot, 'DefaultAxesColor', 'w');
     set(groot, 'DefaultAxesXColor', 'k'); set(groot, 'DefaultAxesYColor', 'k'); set(groot, 'DefaultAxesZColor', 'k');
@@ -1667,11 +1721,19 @@ function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat, P)
     cat.attitude_control = control_summary(S);
     cat.disturbance_note = ['KPI-11..13: mean torque on the simulated attitude (models switched on); KPI-29..31: worst case over ', ...
         'all attitudes (3 mu/(2 r^3) (Imax - Imin), P A Cr |r_cp|, rho v^2 Cd A |r_cp| / 2), whatever the flags'];
-    f = D.face_illum;
-    cat.illumination = struct('mean_cos_sunlit', struct('x_plus', f(1), 'x_minus', f(2), 'y_plus', f(3), 'y_minus', f(4), ...
-        'z_plus', f(5), 'z_minus', f(6)), 'sunlit_fraction', mean(D.sunlit), 'satellite', plan.imaging.label, ...
+    faces = @(f) struct('x_plus', f(1), 'x_minus', f(2), 'y_plus', f(3), 'y_minus', f(4), 'z_plus', f(5), 'z_minus', f(6));
+    cat.illumination = struct('mean_cos_sunlit', faces(D.face_illum), 'sunlit_fraction', mean(D.sunlit), 'satellite', plan.imaging.label, ...
         'note', ['mean cosine of the Sun incidence on each body face over the sunlit time of the whole window ', ...
         '(attitude of this run, eclipses excluded): P_face = P_peak x factor']);
+    C = D.contacts;
+    if ~isempty(C)
+        cat.illumination.contacts = struct('stations', {C.stations}, 'contact_s', C.contact_s, 'sunlit_contact_s', C.sunlit_contact_s, ...
+            'mean_cos_sunlit_run', faces(C.run), 'mean_cos_sunlit_ground_station_pointing', faces(C.ground_station_pointing), ...
+            'note', ['contacts with the END-001 ground stations above their mask, sunlit time only, 10 s grid: mean cosines ', ...
+            'in the attitude of this run and in ground-station pointing (+Z to the station, +X as close to the velocity as ', ...
+            'possible, no slew limit; null for an uncontrolled attitude). END-004 uses them for the solar generation of the ', ...
+            'orbits with a contact']);
+    end
     file = fullfile(out_dir, 'attitude_summary.json');
     write_text(file, jsonencode(cat, 'PrettyPrint', true));
     fprintf('KPI catalog saved: %s\n', file);

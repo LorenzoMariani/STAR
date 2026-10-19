@@ -236,6 +236,16 @@ function empty(id, message){
   el.innerHTML = `<div class="empty">${esc(message)}</div>`;
 }
 
+/* modes the day flies (orbits per day > 0); the others are hidden from charts and tables (2026-10-19) */
+function flownModes(model){
+  const f = model.modes.filter(m => m.count > 0);
+  return f.length ? f : model.modes;
+}
+function hiddenNote(model){
+  const h = model.modes.filter(m => !(m.count > 0));
+  return h.length && h.length < model.modes.length ? `Not flown (0 orbits/day): ${h.map(m => m.label).join(', ')}` : '';
+}
+
 /* ---------- data model ---------- */
 function buildModel(data){
   const cfg = data.input_config || {};
@@ -244,11 +254,13 @@ function buildModel(data){
   const period = num(orb.period_min, num(sum.periodMin, 0));
   const sunMin = num(orb.sunlight_min, num(sum.sunlightMin, 0));
   const eclMin = num(orb.eclipse_min, num(sum.eclipseMin, Math.max(0, period - sunMin)));
-  const N = Math.round(num(orb.daily_orbits, num(sum.dailyOrbits, 15)));
+  const dailyRaw = num(orb.daily_orbits, num(sum.dailyOrbits, 15));
+  const N = Math.round(dailyRaw);
   const genOrbit = num((cfg.generation || {}).power_generated_per_orbit_Wh, num(sum.powerGeneratedPerOrbitWh, 0));
   const capacity = num((cfg.battery || {}).capacity_Wh, num(sum.batteryCapacityWh, 0));
   const margin = num(cfg.margin_fraction, num((data.analysis || {}).margin_fraction, 0));
   const counts = Object.assign({ idle:0, tx_uhf:0, tx_sband:0, payload:0 }, (cfg.operations || {}).mode_orbits_per_day || {});
+  const genByMode = (cfg.generation || {}).power_generated_per_orbit_Wh_by_mode || {};
   const summaries = {};
   (data.mode_summaries || []).forEach(s => { summaries[s.mode_key] = s; });
   const subs = cfg.subsystems || [];
@@ -269,32 +281,43 @@ function buildModel(data){
     const total = eSun + eEcl;
     const totalM = total * (1 + margin);
     const sm = summaries[def.key] || {};
+    /* solar generation of the mode: END-004 per mode (attitude of each mode, 2026-10-19), else the single value */
+    const gen = num(sm.power_generated_per_orbit_Wh, num(genByMode[def.key], genOrbit));
     return Object.assign({}, def, {
-      rows, eSun, eEcl, total, totalM, avgSunW, avgEclW,
+      rows, eSun, eEcl, total, totalM, avgSunW, avgEclW, gen, genW:sunMin > 0 ? gen / (sunMin / 60) : 0,
       count:num(counts[def.key], 0),
       label:def.label,
       fullLabel:sm.mode || def.label,
       peakW:num(sm.peak_power_W, Math.max(avgSunW, avgEclW)),
       dod:num(sm.orbital_DoD, capacity > 0 ? eEcl / capacity : NaN),
-      savedPerOrbit:genOrbit - totalM
+      savedPerOrbit:gen - totalM
     });
   });
   const byKey = {}; modes.forEach(m => byKey[m.key] = m);
 
+  /* the day: the orbits of every mode (fractional counts, as END-004), each with its own generation */
   const orbitsInPlan = MODE_DEFS.reduce((a, d) => a + byKey[d.key].count, 0);
-  const genDay = N * genOrbit;
+  const dayOrbits = orbitsInPlan > 0 ? orbitsInPlan : N;
+  const genDay = orbitsInPlan > 0 ? modes.reduce((a, m) => a + m.count * m.gen, 0) : N * genOrbit;
   const consDay = modes.reduce((a, m) => a + m.count * m.totalM, 0);
   const balance = genDay - consDay;
   const genW = sunMin > 0 ? genOrbit / (sunMin / 60) : 0;
 
-  /* payload orbits the day can sustain (other modes kept as declared, idle fills the rest) */
-  const fixedNonIdle = byKey.tx_uhf.count * byKey.tx_uhf.totalM + byKey.tx_sband.count * byKey.tx_sband.totalM;
+  /* payload orbits the day can sustain (other modes kept as declared, idle fills the rest), net energy per orbit of each mode */
+  const fixedNonIdle = byKey.tx_uhf.count * (byKey.tx_uhf.totalM - byKey.tx_uhf.gen) + byKey.tx_sband.count * (byKey.tx_sband.totalM - byKey.tx_sband.gen);
   const nonPayloadNonIdle = byKey.tx_uhf.count + byKey.tx_sband.count;
-  const dE = byKey.payload.totalM - byKey.idle.totalM;
-  const nMax = dE > 1e-9 ? (genDay - fixedNonIdle - (N - nonPayloadNonIdle) * byKey.idle.totalM) / dE : Infinity;
+  const netIdle = byKey.idle.gen - byKey.idle.totalM, netPay = byKey.payload.gen - byKey.payload.totalM;
+  /* balance(n) = b0 + n x slope for n payload orbits in [0, avail]: the largest n with balance >= 0 (null: none) */
+  const avail = Math.max(0, dayOrbits - nonPayloadNonIdle);
+  const b0 = -fixedNonIdle + avail * netIdle, slope = netPay - netIdle;
+  const zero = Math.abs(slope) > 1e-9 ? -b0 / slope : null;
+  let nMax;
+  if (slope < -1e-9) nMax = b0 >= 0 ? Math.min(avail, b0 / -slope) : null;
+  else nMax = b0 + avail * slope >= 0 ? avail : null;
+  const nMaxAll = nMax !== null && nMax >= avail - 1e-9;
 
-  return { period, sunMin, eclMin, N, genOrbit, genDay, genW, capacity, margin, counts, modes, byKey,
-    orbitsInPlan, consDay, balance, nMax, nonPayloadNonIdle, fixedNonIdle,
+  return { period, sunMin, eclMin, N, dailyRaw, dayOrbits, genOrbit, genDay, genW, capacity, margin, counts, modes, byKey,
+    orbitsInPlan, consDay, balance, nMax, nMaxAll, avail, zero, nonPayloadNonIdle, fixedNonIdle,
     balanceReported:(data.analysis || {}).daily_balance_Wh, runId:(cfg.star_runtime || {}).run_id || data.run_id || '',
     startUtc:sum.startUtc || '', attitudeMode:sum.attitudeMode || '' };
 }
@@ -338,7 +361,7 @@ function simulateBattery(model, seq){
   seq.forEach((k, i) => {
     const m = model.byKey[k], f = 1 + model.margin;
     const startE = e;
-    seg(model.genW - m.avgSunW * f, model.sunMin / 60);
+    seg(m.genW - m.avgSunW * f, model.sunMin / 60);
     seg(-m.avgEclW * f, model.eclMin / 60);
     perOrbit.push({ orbit:i + 1, mode:k, startE, endE:e });
   });
@@ -352,14 +375,14 @@ function renderBanner(model){
   const bal = model.balance;
   const pay = model.byKey.payload;
   let cls = 'good', icon = '✓', head;
-  const tight = Number.isFinite(model.nMax) && model.byKey.payload.count > 0 && (model.nMax - model.byKey.payload.count) < 1;
+  const tight = model.nMax !== null && !model.nMaxAll && model.byKey.payload.count > 0 && (model.nMax - model.byKey.payload.count) < 1;
   if (bal < 0) { cls = 'critical'; icon = '✕'; head = 'ENERGY DEFICIT'; }
   else if (tight) { cls = 'warning'; icon = '!'; head = 'ENERGY POSITIVE — TIGHT MARGIN'; }
   else { head = 'ENERGY POSITIVE'; }
   const pct = model.consDay > 0 ? (bal / model.consDay * 100) : NaN;
   let text = `<b>${head}</b> — the daily budget closes with <b>${sgn(bal)} Wh/day</b> (${fmt(model.genDay, 1)} Wh generated vs ${fmt(model.consDay, 1)} Wh consumed incl. ${fmt(model.margin * 100, 0)}% margin${Number.isFinite(pct) ? `, ${sgn(pct, 1)}% of consumption` : ''}).`;
   if (pay.count > 0) {
-    text += ` Payload mode costs <b>${sgn(pay.savedPerOrbit)} Wh/orbit</b>${pay.savedPerOrbit < 0 ? ' and is recovered by the idle orbits' : ''}; the day sustains at most <b>${Number.isFinite(model.nMax) ? fmt(model.nMax, 1) : '∞'}</b> payload orbits (declared: ${pay.count}).`;
+    text += ` Payload mode costs <b>${sgn(pay.savedPerOrbit)} Wh/orbit</b>${pay.savedPerOrbit < 0 ? ' and is recovered by the idle orbits' : ''}; ${model.nMax === null ? ' no allocation of payload orbits closes the day' : model.nMaxAll ? ` every orbit of the day could be a payload orbit (${fmt(model.avail, 1)})` : ` the day sustains at most <b>${fmt(model.nMax, 1)}</b> payload orbits`} (declared: ${fmt(pay.count, pay.count % 1 ? 2 : 0)}).`;
   }
   el.className = 'banner ' + cls;
   el.innerHTML = `<div class="icon" aria-hidden="true">${icon}</div><div>${text}</div>`;
@@ -367,17 +390,26 @@ function renderBanner(model){
 }
 
 function renderKpis(model, batt){
-  const pay = model.byKey.payload, peak = Math.max(...model.modes.map(m => m.peakW));
-  const peakMode = model.modes.reduce((a, m) => m.peakW > a.peakW ? m : a, model.modes[0]);
-  const worstDod = Math.max(...model.modes.filter(m => m.count > 0 || true).map(m => num(m.dod, 0)));
+  const fm = flownModes(model);
+  const pay = model.byKey.payload, peak = Math.max(...fm.map(m => m.peakW));
+  const peakMode = fm.reduce((a, m) => m.peakW > a.peakW ? m : a, fm[0]);
+  const worstDod = Math.max(...fm.map(m => num(m.dod, 0)));
+  const gens = fm.map(m => m.gen);
+  const genSpread = Math.max(...gens) - Math.min(...gens) > 0.005;
   const items = [
     { label:'Daily energy balance', value:sgn(model.balance), unit:'Wh/day', note:`${fmt(model.genDay, 1)} generated · ${fmt(model.consDay, 1)} consumed`,
       flag:model.balance >= 0 ? { cls:'good', text:'✓ positive' } : { cls:'critical', text:'✕ deficit' } },
-    { label:'Payload orbit balance', value:sgn(pay.savedPerOrbit), unit:'Wh/orbit', note:`${fmt(pay.totalM, 2)} Wh used vs ${fmt(model.genOrbit, 2)} Wh generated`,
+    ...(pay.count > 0 ? [
+    { label:'Payload orbit balance', value:sgn(pay.savedPerOrbit), unit:'Wh/orbit', note:`${fmt(pay.totalM, 2)} Wh used vs ${fmt(pay.gen, 2)} Wh generated`,
       flag:pay.savedPerOrbit >= 0 ? { cls:'good', text:'✓ self-sustained' } : { cls:'warning', text:'! needs idle orbits' } },
-    { label:'Max payload orbits / day', value:Number.isFinite(model.nMax) ? fmt(model.nMax, 1) : '∞', unit:'', note:`declared ${pay.count} of ${model.N} orbits`,
-      flag:(!Number.isFinite(model.nMax) || model.nMax >= pay.count) ? { cls:(Number.isFinite(model.nMax) && model.nMax - pay.count < 1) ? 'warning' : 'good', text:(Number.isFinite(model.nMax) && model.nMax - pay.count < 1) ? '! margin < 1 orbit' : '✓ within limit' } : { cls:'critical', text:'✕ above limit' } },
-    { label:'Peak load', value:fmt(peak, 2), unit:'W', note:`${peakMode.label} · solar avg ${fmt(model.genW, 2)} W in sunlight` },
+    { label:'Max payload orbits / day', value:model.nMax === null ? '0' : fmt(model.nMax, 1), unit:model.nMaxAll ? '(every orbit)' : '',
+      note:`declared ${fmt(pay.count, pay.count % 1 ? 2 : 0)} of ${fmt(model.dayOrbits, model.dayOrbits % 1 ? 2 : 0)} orbits`,
+      flag:model.nMax === null ? { cls:'critical', text:'✕ deficit with any allocation' }
+        : model.nMax + 1e-9 >= pay.count ? (!model.nMaxAll && model.nMax - pay.count < 1 ? { cls:'warning', text:'! margin < 1 orbit' } : { cls:'good', text:'✓ within limit' })
+        : { cls:'critical', text:'✕ above limit' } }] : []),
+    { label:'Solar generation', value:genSpread ? `${fmt(Math.min(...gens), 2)}–${fmt(Math.max(...gens), 2)}` : fmt(gens[0], 2), unit:'Wh/orbit',
+      note:genSpread ? fm.map(m => `${m.label} ${fmt(m.gen, 2)}`).join(' · ') : 'same in every mode' },
+    { label:'Peak load', value:fmt(peak, 2), unit:'W', note:`${peakMode.label} · solar avg ${fmt(peakMode.genW, 2)} W in sunlight` },
     { label:'Battery', value:fmt(model.capacity, 0), unit:'Wh', note:`worst orbit DoD ${fmt(worstDod * 100, 1)}% · min charge ${fmt(model.capacity > 0 ? batt.minE / model.capacity * 100 : NaN, 0)}% over the day`,
       flag:batt.depleted ? { cls:'critical', text:'✕ battery depleted' } : null },
     { label:'Orbit', value:fmt(model.period, 1), unit:'min', note:`${fmt(model.sunMin, 1)} sunlight · ${fmt(model.eclMin, 1)} eclipse (${fmt(model.eclMin / model.period * 100, 0)}%)` }
@@ -387,7 +419,11 @@ function renderKpis(model, batt){
 
 function renderModeBar(model, c){
   const seg = $('mode-seg');
-  seg.innerHTML = model.modes.map(m => `<button type="button" role="tab" data-mode="${m.key}" class="${m.key === state.mode ? 'active' : ''}" aria-selected="${m.key === state.mode}"><span class="dot" style="background:${c.modes[m.key]}"></span>${esc(m.label)}${m.count ? ` <span style="color:var(--muted)">· ${m.count}/day</span>` : ''}</button>`).join('');
+  const fm = flownModes(model);
+  if (!fm.some(m => m.key === state.mode)) state.mode = (fm.find(m => m.key === 'payload') || fm[0]).key;
+  const note = hiddenNote(model);
+  seg.innerHTML = fm.map(m => `<button type="button" role="tab" data-mode="${m.key}" class="${m.key === state.mode ? 'active' : ''}" aria-selected="${m.key === state.mode}"><span class="dot" style="background:${c.modes[m.key]}"></span>${esc(m.label)}${m.count ? ` <span style="color:var(--muted)">· ${fmt(m.count, m.count % 1 ? 2 : 0)}/day</span>` : ''}</button>`).join('')
+    + (note ? `<span class="ctl-label" style="margin-left:6px">${esc(note)}</span>` : '');
   seg.querySelectorAll('button').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; renderAll(); });
   $('mode-bar').hidden = false;
 }
@@ -466,12 +502,12 @@ function renderDaily(model, c, seq){
     xaxis:axis(c, { range:[0, orbitsN * T], title:`Orbit number (${fmt(model.period, 1)} min each · ${fmt(orbitsN * T, 1)} h in total)`, tickvals:Array.from({ length:orbitsN }, (_, i) => (i + 0.5) * T), ticktext:Array.from({ length:orbitsN }, (_, i) => String(i + 1)), zeroline:false, showgrid:false }),
     yaxis:axis(c, { autorange:'reversed', categoryorder:'array', categoryarray:[rowMode, rowPay, rowSun], showgrid:false })
   }));
-  $('legend-modes').innerHTML = MODE_DEFS.map(d => `<span><i style="background:${c.modes[d.key]}"></i>${esc(d.label)}${model.byKey[d.key].count ? ` · ${model.byKey[d.key].count} orbits` : ' · 0 orbits'}</span>`).join('')
+  $('legend-modes').innerHTML = flownModes(model).map(m => `<span><i style="background:${c.modes[m.key]}"></i>${esc(m.label)} · ${fmt(m.count, m.count % 1 ? 2 : 0)} orbits</span>`).join('')
     + `<span><i style="background:${c.muted};opacity:.4"></i>Payload OFF</span>`;
-  const mismatch = model.orbitsInPlan !== model.N;
+  const mismatch = Math.abs(model.orbitsInPlan - model.dailyRaw) > 0.05;
   $('t2-hint').textContent = mismatch
-    ? `Warning: the declared mode orbits (${model.orbitsInPlan}) differ from the ${model.N} orbits/day of the orbit model.`
-    : `${model.N} orbits/day · mode budget as declared in the END-004 input; the order of the orbits is not defined by END-004.`;
+    ? `Warning: the declared mode orbits (${fmt(model.orbitsInPlan, 2)}) differ from the ${fmt(model.dailyRaw, 2)} orbits/day of the orbit model.`
+    : `${fmt(model.dailyRaw, model.dailyRaw % 1 ? 2 : 0)} orbits/day · mode budget as declared in the END-004 input; the order of the orbits is not defined by END-004.`;
 }
 
 function pie(id, labels, values, hover, cols, centerTop, centerBottom, c, unit){
@@ -530,24 +566,39 @@ function renderBattery(model, c, seq, batt){
 }
 
 function renderProfile(model, c){
-  const traces = [{ type:'scatter', mode:'lines', name:`Solar generation (${fmt(model.genW, 2)} W)`, x:[0, model.sunMin, model.sunMin, model.period], y:[model.genW, model.genW, 0, 0], fill:'tozeroy',
+  const fm = flownModes(model);
+  const gMax = Math.max(...fm.map(m => m.genW)), gMin = Math.min(...fm.map(m => m.genW));
+  const traces = [{ type:'scatter', mode:'lines', name:`Solar generation (${fmt(gMax, 2)} W)`, x:[0, model.sunMin, model.sunMin, model.period], y:[gMax, gMax, 0, 0], fill:'tozeroy',
     fillcolor:c.muted2.startsWith('#') ? c.muted2 + '22' : 'rgba(150,160,180,.15)', line:{ color:c.muted2, width:2 }, hovertemplate:'generation %{y:.2f} W<extra></extra>' }];
+  if (gMax - gMin > 0.005) {
+    /* the generation differs by mode (attitude of each mode): one dashed line per mode, in the mode colour */
+    traces[0].name = 'Solar generation';
+    traces[0].line = { color:c.muted2, width:0 };
+    traces[0].hoverinfo = 'skip';
+    traces[0].showlegend = false;
+    fm.forEach(m => traces.push({ type:'scatter', mode:'lines', name:`${m.label} generation (${fmt(m.genW, 2)} W)`, x:[0, model.sunMin, model.sunMin, model.period],
+      y:[m.genW, m.genW, 0, 0], line:{ color:c.modes[m.key], width:2, dash:'dash' }, hovertemplate:`${m.label} generation %{y:.2f} W<extra></extra>` }));
+  }
   const f = 1 + model.margin;
-  model.modes.forEach(m => traces.push({ type:'scatter', mode:'lines', name:m.label, x:[0, model.sunMin, model.sunMin, model.period],
+  flownModes(model).forEach(m => traces.push({ type:'scatter', mode:'lines', name:m.label, x:[0, model.sunMin, model.sunMin, model.period],
     y:[m.avgSunW * f, m.avgSunW * f, m.avgEclW * f, m.avgEclW * f], line:{ color:c.modes[m.key], width:2 }, hovertemplate:`${m.label}: %{y:.2f} W<extra></extra>` }));
-  draw('plotProfile', traces, baseLayout(c, { height:300,
+  const legendRows = Math.ceil(traces.filter(t => t.showlegend !== false).length / 3);
+  draw('plotProfile', traces, baseLayout(c, { height:300 + 18 * (legendRows - 1),
+    margin:{ l:64, r:18, t:12 + 20 * legendRows, b:46 },
+    legend:{ orientation:'h', x:0, y:1.02, yanchor:'bottom', font:{ size:11, color:c.text } },
     shapes:[{ type:'rect', xref:'x', yref:'paper', x0:model.sunMin, x1:model.period, y0:0, y1:1, fillcolor:c.eclTint, line:{ width:0 }, layer:'below' }],
     xaxis:axis(c, { title:'Minutes from the start of sunlight', range:[0, model.period], zeroline:false }),
     yaxis:axis(c, { title:'Average power [W]', rangemode:'tozero' }) }));
 }
 
 function renderSensitivity(model, c){
-  const nMaxSweep = model.N - model.nonPayloadNonIdle;
+  const nMaxSweep = Math.floor(model.dayOrbits - model.nonPayloadNonIdle + 1e-9);
+  const netPay = model.byKey.payload.gen - model.byKey.payload.totalM, netIdle = model.byKey.idle.gen - model.byKey.idle.totalM;
   const xs = [], ys = [];
   for (let n = 0; n <= nMaxSweep; n++) {
     xs.push(n);
-    const idle = model.N - n - model.nonPayloadNonIdle;
-    ys.push(model.genDay - model.fixedNonIdle - n * model.byKey.payload.totalM - idle * model.byKey.idle.totalM);
+    const idle = model.dayOrbits - n - model.nonPayloadNonIdle;
+    ys.push(-model.fixedNonIdle + n * netPay + idle * netIdle);
   }
   const cur = model.byKey.payload.count;
   const traces = [{ type:'scatter', mode:'lines+markers', name:'Daily balance', x:xs, y:ys, line:{ color:c.modes.idle, width:2 }, marker:{ size:8, color:c.modes.idle, line:{ color:c.panel, width:2 } },
@@ -555,7 +606,8 @@ function renderSensitivity(model, c){
   const curIdx = xs.indexOf(cur);
   if (curIdx >= 0) traces.push({ type:'scatter', mode:'markers+text', name:'Declared allocation', x:[cur], y:[ys[curIdx]], text:[`declared: ${cur} (${sgn(ys[curIdx])} Wh)`], textposition:'top right', textfont:{ color:c.strong, size:11 },
     marker:{ size:14, color:c.modes.payload, line:{ color:c.strong, width:2 } }, hovertemplate:'declared allocation<extra></extra>' });
-  $('sens-hint').textContent = Number.isFinite(model.nMax) ? `Zero crossing at ${fmt(model.nMax, 1)} payload orbits/day` : 'Balance stays positive for every allocation';
+  $('sens-hint').textContent = model.zero !== null && model.zero >= 0 && model.zero <= model.avail ? `Zero crossing at ${fmt(model.zero, 1)} payload orbits/day`
+    : ys.every(v => v >= 0) ? 'Balance stays positive for every allocation' : 'Balance negative for every allocation';
   draw('plotSens', traces, baseLayout(c, { height:300, showlegend:false,
     xaxis:axis(c, { title:'Payload orbits per day (remaining orbits idle)', dtick:1, zeroline:false }),
     yaxis:axis(c, { title:'Daily energy balance [Wh]', zeroline:true, zerolinecolor:c.muted, zerolinewidth:1.5 }) }));
@@ -587,13 +639,14 @@ function tableHtml(title, head, rows){
 }
 function renderTables(model, seq, batt){
   const t1 = tableHtml('Mode summary (per orbit)', ['Mode', 'Orbits/day', 'Sunlight Wh', 'Eclipse Wh', 'Total Wh', 'Total + margin Wh', 'Generated Wh', 'Saved Wh', 'Avg W sun', 'Avg W eclipse', 'Peak W', 'DoD %'],
-    model.modes.map(m => [m.fullLabel, m.count, fmt(m.eSun, 3), fmt(m.eEcl, 3), fmt(m.total, 3), fmt(m.totalM, 3), fmt(model.genOrbit, 3), { t:sgn(m.savedPerOrbit, 3), cls:m.savedPerOrbit >= 0 ? 'pos' : 'neg' }, fmt(m.avgSunW, 3), fmt(m.avgEclW, 3), fmt(m.peakW, 3), fmt(num(m.dod, 0) * 100, 2)]));
+    flownModes(model).map(m => [m.fullLabel, m.count, fmt(m.eSun, 3), fmt(m.eEcl, 3), fmt(m.total, 3), fmt(m.totalM, 3), fmt(m.gen, 3), { t:sgn(m.savedPerOrbit, 3), cls:m.savedPerOrbit >= 0 ? 'pos' : 'neg' }, fmt(m.avgSunW, 3), fmt(m.avgEclW, 3), fmt(m.peakW, 3), fmt(num(m.dod, 0) * 100, 2)]));
   const m = model.byKey[state.mode];
   const t2 = tableHtml(`Subsystems · ${m.fullLabel}`, ['Subsystem', 'Function', 'Power W', 'Duty sun %', 'Duty eclipse %', 'ON min sun', 'ON min eclipse', 'Wh sun', 'Wh eclipse'],
     m.rows.map(r => [r.name, GROUP_DEFS.find(g => g.key === r.group).label.split(' (')[0], fmt(r.P, 3), fmt(r.dutySun * 100, 2), fmt(r.dutyEcl * 100, 2), fmt(r.minSun, 2), fmt(r.minEcl, 2), fmt(r.eSun, 4), fmt(r.eEcl, 4)]));
   const t3 = tableHtml(`Daily allocation (${state.order})`, ['Orbit', 'Mode', 'Battery start Wh', 'Battery end Wh', 'Net Wh'],
     batt.perOrbit.map(o => [o.orbit, model.byKey[o.mode].fullLabel, fmt(o.startE, 2), fmt(o.endE, 2), { t:sgn(o.endE - o.startE, 2), cls:(o.endE - o.startE) >= 0 ? 'pos' : 'neg' }]));
-  $('tables').innerHTML = t1 + t2 + t3;
+  const note = hiddenNote(model);
+  $('tables').innerHTML = t1 + (note ? `<div class="note" style="padding:6px 14px">${esc(note)}</div>` : '') + t2 + t3;
 }
 
 function renderAll(){

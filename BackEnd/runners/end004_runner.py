@@ -216,12 +216,45 @@ def _apply_duty_cycles(runtime_data: dict[str, Any], ops: dict[str, Any] | None,
         "note": "upper bound: payload on whenever the AOI is in the footprint, transmitters on for the whole contact (no data-volume model)"}
 
 
-def _illumination(star_payload: dict[str, Any]) -> dict[str, float] | None:
+def _illumination(star_payload: dict[str, Any]) -> tuple[dict[str, float] | None, dict[str, Any] | None]:
+    """END-003 face illumination: whole window in the attitude of the run, and during the ground-station contacts
+    (attitude of the run and ground-station pointing, since 2026-10-19)."""
     summary = find_upstream_artifact(star_payload, ["attitude_summary.json"], [".json"])
     if summary and Path(summary).exists():
         ill = (load_json(Path(summary)) or {}).get("illumination") or {}
-        return ill.get("mean_cos_sunlit") or None
-    return None
+        return ill.get("mean_cos_sunlit") or None, ill.get("contacts") or None
+    return None, None
+
+
+TRANSMITTERS = ("TX S BAND", "TX UHF")
+
+
+def _generation_by_mode(runtime_data: dict[str, Any], energy: float, peak_w: float, keys: list[str],
+                        contacts: dict[str, Any] | None) -> tuple[dict[str, float], str]:
+    """Solar generation per operating mode (2026-10-19): the attitude of the run (END-003) for the whole sunlit time,
+    except the sunlit time a transmitter is on, when the satellite points the ground station (END-003 face cosines in
+    the contacts). E_mode = E_run + P_peak x t_tx,sun x (F_gs - F_run) / 3600, with t_tx,sun = sunlit transmit time of the
+    mode (the duty cycle of its transmitters), F = sum of the cosines of the panel faces in the contacts."""
+    modes = list(MODE_KEYS)
+    flat = {m: round(energy, 4) for m in modes}
+    run = (contacts or {}).get("mean_cos_sunlit_run") or {}
+    gs = (contacts or {}).get("mean_cos_sunlit_ground_station_pointing") or {}
+    if not contacts or not (contacts.get("sunlit_contact_s") or 0) > 0:
+        return flat, "same in every mode: no sunlit ground-station contact in the END-003 window"
+    try:
+        f_run = sum(float(run[k]) for k in keys)
+        f_gs = sum(float(gs[k]) for k in keys)
+    except (KeyError, TypeError, ValueError):
+        return flat, "same in every mode: no ground-station pointing (uncontrolled attitude in END-003)"
+    sun_s = float((runtime_data.get("orbit") or {}).get("sunlight_min") or 0.0) * 60.0
+    out = {}
+    for m in modes:
+        tx = max([float((((s.get("duty") or {}).get(m) or {}).get("sun")) or 0.0) for s in runtime_data.get("subsystems") or []
+                  if str(s.get("name")) in TRANSMITTERS or str(s.get("name")).startswith("COMMS")] or [0.0])
+        out[m] = round(energy + peak_w * min(1.0, tx) * sun_s * (f_gs - f_run) / 3600.0, 4)
+    return out, (f"attitude of the run, except the sunlit transmit time of each mode in ground-station pointing (+Z to the station, "
+                 f"assumed antenna face): panel cosines in the contacts {f_run:.3f} in the attitude of the run, {f_gs:.3f} pointing "
+                 f"the station (END-003, {', '.join(contacts.get('stations') or [])})")
 
 
 def _apply_satellite(runtime_data: dict[str, Any], star_payload: dict[str, Any], sat: dict[str, Any] | None, report: dict[str, Any]) -> None:
@@ -239,19 +272,23 @@ def _apply_satellite(runtime_data: dict[str, Any], star_payload: dict[str, Any],
         report["battery_capacity_Wh"] = {"value": float(sat["battery_wh"]), "source": "END-006 initial design (battery / EPS integrated battery)"}
     _apply_duty_cycles(runtime_data, _operations(star_payload), sat, report)
     panels = sat.get("solar_panels") or {}
-    illum = _illumination(star_payload)
+    illum, contacts = _illumination(star_payload)
     orbit = runtime_data.get("orbit") or {}
     if panels.get("peak_power_w_per_panel") and panels.get("body_faces") and illum and orbit.get("sunlight_min"):
-        factor = sum(float(illum.get(FACE_KEYS[f], 0.0)) for f in panels["body_faces"] if f in FACE_KEYS)
+        keys = [FACE_KEYS[f] for f in panels["body_faces"] if f in FACE_KEYS]
+        factor = sum(float(illum.get(k, 0.0)) for k in keys)
         p_sun = float(panels["peak_power_w_per_panel"]) * factor
         energy = p_sun * float(orbit["sunlight_min"]) / 60.0
+        by_mode, how = _generation_by_mode(runtime_data, energy, float(panels["peak_power_w_per_panel"]), keys, contacts)
         runtime_data.setdefault("generation", {})["power_generated_per_orbit_Wh"] = round(energy, 4)
+        runtime_data["generation"]["power_generated_per_orbit_Wh_by_mode"] = by_mode
         runtime_data["generation"]["solar_power_W"] = None
         report["power_generated_per_orbit_Wh"] = {
             "value": round(energy, 4),
             "source": (f"END-006 panels {panels.get('component')} ({panels.get('peak_power_w_per_panel')} W peak on {', '.join(panels['body_faces'])}) "
                        f"x illumination of those faces in the END-003 attitude (sum of mean cosines {factor:.3f}) x sunlight "
                        f"{float(orbit['sunlight_min']):.1f} min; beginning of life, no temperature or wiring losses")}
+        report["power_generated_per_orbit_Wh_by_mode"] = {"value": by_mode, "source": how}
     else:
         report["power_generated_per_orbit_Wh"] = {"value": (runtime_data.get("generation") or {}).get("power_generated_per_orbit_Wh"),
                                                   "source": "template (panel data or END-003 illumination not available)"}
@@ -287,7 +324,9 @@ def _apply_star_inputs(runtime_data: dict[str, Any], star_payload: dict[str, Any
     generated = coerce_float(_user_input(star_payload, "power_generated_per_orbit_Wh"), 0.0)
     if generated > 0:
         runtime_data.setdefault("generation", {})["power_generated_per_orbit_Wh"] = generated
-        report["power_generated_per_orbit_Wh"] = {"value": generated, "source": "STAR input"}
+        runtime_data["generation"].pop("power_generated_per_orbit_Wh_by_mode", None)
+        report["power_generated_per_orbit_Wh"] = {"value": generated, "source": "STAR input (every mode)"}
+        report.pop("power_generated_per_orbit_Wh_by_mode", None)
     ops = runtime_data.setdefault("operations", {}).setdefault("mode_orbits_per_day", {})
     allocation = _user_input(star_payload, "daily_mode_allocation")
     if isinstance(allocation, dict):
