@@ -1000,6 +1000,7 @@ function a = make_aem_and_figures(key, label, E, A, t, S, ctx, product_dir, resu
     opts.gmst = @(ts) gmst_rad(juliandate(ts));
     opts.site = site;
     opts.site_role = ternary(strcmp(key, 'imaging'), 'target site', 'observer');
+    opts.view_along_H = strcmp(S.mode, 'dynamics');     % figure B: free motion only (2026-10-19)
     info = end003_aem_figures(file, opts);
     a = struct('key', key, 'label', label, 'file', name, 'figures', info.figures, 'rotational_state', info.rotational_state);
 end
@@ -1330,8 +1331,11 @@ function png = make_standard_plots(out_dir, D, S, site, A, plan)
     ax = subplot(3,2,5); plot(th, D.energy); grid on; xlabel('Time [h]'); ylabel('Energy [J]'); title('Rotational Energy (body)'); pad_ylim(ax, D.energy);
     ax = subplot(3,2,6); plot(th, D.alt/1000); grid on; xlabel('Time [h]'); ylabel('Altitude [km]'); title('Altitude (END-001 orbit)'); pad_ylim(ax, D.alt/1000);
     save_png(f1, fullfile(out_dir, '01_telemetry.png'));
-    png = {'01_telemetry.png', '02_tracking.png', '03_angular_momentum.png', '04_ground_track.png', ...
-        '05_orbit_3d_ecef.png', '06_orbit_3d_eci.png'};
+    % 2026-10-19: 03 only in 'dynamics' (with the guided attitudes |H| and its direction are constant), the 3D orbit in
+    % ECEF and ECI in one figure (05, two panels; 06 is no longer written)
+    png = {'01_telemetry.png', '02_tracking.png'};
+    if strcmp(S.mode, 'dynamics'), png{end+1} = '03_angular_momentum.png'; end
+    png = [png, {'04_ground_track.png', '05_orbit_3d.png'}];
     if D.controlled
         control_figure(fullfile(out_dir, '08_attitude_control.png'), th, D, S, A, plan);
         png{end+1} = '08_attitude_control.png';
@@ -1344,12 +1348,14 @@ function png = make_standard_plots(out_dir, D, S, site, A, plan)
     subplot(3,1,3); plot(th, D.target_offset, 'LineWidth', 1.2, 'Color', [0.2 0.6 0.2]); grid on; ylabel('Target offset [deg]'); title('+Z from the target'); xlabel('Time [h]');
     save_png(f2, fullfile(out_dir, '02_tracking.png'));
 
-    f3 = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1100 750]);
-    ax = subplot(2,1,1); plot(th, D.H_mag, 'k', 'LineWidth', 1.2); title('Angular Momentum Modulus (body, wheels excluded)'); xlabel('Time [h]'); ylabel('|H| [Nms]'); grid on;
-    pad_ylim(ax, D.H_mag);
-    ax = subplot(2,1,2); plot(th, D.H_dir, 'LineWidth', 1.1); title('Angular Momentum Direction (ECI)'); xlabel('Time [h]'); ylabel('Components'); legend('H_x','H_y','H_z'); grid on;
-    pad_ylim(ax, D.H_dir);
-    save_png(f3, fullfile(out_dir, '03_angular_momentum.png'));
+    if strcmp(S.mode, 'dynamics')
+        f3 = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1100 750]);
+        ax = subplot(2,1,1); plot(th, D.H_mag, 'k', 'LineWidth', 1.2); title('Angular Momentum Modulus (body, wheels excluded)'); xlabel('Time [h]'); ylabel('|H| [Nms]'); grid on;
+        pad_ylim(ax, D.H_mag);
+        ax = subplot(2,1,2); plot(th, D.H_dir, 'LineWidth', 1.1); title('Angular Momentum Direction (ECI)'); xlabel('Time [h]'); ylabel('Components'); legend('H_x','H_y','H_z'); grid on;
+        pad_ylim(ax, D.H_dir);
+        save_png(f3, fullfile(out_dir, '03_angular_momentum.png'));
+    end
 
     % ground track (geocentric latitude of the sub-satellite point)
     r_ecef = rot_eci2ecef(D.r, D.th);
@@ -1371,25 +1377,25 @@ function png = make_standard_plots(out_dir, D, S, site, A, plan)
     title('Ground Track (END-001 orbit)'); xlabel('Longitude [deg]'); ylabel('Latitude [deg]'); grid on; axis equal; axis([-180 180 -90 90]);
     save_png(f4, fullfile(out_dir, '04_ground_track.png'));
 
+    % 3D orbit, ECEF (left) and ECI (right): each panel as the former 800 x 600 figures 05 and 06
     Re_km = S.Re/1000;
-    for frame = ["ECEF", "ECI"]
-        f = light_figure('Color', 'w', 'Visible', 'off', 'Position', [150 100 800 600]);
-        [Xs, Ys, Zs] = sphere(50);
-        surf(Xs*Re_km, Ys*Re_km, Zs*Re_km, 'FaceColor', [0.8 0.9 1], 'EdgeColor', 'none', 'FaceAlpha', 0.85); hold on; axis equal; grid on;
-        if frame == "ECEF", rr = r_ecef/1000; else, rr = D.r/1000; end
-        plot3(rr(:,1), rr(:,2), rr(:,3), 'Color', [0.6 0.6 0.6]);
+    f = light_figure('Color', 'w', 'Visible', 'off', 'Position', [150 100 1600 600]);
+    [Xs, Ys, Zs] = sphere(50);
+    frames = ["ECEF", "ECI"];
+    for j = 1:2
+        ax = subplot(1, 2, j);
+        surf(ax, Xs*Re_km, Ys*Re_km, Zs*Re_km, 'FaceColor', [0.8 0.9 1], 'EdgeColor', 'none', 'FaceAlpha', 0.85);
+        hold(ax, 'on'); axis(ax, 'equal'); grid(ax, 'on');
+        if j == 1, rr = r_ecef/1000; else, rr = D.r/1000; end
+        plot3(ax, rr(:,1), rr(:,2), rr(:,3), 'Color', [0.6 0.6 0.6]);
         for i = 1:numel(D.start_idx)
             k = D.start_idx(i):D.end_idx(i);
-            plot3(rr(k,1), rr(k,2), rr(k,3), 'Color', [0 0.8 0], 'LineWidth', 3);
+            plot3(ax, rr(k,1), rr(k,2), rr(k,3), 'Color', [0 0.8 0], 'LineWidth', 3);
         end
-        xlabel('X [km]'); ylabel('Y [km]'); zlabel('Z [km]'); view(15, 35);
-        title(sprintf('3D Orbit (%s frame, END-001 ephemeris)', frame));
-        if frame == "ECEF"
-            save_png(f, fullfile(out_dir, '05_orbit_3d_ecef.png'));
-        else
-            save_png(f, fullfile(out_dir, '06_orbit_3d_eci.png'));
-        end
+        xlabel(ax, 'X [km]'); ylabel(ax, 'Y [km]'); zlabel(ax, 'Z [km]'); view(ax, 15, 35);
+        title(ax, sprintf('3D Orbit (%s frame, END-001 ephemeris)', frames(j)));
     end
+    save_png(f, fullfile(out_dir, '05_orbit_3d.png'));
 end
 
 function pad_ylim(ax, y)
