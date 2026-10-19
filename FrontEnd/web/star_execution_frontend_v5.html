@@ -646,8 +646,8 @@
       if (r && r.ok) {
         const lv = r.run_mode === 'full' && r.levels ? r.levels[String(r.run_level)] : null;
         const est = r.run_mode === 'full' ? r.estimates.full[String(r.run_level)] : r.estimates.test;
-        const min = Math.max(1, Math.round(est.total_s / 60));
-        chip.innerHTML = 'Run mode <b>' + (LABELS[r.run_mode] || r.run_mode) + (lv ? ' &middot; ' + lv.name : '') + '</b> &middot; &asymp; ' + min + ' min';
+        const eta = est.total_s < 5400 ? Math.max(1, Math.round(est.total_s / 60)) + ' min' : (est.total_s / 3600).toFixed(1) + ' h';
+        chip.innerHTML = 'Run mode <b>' + (LABELS[r.run_mode] || r.run_mode) + (lv ? ' &middot; ' + lv.name : '') + '</b> &middot; &asymp; ' + eta;
         chip.title = 'Estimated time (' + r.estimate_scope + '), measured on the STAR workstation; change the mode with the Test / Full buttons and the accuracy bar at the top of the window';
       }
     } catch (_) {}

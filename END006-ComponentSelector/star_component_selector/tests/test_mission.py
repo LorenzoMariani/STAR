@@ -41,10 +41,18 @@ def slots_of(sel):
     return {r.id: r for r in sel.subsystems}
 
 
+def batteries(sel):
+    """Batterie del progetto: quella separata e quella integrata nell'EPS (una sola, 2026-10-19)."""
+    sep = sum(1 for r in sel.subsystems if r.subsystem == "battery" and r.selected)
+    eps = sum(1 for r in sel.subsystems if r.subsystem == "eps" and r.selected and r.selected.comp.spec("integrated_battery_wh"))
+    return sep + eps
+
+
 class NeedsTest(unittest.TestCase):
     def test_bus_only_mission(self):
         sel, m = design(CATALOG, [{"id": "R1", "text": "The CubeSat shall relay messages from ground sensors."}])
-        self.assertEqual({r.subsystem for r in sel.subsystems}, {"structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna"})
+        self.assertEqual({r.subsystem for r in sel.subsystems} - {"battery"}, {"structure", "obc", "eps", "solar_panel", "comms", "antenna"})
+        self.assertEqual(batteries(sel), 1)
         self.assertEqual(sel.cubesat.units, 1)
         extras = {e["id"] for e in m["extras"]}
         self.assertIn("propulsion", extras)
@@ -115,8 +123,20 @@ class NeedsTest(unittest.TestCase):
 
     def test_battery_without_end004_is_not_verifiable(self):
         sel, m = design(CATALOG, V6 + [REQ_DOD])
-        self.assertIn("battery", {r.subsystem for r in sel.subsystems})
+        self.assertEqual(batteries(sel), 1)
         self.assertEqual(next(r for r in m["requirements"] if r["requirement"] and r["requirement"]["id"] == "REQ-018")["status"], "not_verifiable")
+
+    def test_one_battery_only(self):
+        """Mai la batteria integrata nell'EPS insieme a una batteria separata: con e senza END-004, con la classe scelta dall'utente."""
+        cases = [(V6, None, None), (V6 + [REQ_DOD], None, None), (V6 + [REQ_DOD], {"end004": end004(1.29)}, None),
+                 (V6 + [REQ_DOD], {"end004": end004(45.0)}, None), (V6, None, 12), (V6, None, 6),
+                 ([{"id": "R1", "text": "The CubeSat shall relay messages from ground sensors."}], None, 3)]
+        for reqs, ctx, cls in cases:
+            with self.subTest(ctx=bool(ctx), cls=cls):
+                sel, m = design(CATALOG, reqs, ctx, forced_class_u=cls)
+                self.assertEqual(batteries(sel), 1)
+                if "battery" not in {r.subsystem for r in sel.subsystems}:
+                    self.assertIn("integrated in the EPS", next(e for e in m["extras"] if e["id"] == "battery")["why_not"])
 
     def test_telecommand_radio_has_a_receiver(self):
         sel, m = design(CATALOG, V6)

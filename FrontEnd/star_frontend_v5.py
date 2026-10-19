@@ -142,11 +142,11 @@ def star_full_level_text(level: int) -> str:
 # workers; v6 proposal, END-001 also on a larger search space, + ~20 s of the STAR
 # runner: full 1 measured 114 s in STAR vs 94 s alone) [s]. The header estimate
 # sums them over the planned workflow (only END-001 before planning).
-# END-001 since 2026-10-19: both orbit families (Orbit Auto) and the per-site surrogate on the whole of Italy (the
-# worst case; a sub-area is proportionally faster): test 140 s and full 1 663 s measured (643 s alone + runner), levels
-# 2-5 extrapolated from level 1 by the GA evaluations (pop x gen x restarts) plus the larger top-K re-simulation.
+# END-001 since 2026-10-19: both orbit families (Orbit Auto) and the per-site surrogate (C core) on the whole of Italy
+# (the worst case; a sub-area is faster): test 99 s and full 1 320 s measured (300 s alone + runner), levels 2-5
+# extrapolated from level 1 by the GA evaluations (pop x gen x restarts) plus the larger top-K re-simulation.
 STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
-    "END-001": {"test": 140, "1": 663, "2": 2170, "3": 6350, "4": 14980, "5": 37050},
+    "END-001": {"test": 99, "1": 320, "2": 880, "3": 2380, "4": 5480, "5": 13370},
     "END-003": {"test": 47},          # STAR version (2026-10-17): orbit from END-001, AEM + attitude figures
     "END-004": {"test": 26},
     "END-007": {"test": 150},

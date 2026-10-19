@@ -649,20 +649,20 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     mass_limit = a["mass_limit"]["kg"] if a["mass_limit"] else None
     classes = [forced_class_u] if forced_class_u else sorted(CLASSES)
 
-    # batteria: con il fabbisogno di END-004 si prova anche il progetto senza batteria separata, con un EPS la cui batteria integrata basta
-    # (un componente in meno: preferito a parita' di classe)
+    # batteria: una sola. O la batteria integrata nell'EPS (nessuna batteria separata; con il fabbisogno di END-004 deve bastare) o una batteria
+    # separata con un EPS senza batteria integrata. Il progetto con la batteria nell'EPS ha un componente in meno: preferito a parita' di classe
     bat = a["battery"]
-    eps_wh: dict[str, float] = {}
-    if bat:
-        eps_wh = {c.id: float(c.spec("integrated_battery_wh")) for c in catalog
-                  if subsystem_of(c) == "eps" and c.spec("integrated_battery_wh") and float(c.spec("integrated_battery_wh")) * bat["dod"] >= bat["energy_wh"] - 1e-9}
+    integrated = {c.id: float(c.spec("integrated_battery_wh")) for c in catalog if subsystem_of(c) == "eps" and c.spec("integrated_battery_wh")}
+    eps_wh = {k: wh for k, wh in integrated.items() if not bat or wh * bat["dod"] >= bat["energy_wh"] - 1e-9}
+    no_int = frozenset(c.id for c in catalog if subsystem_of(c) == "eps" and c.id not in integrated)
 
     def variants_of(sl_list: list[Slot]) -> list[tuple[str, list[Slot]]]:
-        out = [("separate", sl_list)]
-        if eps_wh:
-            ok_eps = frozenset(eps_wh)
-            out.insert(0, ("eps", [replace(s, allowed=ok_eps if s.allowed is None else s.allowed & ok_eps) if s.subsystem == "eps" else s
-                                   for s in sl_list if s.subsystem != "battery"]))
+        def eps_in(ids):
+            return [replace(s, allowed=ids if s.allowed is None else s.allowed & ids) if s.subsystem == "eps" else s for s in sl_list]
+        has_bat = any(s.subsystem == "battery" for s in sl_list)
+        out = [("separate", eps_in(no_int))] if has_bat else [("separate", sl_list)]
+        if eps_wh and has_bat:
+            out.insert(0, ("eps", [s for s in eps_in(frozenset(eps_wh)) if s.subsystem != "battery"]))
         return out
 
     def ok_sel(s: Selection) -> bool:
@@ -837,6 +837,11 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             ck.what = f"battery capacity >= {bat['need_wh']:.1f} Wh (battery integrated in the EPS)"
             ck.status, ck.message = "met", ""
             unmet = [u for u in unmet if u is not ck]
+    elif battery_variant == "eps" and eps_sel is not None:      # senza END-004 la capacita' non si verifica: una sola batteria comunque
+        wh = eps_wh.get(eps_sel.comp.id)
+        bat_info = {"variant": "eps", "integrated_wh": wh,
+                    "why": f"one battery only, the one integrated in the EPS ({wh:g} Wh), no separate battery; its capacity is verified against "
+                           "END-004 Power Budget when the run has it"}
     if a["mass_limit"]:
         ml = a["mass_limit"]
         ck = Check("mass", None, ml["req"], f"satellite mass <= {ml['kg']:g} kg")
@@ -929,7 +934,7 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                 met = dv_info["given_m_s"] >= dv - 1e-9
                 val = f"{dv_info['given_m_s']:.1f} m/s ({val})"
             rows.append({"requirement": ck.req.id if ck.req else None, "what": ck.what, "value": val, "met": met})
-        if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:
+        if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None and bat:
             rows.append({"requirement": bat["req"].id if bat["req"] else None, "what": f"integrated battery >= {bat['need_wh']:.1f} Wh",
                          "value": f"{bat_info['integrated_wh']:g} Wh", "met": True})
         why = nd.why
@@ -1036,8 +1041,9 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         if sid in needed or (sid == "antenna" and dropped):      # l'antenna compresa nella radio e' elencata sotto (dropped)
             continue
         if sid == "battery" and bat_info and bat_info.get("integrated_wh") is not None:
-            reason = (f"the battery integrated in the EPS ({bat_info['integrated_wh']:g} Wh) covers the {bat['need_wh']:.1f} Wh the mission needs "
-                      f"({bat['energy_wh']:.2f} Wh per orbit from END-004" + (f", depth of discharge <= {100 * bat['dod']:g}%)" if bat["req"] else ")"))
+            reason = ((f"the battery integrated in the EPS ({bat_info['integrated_wh']:g} Wh) covers the {bat['need_wh']:.1f} Wh the mission needs "
+                       f"({bat['energy_wh']:.2f} Wh per orbit from END-004" + (f", depth of discharge <= {100 * bat['dod']:g}%)" if bat["req"] else ")"))
+                      if bat else f"the battery integrated in the EPS ({bat_info['integrated_wh']:g} Wh) is the satellite battery (one battery only)")
         elif sid in ADCS_PARTS and "adcs" in needed:
             reason = "contained in the integrated ADCS unit of the design (the catalogue's ADCS units include their sensors and actuators)"
         elif sid in ADCS_PARTS:
