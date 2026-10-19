@@ -145,7 +145,7 @@ function populateKpiTable(){
       return `<div class="data-row"><span class="data-label">${escapeHtml(k.id)} · ${escapeHtml(k.name)}</span><span class="data-value ${cls}">${escapeHtml(valueText)}${thr}</span></div>`;
     }).join('');
     return `<div class="kpi-category"><h4>${escapeHtml(catLabels[cat]||cat)}</h4>${rows}</div>`;
-  }).join('')+orbitFamilyHtml(state.kpiData);
+  }).join('')+orbitFamilyHtml(state.kpiData)+(state.kpiData&&state.kpiData.surrogate_aoi_model?`<div class="fam-note">Surrogate used during the search: ${escapeHtml(state.kpiData.surrogate_aoi_model)}. The selected designs are re-simulated for the real area.</div>`:'');
 }
 // Orbit_Type "Auto" (2026-10-18): END-001 optimised both families; the losing family's best design with the winner's number
 // of satellites is re-simulated, the lowest simulated weighted score is exported; best design per number of satellites below

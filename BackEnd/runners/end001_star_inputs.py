@@ -499,8 +499,14 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     except ImportError:
         import star_domain
     common: list[str] = []
-    if cfg.get("RegionSettings", {}).get("AreaofInterest") != "Italy":
-        common.append("area of interest not the whole of Italy (the surrogate is trained on the Italy grid)")
+    aoi_name = cfg.get("RegionSettings", {}).get("AreaofInterest")
+    if aoi_name in ("Italy and Med", "Mediterranean Area", "Mediterranean", "Europe", "Europe (High Lat)", "Qatar", "Malaysia", "Artic"):
+        common.append(f"area of interest '{aoi_name}' extends beyond Italy (the surrogates are trained on Italy)")
+    elif aoi_name != "Italy":
+        # 2026-10-18: a sub-area of Italy (region, city, point target) uses the per-site surrogate; END-001 checks that
+        # every site lies inside Italy and otherwise simulates (surrogate_domain_check)
+        note("Fitness engine (area of interest)", "Surrogate (per-site)",
+             "area other than the whole of Italy: END-001 aggregates the per-site surrogate over its sites when they all lie in Italy")
     if len(cfg.get("GroundStations", [])) != 1:
         common.append(f"{len(cfg.get('GroundStations', []))} ground stations (the surrogate models one)")
     elif not star_domain.in_surrogate_area(cfg["GroundStations"][0]["lat"], cfg["GroundStations"][0]["lon"]):
