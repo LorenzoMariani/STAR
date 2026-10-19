@@ -4,6 +4,7 @@ import math
 import unittest
 
 from star_selector.api import SelectorService
+from tests.datasheet_library import PDFS_PRESENT
 
 SERVICE = SelectorService()
 CAT = {c.id: c for c in SERVICE.catalog}
@@ -354,7 +355,8 @@ class TestUserDatasheets(unittest.TestCase):
         src, ds = c.raw["source"], c.raw["datasheet"]
         self.assertIsNone(src["url"])
         self.assertIn("utente", src["origin"])
-        self.assertEqual(ds["bytes"], (SERVICE.root / ds["file"]).stat().st_size)
+        if PDFS_PRESENT:                 # il file solo con la libreria dei PDF (tests/datasheet_library.py)
+            self.assertEqual(ds["bytes"], (SERVICE.root / ds["file"]).stat().st_size)
         self.assertTrue(c.raw["image"]["image_url"].startswith(ds["file"]))
 
     def test_xact_keeps_the_2026_sheet_and_notes_the_2019_one(self):
@@ -377,7 +379,9 @@ class TestUserCameras(unittest.TestCase):
             c = CAT[cid]
             self.assertEqual((c.mass_kg, c.raw["power_w"], c.spec("gsd_m_at_ref"), c.spec("swath_km_at_ref"), c.spec("across_track_pixels")), row, cid)
             self.assertIsNone(c.raw["source"]["url"], cid)
-            self.assertTrue((SERVICE.root / c.raw["datasheet"]["file"]).is_file(), cid)
+            self.assertTrue(c.raw["datasheet"]["file"].startswith("datasheets/"), cid)
+            if PDFS_PRESENT:             # il file solo con la libreria dei PDF (tests/datasheet_library.py)
+                self.assertTrue((SERVICE.root / c.raw["datasheet"]["file"]).is_file(), cid)
 
     def test_raveneye5_gsd_matches_its_optics(self):
         c = CAT["cavu-raveneye5"]
