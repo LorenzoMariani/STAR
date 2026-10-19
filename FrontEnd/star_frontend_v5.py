@@ -142,8 +142,11 @@ def star_full_level_text(level: int) -> str:
 # workers; v6 proposal, END-001 also on a larger search space, + ~20 s of the STAR
 # runner: full 1 measured 114 s in STAR vs 94 s alone) [s]. The header estimate
 # sums them over the planned workflow (only END-001 before planning).
+# END-001 since 2026-10-19: both orbit families (Orbit Auto) and the per-site surrogate on the whole of Italy (the
+# worst case; a sub-area is proportionally faster): test 140 s and full 1 663 s measured (643 s alone + runner), levels
+# 2-5 extrapolated from level 1 by the GA evaluations (pop x gen x restarts) plus the larger top-K re-simulation.
 STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
-    "END-001": {"test": 58, "1": 114, "2": 188, "3": 345, "4": 492, "5": 671},
+    "END-001": {"test": 140, "1": 663, "2": 2170, "3": 6350, "4": 14980, "5": 37050},
     "END-003": {"test": 47},          # STAR version (2026-10-17): orbit from END-001, AEM + attitude figures
     "END-004": {"test": 26},
     "END-007": {"test": 150},
@@ -4721,7 +4724,9 @@ Return only valid JSON:
         estimate = star_estimate_seconds(self.run_mode, self.run_level, self.planned_module_ids())
         detail = star_full_level_text(self.run_level) if self.run_mode == "full" else STAR_RUN_MODES[self.run_mode]
         self.add_log("EXECUTION", f"Run mode: {self.run_mode_label()} - {detail}")
-        self.add_log("EXECUTION", f"Estimated time: about {max(1, round(estimate['total_s'] / 60))} min "
+        total_s = estimate["total_s"]
+        eta = f"{max(1, round(total_s / 60))} min" if total_s < 5400 else f"{total_s / 3600:.1f} h"
+        self.add_log("EXECUTION", f"Estimated time: about {eta} "
                                   f"(measured module times on the STAR workstation; the scenario changes them)")
         execution_results = []
         selected_modules = {step.get("module") for step in self.workflow_steps}
@@ -5766,8 +5771,8 @@ STAR_V3_RUN_MODE_PATCH = """
       if (r && r.ok) {
         const lv = r.run_mode === 'full' && r.levels ? r.levels[String(r.run_level)] : null;
         const est = r.run_mode === 'full' ? r.estimates.full[String(r.run_level)] : r.estimates.test;
-        const min = Math.max(1, Math.round(est.total_s / 60));
-        chip.innerHTML = 'Run mode <b>' + (LABELS[r.run_mode] || r.run_mode) + (lv ? ' &middot; ' + lv.name : '') + '</b> &middot; &asymp; ' + min + ' min';
+        const eta = est.total_s < 5400 ? Math.max(1, Math.round(est.total_s / 60)) + ' min' : (est.total_s / 3600).toFixed(1) + ' h';
+        chip.innerHTML = 'Run mode <b>' + (LABELS[r.run_mode] || r.run_mode) + (lv ? ' &middot; ' + lv.name : '') + '</b> &middot; &asymp; ' + eta;
         chip.title = 'Estimated time (' + r.estimate_scope + '), measured on the STAR workstation; change the mode with the Test / Full buttons and the accuracy bar at the top of the window';
       }
     } catch (_) {}

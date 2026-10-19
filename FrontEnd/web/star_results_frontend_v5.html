@@ -3021,7 +3021,7 @@ function populateKpiTable(){
       return `&lt;div class=&quot;data-row&quot;&gt;&lt;span class=&quot;data-label&quot;&gt;${escapeHtml(k.id)} · ${escapeHtml(k.name)}&lt;/span&gt;&lt;span class=&quot;data-value ${cls}&quot;&gt;${escapeHtml(valueText)}${thr}&lt;/span&gt;&lt;/div&gt;`;
     }).join(&#x27;&#x27;);
     return `&lt;div class=&quot;kpi-category&quot;&gt;&lt;h4&gt;${escapeHtml(catLabels[cat]||cat)}&lt;/h4&gt;${rows}&lt;/div&gt;`;
-  }).join(&#x27;&#x27;)+orbitFamilyHtml(state.kpiData);
+  }).join(&#x27;&#x27;)+orbitFamilyHtml(state.kpiData)+(state.kpiData&amp;&amp;state.kpiData.surrogate_aoi_model?`&lt;div class=&quot;fam-note&quot;&gt;Surrogate used during the search: ${escapeHtml(state.kpiData.surrogate_aoi_model)}. The selected designs are re-simulated for the real area.&lt;/div&gt;`:&#x27;&#x27;);
 }
 // Orbit_Type &quot;Auto&quot; (2026-10-18): END-001 optimised both families; the losing family&#x27;s best design with the winner&#x27;s number
 // of satellites is re-simulated, the lowest simulated weighted score is exported; best design per number of satellites below
