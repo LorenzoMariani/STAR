@@ -1,12 +1,12 @@
 {
   "paths": {
-    "unityExe": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\BuildCubeSat\\UnityLightCurveInversion.exe",
-    "inputCsv": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\Output\\output_attitude_propagation\\output_attitude_propagation.csv",
-    "eopFile": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\EOP.txt",
-    "tleFile": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\TLE_AQUA27052026.txt",
-    "stationsJson": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\stations.json",
-    "nutData": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\sgp4\\nut80.dat",
-    "deData": "C:\\Users\\s5oss\\Desktop\\SIU\\STAR\\END010-ReflectanceDetermination\\lib\\data\\DE440.mat"
+    "unityExe": "lib/BuildCubeSat/UnityLightCurveInversion.exe",
+    "inputCsv": "../Output/output_attitude_propagation/output_attitude_propagation.csv",
+    "eopFile": "lib/data/EOP.txt",
+    "tleFile": "lib/data/TLE_AQUA27052026.txt",
+    "stationsJson": "lib/data/stations.json",
+    "nutData": "lib/sgp4/nut80.dat",
+    "deData": "lib/data/DE440.mat"
   },
   "simulation": {
     "debug": true,

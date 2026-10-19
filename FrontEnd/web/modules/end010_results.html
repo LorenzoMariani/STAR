@@ -549,12 +549,13 @@ header.header{display:none!important;}
 const DEFAULT_CSV_PATH = './modules_output/END-010/output_reflectance_determination/flux.csv';
 const DEFAULT_FRAMES_PATH = './modules_output/END-010/results_reflectance_determination/Frames/';
 const DEFAULT_KPI_PATH = './modules_output/END-010/results_reflectance_determination/reflectance_summary.json';
-const ABSOLUTE_CSV_FILE = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Output/RUN_XXXXX/modules_output/END-010/output_reflectance_determination/flux.csv';
-const ABSOLUTE_FRAMES_DIR = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/Frames/';
-const ABSOLUTE_KPI_FILE = 'file:///C:/Users/s5oss/Desktop/SIU/STAR/Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/reflectance_summary.json';
+// fallbacks relative to STAR/FrontEnd/web, where the results page lives (no machine-specific paths, 2026-10-19)
+const ABSOLUTE_CSV_FILE = '../../Output/RUN_XXXXX/modules_output/END-010/output_reflectance_determination/flux.csv';
+const ABSOLUTE_FRAMES_DIR = '../../Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/Frames/';
+const ABSOLUTE_KPI_FILE = '../../Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/reflectance_summary.json';
 const KPI_JSON_NAME = 'reflectance_summary.json';
 const DEFAULT_TIMESERIES_PATH = './modules_output/END-010/results_reflectance_determination/reflectance_timeseries.json';
-const ABSOLUTE_TIMESERIES_FILE = 'file:///C:/Users/s5oss/Desktop/SIU/STAR/Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/reflectance_timeseries.json';
+const ABSOLUTE_TIMESERIES_FILE = '../../Output/RUN_XXXXX/modules_output/END-010/results_reflectance_determination/reflectance_timeseries.json';
 const TIMESERIES_JSON_NAME = 'reflectance_timeseries.json';
 
 let kpiData = null;

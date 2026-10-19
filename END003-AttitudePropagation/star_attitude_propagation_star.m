@@ -71,15 +71,23 @@ function star_attitude_propagation_star(configFile, outputFolder)
     tb = (0:S.base_step:T)';
     ki = plan.imaging.sat_pos;
     site = plan.imaging.site;
+    S.ctrl = size_magnetorquers(S.ctrl, eph(ki), S);
+    % closed-loop control on 1 s steps over the passes of the products (+ margin), wheel momentum on coarse steps elsewhere
+    win_img = [plan.imaging.aos_t, plan.imaging.los_t];
+    win_lc = zeros(0, 2);
+    if plan.lightcurve.found
+        win_lc = [plan.lightcurve.start_t_s, plan.lightcurve.end_t_s];
+        if plan.lightcurve.sat_pos == ki, win_img = [win_img; win_lc]; end
+    end
     fprintf('Attitude of %s on a %g s grid...\n', eph(ki).label, S.base_step);
-    A_img = attitude_history(eph(ki), tb, S, ctx, site);
+    A_img = attitude_history(eph(ki), tb, S, ctx, site, win_img);
     A_lc = [];
     if plan.lightcurve.found
         if plan.lightcurve.sat_pos == ki
             A_lc = A_img;
         else
             fprintf('Attitude of %s (light-curve pass)...\n', eph(plan.lightcurve.sat_pos).label);
-            A_lc = attitude_history(eph(plan.lightcurve.sat_pos), tb, S, ctx, site);
+            A_lc = attitude_history(eph(plan.lightcurve.sat_pos), tb, S, ctx, site, win_lc);
         end
     end
 
@@ -201,6 +209,29 @@ function c = read_control_settings(sat, S)
     c.knowledge_source = char(cfg_get(ct, 'knowledge_source', 'END-003 template'));
     c.sigma_rate = cfg_get(ct, 'rate_noise_rad_s', 1e-5);
     c.seed = cfg_get(ct, 'random_seed', 1);
+    % momentum dumping with the magnetorquers (2026-10-19): dipole per axis of the END-006 design, otherwise sized with the
+    % END-006 rule in size_magnetorquers
+    c.dumping = logical(cfg_get(ct, 'momentum_dumping', true));
+    c.dump_gain = cfg_get(ct, 'momentum_dump_gain_1_s', 1e-3);
+    c.m_max = cfg_get(ct, 'magnetorquer_dipole_Am2', []);
+    c.mtq_source = char(cfg_get(ct, 'magnetorquer_source', 'END-003 template'));
+    h0 = cfg_get(ct, 'initial_wheel_momentum_Nms', [0 0 0]);
+    c.h0 = h0(:);
+    % 1 s closed loop only over the passes (+ margin); wheel momentum on coarse steps elsewhere (attitude on the reference)
+    c.coarse_step = max(2, 2*round(cfg_get(ct, 'coarse_step_s', 10)/2));
+    c.window_margin = cfg_get(ct, 'window_margin_s', 300);
+end
+
+function c = size_magnetorquers(c, E, S)
+    % Dipole per axis when the END-006 design does not give it: the END-006 sizing rule (star_selector.mission
+    % dump_dipole_per_nms), the dipole that dumps a full wheel in one orbit, H / (B T), B = 3.12e-5 T (Re/r)^3 the dipole
+    % field at the magnetic equator, T the orbital period, r the mean orbit radius of the satellite.
+    if ~isempty(c.m_max), return; end
+    rm = mean(vecnorm(E.r, 2, 2));
+    B = 3.12e-5*(S.Re/rm)^3;
+    T = 2*pi*sqrt(rm^3/S.mu);
+    c.m_max = c.h_max/(B*T);
+    c.mtq_source = sprintf('END-006 sizing rule: dumps a full wheel (%.3g N m s) in one orbit at %.0f km', c.h_max, (rm - S.Re)/1e3);
 end
 
 function sel = read_pass_selection_config(cfg)
@@ -491,7 +522,8 @@ end
 %% =========================================================================
 %  ATTITUDE
 %  =========================================================================
-function A = attitude_history(E, tb, S, ctx, site)
+function A = attitude_history(E, tb, S, ctx, site, windows)
+    % windows: [t0 t1] rows (s) of the passes where the attitude control runs on 1 s steps (closed_loop)
     [r, v, acc] = eph_eval(E, tb);
     n = numel(tb);
     A.t = tb; A.r = r; A.v = v; A.qnorm_drift = zeros(n, 1);
@@ -547,11 +579,12 @@ function A = attitude_history(E, tb, S, ctx, site)
     end
     A.controlled = S.ctrl.enabled;
     if A.controlled
-        A = closed_loop(A, E, S, ctx);
+        A = closed_loop(A, E, S, ctx, windows);
     else                                                % ideal attitude: on the reference, no wheels
         A.q_ref = A.q; A.w_ref = A.w;
-        A.h_wheel = zeros(n, 3); A.tau_control = zeros(n, 3); A.tau_dist = zeros(n, 3);
+        A.h_wheel = zeros(n, 3); A.tau_control = zeros(n, 3); A.tau_dist = zeros(n, 3); A.m_dipole = zeros(n, 3);
         A.wheel_limited = false(n, 1); A.pointing_error = zeros(n, 1); A.attitude_error = zeros(n, 1);
+        A.closed_loop = false(n, 1);
     end
 end
 
@@ -573,16 +606,21 @@ function w = nadir_frame_rate(r, v, a)
     w = h./rm.^2 + (sum(a.*h, 2)./hm2).*r;
 end
 
-function A = closed_loop(A, E, S, ctx)
-    % PD attitude control with one reaction wheel per body axis (2026-10-19). The guidance attitude (A.q,
-    % A.w) becomes the reference, tracked with
-    %   tau = -Kp qe - Kd (w_m - Ce' w_ref) + w_m x (I w_m + h) + I Ce' dw_ref/dt
-    % qe = vector part of q_ref^-1 q_m (scalar part >= 0), Ce = R(qe) body -> reference, Kp = 2 wn^2 I,
-    % Kd = 2 zeta wn I. The measured attitude q_m and rate w_m carry a white knowledge error (sigma_att per
-    % axis, sigma_rate). The command is held over the 1 s step and limited by the wheels: |tau| <= tau_max
-    % per axis, wheel momentum h within +-h_max (no momentum dumping: magnetorquers not modelled). The rigid
-    % body, I w' = tau + M_dist - w x (I w + h), h' = -tau, is integrated with RK4 over each step, with the
-    % disturbance torques (GG, SRP, drag) of the attitude at the start of the step.
+function A = closed_loop(A, E, S, ctx, windows)
+    % PD attitude control with one reaction wheel per body axis and momentum dumping with the magnetorquers
+    % (2026-10-19). The guidance attitude (A.q, A.w) becomes the reference.
+    % - Whole window, coarse steps (S.ctrl.coarse_step): the attitude stays on the reference and the wheels
+    %   take the external torques, h' = M_dist + M_mag - w x (I w + h) - I w', w = w_ref (RK4); the
+    %   magnetorquers dump the wheel momentum, m = k (h x B) / |B|^2 limited to +-m_max per axis, M_mag = m x B,
+    %   B from the tilted IGRF dipole (geomagnetic_field_eci).
+    % - Over the passes (windows widened by S.ctrl.window_margin), 1 s steps from the coarse wheel momentum:
+    %     tau = -Kp qe - Kd (w_m - Ce' w_ref) + w_m x (I w_m + h) + I Ce' dw_ref/dt
+    %   qe = vector part of q_ref^-1 q_m (scalar part >= 0), Ce = R(qe) body -> reference, Kp = 2 wn^2 I,
+    %   Kd = 2 zeta wn I; the measured attitude q_m and rate w_m carry a white knowledge error (sigma_att per
+    %   axis, sigma_rate). The command is held over the step and limited by the wheels: |tau| <= tau_max per
+    %   axis, h within +-h_max. The rigid body, I w' = tau + M_dist + M_mag - w x (I w + h), h' = -tau, is
+    %   integrated with RK4, with the disturbance torques (GG, SRP, drag) of the attitude at the start of the step.
+    % Until 2026-10-19 the 1 s loop ran over the whole window (twice the run time) and there was no momentum dumping.
     c = S.ctrl;
     n = numel(A.t);
     dt = S.base_step;
@@ -595,39 +633,144 @@ function A = closed_loop(A, E, S, ctx)
         rho_t = unique([(0:60:A.t(end))'; A.t(end)]);
         rho = interp1(rho_t, density_table(E, rho_t, ctx), A.t);
     end
-    rs = RandStream('mt19937ar', 'Seed', c.seed);
-    e_att = c.sigma_att*randn(rs, n, 3);
-    e_rate = c.sigma_rate*randn(rs, n, 3);
+    Bi = geomagnetic_field_eci(A.r, gmst_rad(ctx.jd0 + A.t/86400));
     I = S.I; invI = S.invI;
-    q = q_ref(1, :)'; w = w_ref(1, :)'; h = zeros(3, 1);
-    Q = zeros(n, 4); W = zeros(n, 3); Hw = zeros(n, 3); Tc = zeros(n, 3); Td = zeros(n, 3);
-    limited = false(n, 1);
-    for k = 1:n
-        Q(k, :) = q'; W(k, :) = w'; Hw(k, :) = h';
-        M = end003_disturbance_torques(A.r(k, :)', A.v(k, :)', qdcm(q'), Sun(k, :)', rho(k), S);
+
+    % ---- whole window: wheel momentum with the attitude on the reference
+    st = c.coarse_step/dt;
+    kc = (1:st:n)';
+    nc = numel(kc);
+    Hc = zeros(nc, 3); Mc = zeros(nc, 3); Tdc = zeros(nc, 3); Tcc = zeros(nc, 3); limc = false(nc, 1);
+    h = c.h0;
+    for j = 1:nc
+        k = kc(j);
+        Hc(j, :) = h';
+        Ar = qdcm(q_ref(k, :));
+        M = end003_disturbance_torques(A.r(k, :)', A.v(k, :)', Ar, Sun(k, :)', rho(k), S);
         td = M(:, 1) + M(:, 2) + M(:, 4);
-        ea = 0.5*e_att(k, :)';
-        qm = qmul(q, [ea; sqrt(1 - ea'*ea)]);         % measured attitude: true one rotated by the knowledge error
-        wm = w + e_rate(k, :)';
-        qr = q_ref(k, :)';
-        qe = qmul([-qr(1:3); qr(4)], qm);
-        if qe(4) < 0, qe = -qe; end
-        Ce = qdcm(qe');
-        tau = -c.Kp.*qe(1:3) - c.Kd.*(wm - Ce'*w_ref(k, :)') + cross3(wm, I*wm + h) + I*(Ce'*wd_ref(k, :)');
-        lo = max(-c.tau_max, (h - c.h_max)/dt);       % h' = -tau: |h| <= h_max at the end of the step
-        hi = min(c.tau_max, (h + c.h_max)/dt);
-        tc = min(max(tau, lo), hi);
-        limited(k) = any(tc ~= tau);
-        Tc(k, :) = tc'; Td(k, :) = td';
-        if k < n
-            [q, w, h] = rk4_body(q, w, h, tc, td, I, invI, dt);
+        [m, tm] = dump_torque(h, Ar'*Bi(k, :)', c);
+        Tdc(j, :) = td'; Mc(j, :) = m';
+        if j == nc
+            Tcc(j, :) = Tcc(max(j - 1, 1), :);
+            break
+        end
+        km = k + st/2; ke = k + st; hs = st*dt;
+        k1 = wheel_rhs(h, td + tm, w_ref(k, :)', wd_ref(k, :)', I);
+        k2 = wheel_rhs(h + 0.5*hs*k1, td + tm, w_ref(km, :)', wd_ref(km, :)', I);
+        k3 = wheel_rhs(h + 0.5*hs*k2, td + tm, w_ref(km, :)', wd_ref(km, :)', I);
+        k4 = wheel_rhs(h + hs*k3, td + tm, w_ref(ke, :)', wd_ref(ke, :)', I);
+        hn = h + hs/6*(k1 + 2*k2 + 2*k3 + k4);
+        limc(j) = any(abs(hn) > c.h_max);
+        hn = min(max(hn, -c.h_max), c.h_max);
+        Tcc(j, :) = -(hn - h)'/hs;                     % torque of the wheels on the body (h' = -tau)
+        h = hn;
+    end
+    tc_grid = A.t(kc);
+    A.q_ref = q_ref; A.w_ref = w_ref;
+    A.h_wheel = interp1(tc_grid, Hc, A.t, 'linear', 'extrap');
+    A.tau_control = interp1(tc_grid, Tcc, A.t, 'previous', 'extrap');
+    A.tau_dist = interp1(tc_grid, Tdc, A.t, 'previous', 'extrap');
+    A.m_dipole = interp1(tc_grid, Mc, A.t, 'previous', 'extrap');
+    A.wheel_limited = interp1(tc_grid, double(limc), A.t, 'previous', 'extrap') > 0;
+    A.pointing_error = nan(n, 1); A.attitude_error = nan(n, 1);
+    A.closed_loop = false(n, 1);
+
+    % ---- passes: closed loop on 1 s steps
+    rs = RandStream('mt19937ar', 'Seed', c.seed);
+    W = loop_windows(windows, A.t, c, st);
+    for iw = 1:size(W, 1)
+        ks = (W(iw, 1):W(iw, 2))';
+        nk = numel(ks);
+        e_att = c.sigma_att*randn(rs, nk, 3);
+        e_rate = c.sigma_rate*randn(rs, nk, 3);
+        q = q_ref(ks(1), :)'; w = w_ref(ks(1), :)'; h = A.h_wheel(ks(1), :)';
+        Q = zeros(nk, 4); Wb = zeros(nk, 3); Hw = zeros(nk, 3); Tc = zeros(nk, 3); Td = zeros(nk, 3); Md = zeros(nk, 3);
+        limited = false(nk, 1);
+        for i = 1:nk
+            k = ks(i);
+            Q(i, :) = q'; Wb(i, :) = w'; Hw(i, :) = h';
+            Ab = qdcm(q');
+            M = end003_disturbance_torques(A.r(k, :)', A.v(k, :)', Ab, Sun(k, :)', rho(k), S);
+            td = M(:, 1) + M(:, 2) + M(:, 4);
+            [m, tm] = dump_torque(h, Ab'*Bi(k, :)', c);
+            ea = 0.5*e_att(i, :)';
+            qm = qmul(q, [ea; sqrt(1 - ea'*ea)]);     % measured attitude: true one rotated by the knowledge error
+            wm = w + e_rate(i, :)';
+            qr = q_ref(k, :)';
+            qe = qmul([-qr(1:3); qr(4)], qm);
+            if qe(4) < 0, qe = -qe; end
+            Ce = qdcm(qe');
+            tau = -c.Kp.*qe(1:3) - c.Kd.*(wm - Ce'*w_ref(k, :)') + cross3(wm, I*wm + h) + I*(Ce'*wd_ref(k, :)');
+            lo = max(-c.tau_max, (h - c.h_max)/dt);   % h' = -tau: |h| <= h_max at the end of the step
+            hi = min(c.tau_max, (h + c.h_max)/dt);
+            tcmd = min(max(tau, lo), hi);
+            limited(i) = any(tcmd ~= tau);
+            Tc(i, :) = tcmd'; Td(i, :) = td'; Md(i, :) = m';
+            if i < nk
+                [q, w, h] = rk4_body(q, w, h, tcmd, td + tm, I, invI, dt);
+            end
+        end
+        A.q(ks, :) = Q; A.w(ks, :) = Wb; A.h_wheel(ks, :) = Hw; A.tau_control(ks, :) = Tc; A.tau_dist(ks, :) = Td;
+        A.m_dipole(ks, :) = Md; A.wheel_limited(ks) = A.wheel_limited(ks) | limited; A.closed_loop(ks) = true;
+        A.pointing_error(ks) = angle_deg(quat_rotate(Q, [0 0 1]), quat_rotate(q_ref(ks, :), [0 0 1]));   % +Z (payload) from its reference
+        A.attitude_error(ks) = 2*acosd(min(1, abs(sum(Q.*q_ref(ks, :), 2))));                          % three-axis error angle
+    end
+    A.q = continuous_sign(A.q);
+end
+
+function dh = wheel_rhs(h, tau_ext, w, wd, I)
+    % Wheel momentum (body frame) with the attitude held on the reference: H = I w + h, dH/dt = tau_ext - w x H.
+    dh = tau_ext - cross3(w, I*w + h) - I*wd;
+end
+
+function [m, tau] = dump_torque(h, B, c)
+    % Magnetorquer dipole that dumps the wheel momentum h (cross-product law) and its torque on the body (B in the
+    % body frame, T): m = k (h x B)/|B|^2, limited to +-m_max per axis; tau = m x B (= -k h_perp before the limit).
+    if ~c.dumping || c.m_max <= 0
+        m = zeros(3, 1); tau = m;
+        return
+    end
+    m = c.dump_gain*cross3(h, B)/(B'*B);
+    m = min(max(m, -c.m_max), c.m_max);
+    tau = cross3(m, B);
+end
+
+function W = loop_windows(windows, t, c, st)
+    % 1 s grid index ranges of the closed-loop windows: the passes widened by c.window_margin, starting on a coarse node
+    % (the wheel momentum of the coarse model is exact there), clipped to the grid and merged when they overlap.
+    W = zeros(0, 2);
+    n = numel(t);
+    dt = t(2) - t(1);
+    for i = 1:size(windows, 1)
+        a = max(t(1), windows(i, 1) - c.window_margin);
+        b = min(t(end), windows(i, 2) + c.window_margin);
+        k0 = floor((a - t(1))/dt/st)*st + 1;
+        k1 = min(n, ceil((b - t(1))/dt) + 1);
+        W(end+1, :) = [k0, k1]; %#ok<AGROW>
+    end
+    if isempty(W), return; end
+    W = sortrows(W);
+    M = W(1, :);
+    for i = 2:size(W, 1)
+        if W(i, 1) <= M(end, 2) + 1
+            M(end, 2) = max(M(end, 2), W(i, 2));
+        else
+            M(end+1, :) = W(i, :); %#ok<AGROW>
         end
     end
-    A.q_ref = q_ref; A.w_ref = w_ref;
-    A.q = continuous_sign(Q); A.w = W;
-    A.h_wheel = Hw; A.tau_control = Tc; A.tau_dist = Td; A.wheel_limited = limited;
-    A.pointing_error = angle_deg(quat_rotate(A.q, [0 0 1]), quat_rotate(q_ref, [0 0 1]));   % +Z (payload) from its reference
-    A.attitude_error = 2*acosd(min(1, abs(sum(A.q.*q_ref, 2))));                            % three-axis error angle
+    W = M;
+end
+
+function B = geomagnetic_field_eci(r, th)
+    % Earth magnetic field [T] at the positions r [m] (rows, STAR inertial frame): tilted dipole of IGRF-13 (epoch 2020,
+    % g10 g11 h11 in nT, reference radius 6371.2 km), B = (a/r)^3 (3 (g.r^) r^ - g) with g = [g11 h11 g10] in ECEF,
+    % rotated with GMST th. Within ~20% of the full IGRF in LEO: enough for the momentum dumping.
+    g = [-1450.9, 4652.5, -29404.8]*1e-9;
+    re = rot_eci2ecef(r, th);
+    rm = vecnorm(re, 2, 2);
+    rh = re./rm;
+    Be = (6371.2e3./rm).^3.*(3*(rh*g').*rh - g);
+    B = rot_ecef2eci(Be, th);
 end
 
 function [q, w, h] = rk4_body(q, w, h, tc, td, I, invI, dt)
@@ -1141,7 +1284,10 @@ function D = dashboard_series(A, td, S, ctx, site, E)
     D.attitude_error = A.attitude_error(idx);
     D.h_wheel = A.h_wheel(idx, :);
     D.tau_control = A.tau_control(idx, :);
+    D.m_dipole = A.m_dipole(idx, :);
+    D.closed_loop = A.closed_loop(idx);
     D.wheel_limited_frac = mean(A.wheel_limited);
+    D.rms_pointing_error = sqrt(mean(A.pointing_error.^2, 'omitnan'));     % over the 1 s closed-loop windows
     D.eul = quat2eul([D.q(:, 4), D.q(:, 1:3)], 'ZYX');
     D.H_body = D.w.*S.Ivec';
     D.H_mag = vecnorm(D.H_body, 2, 2);
@@ -1248,7 +1394,7 @@ function pad_ylim(ax, y)
     ylim(ax, [lo - pad, hi + pad]);
     if m > 0 && (m < 1e-2 || m >= 1e5)                % values in the tick labels: the x10^n label overlapped the title
         ax.YAxis.Exponent = 0;
-        ytickformat(ax, '%.3g');
+        ax.YAxis.TickLabelFormat = '%g';              % ('%.3g' rounds 5e-4 to 0.001: repeated labels)
     end
 end
 
@@ -1299,43 +1445,44 @@ function torque_axes(ax, th, D, S, logscale)
 end
 
 function control_figure(file, th, D, S, A, plan)
-    % Closed-loop attitude control: pointing error, control torque and wheel momentum against the wheel limits.
+    % Attitude control: pointing error and control torque over the imaging pass (1 s closed loop), wheel momentum,
+    % magnetorquer dipole and control torque over the whole window, settings and statistics.
     c = S.ctrl;
     P = pass_control(A, plan.imaging.aos_t, plan.imaging.los_t);
     tp = P.t - P.t(1);
     f = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1300 950]);
     tl = tiledlayout(f, 3, 2, 'TileSpacing', 'compact', 'Padding', 'compact');
-    ax = nexttile(tl); hold(ax, 'on'); grid(ax, 'on'); box(ax, 'on');
-    plot(ax, th, D.pointing_error, 'Color', [0.85 0.33 0.1], 'LineWidth', 1.1);
-    plot(ax, th, D.attitude_error, ':', 'Color', [0.3 0.3 0.3], 'LineWidth', 1.1);
-    legend(ax, '+Z (payload) from its reference', 'three-axis attitude error', 'Location', 'best', 'FontSize', 8);
-    xlabel(ax, 'Time [h]'); ylabel(ax, 'Error [deg]'); title(ax, 'Pointing error, whole window (60 s samples)');
-    pad_ylim(ax, [D.pointing_error; D.attitude_error]);
     ax = nexttile(tl); grid(ax, 'on'); box(ax, 'on'); hold(ax, 'on');
     plot(ax, tp, P.err, 'Color', [0.85 0.33 0.1], 'LineWidth', 1.1);
     xlabel(ax, 'Time from the start of the imaging pass [s]'); ylabel(ax, 'Error [deg]');
     title(ax, sprintf('Pointing error during the imaging pass (1 s): mean %.4f, max %.4f deg', P.mean_err, P.max_err));
     pad_ylim(ax, P.err);
-    limit_axes(nexttile(tl), th, 1e3*D.tau_control, 1e3*c.tau_max, 'Time [h]', 'Control torque [mN m]', ...
-        'Control torque, whole window (60 s samples)');
-    limit_axes(nexttile(tl), th, 1e3*D.h_wheel, 1e3*c.h_max, 'Time [h]', 'Wheel momentum [mN m s]', ...
-        'Wheel momentum (no momentum dumping modelled)');
     limit_axes(nexttile(tl), tp, 1e3*P.tau, 1e3*c.tau_max, 'Time from the start of the imaging pass [s]', ...
         'Control torque [mN m]', 'Control torque during the imaging pass (1 s)');
+    limit_axes(nexttile(tl), th, 1e3*D.h_wheel, 1e3*c.h_max, 'Time [h]', 'Wheel momentum [mN m s]', ...
+        sprintf('Wheel momentum (%s)', ternary(c.dumping, 'dumped by the magnetorquers', 'no momentum dumping')));
+    limit_axes(nexttile(tl), th, D.m_dipole, c.m_max, 'Time [h]', 'Dipole [A m^2]', 'Magnetorquer dipole');
+    limit_axes(nexttile(tl), th, 1e3*D.tau_control, 1e3*c.tau_max, 'Time [h]', 'Control torque [mN m]', ...
+        'Control torque, whole window (60 s samples)');
     ax = nexttile(tl); axis(ax, 'off');
+    win_h = sum(A.closed_loop)*S.base_step/3600;
     txt = {
         'PD control, one reaction wheel per body axis'
         sprintf('natural frequency %.3g rad/s, damping %.2f', c.wn, c.zeta)
         sprintf('Kp = [%s] N m, Kd = [%s] N m s', num2str(c.Kp', '%.3g '), num2str(c.Kd', '%.3g '))
         sprintf('wheels: %.3g mN m s, %.3g mN m per axis', 1e3*c.h_max, 1e3*c.tau_max)
         ['  from ' c.wheels_source]
+        sprintf('magnetorquers: %.3g A m^2 per axis, dumping gain %.3g 1/s%s', c.m_max, c.dump_gain, ternary(c.dumping, '', ' (dumping off)'))
+        ['  from ' c.mtq_source]
         sprintf('attitude knowledge error %.3g deg (1 sigma per axis), rate noise %.2g rad/s', rad2deg(c.sigma_att), c.sigma_rate)
         ['  from ' c.knowledge_source]
+        sprintf('1 s closed loop over the passes (+%g s): %.2f h; wheel momentum every %g s elsewhere', ...
+            c.window_margin, win_h, c.coarse_step)
         ''
         sprintf('imaging pass: pointing error mean %.4f, RMS %.4f, max %.4f deg', P.mean_err, P.rms_err, P.max_err)
-        sprintf('whole window: pointing error RMS %.4f deg', sqrt(mean(A.pointing_error.^2)))
-        sprintf('peak wheel momentum %.2f%%, peak control torque %.2f%% of the limits', ...
-            100*max(abs(A.h_wheel(:)))/c.h_max, 100*max(abs(A.tau_control(:)))/c.tau_max)
+        sprintf('closed-loop windows: pointing error RMS %.4f deg', D.rms_pointing_error)
+        sprintf('peak wheel momentum %.2f%%, peak control torque %.2f%%, peak dipole %.1f%% of the limits', ...
+            100*max(abs(A.h_wheel(:)))/c.h_max, 100*max(abs(A.tau_control(:)))/c.tau_max, 100*max(abs(A.m_dipole(:)))/c.m_max)
         sprintf('wheel limits active %.2f%% of the time', 100*mean(A.wheel_limited))};
     text(ax, 0, 1, txt, 'Units', 'normalized', 'VerticalAlignment', 'top', 'FontSize', 9, 'Interpreter', 'none');
     title(tl, sprintf('Attitude control (%s mode)', strrep(S.mode, '_', ' ')));
@@ -1418,7 +1565,7 @@ function export_dashboard_data(out_dir, cfg, epoch, D, S, site, plan, t_img, aem
         'solar_radiation_pressure_Nm', D.Mmax(:,2), 'drag_Nm', D.Mmax(:,3)));
     db.control = struct('enabled', D.controlled, 'description', mode_text(S), 'pointing_error_deg', D.pointing_error, ...
         'attitude_error_deg', D.attitude_error, 'control_torque_Nm', D.tau_control, 'wheel_momentum_Nms', D.h_wheel, ...
-        'settings', control_summary(S));
+        'magnetorquer_dipole_Am2', D.m_dipole, 'closed_loop_1s', D.closed_loop, 'settings', control_summary(S));
     db.rotational_energy_J = D.energy;
     db.altitude_km = D.alt/1000;
     db.elevation_deg = D.el;
@@ -1448,7 +1595,12 @@ function s = control_summary(S)
         'natural_frequency_rad_s', c.wn, 'damping', c.zeta, 'Kp_Nm', c.Kp', 'Kd_Nms', c.Kd', 'control_step_s', S.base_step, ...
         'wheel_momentum_Nms', c.h_max, 'wheel_torque_Nm', c.tau_max, 'wheels_source', c.wheels_source, ...
         'attitude_knowledge_deg', rad2deg(c.sigma_att), 'rate_noise_rad_s', c.sigma_rate, 'knowledge_source', c.knowledge_source, ...
-        'random_seed', c.seed, 'note', 'one wheel per body axis; no momentum dumping (magnetorquers not modelled)');
+        'random_seed', c.seed, 'momentum_dumping', c.dumping, 'magnetorquer_dipole_Am2', c.m_max, 'magnetorquer_source', c.mtq_source, ...
+        'momentum_dump_gain_1_s', c.dump_gain, 'magnetic_field', 'tilted IGRF-13 dipole (2020)', ...
+        'initial_wheel_momentum_Nms', c.h0', 'closed_loop_windows', 'passes of the products + window_margin_s, 1 s steps', ...
+        'window_margin_s', c.window_margin, 'coarse_step_s', c.coarse_step, ...
+        'note', ['one wheel per body axis; outside the closed-loop windows the attitude is the reference and the wheel momentum ', ...
+        'is integrated every coarse_step_s with the disturbance and magnetorquer torques']);
 end
 
 function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat, P)
@@ -1495,11 +1647,15 @@ function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat, P)
         k = [k, kpi_entry('KPI-22', 'Closed-Loop Attitude Control', true, 'bool', 'attitude_control', true, NaN, NaN)];
         k = [k, kpi_entry('KPI-23', 'Mean Pointing Error During Imaging Pass', P.mean_err, 'deg', 'attitude_control', NaN, NaN, NaN)];
         k = [k, kpi_entry('KPI-24', 'Max Pointing Error During Imaging Pass', P.max_err, 'deg', 'attitude_control', NaN, NaN, NaN)];
-        k = [k, kpi_entry('KPI-25', 'RMS Pointing Error (whole window)', sqrt(mean(D.pointing_error.^2)), 'deg', 'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-25', 'RMS Pointing Error (closed-loop windows)', D.rms_pointing_error, 'deg', 'attitude_control', NaN, NaN, NaN)];
         k = [k, kpi_entry('KPI-26', 'Peak Wheel Momentum', h_pct, '% of capacity', 'attitude_control', h_pct < 100, NaN, 100)];
         k = [k, kpi_entry('KPI-27', 'Peak Control Torque', 100*max(abs(D.tau_control(:)))/c.tau_max, '% of wheel torque', ...
             'attitude_control', NaN, NaN, NaN)];
         k = [k, kpi_entry('KPI-28', 'Time With Wheel Limits Active', 100*D.wheel_limited_frac, '%', 'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-32', 'Peak Magnetorquer Dipole', 100*max(abs(D.m_dipole(:)))/c.m_max, '% of dipole', ...
+            'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-33', 'Wheel Momentum at the End of the Window', 100*norm(D.h_wheel(end, :))/c.h_max, ...
+            '% of capacity', 'attitude_control', NaN, NaN, NaN)];
     else
         k = [k, kpi_entry('KPI-22', 'Closed-Loop Attitude Control', false, 'bool', 'attitude_control', NaN, NaN, NaN)];
     end

@@ -257,29 +257,29 @@ class StarApi:
     # General state and logging
     # ------------------------------------------------------------------
     def resolve_star_root(self) -> Path:
-        """Return the external STAR project root used for shared module I/O.
+        """Return the STAR project root used for shared module I/O.
 
-        Preferred location on the development workstation:
-            C:/Users/s5oss/Desktop/software_s5lab/STAR
-
-        The path can be overridden with STAR_PROJECT_ROOT.  When the app is
-        launched from STAR/STAR-ORCHESTRATOR/star_cef, the ancestor named
-        "STAR" is selected automatically.
+        The path can be overridden with STAR_PROJECT_ROOT. Otherwise it is the
+        closest ancestor of this file that holds BackEnd/runners and Input (the
+        STAR layout), whatever the folder is called (2026-10-19: the check on a
+        folder named "STAR" picked the parent of the checkout when STAR was
+        cloned under another name, e.g. STAR_repository_git); then an ancestor
+        named "STAR"; then the parent of FrontEnd.
         """
         env_root = os.environ.get("STAR_PROJECT_ROOT", "").strip()
         if env_root:
             return Path(env_root).expanduser().resolve()
 
-        for candidate in [self.project_dir, *self.project_dir.parents]:
+        ancestors = [self.project_dir, *self.project_dir.parents]
+        for candidate in ancestors:
+            if (candidate / "BackEnd" / "runners").is_dir() and (candidate / "Input").is_dir():
+                return candidate.resolve()
+        for candidate in ancestors:
             if candidate.name.lower() == "star":
                 return candidate.resolve()
 
-        # Fallback for the expected local layout:
-        # STAR/STAR-ORCHESTRATOR/star_cef/app_webview.py
-        try:
-            return self.project_dir.parents[1].resolve()
-        except IndexError:
-            return self.project_dir.resolve()
+        # STAR/FrontEnd/star_frontend_v5.py
+        return self.project_dir.parent.resolve()
 
     def resolve_output_root(self) -> Path:
         """Return the central output folder for all STAR runs and modules."""

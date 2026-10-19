@@ -1018,7 +1018,7 @@
     60
    ],
    "family": "cubeadcs",
-   "notes": "Massa '<500 g'. 3 ruote CubeWheel Small, 2 CubeTorquer Small, 1 CubeCoil; satelliti tipici 2U-3U; 90x96x57 mm. Listino base USD 37,000 (sensori fine sun / star tracker / magnetometro ridondante opzionali). Accuratezza di puntamento non dichiarata (dipende dai sensori e dalla missione), consumo non dichiarato. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 2U-3U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): non dichiarate nelle note del fornitore.",
+   "notes": "Massa '<500 g'. 3 ruote CubeWheel Small, 2 CubeTorquer Small, 1 CubeCoil; satelliti tipici 2U-3U; 90x96x57 mm. Listino base USD 37,000 (sensori fine sun / star tracker / magnetometro ridondante opzionali). Accuratezza di puntamento non dichiarata (dipende dai sensori e dalla missione), consumo non dichiarato. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 2U-3U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): non dichiarate nelle note del fornitore. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "price": {
     "amount": 37000,
     "currency": "USD",
@@ -1040,7 +1040,8 @@
      3
     ],
     "wheel_momentum_mnms": null,
-    "wheel_max_torque_mnm": null
+    "wheel_max_torque_mnm": null,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/CubeSpace-CubeADCS-3AxisSmall.png",
@@ -1083,7 +1084,7 @@
     60
    ],
    "family": "cubeadcs",
-   "notes": "Massa '<300 g'. Una ruota + magnetorquer: puntamento al nadir, non 3 assi completi; taglie 2U-16U; 90x96x48 mm. Listino base USD 26,780. Accuratezza e consumo non dichiarati. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 2U-16U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): non dichiarate nelle note del fornitore.",
+   "notes": "Massa '<300 g'. Una ruota + magnetorquer: puntamento al nadir, non 3 assi completi; taglie 2U-16U; 90x96x48 mm. Listino base USD 26,780. Accuratezza e consumo non dichiarati. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 2U-16U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): non dichiarate nelle note del fornitore. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "price": {
     "amount": 26780,
     "currency": "USD",
@@ -1105,7 +1106,8 @@
      16
     ],
     "wheel_momentum_mnms": null,
-    "wheel_max_torque_mnm": null
+    "wheel_max_torque_mnm": null,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/CubeSpace-CubeADCS-YMomentumSmall.png",
@@ -2416,7 +2418,7 @@
     80
    ],
    "status": "nla",
-   "notes": "Il listino 2022 indica il kit come NLA (non piu' disponibile) e il prodotto come soggetto a ITAR (22 CFR 121.1, Cat. XV, determinazione di ottobre 2010): le vendite fuori dagli USA richiedono licenza di esportazione. Datasheet datato: i prodotti CubeSat Kit sono di generazione precedente (documenti 2010-2014), verificare la disponibilita' attuale. Massa 885 g = ADACS 865 g + magnetometro esterno 20 g. 3 ruote (1.1 mNms ciascuna, 0.635 mNm), 3 bobine; 100x100x78.74 mm. Potenza 1.5 W tipica (<4.5 W max) a +12 V (elettronica da 7 V, motori a coppia piena da 9 V). Puntamento 1 grado con i sensori forniti (1-3 arcsec solo con giroscopio e star tracker aggiuntivi, non inclusi). Interfaccia seriale RS-232; verso il CubeSat Kit Bus tramite ADACS Interface Module 711-00408 (UART): per questo e' indicato anche UART. TID 30 krad dichiarata ma 'inferita, non testata, non garantita'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): non dichiarata dal fornitore. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 1.1 mNms e 0.635 mNm per ruota, una per asse.",
+   "notes": "Il listino 2022 indica il kit come NLA (non piu' disponibile) e il prodotto come soggetto a ITAR (22 CFR 121.1, Cat. XV, determinazione di ottobre 2010): le vendite fuori dagli USA richiedono licenza di esportazione. Datasheet datato: i prodotti CubeSat Kit sono di generazione precedente (documenti 2010-2014), verificare la disponibilita' attuale. Massa 885 g = ADACS 865 g + magnetometro esterno 20 g. 3 ruote (1.1 mNms ciascuna, 0.635 mNm), 3 bobine; 100x100x78.74 mm. Potenza 1.5 W tipica (<4.5 W max) a +12 V (elettronica da 7 V, motori a coppia piena da 9 V). Puntamento 1 grado con i sensori forniti (1-3 arcsec solo con giroscopio e star tracker aggiuntivi, non inclusi). Interfaccia seriale RS-232; verso il CubeSat Kit Bus tramite ADACS Interface Module 711-00408 (UART): per questo e' indicato anche UART. TID 30 krad dichiarata ma 'inferita, non testata, non garantita'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): non dichiarata dal fornitore. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 1.1 mNms e 0.635 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "source": {
     "url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_ADACS_634-00412-A.pdf",
     "document": "Pumpkin/MAI MAI-100 ADACS 634-00412 (doc Rev G, apr 2011)",
@@ -2438,7 +2440,8 @@
     ],
     "form_factor_range_u": null,
     "wheel_momentum_mnms": 1.1,
-    "wheel_max_torque_mnm": 0.635
+    "wheel_max_torque_mnm": 0.635,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/Pumpkin-MAI-100.png",
@@ -2483,7 +2486,7 @@
     80
    ],
    "status": "nla",
-   "notes": "Il listino 2022 indica il kit come NLA (non piu' disponibile) e il prodotto come soggetto a ITAR (22 CFR 121.1, Cat. XV, determinazione di ottobre 2010): le vendite fuori dagli USA richiedono licenza di esportazione. Datasheet datato: i prodotti CubeSat Kit sono di generazione precedente (documenti 2010-2014), verificare la disponibilita' attuale. Massa 930 g = ADACS 910 g + magnetometro 20 g. Ruote da 10.8 mNms (0.625 mNm), 3 bobine; 100x100x78.74 mm. Potenza 3.5 W tipica (<6 W max) a +12 V. Puntamento 1 grado con i sensori forniti. Interfaccia RS-232 (UART tramite ADACS Interface Module). TID 30 krad 'inferita, non testata'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): non dichiarata dal fornitore. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 10.8 mNms e 0.625 mNm per ruota, una per asse.",
+   "notes": "Il listino 2022 indica il kit come NLA (non piu' disponibile) e il prodotto come soggetto a ITAR (22 CFR 121.1, Cat. XV, determinazione di ottobre 2010): le vendite fuori dagli USA richiedono licenza di esportazione. Datasheet datato: i prodotti CubeSat Kit sono di generazione precedente (documenti 2010-2014), verificare la disponibilita' attuale. Massa 930 g = ADACS 910 g + magnetometro 20 g. Ruote da 10.8 mNms (0.625 mNm), 3 bobine; 100x100x78.74 mm. Potenza 3.5 W tipica (<6 W max) a +12 V. Puntamento 1 grado con i sensori forniti. Interfaccia RS-232 (UART tramite ADACS Interface Module). TID 30 krad 'inferita, non testata'. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): non dichiarata dal fornitore. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 10.8 mNms e 0.625 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "source": {
     "url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_ADACS_634-00458-A.pdf",
     "document": "Pumpkin/MAI MAI-200 ADACS 634-00458 (doc Rev G, apr 2011)",
@@ -2505,7 +2508,8 @@
     ],
     "form_factor_range_u": null,
     "wheel_momentum_mnms": 10.8,
-    "wheel_max_torque_mnm": 0.625
+    "wheel_max_torque_mnm": 0.625,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/Pumpkin-MAI-200.png",
@@ -3036,7 +3040,7 @@
     60
    ],
    "family": "bct-xact",
-   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 3U (4 kg)); 15 mNms per asse, coppia massima 0.005 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 3U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): 0.885 kg, 10 x 10 x 5 cm (0.5U), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, 12 V, RS-422, vita di progetto 5 anni in LEO; consumo non dichiarato. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 15 mNms e 5 mNm per ruota, una per asse.",
+   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 3U (4 kg)); 15 mNms per asse, coppia massima 0.005 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 3U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): 0.885 kg, 10 x 10 x 5 cm (0.5U), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, 12 V, RS-422, vita di progetto 5 anni in LEO; consumo non dichiarato. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 15 mNms e 5 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "source": {
     "url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "document": "Blue Canyon Technologies ADCS product sheet REV 1/2026",
@@ -3060,7 +3064,8 @@
      3
     ],
     "wheel_momentum_mnms": 15.0,
-    "wheel_max_torque_mnm": 5.0
+    "wheel_max_torque_mnm": 5.0,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/BlueCanyon-XACT-15.png",
@@ -3104,7 +3109,7 @@
     60
    ],
    "family": "bct-xact",
-   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 6U (14 kg)); 50 mNms per asse, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x7.54 cm (0.75U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): 1.23 kg, 10 x 10 x 7.54 cm (0.75U), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, 12 V, RS-422, vita di progetto 5 anni in LEO; consumo non dichiarato. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 50 mNms e 6 mNm per ruota, una per asse.",
+   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 6U (14 kg)); 50 mNms per asse, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x7.54 cm (0.75U). Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): 1.23 kg, 10 x 10 x 7.54 cm (0.75U), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, 12 V, RS-422, vita di progetto 5 anni in LEO; consumo non dichiarato. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 50 mNms e 6 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "source": {
     "url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "document": "Blue Canyon Technologies ADCS product sheet REV 1/2026",
@@ -3128,7 +3133,8 @@
      6
     ],
     "wheel_momentum_mnms": 50.0,
-    "wheel_max_torque_mnm": 6.0
+    "wheel_max_torque_mnm": 6.0,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/BlueCanyon-XACT-50.png",
@@ -3172,7 +3178,7 @@
     60
    ],
    "family": "bct-xact",
-   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. Massa '0.52 kg + 1 kg (ruote)': sommata (1.52 kg), ma la scheda non dice a quante ruote si riferisce il chilogrammo. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 12U (25 kg)); fino a 4 ruote da 100 mNms, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U) esclusi i componenti esterni. Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 12U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): XACT-100 0.433 kg + 1.38 kg (ruote + barre di torsione) = 1.813 kg, 10 x 10 x 5 cm (0.5U) esclusi i componenti esterni, 100 mNms, 12 V, RS-422, slew >= 10 gradi/s (12U da 25 kg), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, vita di progetto 5 anni in LEO. Si tiene la massa della REV 1/2026 (piu' recente); per un bilancio di massa prudente il valore 2019 e' 0.29 kg piu' alto. Consumo non dichiarato nemmeno nella scheda 2019. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 100 mNms e 6 mNm per ruota, una per asse.",
+   "notes": "La scheda e' 'solo informativa e soggetta a modifiche': BCT chiede di contattarla per i dati di progetto aggiornati. Massa '0.52 kg + 1 kg (ruote)': sommata (1.52 kg), ma la scheda non dice a quante ruote si riferisce il chilogrammo. ADCS completo con tracker stellare, ruote e barre di torsione (satellite tipico 12U (25 kg)); fino a 4 ruote da 100 mNms, coppia massima 0.006 Nm, slew fino a 10 gradi/s; 10x10x5 cm (0.5U) esclusi i componenti esterni. Puntamento 1 sigma: +-10 arcsec su 2 assi e +-25 arcsec sul terzo; si usa il valore peggiore (25 arcsec = 0.00694 gradi). Tensione 12 V, interfaccia RS-422 e intervallo operativo -20..+60 C valgono per la famiglia XACT. Eredita': 38 unita' XACT lanciate, 5.4 anni la piu' longeva in orbita (non e' un numero di missioni). Consumo, TID e prezzo non dichiarati. Nota: la famiglia FleXcore (28 V, massa 'dipendente dalla configurazione') non e' inclusa. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 12U. Scheda BCT precedente (ottobre 2019; PDF fornito dall'utente il 2026-10-17, da satbase): XACT-100 0.433 kg + 1.38 kg (ruote + barre di torsione) = 1.813 kg, 10 x 10 x 5 cm (0.5U) esclusi i componenti esterni, 100 mNms, 12 V, RS-422, slew >= 10 gradi/s (12U da 25 kg), puntamento +-0.003 gradi (1 sigma) su 2 assi e +-0.007 gradi sul terzo, vita di progetto 5 anni in LEO. Si tiene la massa della REV 1/2026 (piu' recente); per un bilancio di massa prudente il valore 2019 e' 0.29 kg piu' alto. Consumo non dichiarato nemmeno nella scheda 2019. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 100 mNms e 6 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "source": {
     "url": "https://www.bluecanyontech.com/wp-content/uploads/ADCS-2026.pdf",
     "document": "Blue Canyon Technologies ADCS product sheet REV 1/2026",
@@ -3196,7 +3202,8 @@
      12
     ],
     "wheel_momentum_mnms": 100.0,
-    "wheel_max_torque_mnm": 6.0
+    "wheel_max_torque_mnm": 6.0,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/BlueCanyon-XACT-100.png",
@@ -3605,7 +3612,7 @@
    ],
    "trl": 9,
    "family": "hyperion-iadcs",
-   "notes": "Hyperion Technologies e' oggi il marchio AAC Hyperion di AAC Clyde Space (pagina 'our brands/hyperion' del sito): i prodotti sono pubblicati su aac-clyde.space. Fonte: datasheet del fornitore (release febbraio 2023) e pagina prodotto, letti il 2026-10-13. Prezzo non pubblicato. ADCS integrato per CubeSat 3U (0.3U, 95x90x32 mm, 2 schede PC104): tracker stellare ST200, ruote RW210 (una per asse), magnetorquer MTQ200 e IMU. Massa 400 / 435 / 470 g secondo il modello di ruote (momento +-1.5 / +-3.0 / +-6.0 mNms): il datasheet non dice quale massa corrisponda a quale, quindi si usa il caso peggiore, 470 g. Accuratezza di puntamento '<1 grado' (usato 1.0) e determinazione d'assetto 30 arcsec (3 sigma). Potenza: 1.15 W a riposo, 1.4 W nominale (usato), 4.0-4.5 W di picco, escluse ruote e tracker aggiuntivi. Alimentazione 5 V tipici (4.0 V min dai pin 5 V, fino a 15 V da VBAT). Interfaccia I2C standard; RS-422, RS-485 e UART opzionali (non registrate). TID: componenti primari provati fino a 45 krad (il datasheet riporta '>459' per un artefatto di nota a pie di pagina). Temperatura: il datasheet scrive '-45 / -20 to +40 / +85' senza etichette; si usa -20..+40 (come il tracker ST200). Eredita': in orbita dal 2017 in varie configurazioni. Tempo di consegna 9 mesi. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 3U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 1.5 mNms e 0.1 mNm per ruota, una per asse.",
+   "notes": "Hyperion Technologies e' oggi il marchio AAC Hyperion di AAC Clyde Space (pagina 'our brands/hyperion' del sito): i prodotti sono pubblicati su aac-clyde.space. Fonte: datasheet del fornitore (release febbraio 2023) e pagina prodotto, letti il 2026-10-13. Prezzo non pubblicato. ADCS integrato per CubeSat 3U (0.3U, 95x90x32 mm, 2 schede PC104): tracker stellare ST200, ruote RW210 (una per asse), magnetorquer MTQ200 e IMU. Massa 400 / 435 / 470 g secondo il modello di ruote (momento +-1.5 / +-3.0 / +-6.0 mNms): il datasheet non dice quale massa corrisponda a quale, quindi si usa il caso peggiore, 470 g. Accuratezza di puntamento '<1 grado' (usato 1.0) e determinazione d'assetto 30 arcsec (3 sigma). Potenza: 1.15 W a riposo, 1.4 W nominale (usato), 4.0-4.5 W di picco, escluse ruote e tracker aggiuntivi. Alimentazione 5 V tipici (4.0 V min dai pin 5 V, fino a 15 V da VBAT). Interfaccia I2C standard; RS-422, RS-485 e UART opzionali (non registrate). TID: componenti primari provati fino a 45 krad (il datasheet riporta '>459' per un artefatto di nota a pie di pagina). Temperatura: il datasheet scrive '-45 / -20 to +40 / +85' senza etichette; si usa -20..+40 (come il tracker ST200). Eredita': in orbita dal 2017 in varie configurazioni. Tempo di consegna 9 mesi. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 3U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 1.5 mNms e 0.1 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): dipolo non dichiarato nelle note del fornitore.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/iADCS200.pdf",
     "document": "AAC Hyperion iADCS200 datasheet (release 08 Feb 2023) + pagina prodotto",
@@ -3629,7 +3636,8 @@
      3
     ],
     "wheel_momentum_mnms": 1.5,
-    "wheel_max_torque_mnm": 0.1
+    "wheel_max_torque_mnm": 0.1,
+    "magnetorquer_dipole_am2": null
    },
    "image": {
     "file": "images/Hyperion-iADCS200.png",
@@ -3675,7 +3683,7 @@
    ],
    "trl": 9,
    "family": "hyperion-iadcs",
-   "notes": "Hyperion Technologies e' oggi il marchio AAC Hyperion di AAC Clyde Space (pagina 'our brands/hyperion' del sito): i prodotti sono pubblicati su aac-clyde.space. Fonte: datasheet del fornitore (release febbraio 2023) e pagina prodotto, letti il 2026-10-13. Prezzo non pubblicato. ADCS integrato per piattaforme 6U-12U (0.7U, 95.4x95.9x67.3 mm): tracker ST200, ruote RW400 (una per asse), magnetorquer MTQ400 (0.5 A m2). Massa 1150 / 1300 / 1700 g secondo il modello di ruote: si usa il caso peggiore, 1.7 kg. Accuratezza di puntamento '<1 grado' (usato 1.0), determinazione 30 arcsec. Il datasheet cita sia '+-30 mNms per asse' (testo) sia '+-1.5/3.0/6.0 mNms' (tabella), incoerenti. Coppia massima 2-2.5 mNm. Potenza: 0.9 W a riposo (2.4 W max), 2.0 W nominale (usato), picco fino a 5 W (il testo dice '<4 W'). Alimentazione 5 V tipici (4.9 V min, 15 V max). Interfaccia I2C standard; RS-422, RS-485, UART e CAN opzionali (non registrate). TID fino a 45 krad (il datasheet riporta '>458' per lo stesso artefatto), schermatura aggiuntiva integrata. Eredita': in orbita dal 2023 (pagina prodotto). Opzionale: OBC/payload processor integrato CP400. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U-12U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 15 mNms e 2 mNm per ruota, una per asse.",
+   "notes": "Hyperion Technologies e' oggi il marchio AAC Hyperion di AAC Clyde Space (pagina 'our brands/hyperion' del sito): i prodotti sono pubblicati su aac-clyde.space. Fonte: datasheet del fornitore (release febbraio 2023) e pagina prodotto, letti il 2026-10-13. Prezzo non pubblicato. ADCS integrato per piattaforme 6U-12U (0.7U, 95.4x95.9x67.3 mm): tracker ST200, ruote RW400 (una per asse), magnetorquer MTQ400 (0.5 A m2). Massa 1150 / 1300 / 1700 g secondo il modello di ruote: si usa il caso peggiore, 1.7 kg. Accuratezza di puntamento '<1 grado' (usato 1.0), determinazione 30 arcsec. Il datasheet cita sia '+-30 mNms per asse' (testo) sia '+-1.5/3.0/6.0 mNms' (tabella), incoerenti. Coppia massima 2-2.5 mNm. Potenza: 0.9 W a riposo (2.4 W max), 2.0 W nominale (usato), picco fino a 5 W (il testo dice '<4 W'). Alimentazione 5 V tipici (4.9 V min, 15 V max). Interfaccia I2C standard; RS-422, RS-485, UART e CAN opzionali (non registrate). TID fino a 45 krad (il datasheet riporta '>458' per lo stesso artefatto), schermatura aggiuntiva integrata. Eredita': in orbita dal 2023 (pagina prodotto). Opzionale: OBC/payload processor integrato CP400. Classe CubeSat dichiarata (form_factor_range_u, 2026-10-16): 6U-12U. Ruote integrate (wheel_momentum_mnms, wheel_max_torque_mnm, 2026-10-19): 15 mNms e 2 mNm per ruota, una per asse. Magnetorquer integrati (magnetorquer_dipole_am2, 2026-10-19): 0.5 A m2 per asse.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/11/iADCS400-1.pdf",
     "document": "AAC Hyperion iADCS400 datasheet (release 13 Feb 2023) + pagina prodotto",
@@ -3699,7 +3707,8 @@
      12
     ],
     "wheel_momentum_mnms": 15.0,
-    "wheel_max_torque_mnm": 2.0
+    "wheel_max_torque_mnm": 2.0,
+    "magnetorquer_dipole_am2": 0.5
    },
    "image": {
     "file": "images/Hyperion-iADCS400.png",

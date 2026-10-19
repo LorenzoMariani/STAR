@@ -155,6 +155,29 @@ function test_weak_wheels_hold_their_limits(tc)
     verifyGreaterThan(tc, K('KPI-24'), 1, 'the slews towards the site cannot be followed with these wheels');
 end
 
+function test_magnetorquers_dump_the_wheel_momentum(tc)
+    % wheels starting at 0.02 N m s per axis, no disturbance torque but the gravity gradient of the controlled attitude:
+    % without dumping the stored momentum stays (it only turns in the body frame), the magnetorquers take most of it out
+    O = tc.TestData.O;
+    base = struct('enabled', true, 'wheel_momentum_Nms', 0.1, 'wheel_torque_Nm', 0.006, 'attitude_knowledge_deg', 0.00694, ...
+        'rate_noise_rad_s', 1e-5, 'initial_wheel_momentum_Nms', [0.02 0.02 0.02]);
+    flags = struct('gg', true, 'srp', false, 'drag', false);
+    off = base; off.momentum_dumping = false;
+    K_off = read_kpis(run_end003(tc, 'dump_off', 'nadir', off, flags));
+    out_on = run_end003(tc, 'dump_on', 'nadir', base, flags);
+    K_on = read_kpis(out_on);
+    h0_pct = 100*norm([0.02 0.02 0.02])/0.1;
+    verifyEqual(tc, K_off('KPI-33'), h0_pct, 'RelTol', 0.02, 'without dumping the wheel momentum is kept');
+    verifyLessThan(tc, K_on('KPI-33'), 0.3*h0_pct, 'the magnetorquers dump the wheel momentum');
+    verifyGreaterThan(tc, K_on('KPI-32'), 0);
+    verifyLessThanOrEqual(tc, K_on('KPI-32'), 100 + 1e-9);
+    % no dipole from END-006: the END-006 sizing rule, a full wheel dumped in one orbit, H / (B T)
+    s = read_summary(out_on);
+    m_rule = 0.1/(3.12e-5*(6378137.0/O.a)^3*2*pi*sqrt(O.a^3/O.mu));
+    verifyEqual(tc, s.attitude_control.magnetorquer_dipole_Am2, m_rule, 'RelTol', 1e-6);
+    verifySubstring(tc, s.attitude_control.magnetorquer_source, 'END-006 sizing rule');
+end
+
 %% =========================================================================
 %  HELPERS
 %  =========================================================================
@@ -275,8 +298,12 @@ function [t, w] = read_aem_rates(folder, key, epoch)
     w = [num('ANGVEL_X'), num('ANGVEL_Y'), num('ANGVEL_Z')];
 end
 
-function K = read_kpis(out)
+function s = read_summary(out)
     s = jsondecode(fileread(fullfile(out, 'results_attitude_propagator', 'attitude_summary.json')));
+end
+
+function K = read_kpis(out)
+    s = read_summary(out);
     k = s.kpis;
     if iscell(k), k = [k{:}]; end
     K = containers.Map();
