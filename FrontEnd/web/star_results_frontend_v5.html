@@ -3388,7 +3388,7 @@ const state = {
   fileStatus: {
     data: { loaded: false, path: AUTO_DATA_DIR + DATA_JS },
     input: { loaded: false, path: AUTO_INPUT_DIR + INPUT_JSON },
-    png: { loaded: false, path: AUTO_DATA_DIR + &#x27;01_telemetry.png … 06_orbit_3d_eci.png&#x27;, count: 0 },
+    png: { loaded: false, path: AUTO_DATA_DIR + &#x27;01_telemetry.png … 08_attitude_control.png&#x27;, count: 0 },
     kpi: { loaded: false, path: AUTO_DATA_DIR + KPI_JSON }
   }
 };
@@ -3761,13 +3761,13 @@ async function loadDefaultRelativeData() {
   drawDashboard();
 }
 async function loadDefaultPngs() {
-  const names = readPath(state.data, &#x27;png_outputs&#x27;, [&#x27;01_telemetry.png&#x27;,&#x27;02_tracking.png&#x27;,&#x27;03_angular_momentum.png&#x27;,&#x27;04_ground_track.png&#x27;,&#x27;05_orbit_3d_ecef.png&#x27;,&#x27;06_orbit_3d_eci.png&#x27;]);
+  const names = readPath(state.data, &#x27;png_outputs&#x27;, [&#x27;01_telemetry.png&#x27;,&#x27;02_tracking.png&#x27;,&#x27;04_ground_track.png&#x27;,&#x27;05_orbit_3d.png&#x27;,&#x27;08_attitude_control.png&#x27;]);
   names.forEach((name) =&gt; state.pngFiles.set(name, AUTO_DATA_DIR + name));
   /* Local browsers often block fetch/HEAD on file:// URLs, while &lt;img&gt; can still render
      relative PNG files correctly. Therefore the gallery is populated optimistically. */
   state.fileStatus.png.loaded = state.pngFiles.size &gt; 0;
   state.fileStatus.png.count = state.pngFiles.size;
-  state.fileStatus.png.path = AUTO_DATA_DIR + &#x27;01_telemetry.png … 06_orbit_3d_eci.png&#x27;;
+  state.fileStatus.png.path = AUTO_DATA_DIR + names.join(&#x27;, &#x27;);
 }
 
 async function loadFromStarRoot() {
@@ -4015,7 +4015,7 @@ function earthSurface(r){const rows=EARTH_SURFACE_ROWS,cols=EARTH_SURFACE_COLS,x
 function drawOrbit3D(div, frame) {
   const el = $(div);
   const d = state.data;
-  const fallbackName = frame === &#x27;ECI&#x27; ? &#x27;06_orbit_3d_eci.png&#x27; : &#x27;05_orbit_3d_ecef.png&#x27;;
+  const fallbackName = &#x27;05_orbit_3d.png&#x27;;   // ECEF and ECI panels in one figure since 2026-10-19
   if (!el) return;
   if (!d) {
     const url = state.pngFiles.get(fallbackName);

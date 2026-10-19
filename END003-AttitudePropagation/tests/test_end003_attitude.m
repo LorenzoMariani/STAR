@@ -142,6 +142,17 @@ function test_pd_control_tracks_nadir_within_wheel_limits(tc)
     csv = readtable(fullfile(out, 'output_attitude_propagation', 'output_attitude_propagation.csv'));
     verifyLessThan(tc, max(csv.nadir_offset_deg), 5*0.00694);
     verifyTrue(tc, isfile(fullfile(out, 'results_attitude_propagator', '08_attitude_control.png')));
+    % guided attitude (2026-10-19): no 07 B and no 03, the 3D orbit in one figure
+    verify_figures(tc, out, {'01_telemetry', '02_tracking', '04_ground_track', '05_orbit_3d', '08_attitude_control', ...
+        '07_aem_imaging_A_inertial_view', '07_aem_imaging_C_H_orbital_plane', '07_aem_imaging_D_parameters'}, ...
+        {'03_angular_momentum', '05_orbit_3d_ecef', '06_orbit_3d_eci', '07_aem_imaging_B_view_along_H'});
+end
+
+function test_free_motion_keeps_the_figures_of_the_rotation(tc)
+    % 'dynamics' (free motion, no control): 07 B (view along H) and 03 (angular momentum) are drawn
+    out = run_end003(tc, 'free', 'dynamics', struct('enabled', false), struct('gg', true, 'srp', false, 'drag', false));
+    verify_figures(tc, out, {'03_angular_momentum', '05_orbit_3d', '07_aem_imaging_A_inertial_view', ...
+        '07_aem_imaging_B_view_along_H'}, {'06_orbit_3d_eci', '08_attitude_control'});
 end
 
 function test_weak_wheels_hold_their_limits(tc)
@@ -296,6 +307,12 @@ function [t, w] = read_aem_rates(folder, key, epoch)
     t = seconds(datetime(ep, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS') - epoch);
     num = @(tag) str2double(string(cellfun(@(c) c{1}, regexp(txt, ['<' tag '>([^<]+)</' tag '>'], 'tokens'), 'UniformOutput', false)))';
     w = [num('ANGVEL_X'), num('ANGVEL_Y'), num('ANGVEL_Z')];
+end
+
+function verify_figures(tc, out, present, absent)
+    res = fullfile(out, 'results_attitude_propagator');
+    for f = present, verifyTrue(tc, isfile(fullfile(res, [f{1} '.png'])), [f{1} '.png expected']); end
+    for f = absent, verifyFalse(tc, isfile(fullfile(res, [f{1} '.png'])), [f{1} '.png not expected']); end
 end
 
 function s = read_summary(out)

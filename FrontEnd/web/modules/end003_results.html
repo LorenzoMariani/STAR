@@ -224,7 +224,7 @@ const state = {
   fileStatus: {
     data: { loaded: false, path: AUTO_DATA_DIR + DATA_JS },
     input: { loaded: false, path: AUTO_INPUT_DIR + INPUT_JSON },
-    png: { loaded: false, path: AUTO_DATA_DIR + '01_telemetry.png … 06_orbit_3d_eci.png', count: 0 },
+    png: { loaded: false, path: AUTO_DATA_DIR + '01_telemetry.png … 08_attitude_control.png', count: 0 },
     kpi: { loaded: false, path: AUTO_DATA_DIR + KPI_JSON }
   }
 };
@@ -597,13 +597,13 @@ async function loadDefaultRelativeData() {
   drawDashboard();
 }
 async function loadDefaultPngs() {
-  const names = readPath(state.data, 'png_outputs', ['01_telemetry.png','02_tracking.png','03_angular_momentum.png','04_ground_track.png','05_orbit_3d_ecef.png','06_orbit_3d_eci.png']);
+  const names = readPath(state.data, 'png_outputs', ['01_telemetry.png','02_tracking.png','04_ground_track.png','05_orbit_3d.png','08_attitude_control.png']);
   names.forEach((name) => state.pngFiles.set(name, AUTO_DATA_DIR + name));
   /* Local browsers often block fetch/HEAD on file:// URLs, while <img> can still render
      relative PNG files correctly. Therefore the gallery is populated optimistically. */
   state.fileStatus.png.loaded = state.pngFiles.size > 0;
   state.fileStatus.png.count = state.pngFiles.size;
-  state.fileStatus.png.path = AUTO_DATA_DIR + '01_telemetry.png … 06_orbit_3d_eci.png';
+  state.fileStatus.png.path = AUTO_DATA_DIR + names.join(', ');
 }
 
 async function loadFromStarRoot() {
@@ -851,7 +851,7 @@ function earthSurface(r){const rows=EARTH_SURFACE_ROWS,cols=EARTH_SURFACE_COLS,x
 function drawOrbit3D(div, frame) {
   const el = $(div);
   const d = state.data;
-  const fallbackName = frame === 'ECI' ? '06_orbit_3d_eci.png' : '05_orbit_3d_ecef.png';
+  const fallbackName = '05_orbit_3d.png';   // ECEF and ECI panels in one figure since 2026-10-19
   if (!el) return;
   if (!d) {
     const url = state.pngFiles.get(fallbackName);

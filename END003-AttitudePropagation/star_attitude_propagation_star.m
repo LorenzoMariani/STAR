@@ -318,14 +318,22 @@ function eph = read_end001_ephemerides(cfg)
     end
     tmpl = struct('index', 0, 'label', '', 'file', '', 'epoch', NaT, 't', [], 'h', 10, 'r', [], 'v', [], 'orbit', struct());
     eph = repmat(tmpl, numel(items), 1);
+    opts = [];
+    header = '';
     for k = 1:numel(items)
         it = items{k};
         f = char(it.file);
         if ~isfile(f)
             error('STAR:END003:NoEphemeris', 'END-001 ephemeris not found: %s', f);
         end
-        opts = detectImportOptions(f, 'Delimiter', ',', 'FileType', 'text');
-        opts = setvartype(opts, 'time_utc', 'string');
+        fid = fopen(f);
+        line1 = fgetl(fid);
+        fclose(fid);
+        if isempty(opts) || ~isequal(line1, header)    % import options detected once for files with the same header
+            opts = detectImportOptions(f, 'Delimiter', ',', 'FileType', 'text');
+            opts = setvartype(opts, 'time_utc', 'string');
+            header = line1;
+        end
         Tb = readtable(f, opts);
         ts = parse_utc(Tb.time_utc);
         t = seconds(ts - ts(1));
@@ -993,6 +1001,7 @@ function a = make_aem_and_figures(key, label, E, A, t, S, ctx, product_dir, resu
     opts.gmst = @(ts) gmst_rad(juliandate(ts));
     opts.site = site;
     opts.site_role = ternary(strcmp(key, 'imaging'), 'target site', 'observer');
+    opts.view_along_H = strcmp(S.mode, 'dynamics');     % figure B: free motion only (2026-10-19)
     info = end003_aem_figures(file, opts);
     a = struct('key', key, 'label', label, 'file', name, 'figures', info.figures, 'rotational_state', info.rotational_state);
 end
@@ -1000,7 +1009,8 @@ end
 function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
     fid = fopen(file, 'w');
     if fid < 0, error('STAR:END003:Output', 'Unable to write %s', file); end
-    tf = @(s) char(string(epoch + seconds(s), 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS'));
+    ep = string(epoch + seconds(t), 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS');   % all the epochs at once
+    tf = @(i) char(ep(i));
     fprintf(fid, '<?xml version="1.0" encoding="utf-8"?>\n');
     fprintf(fid, ['<aem xmlns:ndm="urn:ccsds:schema:ndmxml"\n     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n', ...
         '     id="CCSDS_AEM_VERS"\n     version="2.0"\n', ...
@@ -1019,7 +1029,7 @@ function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
     fprintf(fid, '            <OBJECT_ID>%s</OBJECT_ID>\n', xml_escape(obj_id));
     fprintf(fid, '            <REF_FRAME_A>J2000</REF_FRAME_A>\n            <REF_FRAME_B>SC_BODY</REF_FRAME_B>\n');
     fprintf(fid, '            <TIME_SYSTEM>UTC</TIME_SYSTEM>\n');
-    fprintf(fid, '            <START_TIME>%s</START_TIME>\n            <STOP_TIME>%s</STOP_TIME>\n', tf(t(1)), tf(t(end)));
+    fprintf(fid, '            <START_TIME>%s</START_TIME>\n            <STOP_TIME>%s</STOP_TIME>\n', tf(1), tf(numel(t)));
     fprintf(fid, '            <ATTITUDE_TYPE>QUATERNION/ANGVEL</ATTITUDE_TYPE>\n         </metadata>\n         <data>\n');
     fprintf(fid, ['            <COMMENT>Quaternion components are Q1, Q2, Q3, QC (scalar last): rotation body -&gt; J2000 ', ...
         '(frame transformation J2000 -&gt; body). ANGVEL: body frame, rad/s.</COMMENT>\n']);
@@ -1029,7 +1039,7 @@ function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
             '                     <Q3>%.7f</Q3>\n                     <QC>%.7f</QC>\n                  </quaternion>\n', ...
             '                  <angVel>\n                     <ANGVEL_X>%.9f</ANGVEL_X>\n                     <ANGVEL_Y>%.9f</ANGVEL_Y>\n', ...
             '                     <ANGVEL_Z>%.9f</ANGVEL_Z>\n                  </angVel>\n               </quaternionAngVel>\n', ...
-            '            </attitudeState>\n'], tf(t(i)), q(i, 1), q(i, 2), q(i, 3), q(i, 4), w(i, 1), w(i, 2), w(i, 3));
+            '            </attitudeState>\n'], tf(i), q(i, 1), q(i, 2), q(i, 3), q(i, 4), w(i, 1), w(i, 2), w(i, 3));
     end
     fprintf(fid, '         </data>\n      </segment>\n   </body>\n</aem>\n');
     fclose(fid);
@@ -1375,8 +1385,11 @@ function png = make_standard_plots(out_dir, D, S, site, A, plan)
     ax = subplot(3,2,5); plot(th, D.energy); grid on; xlabel('Time [h]'); ylabel('Energy [J]'); title('Rotational Energy (body)'); pad_ylim(ax, D.energy);
     ax = subplot(3,2,6); plot(th, D.alt/1000); grid on; xlabel('Time [h]'); ylabel('Altitude [km]'); title('Altitude (END-001 orbit)'); pad_ylim(ax, D.alt/1000);
     save_png(f1, fullfile(out_dir, '01_telemetry.png'));
-    png = {'01_telemetry.png', '02_tracking.png', '03_angular_momentum.png', '04_ground_track.png', ...
-        '05_orbit_3d_ecef.png', '06_orbit_3d_eci.png'};
+    % 2026-10-19: 03 only in 'dynamics' (with the guided attitudes |H| and its direction are constant), the 3D orbit in
+    % ECEF and ECI in one figure (05, two panels; 06 is no longer written)
+    png = {'01_telemetry.png', '02_tracking.png'};
+    if strcmp(S.mode, 'dynamics'), png{end+1} = '03_angular_momentum.png'; end
+    png = [png, {'04_ground_track.png', '05_orbit_3d.png'}];
     if D.controlled
         control_figure(fullfile(out_dir, '08_attitude_control.png'), th, D, S, A, plan);
         png{end+1} = '08_attitude_control.png';
@@ -1389,12 +1402,14 @@ function png = make_standard_plots(out_dir, D, S, site, A, plan)
     subplot(3,1,3); plot(th, D.target_offset, 'LineWidth', 1.2, 'Color', [0.2 0.6 0.2]); grid on; ylabel('Target offset [deg]'); title('+Z from the target'); xlabel('Time [h]');
     save_png(f2, fullfile(out_dir, '02_tracking.png'));
 
-    f3 = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1100 750]);
-    ax = subplot(2,1,1); plot(th, D.H_mag, 'k', 'LineWidth', 1.2); title('Angular Momentum Modulus (body, wheels excluded)'); xlabel('Time [h]'); ylabel('|H| [Nms]'); grid on;
-    pad_ylim(ax, D.H_mag);
-    ax = subplot(2,1,2); plot(th, D.H_dir, 'LineWidth', 1.1); title('Angular Momentum Direction (ECI)'); xlabel('Time [h]'); ylabel('Components'); legend('H_x','H_y','H_z'); grid on;
-    pad_ylim(ax, D.H_dir);
-    save_png(f3, fullfile(out_dir, '03_angular_momentum.png'));
+    if strcmp(S.mode, 'dynamics')
+        f3 = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1100 750]);
+        ax = subplot(2,1,1); plot(th, D.H_mag, 'k', 'LineWidth', 1.2); title('Angular Momentum Modulus (body, wheels excluded)'); xlabel('Time [h]'); ylabel('|H| [Nms]'); grid on;
+        pad_ylim(ax, D.H_mag);
+        ax = subplot(2,1,2); plot(th, D.H_dir, 'LineWidth', 1.1); title('Angular Momentum Direction (ECI)'); xlabel('Time [h]'); ylabel('Components'); legend('H_x','H_y','H_z'); grid on;
+        pad_ylim(ax, D.H_dir);
+        save_png(f3, fullfile(out_dir, '03_angular_momentum.png'));
+    end
 
     % ground track (geocentric latitude of the sub-satellite point)
     r_ecef = rot_eci2ecef(D.r, D.th);
@@ -1416,25 +1431,25 @@ function png = make_standard_plots(out_dir, D, S, site, A, plan)
     title('Ground Track (END-001 orbit)'); xlabel('Longitude [deg]'); ylabel('Latitude [deg]'); grid on; axis equal; axis([-180 180 -90 90]);
     save_png(f4, fullfile(out_dir, '04_ground_track.png'));
 
+    % 3D orbit, ECEF (left) and ECI (right): each panel as the former 800 x 600 figures 05 and 06
     Re_km = S.Re/1000;
-    for frame = ["ECEF", "ECI"]
-        f = light_figure('Color', 'w', 'Visible', 'off', 'Position', [150 100 800 600]);
-        [Xs, Ys, Zs] = sphere(50);
-        surf(Xs*Re_km, Ys*Re_km, Zs*Re_km, 'FaceColor', [0.8 0.9 1], 'EdgeColor', 'none', 'FaceAlpha', 0.85); hold on; axis equal; grid on;
-        if frame == "ECEF", rr = r_ecef/1000; else, rr = D.r/1000; end
-        plot3(rr(:,1), rr(:,2), rr(:,3), 'Color', [0.6 0.6 0.6]);
+    f = light_figure('Color', 'w', 'Visible', 'off', 'Position', [150 100 1600 600]);
+    [Xs, Ys, Zs] = sphere(50);
+    frames = ["ECEF", "ECI"];
+    for j = 1:2
+        ax = subplot(1, 2, j);
+        surf(ax, Xs*Re_km, Ys*Re_km, Zs*Re_km, 'FaceColor', [0.8 0.9 1], 'EdgeColor', 'none', 'FaceAlpha', 0.85);
+        hold(ax, 'on'); axis(ax, 'equal'); grid(ax, 'on');
+        if j == 1, rr = r_ecef/1000; else, rr = D.r/1000; end
+        plot3(ax, rr(:,1), rr(:,2), rr(:,3), 'Color', [0.6 0.6 0.6]);
         for i = 1:numel(D.start_idx)
             k = D.start_idx(i):D.end_idx(i);
-            plot3(rr(k,1), rr(k,2), rr(k,3), 'Color', [0 0.8 0], 'LineWidth', 3);
+            plot3(ax, rr(k,1), rr(k,2), rr(k,3), 'Color', [0 0.8 0], 'LineWidth', 3);
         end
-        xlabel('X [km]'); ylabel('Y [km]'); zlabel('Z [km]'); view(15, 35);
-        title(sprintf('3D Orbit (%s frame, END-001 ephemeris)', frame));
-        if frame == "ECEF"
-            save_png(f, fullfile(out_dir, '05_orbit_3d_ecef.png'));
-        else
-            save_png(f, fullfile(out_dir, '06_orbit_3d_eci.png'));
-        end
+        xlabel(ax, 'X [km]'); ylabel(ax, 'Y [km]'); zlabel(ax, 'Z [km]'); view(ax, 15, 35);
+        title(ax, sprintf('3D Orbit (%s frame, END-001 ephemeris)', frames(j)));
     end
+    save_png(f, fullfile(out_dir, '05_orbit_3d.png'));
 end
 
 function pad_ylim(ax, y)
@@ -1571,8 +1586,8 @@ function f = light_figure(varargin)
 end
 
 function save_png(fig, file)
+    % no drawnow first (2026-10-19): exportgraphics renders the figure itself (see end003_aem_figures save_fig)
     try
-        drawnow;
         exportgraphics(fig, file, 'Resolution', 150, 'BackgroundColor', 'current');
     catch
         try

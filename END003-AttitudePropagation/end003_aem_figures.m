@@ -11,6 +11,7 @@ function info = end003_aem_figures(aemFile, opts)
 %     <prefix>_A_inertial_view.png      attitude at 8 epochs of the pass, fixed
 %                                       inertial view with the angular momentum H vertical
 %     <prefix>_B_view_along_H.png       same sequence seen along H, path of the tip of omega
+%                                       (only with opts.view_along_H)
 %     <prefix>_C_H_orbital_plane.png    H and omega with respect to the orbit at mid pass
 %                                       (only with opts.orbit_rv)
 %     <prefix>_D_parameters.png         quaternion, ZYX Euler angles, body angular velocity
@@ -26,6 +27,9 @@ function info = end003_aem_figures(aemFile, opts)
 %     gmst              @(ts datetime UTC) -> Greenwich sidereal angle [rad] (Earth drawing)
 %     site, site_role   ground point drawn on the Earth (struct name, lat, lon [rad], alt [m]) and its role
 %     frame_rot         3x3 rotation from the frame where ECEF = R3(GMST) x to the AEM frame (e.g. precession)
+%     view_along_H      false: no figure B (default true). STAR END-003 draws it in 'dynamics' mode only
+%                       (2026-10-19): with the guided attitudes H stays on the orbit normal and the body
+%                       turns at the orbital rate, so B repeated the sequence of A from another side
 %
 %   info.figures = struct array (file, title, caption); info.rotational_state =
 %   struct array (quantity, value); info.values = numbers of the table.
@@ -65,11 +69,13 @@ function info = end003_aem_figures(aemFile, opts)
         'Attitude every %.0f s over the pass in a fixed inertial view with the mean angular momentum H vertical. White arrow: H; ', ...
         'orange arrow: instantaneous rotation axis omega; red, green and blue arrows: body axes X, Y, Z (+Z = payload boresight); ', ...
         'white arc: sense of rotation about H.'], dt_tiles));
-    f = sprintf('%s_B_view_along_H.png', opts.prefix);
-    draw_sequence(fullfile(opts.out_dir, f), 'alongH', t, R, W, Hm, k8, stats, opts);
-    figs(end+1) = struct('file', f, 'title', 'Same sequence seen along H', 'caption', ...
-        ['Same sequence seen along H (H and omega point towards the reader): the rotation about H appears in the image plane. ', ...
-        'Orange curve: path of the tip of omega during the pass.']);
+    if opts.view_along_H
+        f = sprintf('%s_B_view_along_H.png', opts.prefix);
+        draw_sequence(fullfile(opts.out_dir, f), 'alongH', t, R, W, Hm, k8, stats, opts);
+        figs(end+1) = struct('file', f, 'title', 'Same sequence seen along H', 'caption', ...
+            ['Same sequence seen along H (H and omega point towards the reader): the rotation about H appears in the image plane. ', ...
+            'Orange curve: path of the tip of omega during the pass.']);
+    end
     if ~isempty(opts.orbit_rv)
         f = sprintf('%s_C_H_orbital_plane.png', opts.prefix);
         draw_orbit_figure(fullfile(opts.out_dir, f), ts, H, W, Hm, stats, opts);
@@ -102,7 +108,7 @@ end
 %% =========================================================================
 function opts = defaults(opts)
     d = struct('out_dir', pwd, 'prefix', 'aem', 'title', 'Attitude', 'I', eye(3), 'dims', [0.1 0.1 0.34], ...
-        'mode', '', 'orbit_rv', [], 'gmst', [], 'site', [], 'site_role', 'site', 'frame_rot', []);
+        'mode', '', 'orbit_rv', [], 'gmst', [], 'site', [], 'site_role', 'site', 'frame_rot', [], 'view_along_H', true);
     fn = fieldnames(d);
     for k = 1:numel(fn)
         if ~isfield(opts, fn{k}) || isempty(opts.(fn{k}))
@@ -727,8 +733,9 @@ function fig = new_fig(pos, colr)
 end
 
 function save_fig(fig, file)
+    % no drawnow first (2026-10-19): exportgraphics renders the figure itself; drawnow rendered it once more (a fifth of
+    % the END-003 run time) and, in batch mode, at the virtual-screen size, which squashed figures taller than the screen
     try
-        drawnow;
         exportgraphics(fig, file, 'Resolution', 110, 'BackgroundColor', 'current');
     catch
         print(fig, file, '-dpng', '-r110');
