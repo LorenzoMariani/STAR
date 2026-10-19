@@ -84,6 +84,8 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
         "form_factor_range_u": ("range", "Classi CubeSat per cui il fornitore dichiara l'unita' [min, max] in U (tools/add_adcs_form_factors.py)", False),
         "data_interfaces": ("strs", "Interfacce dati verso OBC", False),
         "supply_voltage_ranges_v": ("ranges", "Tensioni di alimentazione accettate [[min,max],...]", False),
+        "wheel_momentum_mnms": ("num", "Momento di ciascuna ruota di reazione integrata, una per asse [mN m s] (tools/add_adcs_wheels.py)", False),
+        "wheel_max_torque_mnm": ("num", "Coppia massima di ciascuna ruota integrata [mN m] (tools/add_adcs_wheels.py)", False),
     },
     # Star tracker (opzionale): accuratezza di conoscenza dell'assetto. I fornitori usano basi statistiche diverse
     # (1-sigma, 3-sigma, RMS): il valore e' riportato com'e' e la base e' dichiarata in `accuracy_basis`.

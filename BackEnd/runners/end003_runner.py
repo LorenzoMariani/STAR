@@ -135,7 +135,36 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
                                 "source": f"END-006 initial design ({sat_def.get('form_factor')}, {SPACECRAFT_NOTE})"}
     else:
         report["spacecraft"] = {"value": {k: sat.get(k) for k in ("m", "A_ref", "Ix", "Iy", "Iz")}, "source": "template (no END-006 in the workflow)"}
+    report["attitude_control"] = _apply_attitude_control(sat, sat_def)
     return report
+
+
+def _apply_attitude_control(sat: dict[str, Any], sat_def: dict[str, Any] | None) -> dict[str, Any]:
+    """Wheel limits and attitude knowledge of the PD control (sat.control) from the END-006 design (2026-10-19):
+    momentum and maximum torque of the wheels (one per body axis), knowledge error from the star tracker or from the
+    pointing accuracy of the ADCS unit; the template values stay when the design does not give them."""
+    control = sat.setdefault("control", {})
+    ac = (sat_def or {}).get("attitude_control") or {}
+    wheels = ac.get("wheels") or {}
+    if wheels.get("momentum_nms") and wheels.get("max_torque_nm"):
+        control["wheel_momentum_Nms"] = float(wheels["momentum_nms"])
+        control["wheel_torque_Nm"] = float(wheels["max_torque_nm"])
+        kind = "reaction wheel" if wheels.get("source") == "reaction_wheel" else "wheels of the ADCS unit"
+        control["wheels_source"] = f"END-006 {wheels.get('name') or wheels.get('component')} ({kind}, one per body axis)"
+    else:
+        control.setdefault("wheels_source", "END-003 template" + (" (the END-006 design gives no wheel data)" if sat_def else ""))
+    tracker = ac.get("star_tracker") or {}
+    if tracker.get("accuracy_cross_arcsec"):
+        sigma = float(tracker["accuracy_cross_arcsec"]) / 3600.0 / (3.0 if str(tracker.get("accuracy_basis")) == "3-sigma" else 1.0)
+        control["attitude_knowledge_deg"] = sigma
+        control["knowledge_source"] = f"END-006 star tracker {tracker.get('component')} (cross-axis accuracy, 1 sigma)"
+    elif ac.get("pointing_accuracy_deg"):
+        control["attitude_knowledge_deg"] = float(ac["pointing_accuracy_deg"])
+        control["knowledge_source"] = f"END-006 ADCS unit {ac.get('adcs_unit')} (declared pointing accuracy as 1-sigma knowledge error)"
+    else:
+        control.setdefault("knowledge_source", "END-003 template")
+    return {"value": {k: control.get(k) for k in ("enabled", "wheel_momentum_Nms", "wheel_torque_Nm", "attitude_knowledge_deg")},
+            "wheels_source": control.get("wheels_source"), "knowledge_source": control.get("knowledge_source")}
 
 
 def _terminate(proc: subprocess.Popen, cb: LogCallback | None) -> None:

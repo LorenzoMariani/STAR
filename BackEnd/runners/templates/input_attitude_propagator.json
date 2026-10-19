@@ -12,7 +12,17 @@
     "r_cp": [0.002, 0.002, 0.005],
     "Ix": 0.03,
     "Iy": 0.03,
-    "Iz": 0.01
+    "Iz": 0.01,
+    "control": {
+      "enabled": true,
+      "natural_frequency_rad_s": 0.1,
+      "damping": 0.9,
+      "wheel_momentum_Nms": 0.01,
+      "wheel_torque_Nm": 0.001,
+      "attitude_knowledge_deg": 0.01,
+      "rate_noise_rad_s": 1e-5,
+      "random_seed": 1
+    }
   },
   "env": {
     "Re": 6371000,

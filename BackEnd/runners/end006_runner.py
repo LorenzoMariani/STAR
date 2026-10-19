@@ -133,10 +133,39 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
                        "power_w_tx": (v.get("specs") or {}).get("power_w_tx")}
                    for k, v in chosen.items() if str(k).startswith("comms")},
         "power_unknown": totals.get("power_unknown") or [],
+        "attitude_control": attitude_control(chosen),
         "components": {k: v.get("id") for k, v in chosen.items()},
         "conventions": "body frame: +Z payload boresight (nadir), long axis of the envelope along Z; envelope X x Y x Z; "
                        "Cd and Cr are STAR defaults; area_mean_projected = surface / 4 (orientation average)",
     }
+
+
+def attitude_control(chosen: dict[str, Any]) -> dict[str, Any]:
+    """Actuators and attitude knowledge of the design for the END-003 attitude control (2026-10-19): the reaction wheels (the
+    selected wheel, otherwise the wheels integrated in the ADCS unit), one per body axis, with the momentum and the maximum
+    torque of each wheel as the vendor declares them; the pointing accuracy of the ADCS unit and the star tracker accuracy."""
+    def num(specs: dict[str, Any], key: str) -> float | None:
+        v = (specs or {}).get(key)
+        return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+    wheels = None
+    rw, adcs = chosen.get("reaction_wheel"), chosen.get("adcs")
+    if rw and num(rw.get("specs"), "momentum_mnms") and num(rw.get("specs"), "max_torque_mnm"):
+        wheels = {"source": "reaction_wheel", "component": rw.get("id"), "name": rw.get("name"), "quantity": rw.get("quantity"),
+                  "momentum_nms": num(rw["specs"], "momentum_mnms") / 1000.0, "max_torque_nm": num(rw["specs"], "max_torque_mnm") / 1000.0}
+    elif adcs and num(adcs.get("specs"), "wheel_momentum_mnms") and num(adcs.get("specs"), "wheel_max_torque_mnm"):
+        wheels = {"source": "adcs", "component": adcs.get("id"), "name": adcs.get("name"), "quantity": 3,
+                  "momentum_nms": num(adcs["specs"], "wheel_momentum_mnms") / 1000.0,
+                  "max_torque_nm": num(adcs["specs"], "wheel_max_torque_mnm") / 1000.0}
+    st = chosen.get("star_tracker")
+    tracker = None
+    if st and num(st.get("specs"), "accuracy_cross_arcsec"):
+        tracker = {"component": st.get("id"), "accuracy_cross_arcsec": num(st["specs"], "accuracy_cross_arcsec"),
+                   "accuracy_roll_arcsec": num(st["specs"], "accuracy_roll_arcsec"), "accuracy_basis": st["specs"].get("accuracy_basis")}
+    return {"wheels": wheels, "adcs_unit": adcs.get("id") if adcs else None,
+            "pointing_accuracy_deg": num(adcs.get("specs"), "pointing_accuracy_deg") if adcs else None, "star_tracker": tracker,
+            "note": "wheels: one per body axis, momentum and maximum torque of each wheel (vendor values, END-006 catalog); "
+                    "null when the design has no wheel data"}
 
 
 def design_changes(initial: dict[str, Any] | None, final: dict[str, Any]) -> list[str]:

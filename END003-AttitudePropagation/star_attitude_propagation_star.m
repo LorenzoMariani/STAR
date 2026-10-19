@@ -15,10 +15,18 @@ function star_attitude_propagation_star(configFile, outputFolder)
 %     pass in daylight over the area of interest and the first night pass
 %     visible from the observatory. END-003 computes the attitude on them.
 %   - ATTITUDE on a 1 s grid: 'nadir' (+Z to nadir, +X along track, body rate
-%     = orbital rate about the orbit normal), 'follow_site' (+Z to the target
-%     while it is above the elevation threshold, nadir otherwise, slews limited
-%     to sat.max_slew_rate_deg_s) and 'dynamics' (Euler equations + quaternion
-%     kinematics with gravity-gradient, SRP and drag torques, free motion).
+%     = rate of the orbital frame: orbital rate about the orbit normal plus the
+%     turn of the orbital plane about the radial direction), 'follow_site' (+Z
+%     to the target while it is above the elevation threshold, nadir otherwise,
+%     slews limited to sat.max_slew_rate_deg_s) and 'dynamics' (Euler equations
+%     + quaternion kinematics with gravity-gradient, SRP and drag torques, free
+%     motion).
+%   - CONTROL (2026-10-19): in 'nadir' and 'follow_site' the attitude above is
+%     the reference of a PD controller with one reaction wheel per body axis
+%     (torque and momentum limits of the END-006 wheels, attitude knowledge
+%     error from END-006), integrated with the disturbance torques: the
+%     exported attitude is the controlled one, with its pointing error
+%     (sat.control.enabled = false gives the ideal attitude as before).
 %   - OUTPUTS: the CSV of the imaging pass for END-007 / END-018 / END-004 and
 %     of the light-curve pass for END-010 on a fixed step (integer seconds,
 %     exact timestamps), selected_passes.json, the KPI catalog, the dashboard
@@ -108,17 +116,24 @@ function star_attitude_propagation_star(configFile, outputFolder)
     %% == FULL-SPAN SERIES (dashboard grid) ====================================
     td = (0:S.dash_step:T)';
     D = dashboard_series(A_img, td, S, ctx, site, eph(ki));
-    fprintf('\n--- Mean disturbance torques [Nm] (%s, whole window) ---\n', eph(ki).label);
-    fprintf('GG %.2e | SRP %.2e | Drag %.2e\n', mean(D.M(:,1)), mean(D.M(:,2)), mean(D.M(:,4)));
+    fprintf('\n--- Disturbance torques [Nm] (%s, whole window): mean of the simulated attitude | worst case over all attitudes ---\n', eph(ki).label);
+    fprintf('GG %.2e | %.2e   SRP %.2e | %.2e   Drag %.2e | %.2e\n', mean(D.M(:,1)), max(D.Mmax(:,1)), ...
+        mean(D.M(:,2)), max(D.Mmax(:,2)), mean(D.M(:,4)), max(D.Mmax(:,3)));
+    P_img = pass_control(A_img, plan.imaging.aos_t, plan.imaging.los_t);
+    if S.ctrl.enabled
+        fprintf(['Attitude control: pointing error during the imaging pass mean %.4f deg, max %.4f deg; ', ...
+            'peak wheel momentum %.1f%%, peak control torque %.1f%% of the wheel limits\n'], P_img.mean_err, P_img.max_err, ...
+            100*max(abs(A_img.h_wheel(:)))/S.ctrl.h_max, 100*max(abs(A_img.tau_control(:)))/S.ctrl.tau_max);
+    end
 
-    %% == PLOTS (01-06) ========================================================
-    make_standard_plots(results_dir, D, S, site);
+    %% == PLOTS (01-06, 08) ====================================================
+    png = make_standard_plots(results_dir, D, S, site, A_img, plan);
 
     %% == DASHBOARD DATA =======================================================
-    export_dashboard_data(results_dir, cfg, epoch, D, S, site, plan, t_img, aem);
+    export_dashboard_data(results_dir, cfg, epoch, D, S, site, plan, t_img, aem, png);
 
     %% == KPI CATALOG ==========================================================
-    export_kpis(results_dir, S, plan, D, G_img, sel_info, numel(eph));
+    export_kpis(results_dir, S, plan, D, G_img, sel_info, numel(eph), P_img);
 
     fprintf('\nEND-003 (STAR version) completed in %.1f s\n', toc(total_tic));
 end
@@ -163,9 +178,29 @@ function S = read_settings(cfg)
         error('STAR:END003:SunMode', 'Sun_Constraint_Mode must be "day" or "night".');
     end
     S.sel = read_pass_selection_config(cfg);
-    S.base_step = 1;                                  % s, attitude grid
+    S.base_step = 1;                                  % s, attitude grid (and control step)
     S.dash_step = 60;                                 % s, dashboard / whole-window plots
     S.dims = equivalent_box(S.m, S.Ivec);
+    S.ctrl = read_control_settings(sat, S);
+end
+
+function c = read_control_settings(sat, S)
+    % PD attitude control with one reaction wheel per body axis (2026-10-19) for the guided modes (nadir,
+    % follow_site). The runner writes the wheel limits and the attitude knowledge error of the END-006 design
+    % into sat.control; the values below are used when the design does not give them.
+    ct = cfg_get(sat, 'control', struct());
+    c.enabled = logical(cfg_get(ct, 'enabled', true)) && ~strcmp(S.mode, 'dynamics');
+    c.wn = cfg_get(ct, 'natural_frequency_rad_s', 0.1);
+    c.zeta = cfg_get(ct, 'damping', 0.9);
+    c.Kp = 2*c.wn^2*S.Ivec;                           % small angles, per axis: I th'' = -Kp th/2 - Kd th'
+    c.Kd = 2*c.zeta*c.wn*S.Ivec;
+    c.h_max = cfg_get(ct, 'wheel_momentum_Nms', 0.01);
+    c.tau_max = cfg_get(ct, 'wheel_torque_Nm', 0.001);
+    c.wheels_source = char(cfg_get(ct, 'wheels_source', 'END-003 template'));
+    c.sigma_att = deg2rad(cfg_get(ct, 'attitude_knowledge_deg', 0.01));
+    c.knowledge_source = char(cfg_get(ct, 'knowledge_source', 'END-003 template'));
+    c.sigma_rate = cfg_get(ct, 'rate_noise_rad_s', 1e-5);
+    c.seed = cfg_get(ct, 'random_seed', 1);
 end
 
 function sel = read_pass_selection_config(cfg)
@@ -293,9 +328,10 @@ function ts = parse_utc(s)
     if any(frac), ts(frac) = datetime(s(frac), 'InputFormat', 'yyyy-MM-dd HH:mm:ss.SSS'); end
 end
 
-function [r, v] = eph_eval(E, t)
+function [r, v, a] = eph_eval(E, t)
     % Cubic Hermite interpolation of the END-001 ephemeris (positions and
-    % tabulated velocities), uniform grid. r [m], v [m/s], rows = times.
+    % tabulated velocities), uniform grid. r [m], v [m/s], a [m/s^2] (derivatives
+    % of the interpolant), rows = times.
     t = t(:);
     h = E.h;
     nn = size(E.r, 1);
@@ -308,6 +344,9 @@ function [r, v] = eph_eval(E, t)
     r = (2*u3 - 3*u2 + 1).*p0 + (u3 - 2*u2 + u).*m0 + (-2*u3 + 3*u2).*p1 + (u3 - u2).*m1;
     if nargout > 1
         v = ((6*u2 - 6*u).*p0 + (3*u2 - 4*u + 1).*m0 + (-6*u2 + 6*u).*p1 + (3*u2 - 2*u).*m1)/h;
+    end
+    if nargout > 2
+        a = ((12*u - 6).*p0 + (6*u - 4).*m0 + (-12*u + 6).*p1 + (6*u - 2).*m1)/h^2;
     end
 end
 
@@ -453,14 +492,14 @@ end
 %  ATTITUDE
 %  =========================================================================
 function A = attitude_history(E, tb, S, ctx, site)
-    [r, v] = eph_eval(E, tb);
+    [r, v, acc] = eph_eval(E, tb);
     n = numel(tb);
     A.t = tb; A.r = r; A.v = v; A.qnorm_drift = zeros(n, 1);
     switch S.mode
         case 'nadir'
             [xb, yb, zb] = nadir_axes(r, v);
             A.q = continuous_sign(axes2quat(xb, yb, zb));
-            w_eci = cross(r, v, 2)./sum(r.^2, 2);      % rate of the orbital frame
+            w_eci = nadir_frame_rate(r, v, acc);
             A.w = [sum(xb.*w_eci, 2), sum(yb.*w_eci, 2), sum(zb.*w_eci, 2)];
         case 'follow_site'
             th = gmst_rad(ctx.jd0 + tb/86400);
@@ -506,6 +545,14 @@ function A = attitude_history(E, tb, S, ctx, site)
             A.q = continuous_sign(Y(:, 1:4)./qn);
             A.w = Y(:, 5:7);
     end
+    A.controlled = S.ctrl.enabled;
+    if A.controlled
+        A = closed_loop(A, E, S, ctx);
+    else                                                % ideal attitude: on the reference, no wheels
+        A.q_ref = A.q; A.w_ref = A.w;
+        A.h_wheel = zeros(n, 3); A.tau_control = zeros(n, 3); A.tau_dist = zeros(n, 3);
+        A.wheel_limited = false(n, 1); A.pointing_error = zeros(n, 1); A.attitude_error = zeros(n, 1);
+    end
 end
 
 function [xb, yb, zb] = nadir_axes(r, v)
@@ -513,6 +560,115 @@ function [xb, yb, zb] = nadir_axes(r, v)
     xb = v - sum(v.*zb, 2).*zb; xb = xb./vecnorm(xb, 2, 2);
     yb = cross(zb, xb, 2); yb = yb./vecnorm(yb, 2, 2);
     xb = cross(yb, zb, 2);
+end
+
+function w = nadir_frame_rate(r, v, a)
+    % Angular velocity (inertial) of the nadir frame (+Z = -r, +X along track, +Y = -orbit normal) on a
+    % trajectory with acceleration a: |h|/r^2 about the orbit normal and r (a.h)/|h|^2 about the radial
+    % direction, the turn of the orbital plane (J2: ~1e-6 rad/s in LEO). Until 2026-10-19 only the first
+    % term was used, so the body rate did not match the quaternions (0.1% of the orbital rate, on body Z).
+    h = cross(r, v, 2);
+    hm2 = sum(h.^2, 2);
+    rm = vecnorm(r, 2, 2);
+    w = h./rm.^2 + (sum(a.*h, 2)./hm2).*r;
+end
+
+function A = closed_loop(A, E, S, ctx)
+    % PD attitude control with one reaction wheel per body axis (2026-10-19). The guidance attitude (A.q,
+    % A.w) becomes the reference, tracked with
+    %   tau = -Kp qe - Kd (w_m - Ce' w_ref) + w_m x (I w_m + h) + I Ce' dw_ref/dt
+    % qe = vector part of q_ref^-1 q_m (scalar part >= 0), Ce = R(qe) body -> reference, Kp = 2 wn^2 I,
+    % Kd = 2 zeta wn I. The measured attitude q_m and rate w_m carry a white knowledge error (sigma_att per
+    % axis, sigma_rate). The command is held over the 1 s step and limited by the wheels: |tau| <= tau_max
+    % per axis, wheel momentum h within +-h_max (no momentum dumping: magnetorquers not modelled). The rigid
+    % body, I w' = tau + M_dist - w x (I w + h), h' = -tau, is integrated with RK4 over each step, with the
+    % disturbance torques (GG, SRP, drag) of the attitude at the start of the step.
+    c = S.ctrl;
+    n = numel(A.t);
+    dt = S.base_step;
+    q_ref = A.q; w_ref = A.w;
+    wd_ref = zeros(n, 3);
+    wd_ref(2:end-1, :) = (w_ref(3:end, :) - w_ref(1:end-2, :))/(2*dt);
+    Sun = sun_vectors_eci(ctx.jd0 + A.t/86400);
+    rho = zeros(n, 1);
+    if S.flags.drag
+        rho_t = unique([(0:60:A.t(end))'; A.t(end)]);
+        rho = interp1(rho_t, density_table(E, rho_t, ctx), A.t);
+    end
+    rs = RandStream('mt19937ar', 'Seed', c.seed);
+    e_att = c.sigma_att*randn(rs, n, 3);
+    e_rate = c.sigma_rate*randn(rs, n, 3);
+    I = S.I; invI = S.invI;
+    q = q_ref(1, :)'; w = w_ref(1, :)'; h = zeros(3, 1);
+    Q = zeros(n, 4); W = zeros(n, 3); Hw = zeros(n, 3); Tc = zeros(n, 3); Td = zeros(n, 3);
+    limited = false(n, 1);
+    for k = 1:n
+        Q(k, :) = q'; W(k, :) = w'; Hw(k, :) = h';
+        M = end003_disturbance_torques(A.r(k, :)', A.v(k, :)', qdcm(q'), Sun(k, :)', rho(k), S);
+        td = M(:, 1) + M(:, 2) + M(:, 4);
+        ea = 0.5*e_att(k, :)';
+        qm = qmul(q, [ea; sqrt(1 - ea'*ea)]);         % measured attitude: true one rotated by the knowledge error
+        wm = w + e_rate(k, :)';
+        qr = q_ref(k, :)';
+        qe = qmul([-qr(1:3); qr(4)], qm);
+        if qe(4) < 0, qe = -qe; end
+        Ce = qdcm(qe');
+        tau = -c.Kp.*qe(1:3) - c.Kd.*(wm - Ce'*w_ref(k, :)') + cross3(wm, I*wm + h) + I*(Ce'*wd_ref(k, :)');
+        lo = max(-c.tau_max, (h - c.h_max)/dt);       % h' = -tau: |h| <= h_max at the end of the step
+        hi = min(c.tau_max, (h + c.h_max)/dt);
+        tc = min(max(tau, lo), hi);
+        limited(k) = any(tc ~= tau);
+        Tc(k, :) = tc'; Td(k, :) = td';
+        if k < n
+            [q, w, h] = rk4_body(q, w, h, tc, td, I, invI, dt);
+        end
+    end
+    A.q_ref = q_ref; A.w_ref = w_ref;
+    A.q = continuous_sign(Q); A.w = W;
+    A.h_wheel = Hw; A.tau_control = Tc; A.tau_dist = Td; A.wheel_limited = limited;
+    A.pointing_error = angle_deg(quat_rotate(A.q, [0 0 1]), quat_rotate(q_ref, [0 0 1]));   % +Z (payload) from its reference
+    A.attitude_error = 2*acosd(min(1, abs(sum(A.q.*q_ref, 2))));                            % three-axis error angle
+end
+
+function [q, w, h] = rk4_body(q, w, h, tc, td, I, invI, dt)
+    % One RK4 step of the rigid body with wheels, control and disturbance torques held over the step.
+    h2 = h - 0.5*dt*tc;
+    h3 = h - dt*tc;
+    [dq1, dw1] = body_rhs(q, w, h, tc, td, I, invI);
+    [dq2, dw2] = body_rhs(q + 0.5*dt*dq1, w + 0.5*dt*dw1, h2, tc, td, I, invI);
+    [dq3, dw3] = body_rhs(q + 0.5*dt*dq2, w + 0.5*dt*dw2, h2, tc, td, I, invI);
+    [dq4, dw4] = body_rhs(q + dt*dq3, w + dt*dw3, h3, tc, td, I, invI);
+    q = q + dt/6*(dq1 + 2*dq2 + 2*dq3 + dq4);
+    q = q/norm(q);
+    w = w + dt/6*(dw1 + 2*dw2 + 2*dw3 + dw4);
+    h = h3;
+end
+
+function [dq, dw] = body_rhs(q, w, h, tc, td, I, invI)
+    dq = 0.5*[q(4)*w + cross3(q(1:3), w); -q(1:3)'*w];
+    dw = invI*(tc + td - cross3(w, I*w + h));
+end
+
+function c = cross3(a, b)
+    c = [a(2)*b(3) - a(3)*b(2); a(3)*b(1) - a(1)*b(3); a(1)*b(2) - a(2)*b(1)];
+end
+
+function q = qmul(a, b)
+    % Hamilton product a x b of column quaternions [x y z w] (R(a x b) = R(a) R(b)).
+    q = [a(4)*b(1:3) + b(4)*a(1:3) + cross3(a(1:3), b(1:3)); a(4)*b(4) - a(1:3)'*b(1:3)];
+end
+
+function P = pass_control(A, t0, t1)
+    % Pointing error (+Z from its reference) and wheel use over [t0, t1] on the 1 s grid.
+    k = A.t >= t0 & A.t <= t1;
+    if ~any(k), [~, j] = min(abs(A.t - 0.5*(t0 + t1))); k(j) = true; end
+    P.mean_err = mean(A.pointing_error(k));
+    P.max_err = max(A.pointing_error(k));
+    P.rms_err = sqrt(mean(A.pointing_error(k).^2));
+    P.max_att_err = max(A.attitude_error(k));
+    P.t = A.t(k);
+    P.err = A.pointing_error(k);
+    P.tau = A.tau_control(k, :);
 end
 
 function q = axes2quat(xb, yb, zb)
@@ -580,7 +736,7 @@ function dY = attitude_rhs(t, Y, S, E, ctx, rho_t, rho)
     [r, v] = eph_eval(E, t);
     Sun = sun_vectors_eci(ctx.jd0 + t/86400);
     rhot = interp_lin(rho_t, rho, t);
-    M = disturbance_torques(r(:), v(:), qdcm(q'), Sun(:), rhot, S);
+    M = end003_disturbance_torques(r(:), v(:), qdcm(q'), Sun(:), rhot, S);
     dw = S.invI*(M(:,1) + M(:,2) + M(:,4) - cross(w, S.I*w));
     dq = 0.5*[q(4)*w + cross(q(1:3), w); -dot(q(1:3), w)];
     dY = [dq; dw];
@@ -591,23 +747,6 @@ function y = interp_lin(x, v, t)
     i = min(max(floor((t - x(1))/h) + 1, 1), numel(x) - 1);
     u = (t - x(i))/h;
     y = v(i)*(1 - u) + v(i + 1)*u;
-end
-
-function M = disturbance_torques(r, v, A, Sun, rho, S)
-    % Columns: gravity gradient, SRP, (magnetic: not modelled), drag, 0, 0.
-    M = zeros(3, 6);
-    rm = norm(r);
-    if S.flags.gg
-        rb = A'*r;
-        M(:, 1) = 3*S.mu/rm^5*cross(rb, S.I*rb);
-    end
-    if S.flags.srp && dot(Sun, r/rm) >= -sqrt(1 - (S.Re/rm)^2)
-        M(:, 2) = cross(S.r_cp, -S.P_sun*S.A_ref*S.Cr*(A'*Sun));
-    end
-    if S.flags.drag && rho > 0
-        v_rel = A'*(v - cross([0; 0; 7.2921150e-5], r));
-        M(:, 4) = cross(S.r_cp, -0.5*rho*S.Cd*S.A_ref*norm(v_rel)*v_rel);
-    end
 end
 
 function rho = density_table(E, t, ctx)
@@ -638,6 +777,7 @@ function G = pass_geometry(A, t, S, ctx, site)
     idx = round(t/S.base_step) + 1;
     G.t = t;
     G.r = A.r(idx, :); G.v = A.v(idx, :); G.q = A.q(idx, :); G.w = A.w(idx, :);
+    G.pointing_error = A.pointing_error(idx);
     th = gmst_rad(ctx.jd0 + t/86400);
     [p, up] = geodetic_ecef(site.lat, site.lon, site.alt);
     G.el = elevation_deg(rot_eci2ecef(G.r, th), p, up);
@@ -695,7 +835,7 @@ function a = make_aem_and_figures(key, label, E, A, t, S, ctx, product_dir, resu
     % AEM in J2000: STAR frame (ECEF = R3(GMST) x) -> J2000 with the IAU-76
     % precession at the middle of the pass (constant over a pass to 1e-8 rad)
     M = to_j2000(ctx.jd0 + mean(t([1 end]))/86400);
-    write_aem(file, E.label, sprintf('STAR-%s', E.label), ctx.epoch, t, rotate_quat(M, A.q(idx, :)), A.w(idx, :), S.mode, label);
+    write_aem(file, E.label, sprintf('STAR-%s', E.label), ctx.epoch, t, rotate_quat(M, A.q(idx, :)), A.w(idx, :), mode_text(S), label);
     fprintf('AEM saved: %s (%d states, %g s step)\n', name, numel(t), t(2) - t(1));
     opts = struct();
     opts.out_dir = results_dir;
@@ -728,7 +868,7 @@ function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
     fprintf(fid, '      <MESSAGE_ID>STAR-END003</MESSAGE_ID>\n');
     fprintf(fid, '   </header>\n   <body>\n      <segment>\n         <metadata>\n');
     fprintf(fid, '            <COMMENT>Attitude of spacecraft body frame relative to inertial frame.</COMMENT>\n');
-    fprintf(fid, '            <COMMENT>%s; STAR END-003 attitude mode: %s; orbit: END-001 ephemeris.</COMMENT>\n', xml_escape(label), mode);
+    fprintf(fid, '            <COMMENT>%s; STAR END-003 attitude mode: %s; orbit: END-001 ephemeris.</COMMENT>\n', xml_escape(label), xml_escape(mode));
     fprintf(fid, ['            <COMMENT>J2000: STAR inertial frame (ECEF = R3(GMST) x inertial, the frame of the END-001 ephemerides) ', ...
         'rotated with the IAU-76 precession; nutation (&lt; 0.005 deg) neglected.</COMMENT>\n']);
     fprintf(fid, '            <OBJECT_NAME>%s</OBJECT_NAME>\n', xml_escape(obj_name));
@@ -777,6 +917,16 @@ function [r, v] = rv_j2000(E, t, M)
     r = r*M'; v = v*M';
 end
 
+function s = mode_text(S)
+    if S.ctrl.enabled
+        s = sprintf('%s, closed-loop PD control with reaction wheels (%s)', S.mode, S.ctrl.wheels_source);
+    elseif strcmp(S.mode, 'dynamics')
+        s = 'dynamics (free motion)';
+    else
+        s = sprintf('%s, ideal attitude (no control model)', S.mode);
+    end
+end
+
 function s = xml_escape(s)
     s = strrep(strrep(strrep(char(s), '&', '&amp;'), '<', '&lt;'), '>', '&gt;');
 end
@@ -796,7 +946,7 @@ function info = export_selected_passes(product_dir, results_dir, plan, S, epoch,
     P.generated_at = char(string(datetime('now', 'TimeZone', 'UTC'), 'yyyy-MM-dd HH:mm:ss'));
     P.simulation = struct('start_utc', utc_str(epoch, 0), 'hours', eph(1).t(end)/3600, 'attitude_mode', S.mode, ...
         'orbit_source', 'END-001 ephemeris (satellite_NN_ephemeris.csv), no propagation in END-003', ...
-        'ephemeris_step_s', eph(1).h, 'attitude_step_s', S.base_step);
+        'ephemeris_step_s', eph(1).h, 'attitude_step_s', S.base_step, 'attitude', mode_text(S));
     P.constellation = struct('n_satellites', plan.n_satellites, 'source', 'END-001 constellation_optimizer_output.csv + satellite_NN_ephemeris.csv');
 
     c = plan.imaging.cand;
@@ -979,16 +1129,19 @@ function D = dashboard_series(A, td, S, ctx, site, E)
     D.target_offset = angle_deg(zb, p_eci - D.r);
     Sun = sun_vectors_eci(ctx.jd0 + td/86400);
     D.sunlit = sunlit_flags(D.r, Sun, S.Re);
-    if S.flags.drag
-        rho = density_table(E, td, ctx);
-    else
-        rho = zeros(n, 1);
-    end
+    rho = density_table(E, td, ctx);                   % also with drag off: worst-case drag torque (sizing)
     D.M = zeros(n, 6);
+    D.Mmax = zeros(n, 3);
     for i = 1:n
-        M = disturbance_torques(D.r(i, :)', D.v(i, :)', qdcm(D.q(i, :)), Sun(i, :)', rho(i), S);
+        [M, D.Mmax(i, :)] = end003_disturbance_torques(D.r(i, :)', D.v(i, :)', qdcm(D.q(i, :)), Sun(i, :)', rho(i), S);
         D.M(i, :) = vecnorm(M, 2, 1);
     end
+    D.controlled = A.controlled;
+    D.pointing_error = A.pointing_error(idx);
+    D.attitude_error = A.attitude_error(idx);
+    D.h_wheel = A.h_wheel(idx, :);
+    D.tau_control = A.tau_control(idx, :);
+    D.wheel_limited_frac = mean(A.wheel_limited);
     D.eul = quat2eul([D.q(:, 4), D.q(:, 1:3)], 'ZYX');
     D.H_body = D.w.*S.Ivec';
     D.H_mag = vecnorm(D.H_body, 2, 2);
@@ -1004,29 +1157,43 @@ function D = dashboard_series(A, td, S, ctx, site, E)
     D.face_illum = mean(cosf(D.sunlit, :), 1);
 end
 
-function make_standard_plots(out_dir, D, S, site)
+function png = make_standard_plots(out_dir, D, S, site, A, plan)
     set(groot, 'DefaultFigureColor', 'w'); set(groot, 'DefaultAxesColor', 'w');
     set(groot, 'DefaultAxesXColor', 'k'); set(groot, 'DefaultAxesYColor', 'k'); set(groot, 'DefaultAxesZColor', 'k');
     set(groot, 'DefaultTextColor', 'k'); set(groot, 'DefaultLegendColor', 'w'); set(groot, 'DefaultLegendTextColor', 'k');
     th = D.t/3600;
+    % 2026-10-19: y limits with a margin (constant series such as the nadir body rate lay on the axes border and
+    % the panels looked empty); torques: simulated attitude (solid) and worst case over all attitudes (dashed),
+    % log axis fitted to the data (the fixed 1e-15..1e-4 range hid the ~1e-22 rounding of the nadir equilibrium)
     f1 = light_figure('Color', [0.94 0.94 0.94], 'Visible', 'off', 'Position', [100 100 1200 900]);
-    subplot(3,2,1); plot(th, rad2deg(D.w)); grid on; xlabel('Time [h]'); ylabel('Angular velocity [deg/s]'); title('Angular Velocity (body)'); legend('\omega_x','\omega_y','\omega_z');
-    subplot(3,2,2); plot(th, rad2deg(D.eul)); grid on; xlabel('Time [h]'); ylabel('Euler angles [deg]'); title('Euler Angles (ZYX)'); legend('Z','Y','X');
-    subplot(3,2,3); plot(th, D.M(:, [1 2 4])); grid on; xlabel('Time [h]'); ylabel('Torque [Nm]'); title('Disturbance Torques'); legend('GG','SRP','Drag');
-    subplot(3,2,4); semilogy(th, D.M(:, [1 2 4]) + 1e-25); grid on; xlabel('Time [h]'); ylabel('Torque [Nm]'); title('Disturbance Torques (log)'); ylim([1e-15 1e-4]); legend('GG','SRP','Drag');
-    subplot(3,2,5); plot(th, D.energy); grid on; xlabel('Time [h]'); ylabel('Energy [J]'); title('Rotational Energy');
-    subplot(3,2,6); plot(th, D.alt/1000); grid on; xlabel('Time [h]'); ylabel('Altitude [km]'); title('Altitude (END-001 orbit)');
+    ax = subplot(3,2,1); plot(th, rad2deg(D.w)); grid on; xlabel('Time [h]'); ylabel('Angular velocity [deg/s]');
+    title('Angular Velocity (body)'); legend('\omega_x','\omega_y','\omega_z', 'Location', 'best'); pad_ylim(ax, rad2deg(D.w));
+    ax = subplot(3,2,2); plot(th, rad2deg(D.eul)); grid on; xlabel('Time [h]'); ylabel('Euler angles [deg]');
+    title('Euler Angles (ZYX)'); legend('Z','Y','X', 'Location', 'best'); pad_ylim(ax, rad2deg(D.eul));
+    torque_axes(subplot(3,2,3), th, D, S, false);
+    torque_axes(subplot(3,2,4), th, D, S, true);
+    ax = subplot(3,2,5); plot(th, D.energy); grid on; xlabel('Time [h]'); ylabel('Energy [J]'); title('Rotational Energy (body)'); pad_ylim(ax, D.energy);
+    ax = subplot(3,2,6); plot(th, D.alt/1000); grid on; xlabel('Time [h]'); ylabel('Altitude [km]'); title('Altitude (END-001 orbit)'); pad_ylim(ax, D.alt/1000);
     save_png(f1, fullfile(out_dir, '01_telemetry.png'));
+    png = {'01_telemetry.png', '02_tracking.png', '03_angular_momentum.png', '04_ground_track.png', ...
+        '05_orbit_3d_ecef.png', '06_orbit_3d_eci.png'};
+    if D.controlled
+        control_figure(fullfile(out_dir, '08_attitude_control.png'), th, D, S, A, plan);
+        png{end+1} = '08_attitude_control.png';
+    end
 
     f2 = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1100 850]);
     subplot(3,1,1); plot(th, D.el, 'LineWidth', 1.2); grid on; ylabel('Elevation [deg]'); title(sprintf('Elevation over %s', site.name));
-    subplot(3,1,2); plot(th, D.offset, 'LineWidth', 1.2, 'Color', [0.85 0.33 0.1]); grid on; ylabel('Nadir offset [deg]'); title('+Z from nadir');
+    ax = subplot(3,1,2); plot(th, D.offset, 'LineWidth', 1.2, 'Color', [0.85 0.33 0.1]); grid on; ylabel('Nadir offset [deg]'); title('+Z from nadir');
+    pad_ylim(ax, D.offset);
     subplot(3,1,3); plot(th, D.target_offset, 'LineWidth', 1.2, 'Color', [0.2 0.6 0.2]); grid on; ylabel('Target offset [deg]'); title('+Z from the target'); xlabel('Time [h]');
     save_png(f2, fullfile(out_dir, '02_tracking.png'));
 
     f3 = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1100 750]);
-    subplot(2,1,1); plot(th, D.H_mag, 'k', 'LineWidth', 1.2); title('Angular Momentum Modulus'); xlabel('Time [h]'); ylabel('|H| [Nms]'); grid on;
-    subplot(2,1,2); plot(th, D.H_dir, 'LineWidth', 1.1); title('Angular Momentum Direction (ECI)'); xlabel('Time [h]'); ylabel('Components'); legend('H_x','H_y','H_z'); grid on;
+    ax = subplot(2,1,1); plot(th, D.H_mag, 'k', 'LineWidth', 1.2); title('Angular Momentum Modulus (body, wheels excluded)'); xlabel('Time [h]'); ylabel('|H| [Nms]'); grid on;
+    pad_ylim(ax, D.H_mag);
+    ax = subplot(2,1,2); plot(th, D.H_dir, 'LineWidth', 1.1); title('Angular Momentum Direction (ECI)'); xlabel('Time [h]'); ylabel('Components'); legend('H_x','H_y','H_z'); grid on;
+    pad_ylim(ax, D.H_dir);
     save_png(f3, fullfile(out_dir, '03_angular_momentum.png'));
 
     % ground track (geocentric latitude of the sub-satellite point)
@@ -1070,6 +1237,127 @@ function make_standard_plots(out_dir, D, S, site)
     end
 end
 
+function pad_ylim(ax, y)
+    % Y limits with a margin, also for constant series (a constant line on the axes border looked like an empty panel).
+    y = y(isfinite(y));
+    if isempty(y), return; end
+    lo = min(y); hi = max(y);
+    m = max(abs([lo hi]));
+    pad = max(0.08*(hi - lo), 1e-3*m);
+    if pad == 0, pad = 1; end
+    ylim(ax, [lo - pad, hi + pad]);
+    if m > 0 && (m < 1e-2 || m >= 1e5)                % values in the tick labels: the x10^n label overlapped the title
+        ax.YAxis.Exponent = 0;
+        ytickformat(ax, '%.3g');
+    end
+end
+
+function torque_axes(ax, th, D, S, logscale)
+    % Disturbance torques of the simulated attitude (solid, models switched on) and, on the log axis, their worst
+    % case over all attitudes (dashed, every model: sizing of the wheels).
+    names = {'GG', 'SRP', 'Drag'};
+    on = [S.flags.gg, S.flags.srp, S.flags.drag];
+    cols = [0 0.447 0.741; 0.85 0.325 0.098; 0.466 0.674 0.188];
+    act = D.M(:, [1 2 4]);
+    hold(ax, 'on'); grid(ax, 'on'); box(ax, 'on');
+    if logscale, set(ax, 'YScale', 'log'); end
+    hs = gobjects(0); lab = {};
+    for j = 1:3
+        y = act(:, j);
+        if logscale, y(y <= 0) = NaN; end
+        if on(j)
+            hs(end+1) = plot(ax, th, y, '-', 'Color', cols(j, :), 'LineWidth', 1.1); %#ok<AGROW>
+            lab{end+1} = names{j}; %#ok<AGROW>
+        end
+        if logscale && any(D.Mmax(:, j) > 0)
+            ym = D.Mmax(:, j); ym(ym <= 0) = NaN;
+            hs(end+1) = plot(ax, th, ym, '--', 'Color', cols(j, :), 'LineWidth', 1.1); %#ok<AGROW>
+            lab{end+1} = sprintf('%s worst case%s', names{j}, ternary(on(j), '', ' (model off)')); %#ok<AGROW>
+        end
+    end
+    xlabel(ax, 'Time [h]'); ylabel(ax, 'Torque [Nm]');
+    off = names(~on);
+    if logscale
+        title(ax, 'Disturbance Torques (log): simulated attitude and worst case');
+        v = [act(act > 0); D.Mmax(D.Mmax > 0)];
+        if ~isempty(v)
+            e = [floor(log10(min(v)) - 0.3), ceil(log10(max(v)) + 0.3)];   % no series on the axes border
+            ylim(ax, 10.^e);
+        end
+    else
+        title(ax, ['Disturbance Torques (simulated attitude)' ternary(isempty(off), '', [', off: ' strjoin(off, ', ')])]);
+        pad_ylim(ax, act(:, on));
+    end
+    if ~isempty(hs), legend(ax, hs, lab, 'Location', 'best', 'FontSize', 7); end
+    if ~any(act(:, on) > 0, 'all')
+        why = {};
+        if on(1) && ~D.controlled, why{end+1} = 'ideal pointing on the principal axes is a gravity-gradient equilibrium'; end
+        if any(on(2:3)) && norm(S.r_cp) == 0, why{end+1} = 'r_cp = 0 (no SRP/drag lever arm)'; end
+        text(ax, 0.02, 0.08, ['Simulated attitude: zero torque' ternary(isempty(why), '', [' (' strjoin(why, '; ') ')'])], ...
+            'Units', 'normalized', 'FontSize', 8, 'Color', [0.3 0.3 0.3], 'Interpreter', 'none');
+    end
+end
+
+function control_figure(file, th, D, S, A, plan)
+    % Closed-loop attitude control: pointing error, control torque and wheel momentum against the wheel limits.
+    c = S.ctrl;
+    P = pass_control(A, plan.imaging.aos_t, plan.imaging.los_t);
+    tp = P.t - P.t(1);
+    f = light_figure('Color', 'w', 'Visible', 'off', 'Position', [100 100 1300 950]);
+    tl = tiledlayout(f, 3, 2, 'TileSpacing', 'compact', 'Padding', 'compact');
+    ax = nexttile(tl); hold(ax, 'on'); grid(ax, 'on'); box(ax, 'on');
+    plot(ax, th, D.pointing_error, 'Color', [0.85 0.33 0.1], 'LineWidth', 1.1);
+    plot(ax, th, D.attitude_error, ':', 'Color', [0.3 0.3 0.3], 'LineWidth', 1.1);
+    legend(ax, '+Z (payload) from its reference', 'three-axis attitude error', 'Location', 'best', 'FontSize', 8);
+    xlabel(ax, 'Time [h]'); ylabel(ax, 'Error [deg]'); title(ax, 'Pointing error, whole window (60 s samples)');
+    pad_ylim(ax, [D.pointing_error; D.attitude_error]);
+    ax = nexttile(tl); grid(ax, 'on'); box(ax, 'on'); hold(ax, 'on');
+    plot(ax, tp, P.err, 'Color', [0.85 0.33 0.1], 'LineWidth', 1.1);
+    xlabel(ax, 'Time from the start of the imaging pass [s]'); ylabel(ax, 'Error [deg]');
+    title(ax, sprintf('Pointing error during the imaging pass (1 s): mean %.4f, max %.4f deg', P.mean_err, P.max_err));
+    pad_ylim(ax, P.err);
+    limit_axes(nexttile(tl), th, 1e3*D.tau_control, 1e3*c.tau_max, 'Time [h]', 'Control torque [mN m]', ...
+        'Control torque, whole window (60 s samples)');
+    limit_axes(nexttile(tl), th, 1e3*D.h_wheel, 1e3*c.h_max, 'Time [h]', 'Wheel momentum [mN m s]', ...
+        'Wheel momentum (no momentum dumping modelled)');
+    limit_axes(nexttile(tl), tp, 1e3*P.tau, 1e3*c.tau_max, 'Time from the start of the imaging pass [s]', ...
+        'Control torque [mN m]', 'Control torque during the imaging pass (1 s)');
+    ax = nexttile(tl); axis(ax, 'off');
+    txt = {
+        'PD control, one reaction wheel per body axis'
+        sprintf('natural frequency %.3g rad/s, damping %.2f', c.wn, c.zeta)
+        sprintf('Kp = [%s] N m, Kd = [%s] N m s', num2str(c.Kp', '%.3g '), num2str(c.Kd', '%.3g '))
+        sprintf('wheels: %.3g mN m s, %.3g mN m per axis', 1e3*c.h_max, 1e3*c.tau_max)
+        ['  from ' c.wheels_source]
+        sprintf('attitude knowledge error %.3g deg (1 sigma per axis), rate noise %.2g rad/s', rad2deg(c.sigma_att), c.sigma_rate)
+        ['  from ' c.knowledge_source]
+        ''
+        sprintf('imaging pass: pointing error mean %.4f, RMS %.4f, max %.4f deg', P.mean_err, P.rms_err, P.max_err)
+        sprintf('whole window: pointing error RMS %.4f deg', sqrt(mean(A.pointing_error.^2)))
+        sprintf('peak wheel momentum %.2f%%, peak control torque %.2f%% of the limits', ...
+            100*max(abs(A.h_wheel(:)))/c.h_max, 100*max(abs(A.tau_control(:)))/c.tau_max)
+        sprintf('wheel limits active %.2f%% of the time', 100*mean(A.wheel_limited))};
+    text(ax, 0, 1, txt, 'Units', 'normalized', 'VerticalAlignment', 'top', 'FontSize', 9, 'Interpreter', 'none');
+    title(tl, sprintf('Attitude control (%s mode)', strrep(S.mode, '_', ' ')));
+    save_png(f, file);
+end
+
+function limit_axes(ax, x, y, lim, xl, yl, ttl)
+    % Per-axis series with the +-limit drawn when the series reaches a visible fraction of it.
+    hold(ax, 'on'); grid(ax, 'on'); box(ax, 'on');
+    plot(ax, x, y, 'LineWidth', 1);
+    peak = max(abs(y(:)));
+    names = {'x', 'y', 'z'};
+    if peak > 0.2*lim
+        yline(ax, [-lim lim], '--k');
+        names = [names, {'limit'}];
+    end
+    legend(ax, names, 'Location', 'best', 'FontSize', 8);
+    xlabel(ax, xl); ylabel(ax, yl);
+    title(ax, sprintf('%s: peak %.3g (limit %.3g)', ttl, peak, lim));
+    pad_ylim(ax, [y(:); ternary(peak > 0.2*lim, [-lim; lim], [])]);
+end
+
 function f = light_figure(varargin)
     % Light theme whatever the desktop theme (R2025a+), keeping the requested colour.
     f = figure(varargin{:});
@@ -1095,7 +1383,7 @@ function save_png(fig, file)
     close(fig);
 end
 
-function export_dashboard_data(out_dir, cfg, epoch, D, S, site, plan, t_img, aem)
+function export_dashboard_data(out_dir, cfg, epoch, D, S, site, plan, t_img, aem, png)
     r_eci_km = D.r/1000;
     r_ecef_m = rot_eci2ecef(D.r, D.th);
     r_ecef_km = r_ecef_m/1000;
@@ -1125,7 +1413,12 @@ function export_dashboard_data(out_dir, cfg, epoch, D, S, site, plan, t_img, aem
     db.time_h = D.t/3600;
     db.angular_velocity_deg_s = rad2deg(D.w);
     db.euler_angles_deg = rad2deg(D.eul);
-    db.torques = struct('gravity_gradient_Nm', D.M(:,1), 'solar_radiation_pressure_Nm', D.M(:,2), 'drag_Nm', D.M(:,4));
+    db.torques = struct('gravity_gradient_Nm', D.M(:,1), 'solar_radiation_pressure_Nm', D.M(:,2), 'drag_Nm', D.M(:,4), ...
+        'models_on', S.flags, 'worst_case', struct('gravity_gradient_Nm', D.Mmax(:,1), ...
+        'solar_radiation_pressure_Nm', D.Mmax(:,2), 'drag_Nm', D.Mmax(:,3)));
+    db.control = struct('enabled', D.controlled, 'description', mode_text(S), 'pointing_error_deg', D.pointing_error, ...
+        'attitude_error_deg', D.attitude_error, 'control_torque_Nm', D.tau_control, 'wheel_momentum_Nms', D.h_wheel, ...
+        'settings', control_summary(S));
     db.rotational_energy_J = D.energy;
     db.altitude_km = D.alt/1000;
     db.elevation_deg = D.el;
@@ -1138,9 +1431,10 @@ function export_dashboard_data(out_dir, cfg, epoch, D, S, site, plan, t_img, aem
     db.site = struct('name', site.name, 'lat_deg', rad2deg(site.lat), 'lon_deg', rad2deg(site.lon), ...
         'elev_threshold_deg', S.elev_threshold, 'r_ecef_km', p/1000);
     db.report = struct('mean_torques', struct('whole_window', struct('gravity_gradient_Nm', mean(D.M(:,1)), ...
-        'solar_radiation_pressure_Nm', mean(D.M(:,2)), 'drag_Nm', mean(D.M(:,4)))));
-    db.png_outputs = {'01_telemetry.png', '02_tracking.png', '03_angular_momentum.png', '04_ground_track.png', ...
-        '05_orbit_3d_ecef.png', '06_orbit_3d_eci.png'};
+        'solar_radiation_pressure_Nm', mean(D.M(:,2)), 'drag_Nm', mean(D.M(:,4))), ...
+        'worst_case', struct('gravity_gradient_Nm', max(D.Mmax(:,1)), 'solar_radiation_pressure_Nm', max(D.Mmax(:,2)), ...
+        'drag_Nm', max(D.Mmax(:,3)))));
+    db.png_outputs = png;
     db.aem = aem;
     txt = jsonencode(db);
     write_text(fullfile(out_dir, 'attitude_propagation_plots_data.json'), txt);
@@ -1148,7 +1442,16 @@ function export_dashboard_data(out_dir, cfg, epoch, D, S, site, plan, t_img, aem
     fprintf('Dashboard data saved: %s\n', fullfile(out_dir, 'attitude_propagation_plots_data.js'));
 end
 
-function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat)
+function s = control_summary(S)
+    c = S.ctrl;
+    s = struct('enabled', c.enabled, 'law', 'PD on the error quaternion + gyroscopic and reference-acceleration terms', ...
+        'natural_frequency_rad_s', c.wn, 'damping', c.zeta, 'Kp_Nm', c.Kp', 'Kd_Nms', c.Kd', 'control_step_s', S.base_step, ...
+        'wheel_momentum_Nms', c.h_max, 'wheel_torque_Nm', c.tau_max, 'wheels_source', c.wheels_source, ...
+        'attitude_knowledge_deg', rad2deg(c.sigma_att), 'rate_noise_rad_s', c.sigma_rate, 'knowledge_source', c.knowledge_source, ...
+        'random_seed', c.seed, 'note', 'one wheel per body axis; no momentum dumping (magnetorquers not modelled)');
+end
+
+function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat, P)
     pass_found = plan.imaging.pass_found;
     if ~pass_found || ~S.sun_enabled
         sun_kpi = NaN;
@@ -1185,8 +1488,29 @@ function export_kpis(out_dir, S, plan, D, G, sel_info, n_sat)
     k = [k, kpi_entry('KPI-19', 'Night Light-Curve Pass Found', sel_info.lightcurve_found, 'bool', 'pass_selection', sel_info.lightcurve_found, NaN, NaN)];
     k = [k, kpi_entry('KPI-20', 'Mean Body Rate During Imaging Pass', mean(rate), 'deg/s', 'momentum_and_rates', NaN, NaN, NaN)];
     k = [k, kpi_entry('KPI-21', 'Max Body Rate During Imaging Pass', max(rate), 'deg/s', 'momentum_and_rates', NaN, NaN, NaN)];
+    % closed-loop attitude control and worst-case disturbances (2026-10-19)
+    c = S.ctrl;
+    if c.enabled
+        h_pct = 100*max(abs(D.h_wheel(:)))/c.h_max;
+        k = [k, kpi_entry('KPI-22', 'Closed-Loop Attitude Control', true, 'bool', 'attitude_control', true, NaN, NaN)];
+        k = [k, kpi_entry('KPI-23', 'Mean Pointing Error During Imaging Pass', P.mean_err, 'deg', 'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-24', 'Max Pointing Error During Imaging Pass', P.max_err, 'deg', 'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-25', 'RMS Pointing Error (whole window)', sqrt(mean(D.pointing_error.^2)), 'deg', 'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-26', 'Peak Wheel Momentum', h_pct, '% of capacity', 'attitude_control', h_pct < 100, NaN, 100)];
+        k = [k, kpi_entry('KPI-27', 'Peak Control Torque', 100*max(abs(D.tau_control(:)))/c.tau_max, '% of wheel torque', ...
+            'attitude_control', NaN, NaN, NaN)];
+        k = [k, kpi_entry('KPI-28', 'Time With Wheel Limits Active', 100*D.wheel_limited_frac, '%', 'attitude_control', NaN, NaN, NaN)];
+    else
+        k = [k, kpi_entry('KPI-22', 'Closed-Loop Attitude Control', false, 'bool', 'attitude_control', NaN, NaN, NaN)];
+    end
+    k = [k, kpi_entry('KPI-29', 'Worst-Case Gravity-Gradient Torque', max(D.Mmax(:,1)), 'Nm', 'disturbance_environment', NaN, NaN, NaN)];
+    k = [k, kpi_entry('KPI-30', 'Worst-Case SRP Torque', max(D.Mmax(:,2)), 'Nm', 'disturbance_environment', NaN, NaN, NaN)];
+    k = [k, kpi_entry('KPI-31', 'Worst-Case Drag Torque', max(D.Mmax(:,3)), 'Nm', 'disturbance_environment', NaN, NaN, NaN)];
     cat = struct('module_id', 'END-003', 'attitude_mode', S.mode, 'orbit_source', 'END-001 ephemeris', ...
         'generated_at', char(string(datetime('now', 'TimeZone', 'UTC'), 'yyyy-MM-dd HH:mm:ss')), 'kpis', k);
+    cat.attitude_control = control_summary(S);
+    cat.disturbance_note = ['KPI-11..13: mean torque on the simulated attitude (models switched on); KPI-29..31: worst case over ', ...
+        'all attitudes (3 mu/(2 r^3) (Imax - Imin), P A Cr |r_cp|, rho v^2 Cd A |r_cp| / 2), whatever the flags'];
     f = D.face_illum;
     cat.illumination = struct('mean_cos_sunlit', struct('x_plus', f(1), 'x_minus', f(2), 'y_plus', f(3), 'y_minus', f(4), ...
         'z_plus', f(5), 'z_minus', f(6)), 'sunlit_fraction', mean(D.sunlit), 'satellite', plan.imaging.label, ...

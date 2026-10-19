@@ -767,13 +767,37 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "wheel_momentum_mnms": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Momento di ciascuna ruota di reazione integrata, una per asse [mN m s] (tools/add_adcs_wheels.py)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "wheel_max_torque_mnm": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Coppia massima di ciascuna ruota integrata [mN m] (tools/add_adcs_wheels.py)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
                     "pointing_accuracy_deg",
                     "form_factor_range_u",
                     "data_interfaces",
-                    "supply_voltage_ranges_v"
+                    "supply_voltage_ranges_v",
+                    "wheel_momentum_mnms",
+                    "wheel_max_torque_mnm"
                   ],
                   "additionalProperties": false
                 }

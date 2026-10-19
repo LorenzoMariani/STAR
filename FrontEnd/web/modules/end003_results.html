@@ -540,6 +540,7 @@ function populateKpiTable() {
     pointing_performance: 'Pointing Performance',
     disturbance_environment: 'Disturbance Environment',
     momentum_and_rates: 'Momentum and Rates',
+    attitude_control: 'Attitude Control',
     pass_selection: 'Pass Selection'
   };
   const cats = [...new Set(kpis.map((k) => k.category))];
@@ -717,10 +718,13 @@ function populateSummary() {
 
   const mt = readPath(state.data, 'report.mean_torques', null);
   if (!mt) return;
+  // MATLAB writes whole_window (mean on the simulated attitude) and worst_case (over all attitudes), 2026-10-19
+  const sci = (v) => (Number.isFinite(Number(v)) ? Number(v).toExponential(2) : '—');
+  const pair = (key) => `${sci(readPath(mt, 'whole_window.' + key))} / ${sci(readPath(mt, 'worst_case.' + key))} Nm`;
   $('torque-report-panel').innerHTML = [
-    row('GG perigee/apogee', `${fmt(readPath(mt,'perigee.gravity_gradient_Nm'),3)} / ${fmt(readPath(mt,'apogee.gravity_gradient_Nm'),3)} Nm`),
-    row('SRP perigee/apogee', `${fmt(readPath(mt,'perigee.solar_radiation_pressure_Nm'),3)} / ${fmt(readPath(mt,'apogee.solar_radiation_pressure_Nm'),3)} Nm`),
-    row('Drag perigee/apogee', `${fmt(readPath(mt,'perigee.drag_Nm'),3)} / ${fmt(readPath(mt,'apogee.drag_Nm'),3)} Nm`)
+    row('GG mean / worst case', pair('gravity_gradient_Nm')),
+    row('SRP mean / worst case', pair('solar_radiation_pressure_Nm')),
+    row('Drag mean / worst case', pair('drag_Nm'))
   ].join('');
 }
 
@@ -782,7 +786,14 @@ function drawTimeSeries() {
     lineTrace('Drag', t, tor.drag_Nm || [])
   ];
   linePlot('plotTorquesLinear', torqueTraces, 'Torque [Nm]');
-  linePlot('plotTorquesLog', torqueTraces.map(tr => ({...tr, y:(tr.y || []).map(v=>Math.max(Number(v)||0,1e-25))})), 'Torque [Nm]', { yaxis:{...baseLayout().yaxis,type:'log',title:'Torque [Nm]',range:[-15,-4]} });
+  // log axis: zeros (model off, eclipse, ideal nadir) are left out instead of being drawn at 1e-25
+  const positive = (y) => (y || []).map((v) => (Number(v) > 0 ? Number(v) : null));
+  const wc = tor.worst_case || {};
+  const worstTraces = [['GG worst case', wc.gravity_gradient_Nm], ['SRP worst case', wc.solar_radiation_pressure_Nm], ['Drag worst case', wc.drag_Nm]]
+    .filter(([, y]) => Array.isArray(y) && y.some((v) => Number(v) > 0))
+    .map(([name, y]) => ({ ...lineTrace(name, t, positive(y)), line:{ width:1.5, dash:'dash' } }));
+  linePlot('plotTorquesLog', [...torqueTraces.map(tr => ({...tr, y:positive(tr.y)})), ...worstTraces],
+    'Torque [Nm]', { yaxis:{...baseLayout().yaxis,type:'log',title:'Torque [Nm]'} });
 
   linePlot('plotEnergy', [lineTrace('Rotational energy', t, d.rotational_energy_J || [])], 'Energy [J]');
   linePlot('plotAltitude', [lineTrace('Altitude', t, d.altitude_km || [])], 'Altitude [km]');
