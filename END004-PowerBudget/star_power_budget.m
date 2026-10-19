@@ -9,8 +9,11 @@ clear; clc; close all;
 set(0, 'DefaultFigureVisible', 'off');
 addpath(fileparts(mfilename('fullpath')));
 
-default_file_input = "C:\Users\s5oss\Desktop\software_s5lab\STAR\Input\input_power_budget.json";
-default_path_output = "C:\Users\s5oss\Desktop\software_s5lab\STAR\Output\output_power_budget";
+% defaults for a standalone run: Input/ and Output/ of the STAR folder that holds END004-PowerBudget
+% (the STAR runner passes its own paths through the variables below)
+star_root = fileparts(fileparts(mfilename('fullpath')));
+default_file_input = string(fullfile(star_root, 'Input', 'input_power_budget.json'));
+default_path_output = string(fullfile(star_root, 'Output', 'output_power_budget'));
 
 star_input_override = getenv('STAR_END004_INPUT_FILE');
 star_output_override = getenv('STAR_END004_OUTPUT_DIR');

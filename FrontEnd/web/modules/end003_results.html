@@ -204,9 +204,10 @@ details.pass-details>summary{cursor:pointer;color:var(--muted-2);font-size:11px;
 'use strict';
 
 const AUTO_DATA_DIR = './modules_output/END-003/results_attitude_propagator/';
-const ABSOLUTE_DATA_DIR = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Output/RUN_XXXXX/modules_output/END-003/results_attitude_propagator/';
+// fallbacks relative to STAR/FrontEnd/web, where the results page lives (no machine-specific paths, 2026-10-19)
+const ABSOLUTE_DATA_DIR = '../../Output/RUN_XXXXX/modules_output/END-003/results_attitude_propagator/';
 const AUTO_INPUT_DIR = './modules_output/END-003/';
-const ABSOLUTE_INPUT_DIR = 'file:///C:/Users/s5oss/Desktop/software_s5lab/STAR/Input/';
+const ABSOLUTE_INPUT_DIR = '../../Input/';
 const DATA_JS = 'attitude_propagation_plots_data.js';
 const DATA_JSON = 'attitude_propagation_plots_data.json';
 const INPUT_JSON = 'end003_runtime_input.json';
