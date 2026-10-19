@@ -322,7 +322,9 @@ function renderRequirements(r) {
       <span class="id">${esc(x.requirement ? x.requirement.id : '—')}</span><span><span>${esc(x.what)}</span>${x.message ? `<div class="m">${esc(x.message)}</div>` : ''}
       ${x.requirement ? `<div class="t">${esc(x.requirement.text)}</div>` : ''}</span></div>`).join('')
     + (M.dv ? `<div class="hint">Delta-v ${f(M.dv.dv_m_s, 1)} m/s: ${esc(M.dv.why)}${M.dv.given_m_s != null ? ` · the selected thruster gives ${f(M.dv.given_m_s, 1)} m/s (total impulse / sum of the published masses)` : ''}</div>` : '')
-    + (M.battery ? `<div class="hint">Battery capacity ≥ ${f(M.battery.need_wh, 1)} Wh: ${esc(M.battery.why)}${M.battery.integrated_wh != null ? ` · covered by the battery integrated in the EPS (${f(M.battery.integrated_wh, 1)} Wh): no separate battery` : ''}</div>` : '')
+    + (M.battery ? (M.battery.need_wh != null
+        ? `<div class="hint">Battery capacity ≥ ${f(M.battery.need_wh, 1)} Wh: ${esc(M.battery.why)}${M.battery.integrated_wh != null ? ` · covered by the battery integrated in the EPS (${f(M.battery.integrated_wh, 1)} Wh): no separate battery` : ''}</div>`
+        : `<div class="hint">Battery: ${esc(M.battery.why)}</div>`) : '')
     + (M.altitude ? `<div class="hint">Orbit altitude ${f(M.altitude.min_km, 0)}${M.altitude.max_km !== M.altitude.min_km ? '–' + f(M.altitude.max_km, 0) : ''} km (${esc(M.altitude.source)}): GSD and swath of the imagers are scaled to it.</div>` : '')
     + (M.notes || []).map(n => `<div class="hint">• ${esc(n)}</div>`).join('');
 }
