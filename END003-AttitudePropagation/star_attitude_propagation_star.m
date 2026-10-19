@@ -317,14 +317,22 @@ function eph = read_end001_ephemerides(cfg)
     end
     tmpl = struct('index', 0, 'label', '', 'file', '', 'epoch', NaT, 't', [], 'h', 10, 'r', [], 'v', [], 'orbit', struct());
     eph = repmat(tmpl, numel(items), 1);
+    opts = [];
+    header = '';
     for k = 1:numel(items)
         it = items{k};
         f = char(it.file);
         if ~isfile(f)
             error('STAR:END003:NoEphemeris', 'END-001 ephemeris not found: %s', f);
         end
-        opts = detectImportOptions(f, 'Delimiter', ',', 'FileType', 'text');
-        opts = setvartype(opts, 'time_utc', 'string');
+        fid = fopen(f);
+        line1 = fgetl(fid);
+        fclose(fid);
+        if isempty(opts) || ~isequal(line1, header)    % import options detected once for files with the same header
+            opts = detectImportOptions(f, 'Delimiter', ',', 'FileType', 'text');
+            opts = setvartype(opts, 'time_utc', 'string');
+            header = line1;
+        end
         Tb = readtable(f, opts);
         ts = parse_utc(Tb.time_utc);
         t = seconds(ts - ts(1));
@@ -999,7 +1007,8 @@ end
 function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
     fid = fopen(file, 'w');
     if fid < 0, error('STAR:END003:Output', 'Unable to write %s', file); end
-    tf = @(s) char(string(epoch + seconds(s), 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS'));
+    ep = string(epoch + seconds(t), 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS');   % all the epochs at once
+    tf = @(i) char(ep(i));
     fprintf(fid, '<?xml version="1.0" encoding="utf-8"?>\n');
     fprintf(fid, ['<aem xmlns:ndm="urn:ccsds:schema:ndmxml"\n     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n', ...
         '     id="CCSDS_AEM_VERS"\n     version="2.0"\n', ...
@@ -1018,7 +1027,7 @@ function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
     fprintf(fid, '            <OBJECT_ID>%s</OBJECT_ID>\n', xml_escape(obj_id));
     fprintf(fid, '            <REF_FRAME_A>J2000</REF_FRAME_A>\n            <REF_FRAME_B>SC_BODY</REF_FRAME_B>\n');
     fprintf(fid, '            <TIME_SYSTEM>UTC</TIME_SYSTEM>\n');
-    fprintf(fid, '            <START_TIME>%s</START_TIME>\n            <STOP_TIME>%s</STOP_TIME>\n', tf(t(1)), tf(t(end)));
+    fprintf(fid, '            <START_TIME>%s</START_TIME>\n            <STOP_TIME>%s</STOP_TIME>\n', tf(1), tf(numel(t)));
     fprintf(fid, '            <ATTITUDE_TYPE>QUATERNION/ANGVEL</ATTITUDE_TYPE>\n         </metadata>\n         <data>\n');
     fprintf(fid, ['            <COMMENT>Quaternion components are Q1, Q2, Q3, QC (scalar last): rotation body -&gt; J2000 ', ...
         '(frame transformation J2000 -&gt; body). ANGVEL: body frame, rad/s.</COMMENT>\n']);
@@ -1028,7 +1037,7 @@ function write_aem(file, obj_name, obj_id, epoch, t, q, w, mode, label)
             '                     <Q3>%.7f</Q3>\n                     <QC>%.7f</QC>\n                  </quaternion>\n', ...
             '                  <angVel>\n                     <ANGVEL_X>%.9f</ANGVEL_X>\n                     <ANGVEL_Y>%.9f</ANGVEL_Y>\n', ...
             '                     <ANGVEL_Z>%.9f</ANGVEL_Z>\n                  </angVel>\n               </quaternionAngVel>\n', ...
-            '            </attitudeState>\n'], tf(t(i)), q(i, 1), q(i, 2), q(i, 3), q(i, 4), w(i, 1), w(i, 2), w(i, 3));
+            '            </attitudeState>\n'], tf(i), q(i, 1), q(i, 2), q(i, 3), q(i, 4), w(i, 1), w(i, 2), w(i, 3));
     end
     fprintf(fid, '         </data>\n      </segment>\n   </body>\n</aem>\n');
     fclose(fid);
@@ -1517,8 +1526,8 @@ function f = light_figure(varargin)
 end
 
 function save_png(fig, file)
+    % no drawnow first (2026-10-19): exportgraphics renders the figure itself (see end003_aem_figures save_fig)
     try
-        drawnow;
         exportgraphics(fig, file, 'Resolution', 150, 'BackgroundColor', 'current');
     catch
         try

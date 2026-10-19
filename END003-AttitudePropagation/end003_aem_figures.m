@@ -727,8 +727,9 @@ function fig = new_fig(pos, colr)
 end
 
 function save_fig(fig, file)
+    % no drawnow first (2026-10-19): exportgraphics renders the figure itself; drawnow rendered it once more (a fifth of
+    % the END-003 run time) and, in batch mode, at the virtual-screen size, which squashed figures taller than the screen
     try
-        drawnow;
         exportgraphics(fig, file, 'Resolution', 110, 'BackgroundColor', 'current');
     catch
         print(fig, file, '-dpng', '-r110');
