@@ -2,3 +2,4 @@ pywebview
 PyYAML
 openai
 python-docx
+Pillow

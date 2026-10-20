@@ -9,7 +9,9 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-003  END003-AttitudePropagation/tests
     END-004  END004-PowerBudget/tests
 Python suites (unittest):
+    STAR     tests/test_star_python.py   (BackEnd imports, Python syntax, generated results page; 2026-10-20)
     END-006  END006-ComponentSelector/star_component_selector/tests
+The Python suites also run on GitHub at every push and pull request (.github/workflows/tests.yml).
 
 MATLAB is MATLAB_EXECUTABLE, otherwise matlab on the PATH, otherwise the newest C:/Program Files/MATLAB/R*/bin/matlab.exe.
 Exit code 0 only when every selected suite ran and passed (a suite that could not run counts as a failure).
@@ -33,6 +35,7 @@ SUITES = [
     {"id": "END-001", "kind": "matlab", "path": "tests/test_end001_constellation.m"},
     {"id": "END-003", "kind": "matlab", "path": "END003-AttitudePropagation/tests"},
     {"id": "END-004", "kind": "matlab", "path": "END004-PowerBudget/tests"},
+    {"id": "STAR", "kind": "python", "path": ".", "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
 ]
