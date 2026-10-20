@@ -8,6 +8,7 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-001  tests/test_end001_constellation.m   (END-001 is a git submodule: its STAR tests stay in this repository)
     END-003  END003-AttitudePropagation/tests
     END-004  END004-PowerBudget/tests
+    END-018  END018-ComponentsThermalAnalysis/tests   (2026-10-20)
 Python suites (unittest):
     END-006  END006-ComponentSelector/star_component_selector/tests
 
@@ -35,6 +36,7 @@ SUITES = [
     {"id": "END-004", "kind": "matlab", "path": "END004-PowerBudget/tests"},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
+    {"id": "END-018", "kind": "matlab", "path": "END018-ComponentsThermalAnalysis/tests"},
 ]
 
 MATLAB_SCRIPT = r"""
