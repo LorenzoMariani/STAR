@@ -11,7 +11,7 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
 Python suites (unittest):
     STAR     tests/test_star_python.py   (BackEnd imports, Python syntax, generated results page; 2026-10-20)
     END-006  END006-ComponentSelector/star_component_selector/tests
-The Python suites also run on GitHub at every push and pull request (.github/workflows/tests.yml).
+On GitHub at every push and pull request (.github/workflows/tests.yml): the Python suites and every MATLAB suite but END-001.
 
 MATLAB is MATLAB_EXECUTABLE, otherwise matlab on the PATH, otherwise the newest C:/Program Files/MATLAB/R*/bin/matlab.exe.
 Exit code 0 only when every selected suite ran and passed (a suite that could not run counts as a failure).
