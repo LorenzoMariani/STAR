@@ -3,6 +3,7 @@
     python run_all_tests.py                    all the suites
     python run_all_tests.py END-003 END-006    only these
     python run_all_tests.py --list             the suites and where they are
+    python run_all_tests.py SMOKE              the whole pipeline (FrontEnd/star_smoke_test.py), only when named
 
 MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-001  tests/test_end001_constellation.m   (END-001 is a git submodule: its STAR tests stay in this repository)
@@ -10,6 +11,10 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-004  END004-PowerBudget/tests
 Python suites (unittest):
     END-006  END006-ComponentSelector/star_component_selector/tests
+
+Run only when named (2026-10-20):
+    SMOKE    FrontEnd/star_smoke_test.py   the whole STAR pipeline headless in test mode (Mission_Proposal_v7, without
+             END-007), about 3 minutes; needs MATLAB, pywebview and the module builds of the STAR PC (Unity for END-010)
 
 MATLAB is MATLAB_EXECUTABLE, otherwise matlab on the PATH, otherwise the newest C:/Program Files/MATLAB/R*/bin/matlab.exe.
 Exit code 0 only when every selected suite ran and passed (a suite that could not run counts as a failure).
@@ -35,6 +40,10 @@ SUITES = [
     {"id": "END-004", "kind": "matlab", "path": "END004-PowerBudget/tests"},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
+]
+# not in the default run: python run_all_tests.py SMOKE
+OPTIONAL_SUITES = [
+    {"id": "SMOKE", "kind": "script", "path": "FrontEnd/star_smoke_test.py"},
 ]
 
 MATLAB_SCRIPT = r"""
@@ -123,20 +132,45 @@ def run_python(suite: dict) -> dict:
             "not_passed": failed}
 
 
+def run_script(suite: dict) -> dict:
+    """A script with its own report (the pipeline smoke test): output shown while it runs, exit code 0 = pass."""
+    print(f"\n===== {suite['id']}: {suite['path']} =====", flush=True)
+    t0 = time.perf_counter()
+    proc = subprocess.Popen([sys.executable, suite["path"], *suite.get("args", [])], cwd=STAR_ROOT, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+                            env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    lines = []
+    for line in proc.stdout:
+        print(line, end="", flush=True)
+        lines.append(line.rstrip("\n"))
+    proc.wait()
+    seconds = time.perf_counter() - t0
+    # star_smoke_test.py: a table "module status time est. evidence" and a last line "PASS: ..." / "FAIL: ...",
+    # or "Smoke test stopped at '<step>': ..." before the execution
+    tail = next((x for x in reversed(lines) if re.match(r"(PASS|FAIL): |Smoke test stopped", x)), None)
+    head = next((i for i, x in enumerate(lines) if re.match(r"module\s+status\s", x)), len(lines))
+    not_passed = [f"{m.group(1)} {m.group(2)}" for x in lines[head + 1:]
+                  if (m := re.match(r"(END-\d{3})\s+(\S+)\s", x)) and m.group(2) not in ("completed", "skipped")]
+    return {"suite": suite["id"], "status": "PASS" if proc.returncode == 0 else "FAIL", "seconds": seconds,
+            "detail": tail.split("; run folder")[0] if tail else f"ended with code {proc.returncode}, no report",
+            "not_passed": not_passed}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the STAR test suites (MATLAB and Python) and print a summary.")
-    parser.add_argument("suites", nargs="*", help="suite ids to run (default: all), e.g. END-003 END-006")
+    parser.add_argument("suites", nargs="*", help="suite ids to run (default: all but SMOKE), e.g. END-003 END-006")
     parser.add_argument("--list", action="store_true", help="list the suites and exit")
     args = parser.parse_args()
+    known = SUITES + OPTIONAL_SUITES
     if args.list:
-        for s in SUITES:
-            print(f"{s['id']:8} {s['kind']:7} {s['path']}")
+        for s in known:
+            print(f"{s['id']:8} {s['kind']:7} {s['path']}" + ("   (only when named)" if s in OPTIONAL_SUITES else ""))
         return 0
     wanted = [x.upper() for x in args.suites]
-    unknown = [x for x in wanted if x not in {s["id"] for s in SUITES}]
+    unknown = [x for x in wanted if x not in {s["id"] for s in known}]
     if unknown:
-        parser.error(f"unknown suite(s) {', '.join(unknown)}; known: {', '.join(s['id'] for s in SUITES)}")
-    chosen = [s for s in SUITES if not wanted or s["id"] in wanted]
+        parser.error(f"unknown suite(s) {', '.join(unknown)}; known: {', '.join(s['id'] for s in known)}")
+    chosen = [s for s in known if s["id"] in wanted] if wanted else SUITES
 
     t0 = time.perf_counter()
     rows = []
@@ -144,7 +178,8 @@ def main() -> int:
     if matlab_suites:
         rows += run_matlab(matlab_suites)
     rows += [run_python(s) for s in chosen if s["kind"] == "python"]
-    order = {s["id"]: i for i, s in enumerate(SUITES)}
+    rows += [run_script(s) for s in chosen if s["kind"] == "script"]
+    order = {s["id"]: i for i, s in enumerate(known)}
     rows.sort(key=lambda r: order[r["suite"]])
 
     print("\n" + "=" * 78)
