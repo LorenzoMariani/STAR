@@ -9,9 +9,12 @@
 clear; clc; close all;
 set(0, 'DefaultFigureVisible', 'off');
 
-% I/O folders
-default_file_input = 'C:\Users\s5oss\Desktop\software_s5lab\STAR\Input\input_reflectance_determination.json';
-default_path_output = 'C:\Users\s5oss\Desktop\software_s5lab\STAR\Output';
+% I/O folders: rispetto alla cartella dello script, come in
+% star_reflectance_determination.m (STAR li sovrascrive con le env var sotto)
+script_folder = fileparts(mfilename('fullpath'));
+star_root = fileparts(script_folder);
+default_file_input = fullfile(star_root, 'Input', 'input_reflectance_determination.json');
+default_path_output = fullfile(star_root, 'Output');
 
 star_input_override = getenv('STAR_END010_INPUT_FILE');
 star_output_override = getenv('STAR_END010_OUTPUT_DIR');

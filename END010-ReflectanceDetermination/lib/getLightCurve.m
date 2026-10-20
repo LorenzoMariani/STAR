@@ -1,4 +1,4 @@
-exe = "C:\Users\Lorenzo\Desktop\UnityBuilds\BuildAqua\UnityLightCurveInversion.exe";
+exe = fullfile(fileparts(mfilename('fullpath')), "BuildAqua", "UnityLightCurveInversion.exe");   % lib/BuildAqua (copiata a mano)
 csv = "csvUnity.csv";
 log = "unityLog.log";
 out = fullfile(pwd,"OUT");
