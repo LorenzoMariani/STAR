@@ -7,6 +7,7 @@
 MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-001  tests/test_end001_constellation.m   (END-001 is a git submodule: its STAR tests stay in this repository)
     END-003  END003-AttitudePropagation/tests
+    END-016  END016-CollisionAvoidance/tests   (2026-10-20)
     END-004  END004-PowerBudget/tests
 Python suites (unittest):
     END-006  END006-ComponentSelector/star_component_selector/tests
@@ -32,6 +33,7 @@ STAR_ROOT = Path(__file__).resolve().parent
 SUITES = [
     {"id": "END-001", "kind": "matlab", "path": "tests/test_end001_constellation.m"},
     {"id": "END-003", "kind": "matlab", "path": "END003-AttitudePropagation/tests"},
+    {"id": "END-016", "kind": "matlab", "path": "END016-CollisionAvoidance/tests"},
     {"id": "END-004", "kind": "matlab", "path": "END004-PowerBudget/tests"},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
