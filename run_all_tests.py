@@ -9,7 +9,7 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-003  END003-AttitudePropagation/tests
     END-004  END004-PowerBudget/tests
 Python suites (unittest):
-    STAR     tests/test_star_python.py   (BackEnd imports, Python syntax, generated results page; 2026-10-20)
+    STAR     tests/test_*.py   (BackEnd imports, Python syntax, generated results page, runners without MATLAB; 2026-10-20)
     END-006  END006-ComponentSelector/star_component_selector/tests
 The Python suites also run on GitHub at every push and pull request (.github/workflows/tests.yml).
 
