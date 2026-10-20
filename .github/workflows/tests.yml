@@ -1,10 +1,12 @@
-# STAR tests on every push and pull request (2026-10-20): the Python suites of run_all_tests.py.
+# STAR tests on every push and pull request (2026-10-20): the suites of run_all_tests.py.
+# Job python:
 #   STAR     tests/test_star_python.py: BackEnd modules import, BackEnd / FrontEnd Python compiles,
 #            FrontEnd/web/star_results_frontend_v5.html matches the shell template and web/modules/*.html
 #   END-006  END006-ComponentSelector/star_component_selector/tests (the datasheet PDFs are not in the
 #            repository: the checks on the files are skipped there, see tests/datasheet_library.py)
-# The MATLAB suites (END-001, END-003, END-004) need a MATLAB licence: run them on the STAR PC with
-#   python run_all_tests.py
+# Job matlab: every MATLAB suite of run_all_tests.py but END-001, whose sources are a private submodule
+#   (run it on the STAR PC: python run_all_tests.py END-001). MATLAB is licensed by the MathWorks actions
+#   because the repository is public; a private repository needs a batch licence token (MLM_LICENSE_TOKEN).
 name: tests
 
 on:
@@ -30,3 +32,37 @@ jobs:
         run: python -m pip install --disable-pip-version-check Pillow PyYAML openai
       - name: Run the Python suites
         run: python run_all_tests.py STAR END-006
+
+  matlab:
+    name: MATLAB suites (all but END-001)
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Long paths in git (END-016 data files are over 260 characters)
+        run: git config --system core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The MATLAB suites listed in run_all_tests.py
+        shell: python
+        run: |
+          import sys
+          sys.path.insert(0, ".")
+          import run_all_tests as r
+          paths = [s["path"] for s in r.SUITES if s["kind"] == "matlab" and s["id"] != "END-001"]
+          print("\n".join(paths))
+          open("matlab_suites.txt", "w").write("\n".join(paths))
+      - uses: matlab-actions/setup-matlab@v3
+        with:
+          release: R2024b                # as the STAR PC
+          products: Aerospace_Toolbox Mapping_Toolbox    # END-003 (both), END-016 (Aerospace: NRLMSISE-00)
+          cache: true
+      - name: Run the MATLAB suites
+        uses: matlab-actions/run-command@v3
+        with:
+          command: >-
+            suites = cellstr(readlines('matlab_suites.txt', 'EmptyLineRule', 'skip'));
+            results = runtests(suites);
+            disp(table(results));
+            assertSuccess(results);
