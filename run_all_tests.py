@@ -14,7 +14,8 @@ Python suites (unittest):
 
 Run only when named (2026-10-20):
     SMOKE    FrontEnd/star_smoke_test.py   the whole STAR pipeline headless in test mode (Mission_Proposal_v7, without
-             END-007), about 3 minutes; needs MATLAB, pywebview and the module builds of the STAR PC (Unity for END-010)
+             END-007), 4 to 7 minutes; needs MATLAB, pywebview and the module data and builds of the STAR PC (END-010:
+             lib/data/DE440.mat and the Unity build)
 
 MATLAB is MATLAB_EXECUTABLE, otherwise matlab on the PATH, otherwise the newest C:/Program Files/MATLAB/R*/bin/matlab.exe.
 Exit code 0 only when every selected suite ran and passed (a suite that could not run counts as a failure).
