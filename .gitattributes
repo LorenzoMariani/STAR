@@ -1,0 +1,40 @@
+# Line endings (2026-10-20): the repository stores text with LF; a checkout writes the line ending of its
+# platform (CRLF on Windows) also where core.autocrlf is not set (core.autocrlf=input still keeps LF). Git
+# decides what is text from the content; the rules below only fix the extensions that are always one or the other.
+* text=auto
+
+*.m       text
+*.py      text
+*.json    text
+*.md      text
+*.html    text
+*.js      text
+*.css     text
+*.csv     text
+*.txt     text
+*.yml     text
+*.yaml    text
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+*.sh      text eol=lf
+
+# binary: no line-ending conversion, no text diff or merge (the Unity materials *.mat are YAML text, so .mat is
+# left to the content check above)
+*.png     binary
+*.jpg     binary
+*.glb     binary
+*.exe     binary
+*.dll     binary
+*.so      binary
+*.a       binary
+*.lib     binary
+*.mexw64  binary
+*.mexa64  binary
+*.bytes   binary
+*.xls     binary
+*.xlsx    binary
+*.docx    binary
+*.pptx    binary
+*.pdf     binary
+*.zip     binary
+*.mp4     binary
