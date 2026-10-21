@@ -503,7 +503,13 @@ execution:
   runner_module: runners.end001_runner
   runner_function: run_end001
   upstream_dependencies: []
-  downstream_dependencies: []
+  downstream_dependencies:
+  - END-003
+  - END-004
+  - END-007
+  - END-010
+  - END-016
+  - END-019
 interface_notes: This module provides orbit/constellation-level outputs required by
   downstream attitude propagation and synthetic/observation simulation modules. END-003
   may consume the optimized orbital configuration for attitude and pointing propagation;

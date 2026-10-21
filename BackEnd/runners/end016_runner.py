@@ -14,8 +14,8 @@ the run (MATLAB, END016-CollisionAvoidance/lib/star_collision_main.m):
 
 The runner
 1. copies the END-001 products of this run (satellite_NN.json, satellite_NN_ephemeris.csv)
-   into star_input/ and takes mass, drag area and drag coefficient from END-001's input
-   of the run (the values END-001 used), else from the requirements, else defaults;
+   into star_input/ and takes mass, drag area and drag coefficient from the END-006 design of the
+   run (spacecraft_definition.json), else END-001's input of the run, else the requirements, else defaults;
 2. reads the mission lifetime and any disposal deadline from the requirements, and the
    values the user approved; every value records where it came from;
 3. runs star_collision_main with matlab -batch (MATLAB_EXECUTABLE overrides the command);
@@ -38,9 +38,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
-    from .star_runner_io import star_run_mode
+    from .star_runner_io import load_spacecraft_definition, star_run_mode
 except ImportError:
-    from star_runner_io import star_run_mode
+    from star_runner_io import load_spacecraft_definition, star_run_mode
 
 MODULE_ID = "END-016"
 OUTPUT_DIRNAME = "output_collision_avoidance"
@@ -137,6 +137,21 @@ def _end001_spacecraft(modules_output: Path) -> dict[str, float]:
     return out
 
 
+def _end006_spacecraft(payload: dict[str, Any], modules_output: Path) -> dict[str, float]:
+    """Mass, mean projected drag area and Cd of the END-006 design of the run (spacecraft_definition.json)."""
+    sat = load_spacecraft_definition(payload, modules_output)
+    if not sat:
+        return {}
+    out = {}
+    for key, name in (("mass_kg", "mass_kg"), ("area_mean_projected_m2", "drag_area_m2"), ("cd", "cd")):
+        try:
+            if float(sat[key]) > 0:
+                out[name] = float(sat[key])
+        except (KeyError, TypeError, ValueError):
+            pass
+    return out
+
+
 def _stage_upstream(modules_output: Path, staging: Path) -> tuple[list[str], str | None]:
     src = modules_output / "END-001" / "output_constellation_optimizer"
     sats = sorted(p for p in src.glob("satellite_*.json")) if src.is_dir() else []
@@ -212,15 +227,20 @@ def run_end016(input_file: str, output_dir: str, run_id: str | None = None,
         provenance[name] = origin
 
     defaults = {"mass_kg": 100.0, "drag_area_m2": 1.0, "cd": 2.2}
+    sc_def = _end006_spacecraft(payload, modules_output)
     spacecraft = {}
     for name in ("mass_kg", "drag_area_m2", "cd"):
-        if name in sc_end001:
+        if name in sc_def:
+            spacecraft[name], provenance[f"spacecraft.{name}"] = sc_def[name], "END-006 initial design (spacecraft_definition.json)"
+        elif name in sc_end001:
             spacecraft[name], provenance[f"spacecraft.{name}"] = sc_end001[name], "END-001 input of this run"
         elif name in req:
             spacecraft[name], provenance[f"spacecraft.{name}"] = req[name], req_where[name]
         else:
             spacecraft[name], provenance[f"spacecraft.{name}"] = defaults[name], "default (END-001 template)"
     config["spacecraft"] = spacecraft
+    if not sc_def:
+        notes.append("END-006 spacecraft_definition.json not found: mass, drag area and Cd come from the END-001 input, the requirements or defaults")
     if "hard_body_radius_m" in approved:
         put("hard_body_radius_m", approved["hard_body_radius_m"], "approved by the user")
     elif "hard_body_radius_m" in req:

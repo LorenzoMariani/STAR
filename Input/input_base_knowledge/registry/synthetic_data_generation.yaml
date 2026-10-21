@@ -420,7 +420,6 @@ execution:
   runner_function: run_end007
   upstream_dependencies:
   - END-001
-  optional_upstream_dependencies:
   - END-003
   downstream_dependencies:
   - END-008

@@ -97,6 +97,10 @@ outputs:
     artifact_name: output_component_selector/component_selector_power_handoff.json
     data_type: json
     description: Maximum powers declared by the vendors for the selected components (no estimate), usable as a starting point by END-004 Power Budget.
+  - name: spacecraft_definition
+    artifact_name: output_component_selector/spacecraft_definition.json
+    data_type: json
+    description: The satellite of the END-006 initial design (class, mass, inertia, areas, Cd/Cr, solar panels, battery, declared powers, radios, attitude actuators) used by END-001, END-003, END-004, END-010, END-016 and END-019; spacecraft_definition_final.json is the final design.
   - name: component_selector_frontend_data
     artifact_name: results_component_selector/component_selector_data.js
     data_type: javascript

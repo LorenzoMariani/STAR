@@ -403,6 +403,8 @@ execution:
   downstream_dependencies:
     - END-004
     - END-007
+    - END-010
+    - END-019
   software:
     operating_system:
       - Windows 10/11

@@ -183,7 +183,8 @@ function nodeLabel(name){
   const n = name.replace(/^t_/i, '');
   const map = { CTR:'Central body', BAT:'Battery', SAR:'SAR payload' };
   let m;
-  if ((m = n.match(/^(?:_+|x_)([XYZ])$/i))) return `Face ${m[1].toUpperCase()}`;     // T__X in the CSV, x_X in the summary
+  if ((m = n.match(/^([pm])([XYZ])$/))) return `Face ${m[1] === 'p' ? '+' : '−'}${m[2]}`;   // T_pX / T_mX in the CSV, pX / mX in the summary
+  if ((m = n.match(/^(?:_+|x_)([XYZ])$/i))) return `Face ${m[1].toUpperCase()}`;     // older runs: T__X in the CSV, x_X in the summary
   if ((m = n.match(/^PANdep(\d+)$/i))) return `Deployable panel ${m[1]}`;
   return map[n.toUpperCase()] || n;
 }

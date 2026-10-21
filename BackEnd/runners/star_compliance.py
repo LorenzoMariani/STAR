@@ -219,7 +219,14 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
         checks.append(_check("END-001", "inclination_deg", "in", [p["incl"] - 0.5, p["incl"] + 0.5], "deg", kpis, "Inclination"))
     if "mass" in p:
         checks.append(_check("END-006", "mass_kg", "<=", p["mass"][0], "kg", kpis, "Satellite mass"))
-    if "class_u" in p:
+    low = R.norm(text)
+    from_catalogue = R.has_any(low, ("datasheet", "commercially available", "off-the-shelf", "off the shelf"))
+    if from_catalogue and "END-006" in kpis:
+        # "components selected among commercial products with datasheets": END-006 selects only from its vendor catalogue;
+        # a "6U" in the sentence only names the platform, it is not a class requirement
+        checks.append({"module": "END-006", "metric": "Components selected from the vendor-datasheet catalogue", "operator": "", "threshold": None,
+                       "unit": "", "value": True, "status": "met", "reason": "END-006 chooses only among catalogued components with vendor datasheets"})
+    if "class_u" in p and not from_catalogue:
         c = _check("END-006", "class_u", "in", [min(p["class_u"]), max(p["class_u"])], "U", kpis, "CubeSat class")
         if c["status"] == "not_met":
             c["reason"] = "END-006 chooses the smallest class whose components meet the performance requirements (stated class only reported)"
@@ -235,7 +242,9 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
     if "reentry_years" in p:
         c = _check("END-016", "passive_lifetime_years_mean_activity", "<=", p["reentry_years"], "years", kpis, "Passive orbital lifetime")
         if c["status"] == "not_met":
-            dv = [x for x in (kpis.get("END-006") or {}).get("checks", []) if "delta-v" in str(x.get("what", "")).lower() and x.get("status") == "met"]
+            # only the delta-v check END-006 made for THIS requirement (disposal deadline), not any delta-v of the design
+            dv = [x for x in (kpis.get("END-006") or {}).get("checks", []) if "delta-v" in str(x.get("what", "")).lower()
+                  and x.get("status") == "met" and (x.get("requirement") or {}).get("id") == rid]
             if dv:
                 c.update({"status": "met", "reason": "disposal manoeuvre: " + str(dv[0].get("what"))})
             else:
@@ -253,7 +262,6 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
             checks.append({"module": "END-019", "metric": f"{tr['item']} temperature", "operator": "in", "threshold": [tr["min"], tr["max"]],
                            "unit": "C", "value": None, "status": "not_verifiable",
                            "reason": "END-019 models the faces, panels, central body, battery and SAR payload nodes"})
-    low = R.norm(text)
     if p.get("orbit") == "SSORGT" and "END-001" in kpis:
         checks.append(_check("END-001", "orbit_type", "==", "SSORGT", "", kpis, "Sun-synchronous orbit"))
     # reference passes: daylight imaging pass and night pass of END-001 / END-003
@@ -272,7 +280,8 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
             checks.append({"module": "END-019", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "C",
                            "value": data.get("battery_max_C"), "status": "not_met" if over else "met",
                            "reason": "limit exceeded on at least one satellite" if over else ""})
-    # an analysis the call asks for: met when the module that makes it produced its results
+    # an analysis the call asks for: the module that makes it produced its results; this is evidence for the reader, not a
+    # verified threshold, so it is never "met" by itself (2026-10-21)
     if R.has_any(low, ("shall be assessed", "shall be provided", "shall provide evidence", "evidence of", "shall be computed", "shall be simulated",
                        "shall be estimated", "shall be analysed", "shall be analyzed", "shall be verified", "shall be evaluated",
                        "dovra essere fornito", "dovra essere fornita", "dovranno essere forniti", "dovranno essere fornite", "dovra essere valutato", "dovra essere valutata", "dovranno essere valutati", "dovranno essere valutate", "dovra essere calcolato", "dovra essere calcolata", "dovranno essere calcolati", "dovranno essere calcolate", "dovra essere simulato", "dovra essere simulata", "dovranno essere simulati", "dovranno essere simulate", "dovra essere stimato", "dovra essere stimata", "dovranno essere stimati", "dovranno essere stimate", "dovra essere analizzato", "dovra essere analizzata", "dovranno essere analizzati", "dovranno essere analizzate", "dovra essere verificato", "dovra essere verificata", "dovranno essere verificati", "dovranno essere verificate")):
@@ -281,7 +290,8 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
         for module_id in (specific or named):     # the module that makes the analysis, not the generic orbit / CubeSat ones
             if module_id in kpis and not any(c["module"] == module_id for c in checks):
                 checks.append({"module": module_id, "metric": "Analysis produced", "operator": "", "threshold": None, "unit": "", "value": True,
-                               "status": "met", "reason": f"{module_id} produced its results"})
+                               "status": "not_verifiable",
+                               "reason": f"{module_id} produced its results (see its results tab); the requirement states no threshold STAR can verify"})
     for x in (kpis.get("END-006") or {}).get("checks", []):
         if (x.get("requirement") or {}).get("id") == rid:
             st = str(x.get("status", "")).replace("-", "_")

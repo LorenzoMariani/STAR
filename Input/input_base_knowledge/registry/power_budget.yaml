@@ -40,6 +40,7 @@ activation_rules:
     - payload operation
     - transmission pass
   required_upstream_modules:
+    - END-001
     - END-003
 planning_guidance: >
   Select END-004 when the user asks for power feasibility, EPS sizing, battery
@@ -49,6 +50,13 @@ planning_guidance: >
   timing information. END-004 may also use END-001 indirectly when END-003 is
   generated from the constellation/orbit solution.
 required_inputs:
+  - name: operations_summary
+    data_type: file_path
+    required: true
+    produced_by: END-001
+    unit: json
+    description: operations_summary.json of END-001 (output_constellation_optimizer); duty cycles, ground-station contacts and acquisitions per orbit come from it.
+    missing_information_reason: END-004 builds the per-mode duty cycles and the orbits per day of each mode from the passes END-001 selected.
   - name: attitude_propagation_csv
     data_type: file_path
     required: true
@@ -121,6 +129,14 @@ outputs:
     artifact_name: results_power_budget/power_budget_tables.js
     data_type: javascript
     description: JavaScript payload consumed by STAR FrontEnd.
+  - name: power_budget_summary_json
+    artifact_name: output_power_budget/power_budget_summary.json
+    data_type: json
+    description: Summary of the run (modes, margins, depth of discharge) read back by STAR.
+  - name: power_budget_status
+    artifact_name: output_power_budget/power_budget_status.json
+    data_type: json
+    description: Status of the MATLAB run.
   - name: power_budget_figures
     artifact_name: results_power_budget/*.png
     data_type: image
@@ -130,6 +146,7 @@ execution:
   runner_module: runners.end004_runner
   runner_function: run_end004
   upstream_dependencies:
+    - END-001
     - END-003
   downstream_dependencies: []
   estimated_runtime: 30

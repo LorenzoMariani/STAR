@@ -14,7 +14,7 @@ idx  = 1:step:size(R.T,1);
 ts   = string(R.tutc(idx), 'yyyy-MM-dd''T''HH:mm:ss''Z''');
 Tt = table(ts, 'VariableNames', {'timestamp_utc'});
 for j=1:numel(R.names)
-    Tt.(matlab.lang.makeValidName(['T_' R.names{j}])) = round(R.T(idx,j),2);
+    Tt.(local_name(['T_' R.names{j}])) = round(R.T(idx,j),2);
 end
 Tt.sar_on  = double(R.sar_on(idx));
 Tt.eclipse = double(~R.lit(idx));
@@ -43,7 +43,7 @@ if cfg.nodes.config==3
 end
 S.nodes=struct();
 for j=1:numel(R.names)
-    S.nodes.(matlab.lang.makeValidName(R.names{j}))=struct('min_C',round(mn(j),2),'max_C',round(mx(j),2),'mean_C',round(av(j),2));
+    S.nodes.(local_name(R.names{j}))=struct('min_C',round(mn(j),2),'max_C',round(mx(j),2),'mean_C',round(av(j),2));
 end
 S.solar_panels=struct('min_C',round(solMin,2),'max_C',round(solMax,2),'mean_C',round(solMean,2), ...
                       'note','ottiche dalla calibrazione SIMBA');
@@ -70,4 +70,9 @@ end
 
 function v = local_stat(R,gi,n,fun)
 k=gi(n); if isempty(k), v=NaN; else, v=fun(R.T(:,k)); end
+end
+
+function s = local_name(s)
+% '+X' and '-X' would both become '_X' with makeValidName: spell the sign (pX, mX)
+s = matlab.lang.makeValidName(regexprep(regexprep(s,'\+','p'),'-','m'));
 end
