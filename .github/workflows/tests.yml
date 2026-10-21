@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Long paths in git (END-016 data files are over 260 characters)
         run: git config --system core.longpaths true
-      - uses: actions/checkout@v4      # no submodules: END-001 (private) is needed only by the MATLAB suites
+      - uses: actions/checkout@v7      # no submodules: END-001 (private) is needed only by the MATLAB suites
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -40,7 +40,7 @@ jobs:
     steps:
       - name: Long paths in git (END-016 data files are over 260 characters)
         run: git config --system core.longpaths true
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
