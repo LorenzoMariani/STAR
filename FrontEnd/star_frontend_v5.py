@@ -100,7 +100,8 @@ CANONICAL_MODULE_CATALOG = [
     {"module_id": "END-004", "module_name": "Power Budget", "owner": "UNIRM1"},
     {"module_id": "END-005", "module_name": "CMG Healt Monitoring", "owner": "TASI-POLIBA"},
     # 2026-10-18: END-006 Scenario Generation (TELESPAZIO) merged into END-007; the component selector (END-019 until then)
-    # took the number END-006, so STAR has 18 END
+    # took the number END-006, so STAR has 18 END. 2026-10-21: END-018 is ABEP (SITAEL) and the components thermal analysis
+    # is END-019, so STAR has 19 END
     {"module_id": "END-006", "module_name": "Satellite Design Component Selector", "owner": "UNIRM1"},
     {"module_id": "END-007", "module_name": "Synthetic Data Generation", "owner": "TELESPAZIO"},
     {"module_id": "END-008", "module_name": "Battery Healt Monitorying", "owner": "UNIRM1"},
@@ -113,7 +114,8 @@ CANONICAL_MODULE_CATALOG = [
     {"module_id": "END-015", "module_name": "Flexible Components Health Monitorying", "owner": "UNIRM1"},
     {"module_id": "END-016", "module_name": "Collision Avoidance", "owner": "UNIRM1"},
     {"module_id": "END-017", "module_name": "Clock Anomalies Detection", "owner": "INRIM"},
-    {"module_id": "END-018", "module_name": "Components Thermal Analysis", "owner": "UNIRM1"},   # Sapienza (user, 2026-10-16); "ABEP" (SITAEL) until 2026-10-15, then TBD
+    {"module_id": "END-018", "module_name": "ABEP", "owner": "SITAEL"},   # catalogue only (2026-10-21: END-018 is ABEP again)
+    {"module_id": "END-019", "module_name": "Components Thermal Analysis", "owner": "UNIRM1"},   # Sapienza; END-018 until 2026-10-21
 ]
 
 
@@ -152,7 +154,7 @@ STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
     "END-007": {"test": 150},
     "END-010": {"test": 49},
     "END-016": {"test": 6, "full": 9},
-    "END-018": {"test": 7},
+    "END-019": {"test": 12},          # measured 2026-10-19/21 (test mode, 20 satellites)
     "END-006": {"test": 1},
 }
 STAR_MODULE_TIME_DEFAULT_S = 5     # modules without a runner (placeholders)
@@ -250,7 +252,7 @@ class StarApi:
         self.add_log("SYSTEM", f"STAR root: {self.star_root}")
         self.add_log("SYSTEM", f"Output root: {self.outputs_dir}")
         self.add_log("SYSTEM", f"Loaded modules: {len(self.modules)}")
-        self.add_log("SYSTEM", "Canonical END-001 ... END-018 module catalog applied.")
+        self.add_log("SYSTEM", "Canonical END-001 ... END-019 module catalog applied.")
         self.add_log("SYSTEM", "Waiting for mission request document.")
 
     # ------------------------------------------------------------------
@@ -447,7 +449,7 @@ class StarApi:
 
     def apply_canonical_module_catalog(self, loaded_modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
-        Force the Module Bay to use the official END-001 ... END-018 order.
+        Force the Module Bay to use the official END-001 ... END-019 order.
 
         If a module already exists in registry/*.yaml, its technical metadata
         (inputs, outputs, capabilities, execution rules) is preserved. The
@@ -527,7 +529,7 @@ class StarApi:
                 "END-007": ("runners.end007_runner", "run_end007"),
                 "END-010": ("runners.end010_runner", "run_end010"),
                 "END-016": ("runners.end016_runner", "run_end016"),
-                "END-018": ("runners.end018_runner", "run_end018"),
+                "END-019": ("runners.end019_runner", "run_end019"),
                 "END-006": ("runners.end006_runner", "run_end006"),
             }
             if module_id in default_runner_by_id:
@@ -558,7 +560,7 @@ class StarApi:
                     "useful night pass.", "simulation_product", "high"),
         "END-016": ("Check the close approaches between the satellites, the orbital lifetime, the disposal rules and the disposal delta-v.",
                     "engineering_feasibility", "medium"),
-        "END-018": ("Compute the temperatures of the CubeSat faces, panels and internal nodes along the orbit and flag the limits that "
+        "END-019": ("Compute the temperatures of the CubeSat faces, panels and internal nodes along the orbit and flag the limits that "
                     "are exceeded.", "engineering_feasibility", "medium"),
         "END-006": ("Design the CubeSat every module uses (initial design) and update it with their results (final design): the "
                     "smallest class whose real components meet the requirements.", "engineering_feasibility", "high"),
@@ -1179,8 +1181,8 @@ class StarApi:
             "re-enter", "reenter", "re-entry", "reentry", "orbital lifetime", "safe separation",
         ])
 
-    def end018_thermal_requested(self, normalized_text: str) -> bool:
-        """END-018 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose thermal
+    def end019_thermal_requested(self, normalized_text: str) -> bool:
+        """END-019 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose thermal
         behaviour is asked for. Outside it (larger satellites) the module would only
         report that the mission is out of scope, so it is not planned."""
         cubesat = "cubesat" in normalized_text or re.search(r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)", normalized_text) is not None
@@ -4919,7 +4921,7 @@ Return only valid JSON:
 
     # Modules that use the CubeSat of the END-006 initial design (inertia, loads, class, form factor); END-001 and
     # END-016 can run without it (mass and drag area from the requirements).
-    INITIAL_DESIGN_DEPENDENTS = {"END-003", "END-004", "END-010", "END-018"}
+    INITIAL_DESIGN_DEPENDENTS = {"END-003", "END-004", "END-010", "END-019"}
 
     def blocked_reason(self, module_id: str, blocked: dict[str, str], initial_failed: bool) -> str:
         """Why a module cannot run: not executable here, an upstream module of the workflow without its data, or the
@@ -5031,7 +5033,7 @@ Return only valid JSON:
             "END-007": ("output_synthetic_data_generation", "results_synthetic_data_generation"),
             "END-010": ("output_reflectance_determination", "results_reflectance_determination"),
             "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
-            "END-018": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
+            "END-019": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
             "END-006": ("output_component_selector", "results_component_selector"),
         }
         clean_id = str(module_id or "UNKNOWN").upper()
@@ -5717,7 +5719,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_SYNTHETIC__": "end007_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__": "end010_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COLLISION__": "end016_results.html",
-        "__SRCDOC_PLACEHOLDER_FRAME_THERMAL__": "end018_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_THERMAL__": "end019_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__": "end006_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__": "end001_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__": "end003_results.html",
@@ -5804,7 +5806,7 @@ STAR_V3_PARTNER_LOGOS_PATCH = """
     UNIPD: ['unipd', 'Universit\\u00e0 degli Studi di Padova'], UNIPA: ['unipa', 'Universit\\u00e0 degli Studi di Palermo'],
     POLIMI: ['polimi', 'Politecnico di Milano'], POLITO: ['polito', 'Politecnico di Torino'], POLIBA: ['poliba', 'Politecnico di Bari'],
     TASI: ['thales', 'Thales Alenia Space'], THALES: ['thales', 'Thales Alenia Space'], TELESPAZIO: ['tpz', 'Telespazio'], TPZ: ['tpz', 'Telespazio'],
-    INRIM: ['inrim', 'INRiM']
+    INRIM: ['inrim', 'INRiM'], SITAEL: ['sitael', 'SITAEL']
   };
   function decorate(card){
     if (card.querySelector('.owner-logos')) return;

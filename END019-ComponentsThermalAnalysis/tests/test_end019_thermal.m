@@ -1,7 +1,7 @@
-function tests = test_end018_thermal
-%TEST_END018_THERMAL  Checks of END-018 (lumped-capacitance thermal model) against hand-computed cases (2026-10-20).
+function tests = test_end019_thermal
+%TEST_END019_THERMAL  Checks of END-019 (lumped-capacitance thermal model) against hand-computed cases (2026-10-20).
 %
-%   From END018-ComponentsThermalAnalysis:   results = runtests('tests/test_end018_thermal.m')
+%   From END019-ComponentsThermalAnalysis:   results = runtests('tests/test_end019_thermal.m')
 %
 %   Steady state of the Backward-Euler step with linearised radiation (exact at the fixed point):
 %     sum_i sigma epsA_i (T_i^4 - T_space^4) = absorbed + internal power, the conduction network carries no net heat;

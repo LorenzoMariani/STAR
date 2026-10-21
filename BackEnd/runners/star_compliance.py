@@ -76,7 +76,7 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
             "min_separation_km", "n_events_below_screening", "n_events_below_1km", "passive_lifetime_years_mean_activity",
             "complies_5y_rule_mean_activity", "disposal_dv_m_s_5y_rule_mean_activity", "complies_25y_rule_mean_activity",
             "disposal_dv_m_s_25y_rule_mean_activity", "orbit_maintenance_needed")}}
-    files = sorted((modules_root / "END-018").glob("*/thermal_summary_SAT-*.json"))
+    files = sorted((modules_root / "END-019").glob("*/thermal_summary_SAT-*.json"))
     if files:
         bat_max, bat_min, ctr_max, over = [], [], [], []
         for f in files:
@@ -90,7 +90,7 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
             if pk.get("CTR_max_C") is not None:
                 ctr_max.append(pk["CTR_max_C"])
             over += [k for k, v in (t.get("violations") or {}).items() if v]
-        out["END-018"] = {"_source": str(files[0].parent), "battery_max_C": max(bat_max) if bat_max else None,
+        out["END-019"] = {"_source": str(files[0].parent), "battery_max_C": max(bat_max) if bat_max else None,
                           "battery_min_C": min(bat_min) if bat_min else None, "central_body_max_C": max(ctr_max) if ctr_max else None,
                           "limits_exceeded": sorted(set(over)), "n_satellites": len(files)}
     p = _first(modules_root, "END-010/*/reflectance_summary.json")
@@ -143,8 +143,8 @@ KPI_ROWS = [
     ("END-016", "n_events_below_screening", "Close approaches below screening", "-"),
     ("END-016", "passive_lifetime_years_mean_activity", "Passive orbital lifetime", "years"),
     ("END-016", "disposal_dv_m_s_5y_rule_mean_activity", "Disposal delta-v (5-year rule)", "m/s"),
-    ("END-018", "battery_max_C", "Battery max temperature", "C"), ("END-018", "battery_min_C", "Battery min temperature", "C"),
-    ("END-018", "central_body_max_C", "Central body max temperature", "C"),
+    ("END-019", "battery_max_C", "Battery max temperature", "C"), ("END-019", "battery_min_C", "Battery min temperature", "C"),
+    ("END-019", "central_body_max_C", "Central body max temperature", "C"),
     ("END-006", "class_u", "CubeSat class", "U"), ("END-006", "mass_kg", "Satellite mass", "kg"),
 ]
 
@@ -247,12 +247,12 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
     if "temp_range_c" in p:
         tr = p["temp_range_c"]
         if tr["item"] == "battery":
-            checks.append(_check("END-018", "battery_max_C", "<=", tr["max"], "C", kpis, "Battery max temperature"))
-            checks.append(_check("END-018", "battery_min_C", ">=", tr["min"], "C", kpis, "Battery min temperature"))
+            checks.append(_check("END-019", "battery_max_C", "<=", tr["max"], "C", kpis, "Battery max temperature"))
+            checks.append(_check("END-019", "battery_min_C", ">=", tr["min"], "C", kpis, "Battery min temperature"))
         else:
-            checks.append({"module": "END-018", "metric": f"{tr['item']} temperature", "operator": "in", "threshold": [tr["min"], tr["max"]],
+            checks.append({"module": "END-019", "metric": f"{tr['item']} temperature", "operator": "in", "threshold": [tr["min"], tr["max"]],
                            "unit": "C", "value": None, "status": "not_verifiable",
-                           "reason": "END-018 models the faces, panels, central body, battery and SAR payload nodes"})
+                           "reason": "END-019 models the faces, panels, central body, battery and SAR payload nodes"})
     low = R.norm(text)
     if p.get("orbit") == "SSORGT" and "END-001" in kpis:
         checks.append(_check("END-001", "orbit_type", "==", "SSORGT", "", kpis, "Sun-synchronous orbit"))
@@ -263,13 +263,13 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
                                                                                             "illuminated", "visibile", "curva di luce")):
         checks.append(_check("END-003", "night_pass_found", "==", True, "", kpis, "Night pass visible from the observatory found"))
     if R.has_any(low, ("battery temperature", "temperatura della batteria")) and R.has_any(low, ("limit", "limits", "limite", "limiti")):
-        data = kpis.get("END-018")
+        data = kpis.get("END-019")
         if data is None:
-            checks.append({"module": "END-018", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "", "value": None,
-                           "status": "not_verifiable", "reason": "END-018 did not run in this workflow"})
+            checks.append({"module": "END-019", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "", "value": None,
+                           "status": "not_verifiable", "reason": "END-019 did not run in this workflow"})
         else:
             over = [v for v in data.get("limits_exceeded", []) if v.startswith("BAT")]
-            checks.append({"module": "END-018", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "C",
+            checks.append({"module": "END-019", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "C",
                            "value": data.get("battery_max_C"), "status": "not_met" if over else "met",
                            "reason": "limit exceeded on at least one satellite" if over else ""})
     # an analysis the call asks for: met when the module that makes it produced its results
@@ -277,7 +277,7 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
                        "shall be estimated", "shall be analysed", "shall be analyzed", "shall be verified", "shall be evaluated",
                        "dovra essere fornito", "dovra essere fornita", "dovranno essere forniti", "dovranno essere fornite", "dovra essere valutato", "dovra essere valutata", "dovranno essere valutati", "dovranno essere valutate", "dovra essere calcolato", "dovra essere calcolata", "dovranno essere calcolati", "dovranno essere calcolate", "dovra essere simulato", "dovra essere simulata", "dovranno essere simulati", "dovranno essere simulate", "dovra essere stimato", "dovra essere stimata", "dovranno essere stimati", "dovranno essere stimate", "dovra essere analizzato", "dovra essere analizzata", "dovranno essere analizzati", "dovranno essere analizzate", "dovra essere verificato", "dovra essere verificata", "dovranno essere verificati", "dovranno essere verificate")):
         named = list(R.modules_requested(text))
-        specific = [m for m in named if m in ("END-004", "END-007", "END-010", "END-016", "END-018")]
+        specific = [m for m in named if m in ("END-004", "END-007", "END-010", "END-016", "END-019")]
         for module_id in (specific or named):     # the module that makes the analysis, not the generic orbit / CubeSat ones
             if module_id in kpis and not any(c["module"] == module_id for c in checks):
                 checks.append({"module": module_id, "metric": "Analysis produced", "operator": "", "threshold": None, "unit": "", "value": True,

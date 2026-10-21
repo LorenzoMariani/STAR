@@ -6,7 +6,7 @@ function tests = test_matlab_sources
 %   checkcode -m2 reports only the errors of the Code Analyzer (red in the editor): syntax errors, which stop a file
 %   from running at all, and constructs it knows to be wrong (e.g. isempty on a logical expression). Warnings are not
 %   checked, nor run-time errors such as an undefined variable in a script.
-%   Folders: END-003, END-004, END-010, END-016, END-018 and tests. Left out, as code STAR does not maintain here:
+%   Folders: END-003, END-004, END-010, END-016, END-019 and tests. Left out, as code STAR does not maintain here:
 %   END-001 (its own repository, a git submodule), CARA_Analysis_Tools (NASA CARA), the lib/sgp4 folders (Vallado's
 %   SGP4; in END-010, ecef2lle.m and mincomb.m are Fortran-like and do not parse, and nothing calls them), the Unity
 %   project of END-010 and the _old* copies.
@@ -45,7 +45,7 @@ end
 %% =========================================================================
 function [files, rel] = star_sources(root)
     folders = ["END003-AttitudePropagation", "END004-PowerBudget", "END010-ReflectanceDetermination", ...
-        "END016-CollisionAvoidance", "END018-ComponentsThermalAnalysis", "tests"];
+        "END016-CollisionAvoidance", "END019-ComponentsThermalAnalysis", "tests"];
     files = strings(0, 1);
     for f = folders
         d = dir(fullfile(root, f, '**', '*.m'));

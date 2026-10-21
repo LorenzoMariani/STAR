@@ -4,13 +4,13 @@
 
 ## Functional role
 
-END-003 computes the attitude of the satellite during the passes END-001 chose: the daylight imaging pass over the area of interest (for END-007, END-018, END-004) and the first night pass visible from the observatory (for END-010). The orbit is not propagated by END-003: it comes from the END-001 ephemerides (Hermite interpolation, sub-metre), so the satellites are exactly the ones END-001 designed.
+END-003 computes the attitude of the satellite during the passes END-001 chose: the daylight imaging pass over the area of interest (for END-007, END-019, END-004) and the first night pass visible from the observatory (for END-010). The orbit is not propagated by END-003: it comes from the END-001 ephemerides (Hermite interpolation, sub-metre), so the satellites are exactly the ones END-001 designed.
 
 Attitude modes on a 1 s grid: nadir (+Z to nadir, +X along track; body rate = orbital rate about the orbit normal plus the turn of the orbital plane), follow_site (+Z to the target while it is above the elevation threshold, slews limited) and dynamics (Euler equations with the disturbance torques, free motion). In nadir and follow_site the guidance attitude is the reference of a PD controller with one reaction wheel per body axis, with the wheel torque and momentum limits of the END-006 design, the attitude knowledge error of its star tracker or ADCS unit, and momentum dumping with the magnetorquers (tilted IGRF-13 dipole field). The exported attitude is the controlled one, with its pointing error. Disturbance torques: gravity gradient, solar radiation pressure (with Earth shadow) and drag, and their worst case over all attitudes.
 
 ## When the planner should select this module
 
-Select END-003 when the request mentions attitude, nadir or target pointing, pointing accuracy or pointing error, quaternions, line of sight, viewing or observation geometry, target tracking, reaction wheels, magnetorquers, momentum, disturbance torques, eclipses, or when a downstream module needs the attitude of a pass: END-007 (synthetic images), END-010 (light curve), END-018 (thermal) and END-004 (power: eclipse and panel illumination). END-003 needs END-001 earlier in the same workflow (ephemerides and pass_selection.json).
+Select END-003 when the request mentions attitude, nadir or target pointing, pointing accuracy or pointing error, quaternions, line of sight, viewing or observation geometry, target tracking, reaction wheels, magnetorquers, momentum, disturbance torques, eclipses, or when a downstream module needs the attitude of a pass: END-007 (synthetic images), END-010 (light curve), END-019 (thermal) and END-004 (power: eclipse and panel illumination). END-003 needs END-001 earlier in the same workflow (ephemerides and pass_selection.json).
 
 ## Input interface
 
@@ -39,7 +39,7 @@ In modules_output/END-003/results_attitude_propagator/: output_attitude_propagat
 - END-004 uses the orbit of the selected satellite, the eclipse fraction and the face illumination.
 - END-007 uses output_attitude_propagation.csv (ECI->body) and selected_passes.json.
 - END-010 uses the light-curve pass CSV and its observer.
-- END-018 uses selected_pass_summary.csv and the body->ECI attitude of the pass.
+- END-019 uses selected_pass_summary.csv and the body->ECI attitude of the pass.
 - STAR compliance and the END003 results tab read attitude_summary.json.
 
 ## Known limits

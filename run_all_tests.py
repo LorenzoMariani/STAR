@@ -11,7 +11,7 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-003  END003-AttitudePropagation/tests
     END-016  END016-CollisionAvoidance/tests   (2026-10-20)
     END-004  END004-PowerBudget/tests
-    END-018  END018-ComponentsThermalAnalysis/tests   (2026-10-20)
+    END-019  END019-ComponentsThermalAnalysis/tests   (2026-10-20)
 Python suites (unittest):
     STAR     tests/test_*.py   (BackEnd imports, Python syntax, generated results page, runners without MATLAB; 2026-10-20)
     END-006  END006-ComponentSelector/star_component_selector/tests
@@ -49,7 +49,7 @@ SUITES = [
     {"id": "STAR", "kind": "python", "path": ".", "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
-    {"id": "END-018", "kind": "matlab", "path": "END018-ComponentsThermalAnalysis/tests"},
+    {"id": "END-019", "kind": "matlab", "path": "END019-ComponentsThermalAnalysis/tests"},
 ]
 # not in the default run: python run_all_tests.py SMOKE
 OPTIONAL_SUITES = [

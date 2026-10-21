@@ -1,8 +1,8 @@
-"""STAR runner for END-018 Components Thermal Analysis (2026-10-15).
+"""STAR runner for END-019 Components Thermal Analysis (2026-10-15).
 
-END-018 is a lumped-parameter thermal model of a CubeSat (1U, 3U, 6U, 12U;
+END-019 is a lumped-parameter thermal model of a CubeSat (1U, 3U, 6U, 12U;
 calibrated on in-orbit temperatures of a 3U, WildtrackCube / SIMBA), MATLAB
-sources in END018-ComponentsThermalAnalysis/src (entry star_thermal_main):
+sources in END019-ComponentsThermalAnalysis/src (entry star_thermal_main):
 it reads input_termico.json and the STAR products of END-001
 (satellite_XX.json) and END-003 (selected_pass_summary.csv and the pass
 attitude, output_attitude_propagation_ECI.csv) and writes, per satellite,
@@ -11,7 +11,7 @@ SAR on, eclipse), thermal_summary_SAT-XX.json and
 thermal_constellation_output.csv.
 
 Called by the orchestrator (FrontEnd/star_frontend_v5.py ->
-StarApi.call_module_runner_or_placeholder) as run_end018(input_file=..., ...).
+StarApi.call_module_runner_or_placeholder) as run_end019(input_file=..., ...).
 The runner
 1. checks the domain: a CubeSat of 1U-12U; a satellite above 24 kg, or a mission
    that names no CubeSat (and no class approved by the user), is skipped;
@@ -21,8 +21,8 @@ The runner
    where it came from;
 3. copies the END-001 and END-003 products of this run into one star_input_dir;
 4. runs the sources in MATLAB (matlab -batch; MATLAB_EXECUTABLE overrides the
-   command, STAR_END018_MATLAB_SOURCE the source folder). With
-   STAR_END018_EXECUTABLE = blackbox_build/star_thermal.exe it runs the compiled
+   command, STAR_END019_MATLAB_SOURCE the source folder). With
+   STAR_END019_EXECUTABLE = blackbox_build/star_thermal.exe it runs the compiled
    black box instead (the model as delivered, before the 2026-10-15 fixes;
    needs the MATLAB Runtime R2026a, a missing Runtime is reported explicitly);
 5. writes thermal_run_info.json (configuration, provenance, domain notes,
@@ -47,22 +47,22 @@ except ImportError:          # loaded outside the runners package
 from pathlib import Path
 from typing import Any, Callable
 
-MODULE_ID = "END-018"
+MODULE_ID = "END-019"
 OUTPUT_DIRNAME = "output_components_thermal_analysis"
 RESULTS_DIRNAME = "results_components_thermal_analysis"
-MODULE_DIRNAME = "END018-ComponentsThermalAnalysis"
+MODULE_DIRNAME = "END019-ComponentsThermalAnalysis"
 CUBESAT_MAX_MASS_KG = 24.0          # 12U, CubeSat Design Specification Rev. 14.1
 CLASSES = ("1U", "3U", "6U", "12U")
 RUNTIME_RELEASE = "R2026a"          # MATLAB release star_thermal.exe was compiled with
 RUNTIME_HINT = ("star_thermal needs the MATLAB Runtime R2026a (version 26.1), which is not installed on this machine: install it "
                 "(free, administrator rights: https://www.mathworks.com/products/compiler/mcr/index.html), or rebuild star_thermal "
-                "with the MATLAB release installed here, or unset STAR_END018_EXECUTABLE to run the MATLAB sources (src/).")
+                "with the MATLAB release installed here, or unset STAR_END019_EXECUTABLE to run the MATLAB sources (src/).")
 
 
 def _star_root(star_root: str | None) -> Path:
     if star_root:
         return Path(star_root)
-    return Path(__file__).resolve().parents[2]          # STAR/BackEnd/runners/end018_runner.py
+    return Path(__file__).resolve().parents[2]          # STAR/BackEnd/runners/end019_runner.py
 
 
 def _requirement_texts(requirements: list[Any]) -> list[str]:
@@ -91,7 +91,7 @@ def _from_requirements(texts: list[str]) -> tuple[dict[str, Any], dict[str, str]
         mass = float(m.group(1).replace(",", "."))
         evidence["satellite_mass_kg"] = _sentence(blob, m)
         if mass > CUBESAT_MAX_MASS_KG:
-            out_of_scope.append(f"satellite mass up to {mass:g} kg > {CUBESAT_MAX_MASS_KG:g} kg (12U): END-018 models CubeSats of 1U-12U only")
+            out_of_scope.append(f"satellite mass up to {mass:g} kg > {CUBESAT_MAX_MASS_KG:g} kg (12U): END-019 models CubeSats of 1U-12U only")
     is_cubesat = "cubesat" in low or "form_factor" in params
     is_sar = re.search(r"\bsar\b|synthetic aperture radar", low) is not None
     if is_sar and (m := re.search(r"\bsar\b[^.]{0,80}?(\d+(?:[.,]\d+)?)\s*w\b(?!h)", low)):
@@ -106,7 +106,7 @@ def _from_requirements(texts: list[str]) -> tuple[dict[str, Any], dict[str, str]
 
 
 def _approved_inputs(items: list[dict[str, Any]], reviewed: bool) -> dict[str, Any]:
-    """END-018 values of the missing-information step. reviewed=True: values the user entered or
+    """END-019 values of the missing-information step. reviewed=True: values the user entered or
     edited; False: first guesses (registry defaults), which never override the requirements."""
     out: dict[str, Any] = {}
     for item in items or []:
@@ -165,9 +165,9 @@ def _stage_upstream(modules_output: Path, staging: Path) -> tuple[list[str], lis
 
 def _process_env() -> dict[str, str]:
     """Environment with the MATLAB Runtime R2026a first on PATH: its installer edits the system PATH, which a STAR
-    started before the install does not see (STAR_END018_RUNTIME_DIR overrides the install folder)."""
+    started before the install does not see (STAR_END019_RUNTIME_DIR overrides the install folder)."""
     env = dict(os.environ)
-    roots = [os.environ.get("STAR_END018_RUNTIME_DIR", "").strip()]
+    roots = [os.environ.get("STAR_END019_RUNTIME_DIR", "").strip()]
     roots += [str(Path(os.environ[v]) / "MATLAB" / "MATLAB Runtime" / RUNTIME_RELEASE)
               for v in ("ProgramW6432", "ProgramFiles") if os.environ.get(v)]
     for r in filter(None, roots):
@@ -184,7 +184,7 @@ def _run_process(cmd: list[str], cwd: Path, log_path: Path, stop_event: Any, log
                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         while proc.poll() is None:
             if stop_event is not None and stop_event.is_set():
-                log("WARNING", "END-018 stopped by the user.")
+                log("WARNING", "END-019 stopped by the user.")
                 if sys.platform.startswith("win"):     # matlab -batch starts MATLAB.exe as a child
                     subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL, check=False, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
@@ -214,7 +214,7 @@ def _constellation_evidence(path: Path) -> str:
     return text
 
 
-def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
+def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
                log_callback: Callable[[str, str], Any] | None = None, stop_event: Any = None,
                star_root: str | None = None, run_output_dir: str | None = None, modules_output_root: str | None = None,
                module_product_output_dir: str | None = None, module_results_dir: str | None = None, **_: Any) -> dict[str, Any]:
@@ -259,7 +259,7 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
     stated_class = approved.get("form_factor") or req_params.get("form_factor") or (sat or {}).get("form_factor")
     if not out_of_scope and not stated_class:
         if not is_cubesat:
-            out_of_scope.append("the mission names no CubeSat and no CubeSat class was approved: END-018 models CubeSats of 1U-12U only")
+            out_of_scope.append("the mission names no CubeSat and no CubeSat class was approved: END-019 models CubeSats of 1U-12U only")
         elif "form_factor" in config:
             notes.append(f"CubeSat class not stated: first guess {config['form_factor']} (registry default)")
         else:
@@ -294,8 +294,8 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
         generated.append(str(path))
         process = {"run_id": run_id, "status": status, "started_at": started, "completed_at": datetime.now().isoformat(),
                    "return_code": info.get("return_code"), "evidence": message}
-        (module_root / "end018_process_result.json").write_text(json.dumps(process, indent=1, ensure_ascii=False), encoding="utf-8")
-        log("EXECUTION" if status == "completed" else "WARNING", f"END-018 {status}: {message}")
+        (module_root / "end019_process_result.json").write_text(json.dumps(process, indent=1, ensure_ascii=False), encoding="utf-8")
+        log("EXECUTION" if status == "completed" else "WARNING", f"END-019 {status}: {message}")
         return {"status": status, "generated_artifacts": generated, "evidence": message}
 
     if out_of_scope:
@@ -309,47 +309,47 @@ def run_end018(input_file: str, output_dir: str, run_id: str | None = None,
         shutil.rmtree(staging)
     satellites, missing = _stage_upstream(modules_output, staging)
     if missing:
-        return finish("failed", "Upstream products missing: " + "; ".join(missing) + ". END-018 needs END-001 and END-003 earlier in the workflow.")
+        return finish("failed", "Upstream products missing: " + "; ".join(missing) + ". END-019 needs END-001 and END-003 earlier in the workflow.")
     info["satellites"] = satellites
 
     # 4. the model
     cfg = {"star_input_dir": str(staging), "output_dir": str(product_dir), **config}
     cfg_path = module_root / "input_termico.json"
     cfg_path.write_text(json.dumps(cfg, indent=1), encoding="utf-8")
-    log("EXECUTION", f"END-018 configuration: {json.dumps(config)}")
-    exe_env = os.environ.get("STAR_END018_EXECUTABLE", "").strip()
+    log("EXECUTION", f"END-019 configuration: {json.dumps(config)}")
+    exe_env = os.environ.get("STAR_END019_EXECUTABLE", "").strip()
     if exe_env:
         exe = Path(exe_env)
         if not exe.is_file():
-            return finish("failed", f"STAR_END018_EXECUTABLE {exe} not found.")
+            return finish("failed", f"STAR_END019_EXECUTABLE {exe} not found.")
         cmd = [str(exe), str(cfg_path)]
         info["engine"] = "executable (model as delivered, before the 2026-10-15 fixes)"
     else:
-        src_dir = Path(os.environ.get("STAR_END018_MATLAB_SOURCE", "").strip() or root / MODULE_DIRNAME / "src")
+        src_dir = Path(os.environ.get("STAR_END019_MATLAB_SOURCE", "").strip() or root / MODULE_DIRNAME / "src")
         if not (src_dir / "star_thermal_main.m").is_file():
-            return finish("failed", f"END-018 MATLAB sources not found: {src_dir / 'star_thermal_main.m'} (set STAR_END018_MATLAB_SOURCE).")
+            return finish("failed", f"END-019 MATLAB sources not found: {src_dir / 'star_thermal_main.m'} (set STAR_END019_MATLAB_SOURCE).")
         matlab = os.environ.get("MATLAB_EXECUTABLE", "matlab")
         if not (Path(matlab).is_file() or shutil.which(matlab)):
-            return finish("failed", f"MATLAB not found ('{matlab}'): END-018 runs its MATLAB sources (set MATLAB_EXECUTABLE).")
+            return finish("failed", f"MATLAB not found ('{matlab}'): END-019 runs its MATLAB sources (set MATLAB_EXECUTABLE).")
         src, cfg_m = str(src_dir).replace("'", "''"), str(cfg_path).replace("'", "''")
         cmd = [matlab, "-batch", f"addpath('{src}'); star_thermal_main('{cfg_m}')"]
         info["engine"] = f"MATLAB sources {src_dir}"
-    log("EXECUTION", f"END-018 running {' '.join(cmd)}")
-    rc, out = _run_process(cmd, module_root, module_root / "end018_process_log.txt", stop_event, log)
+    log("EXECUTION", f"END-019 running {' '.join(cmd)}")
+    rc, out = _run_process(cmd, module_root, module_root / "end019_process_log.txt", stop_event, log)
     info["command"] = cmd
     info["return_code"] = rc
     if stop_event is not None and stop_event.is_set():
-        return finish("stopped", "END-018 stopped by the user.")
+        return finish("stopped", "END-019 stopped by the user.")
     if rc != 0:
         if exe_env and ("MATLAB Runtime" in out or "mclmcrrt" in out):
             return finish("failed", RUNTIME_HINT, process_output=out[-1500:])
-        return finish("failed", f"END-018 model exited with code {rc}: {out.strip()[-600:]}", process_output=out[-1500:])
+        return finish("failed", f"END-019 model exited with code {rc}: {out.strip()[-600:]}", process_output=out[-1500:])
 
     # 5. products
     products = sorted(p.name for p in product_dir.iterdir() if p.is_file())
     generated.extend(str(product_dir / p) for p in products)
     constellation = product_dir / "thermal_constellation_output.csv"
     if not constellation.is_file():
-        return finish("failed", "The END-018 model ended without thermal_constellation_output.csv.", products=products)
+        return finish("failed", "The END-019 model ended without thermal_constellation_output.csv.", products=products)
     evidence_text = _constellation_evidence(constellation) or f"{len(satellites)} satellite(s) analysed"
     return finish("completed", f"{evidence_text} ({', '.join(f'{k}={v}' for k, v in config.items())}).", products=products)

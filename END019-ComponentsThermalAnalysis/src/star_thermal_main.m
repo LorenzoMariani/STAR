@@ -1,12 +1,12 @@
 function rows = star_thermal_main(cfg_json)
-% STAR_THERMAL_MAIN  Modulo termico END-018 come lo lancia STAR (stesso ingresso della black box).
+% STAR_THERMAL_MAIN  Modulo termico END-019 come lo lancia STAR (stesso ingresso della black box).
 %   star_thermal_main('input_termico.json') legge le scelte dal file JSON
 %   (stessi campi di star_config: form_factor, panels, n_internal_nodes,
 %   sar_power_W, sar_source, sar_duty, star_input_dir, output_dir), esegue
 %   star_process e scrive gli output in output_dir. I percorsi relativi nel
 %   JSON sono relativi alla cartella del JSON (gli esempi in examples/).
-%   Il runner STAR (BackEnd/runners/end018_runner.py) lo chiama con
-%     matlab -batch "addpath('<END018>/src'); star_thermal_main('<input_termico.json>')"
+%   Il runner STAR (BackEnd/runners/end019_runner.py) lo chiama con
+%     matlab -batch "addpath('<END019>/src'); star_thermal_main('<input_termico.json>')"
 %   blackbox_build/star_thermal.exe e' la compilazione della versione
 %   consegnata il 2026-10-15 (prima delle correzioni annotate in README.md).
 if nargin < 1 || isempty(cfg_json), cfg_json = 'input_termico.json'; end

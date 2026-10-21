@@ -16,7 +16,7 @@ function cfg = star_config(opts)
 % ------------------------------------------------------------------------------
 if nargin<1 || isempty(opts), opts = struct(); end
 here = fileparts(mfilename('fullpath'));
-examples = fullfile(fileparts(here), 'examples');    % END018-ComponentsThermalAnalysis/examples
+examples = fullfile(fileparts(here), 'examples');    % END019-ComponentsThermalAnalysis/examples
 
 %% ============ SCELTE DI INPUT (default; sovrascrivibili da 'opts') ============
 cfg.sat.form     = getf(opts,'form_factor','3U');        % '1U'|'3U'|'6U'|'12U'

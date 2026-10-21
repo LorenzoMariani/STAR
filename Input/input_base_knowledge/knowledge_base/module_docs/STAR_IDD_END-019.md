@@ -1,20 +1,20 @@
-# STAR Interface Definition Notes — END-018 Components Thermal Analysis
+# STAR Interface Definition Notes — END-019 Components Thermal Analysis
 
-> Updated 2026-10-21. The formal IDD is STAR/IDD/STAR_IDD_END-018.docx; the module README is END018-ComponentsThermalAnalysis/README.md.
+> Updated 2026-10-21. The formal IDD is STAR/IDD/STAR_IDD_END-019.docx; the module README is END019-ComponentsThermalAnalysis/README.md.
 
 ## Functional role
 
-END-018 computes the thermal behaviour of a CubeSat (1U, 3U, 6U or 12U) along the orbit and the imaging passes produced by the upstream STAR modules: the temperature over time of the six faces (+X/-X, +Y/-Y, +Z/-Z), of the deployable solar panels and of the internal nodes (central body, battery and, when the payload is a SAR, the SAR payload), and the operational limits that are exceeded (for example the battery above 25 degC). It is a lumped-parameter model: a few thermal nodes exchange heat with each other, with the orbital environment (solar flux, albedo, Earth infrared, eclipses) and with deep space. Its parameters were calibrated on temperatures measured in orbit by a 3U CubeSat (WildtrackCube / SIMBA). The analysis lasts as long as the propagation it receives and starts from the periodic thermal regime of the orbit.
+END-019 computes the thermal behaviour of a CubeSat (1U, 3U, 6U or 12U) along the orbit and the imaging passes produced by the upstream STAR modules: the temperature over time of the six faces (+X/-X, +Y/-Y, +Z/-Z), of the deployable solar panels and of the internal nodes (central body, battery and, when the payload is a SAR, the SAR payload), and the operational limits that are exceeded (for example the battery above 25 degC). It is a lumped-parameter model: a few thermal nodes exchange heat with each other, with the orbital environment (solar flux, albedo, Earth infrared, eclipses) and with deep space. Its parameters were calibrated on temperatures measured in orbit by a 3U CubeSat (WildtrackCube / SIMBA). The analysis lasts as long as the propagation it receives and starts from the periodic thermal regime of the orbit.
 
-MATLAB sources in `END018-ComponentsThermalAnalysis/src` (MATLAB base only; entry `star_thermal_main`, run by the STAR runner with `matlab -batch`): it reads a configuration file and the STAR products, and writes its results files. The satellite follows its real orbit phase (RAAN, inclination, true anomaly, Sun at the epoch; radius and J2 rates as END-001), so eclipses are aligned with the END-003 passes. `blackbox_build/star_thermal.exe` is the compiled version as delivered (before the 2026-10-15 fixes, see the module README).
+MATLAB sources in `END019-ComponentsThermalAnalysis/src` (MATLAB base only; entry `star_thermal_main`, run by the STAR runner with `matlab -batch`): it reads a configuration file and the STAR products, and writes its results files. The satellite follows its real orbit phase (RAAN, inclination, true anomaly, Sun at the epoch; radius and J2 rates as END-001), so eclipses are aligned with the END-003 passes. `blackbox_build/star_thermal.exe` is the compiled version as delivered (before the 2026-10-15 fixes, see the module README).
 
 ## When the planner should select this module
 
-Select END-018 when the mission is a CubeSat (the request or the requirements name a CubeSat or a 1U, 3U, 6U or 12U class) and the request asks for its thermal behaviour, its temperatures, thermal control or thermal limits (battery, payload, solar panels). END-018 needs END-001 Constellation Optimizer (orbits) and END-003 Attitude Propagation (imaging passes, position and attitude) earlier in the same workflow. Do not select it for satellites above 24 kg: the module would report that the mission is out of scope.
+Select END-019 when the mission is a CubeSat (the request or the requirements name a CubeSat or a 1U, 3U, 6U or 12U class) and the request asks for its thermal behaviour, its temperatures, thermal control or thermal limits (battery, payload, solar panels). END-019 needs END-001 Constellation Optimizer (orbits) and END-003 Attitude Propagation (imaging passes, position and attitude) earlier in the same workflow. Do not select it for satellites above 24 kg: the module would report that the mission is out of scope.
 
 ## Input interface
 
-The Python runner `runners.end018_runner.run_end018` reads the module input JSON written by the orchestrator and builds `input_termico.json`:
+The Python runner `runners.end019_runner.run_end019` reads the module input JSON written by the orchestrator and builds `input_termico.json`:
 
 - `form_factor` (1U / 3U / 6U / 12U): the class of the END-006 initial design of the run (spacecraft_definition.json, shared by every module); a class the user approves in the missing-information step wins; a class written in the requirements is only reported when it differs; without END-006, the class of the requirements, else the model default;
 - `panels` (body / deployable / both): from the requirements ("deployable solar panels", "body-mounted solar panels"), else the model default;
@@ -27,18 +27,18 @@ Upstream files, copied by the runner into one folder for the model: `modules_out
 
 ## Output interface
 
-- `modules_output/END-018/output_components_thermal_analysis/output_thermal_SAT-XX.csv` — per satellite: `timestamp_utc`, one `T_<node>` column per face, panel and internal node [degC], `sar_on` (0/1), `eclipse` (0/1);
+- `modules_output/END-019/output_components_thermal_analysis/output_thermal_SAT-XX.csv` — per satellite: `timestamp_utc`, one `T_<node>` column per face, panel and internal node [degC], `sar_on` (0/1), `eclipse` (0/1);
 - `thermal_summary_SAT-XX.json` — per satellite: configuration used, orbit, minimum / maximum / mean of every node, solar panels block, peaks (SAR over the orbit and in the imaging pass with the real attitude, battery, central body), `limits` (battery 25, central body 60, SAR 85 degC) and `violations` (limit flags);
 - `thermal_constellation_output.csv` — one row per satellite (form factor, beta angle, number of passes, maximum SAR / battery / central / panel temperatures, battery limit flag);
-- `modules_output/END-018/results_components_thermal_analysis/thermal_run_info.json` — configuration passed to the model, provenance of every value, domain notes and status, read by the STAR FrontEnd results tab (END018 Thermal Analysis).
+- `modules_output/END-019/results_components_thermal_analysis/thermal_run_info.json` — configuration passed to the model, provenance of every value, domain notes and status, read by the STAR FrontEnd results tab (END019 Thermal Analysis).
 
 Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or a satellite above 24 kg); `failed` when END-001 / END-003 products are missing or the model cannot run (MATLAB not found; with the black box, a missing MATLAB Runtime R2026a: the message says so).
 
 ## Relationship with other modules
 
 - END-001 provides the orbits, END-003 the imaging passes and the attitude.
-- END-006 Satellite Design Component Selector chooses the CubeSat class: END-018 analyses the class of the END-006 initial design (the user can override it).
-- END-004 Power Budget and END-018 share the battery and payload duty assumptions only through the requirements.
+- END-006 Satellite Design Component Selector chooses the CubeSat class: END-019 analyses the class of the END-006 initial design (the user can override it).
+- END-004 Power Budget and END-019 share the battery and payload duty assumptions only through the requirements.
 
 ## Known limits
 

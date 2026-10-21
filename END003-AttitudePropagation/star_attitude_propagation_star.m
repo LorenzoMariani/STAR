@@ -28,7 +28,7 @@ function star_attitude_propagation_star(configFile, outputFolder)
 %     error from END-006), integrated with the disturbance torques: the
 %     exported attitude is the controlled one, with its pointing error
 %     (sat.control.enabled = false gives the ideal attitude as before).
-%   - OUTPUTS: the CSV of the imaging pass for END-007 / END-018 / END-004 and
+%   - OUTPUTS: the CSV of the imaging pass for END-007 / END-019 / END-004 and
 %     of the light-curve pass for END-010 on a fixed step (integer seconds,
 %     exact timestamps), selected_passes.json, the KPI catalog, the dashboard
 %     data, the PNG figures, and the CCSDS AEM of both passes with the figures
@@ -92,7 +92,7 @@ function star_attitude_propagation_star(configFile, outputFolder)
         end
     end
 
-    %% == IMAGING PASS CSV (END-007, END-018, END-004) =========================
+    %% == IMAGING PASS CSV (END-007, END-019, END-004) =========================
     step = S.sel.img.output_step_s;                   % rows on the END-001 grid (multiples of step from the epoch)
     t_img = (ceil(plan.imaging.aos_t/step)*step:step:floor(plan.imaging.los_t/step)*step)';
     if numel(t_img) < 2

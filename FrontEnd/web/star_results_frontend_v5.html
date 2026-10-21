@@ -262,7 +262,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END-007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END-010</span><span class="tab-title">Reflectance Determination</span></button>
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END-016</span><span class="tab-title">Collision Avoidance</span></button>
-        <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END-018</span><span class="tab-title">Thermal Analysis</span></button>
+        <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END-019</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
@@ -4657,11 +4657,11 @@ pre.json{margin:0;padding:12px 14px;max-height:420px;overflow:auto;font-size:11p
   &lt;div class=&quot;topbar&quot;&gt;
     &lt;div&gt;
       &lt;h2&gt;Components Thermal Analysis&lt;/h2&gt;
-      &lt;div class=&quot;sub&quot; id=&quot;source-label&quot;&gt;END-018 · CubeSat lumped-parameter thermal model (1U-12U) · temperatures along the END-001 orbit and the END-003 imaging passes&lt;/div&gt;
+      &lt;div class=&quot;sub&quot; id=&quot;source-label&quot;&gt;END-019 · CubeSat lumped-parameter thermal model (1U-12U) · temperatures along the END-001 orbit and the END-003 imaging passes&lt;/div&gt;
     &lt;/div&gt;
     &lt;div class=&quot;controls&quot;&gt;
       &lt;span class=&quot;status-pill&quot;&gt;&lt;span id=&quot;status-dot&quot; class=&quot;status-dot&quot;&gt;&lt;/span&gt;&lt;span id=&quot;load-status&quot;&gt;No data loaded&lt;/span&gt;&lt;/span&gt;
-      &lt;button id=&quot;manual-load&quot; class=&quot;primary-action&quot; type=&quot;button&quot;&gt;Select END-018 Folder&lt;/button&gt;
+      &lt;button id=&quot;manual-load&quot; class=&quot;primary-action&quot; type=&quot;button&quot;&gt;Select END-019 Folder&lt;/button&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
@@ -4808,7 +4808,7 @@ function renderBanner(){
   let cls = &#x27;good&#x27;, icon = &#x27;✓&#x27;, head = &#x27;&#x27;;
   if (info &amp;&amp; info.status &amp;&amp; info.status !== &#x27;completed&#x27;) {
     cls = info.status === &#x27;failed&#x27; ? &#x27;critical&#x27; : &#x27;warning&#x27;; icon = info.status === &#x27;failed&#x27; ? &#x27;✕&#x27; : &#x27;!&#x27;;
-    head = `&lt;b&gt;END-018 ${esc(info.status)}&lt;/b&gt; — ${esc(info.evidence_text || &#x27;&#x27;)}`;
+    head = `&lt;b&gt;END-019 ${esc(info.status)}&lt;/b&gt; — ${esc(info.evidence_text || &#x27;&#x27;)}`;
   } else {
     const viol = [];
     for (const id of Object.keys(state.sats).sort()) {
@@ -4933,7 +4933,7 @@ function renderAll(){
   const sat = state.current &amp;&amp; state.sats[state.current];
   if (sat &amp;&amp; sat.series) { renderSeries(&#x27;plotExternal&#x27;, &#x27;external&#x27;, c, sat.series); renderSeries(&#x27;plotInternal&#x27;, &#x27;internal&#x27;, c, sat.series); renderRange(c, sat.series); }
   else {
-    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; state.runInfo.status !== &#x27;completed&#x27; ? `END-018 ${state.runInfo.status}: no temperatures to show.` : &#x27;No temperature time series (output_thermal_SAT-XX.csv) loaded.&#x27;;
+    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; state.runInfo.status !== &#x27;completed&#x27; ? `END-019 ${state.runInfo.status}: no temperatures to show.` : &#x27;No temperature time series (output_thermal_SAT-XX.csv) loaded.&#x27;;
     empty(&#x27;plotExternal&#x27;, why); empty(&#x27;plotInternal&#x27;, why); empty(&#x27;plotRange&#x27;, why);
   }
 }
@@ -4944,10 +4944,10 @@ function applyData(data, labels){
   state.runInfo = data.runInfo || null; state.sats = data.sats || {}; state.constellation = data.constellation || null; state.labels = labels || {};
   const ids = Object.keys(state.sats).sort();
   state.current = ids.includes(state.current) ? state.current : (ids[0] || null);
-  if (!ids.length &amp;&amp; !state.runInfo) { setLoaded(false, &#x27;No END-018 files in the selected folder&#x27;); renderAll(); return false; }
+  if (!ids.length &amp;&amp; !state.runInfo) { setLoaded(false, &#x27;No END-019 files in the selected folder&#x27;); renderAll(); return false; }
   const status = state.runInfo &amp;&amp; state.runInfo.status ? `${state.runInfo.status} · ` : &#x27;&#x27;;
   setLoaded(ids.length &gt; 0, `${status}${ids.length} satellite(s)`);
-  if (labels &amp;&amp; (labels.product || labels.all)) $(&#x27;source-label&#x27;).textContent = `${labels.product || labels.all} · END-018 Components Thermal Analysis`;
+  if (labels &amp;&amp; (labels.product || labels.all)) $(&#x27;source-label&#x27;).textContent = `${labels.product || labels.all} · END-019 Components Thermal Analysis`;
   renderAll();
   return true;
 }
@@ -4962,7 +4962,7 @@ async function loadFiles(files, labels){
       else if (/^thermal_constellation_output\.csv$/i.test(name)) data.constellation = parseCsv(await f.text());
       else if ((m = name.match(/^output_thermal_(.+)\.csv$/i))) (data.sats[m[1]] = data.sats[m[1]] || {}).series = buildSeries(await f.text());
       else if ((m = name.match(/^thermal_summary_(.+)\.json$/i))) { const s = (data.sats[m[1]] = data.sats[m[1]] || {}); s.summary = JSON.parse(await f.text()); s.violations = findViolations(s.summary); }
-    } catch (e) { console.warn(`END-018: could not read ${name}`, e); }
+    } catch (e) { console.warn(`END-019: could not read ${name}`, e); }
   }
   return applyData(data, labels);
 }
@@ -4994,13 +4994,13 @@ window.refreshThermalDashboard = function(){ renderAll(); };
 
 document.addEventListener(&#x27;DOMContentLoaded&#x27;, () =&gt; {
   $(&#x27;manual-load&#x27;).onclick = requestFolder;
-  $(&#x27;thermalFolderInput&#x27;).addEventListener(&#x27;change&#x27;, async e =&gt; { await loadFiles(e.target.files, { all:&#x27;Selected END-018 folder&#x27; }); e.target.value = &#x27;&#x27;; });
+  $(&#x27;thermalFolderInput&#x27;).addEventListener(&#x27;change&#x27;, async e =&gt; { await loadFiles(e.target.files, { all:&#x27;Selected END-019 folder&#x27; }); e.target.value = &#x27;&#x27;; });
   new MutationObserver(() =&gt; renderAll()).observe(document.documentElement, { attributes:true, attributeFilter:[&#x27;data-theme&#x27;] });
   let t = null;
   window.addEventListener(&#x27;resize&#x27;, () =&gt; { clearTimeout(t); t = setTimeout(renderAll, 120); });
-  empty(&#x27;plotExternal&#x27;, &#x27;Select a RUN folder to load the END-018 thermal analysis.&#x27;);
-  empty(&#x27;plotInternal&#x27;, &#x27;Select a RUN folder to load the END-018 thermal analysis.&#x27;);
-  empty(&#x27;plotRange&#x27;, &#x27;Select a RUN folder to load the END-018 thermal analysis.&#x27;);
+  empty(&#x27;plotExternal&#x27;, &#x27;Select a RUN folder to load the END-019 thermal analysis.&#x27;);
+  empty(&#x27;plotInternal&#x27;, &#x27;Select a RUN folder to load the END-019 thermal analysis.&#x27;);
+  empty(&#x27;plotRange&#x27;, &#x27;Select a RUN folder to load the END-019 thermal analysis.&#x27;);
 });
 })();
 &lt;/script&gt;
@@ -5960,9 +5960,9 @@ const STAR_KIND_PATHS = {
     results: ['modules_output', 'END-016', 'results_collision_avoidance']
   },
   thermal: {
-    all: ['modules_output', 'END-018'],
-    product: ['modules_output', 'END-018', 'output_components_thermal_analysis'],
-    results: ['modules_output', 'END-018', 'results_components_thermal_analysis']
+    all: ['modules_output', 'END-019'],
+    product: ['modules_output', 'END-019', 'output_components_thermal_analysis'],
+    results: ['modules_output', 'END-019', 'results_components_thermal_analysis']
   },
   compsel: {
     all: ['modules_output', 'END-006'],
@@ -6524,8 +6524,8 @@ async function loadThermalAnalysisFromStarRoot() {
   const frame = $('frame-thermal');
   if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveThermalFilesFromParent !== 'function') return false;
   try {
-    const productPath = ['modules_output','END-018','output_components_thermal_analysis'];
-    const resultsPath = ['modules_output','END-018','results_components_thermal_analysis'];
+    const productPath = ['modules_output','END-019','output_components_thermal_analysis'];
+    const resultsPath = ['modules_output','END-019','results_components_thermal_analysis'];
     const payload = {
       productFiles: await collectFilesFromSelectedPath(productPath),
       resultFiles: await collectFilesFromSelectedPath(resultsPath)
@@ -6533,7 +6533,7 @@ async function loadThermalAnalysisFromStarRoot() {
     await frame.contentWindow.receiveThermalFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
     return true;
   } catch (error) {
-    console.warn('Unable to load END-018 thermal-analysis data from the selected RUN folder:', error);
+    console.warn('Unable to load END-019 thermal-analysis data from the selected RUN folder:', error);
     return false;
   }
 }
@@ -6613,7 +6613,7 @@ function moduleDisplayName(moduleId) {
     'END-007': 'Synthetic Data Generation',
     'END-010': 'Reflectance Determination',
     'END-016': 'Collision Avoidance',
-    'END-018': 'Components Thermal Analysis',
+    'END-019': 'Components Thermal Analysis',
     'END-006': 'Satellite Design Component Selector'
   };
   return names[moduleId] || moduleId;
@@ -6641,8 +6641,8 @@ async function buildRunDiagnostics() {
     { module:'END-010', artifact:'Reflectance plots', path:['modules_output','END-010','results_reflectance_determination'], matcher:name=>/\.(png|jpg|jpeg|html)$/i.test(name) },
     { module:'END-016', artifact:'Space-safety summary and close approaches', path:['modules_output','END-016','output_collision_avoidance'], matcher:name=>/^(space_safety_summary\.json|intra_close_approaches\.csv|intra_pair_min_distance\.csv|disposal_lifetime\.csv)$/i },
     { module:'END-016', artifact:'Collision-avoidance run information', path:['modules_output','END-016','results_collision_avoidance'], matcher:name=>/^collision_run_info\.json$/i },
-    { module:'END-018', artifact:'Thermal time series and summaries', path:['modules_output','END-018','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
-    { module:'END-018', artifact:'Thermal run information', path:['modules_output','END-018','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
+    { module:'END-019', artifact:'Thermal time series and summaries', path:['modules_output','END-019','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
+    { module:'END-019', artifact:'Thermal run information', path:['modules_output','END-019','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
     { module:'END-006', artifact:'Component-selector results', path:['modules_output','END-006','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
     { module:'END-006', artifact:'Component-selector frontend data and report', path:['modules_output','END-006','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
   ];
@@ -6685,7 +6685,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-018']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-019']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {

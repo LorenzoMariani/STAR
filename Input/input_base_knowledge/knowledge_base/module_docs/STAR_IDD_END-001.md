@@ -12,7 +12,7 @@ END-001 is the first module of the STAR chain. After choosing the constellation 
 
 ## When the planner should select this module
 
-Select END-001 when the request asks for a constellation, a number of satellites or orbital planes, orbits, altitude or inclination, revisit time, coverage of an area, acquisition frequency, latency, ground-station access or observation windows. Select it also when a downstream module needs orbits: END-003 (attitude), END-004 (power), END-010 (light curve), END-016 (space safety) and END-018 (thermal) all start from the END-001 products of the same run. The area of interest must be inside Italy (STAR domain): a request for an area outside Italy stops STAR.
+Select END-001 when the request asks for a constellation, a number of satellites or orbital planes, orbits, altitude or inclination, revisit time, coverage of an area, acquisition frequency, latency, ground-station access or observation windows. Select it also when a downstream module needs orbits: END-003 (attitude), END-004 (power), END-010 (light curve), END-016 (space safety) and END-019 (thermal) all start from the END-001 products of the same run. The area of interest must be inside Italy (STAR domain): a request for an area outside Italy stops STAR.
 
 ## Input interface
 
@@ -44,7 +44,7 @@ In modules_output/END-001/results_constellation_optimizer/: coverage_summary.jso
 - END-006 (final design) uses the orbit altitudes (GSD and swath of the imager).
 - END-010 receives the night pass through END-003; END-007 receives orbit and attitude through END-003.
 - END-016 uses satellite_NN.json, the ephemerides and the mass, drag area and Cd of end001_runtime_input.json.
-- END-018 uses satellite_NN.json.
+- END-019 uses satellite_NN.json.
 - STAR compliance and the END001 results tab read coverage_summary.json.
 
 ## Known limits

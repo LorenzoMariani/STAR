@@ -7,7 +7,7 @@ writes the products the real model writes):
 - END-016 (runners/end016_runner.py): spacecraft from END-001's input of the run, values from the requirements and from
   the user, provenance of each value, disposal rules, solar activity levels of the run mode, staging of the END-001
   products, the MATLAB command, the evidence line from the KPIs; the failures without END-001 products or MATLAB.
-- END-018 (runners/end018_runner.py): CubeSat domain (mass above 24 kg, no CubeSat: skipped), class of the END-006 design,
+- END-019 (runners/end019_runner.py): CubeSat domain (mass above 24 kg, no CubeSat: skipped), class of the END-006 design,
   SAR payload and its power, panels, staging of the END-001 and END-003 products, the evidence line, the MATLAB Runtime hint.
 - END-003 attitude control from the END-006 design (wheels, star tracker, magnetorquers), END-004 orbit period from the
   END-001 orbit, run mode and level, the END-006 spacecraft definition lookup.
@@ -26,7 +26,7 @@ STAR = Path(__file__).resolve().parent.parent
 if str(STAR / "BackEnd") not in sys.path:
     sys.path.insert(0, str(STAR / "BackEnd"))
 
-from runners import end003_runner, end004_runner, end016_runner, end018_runner, star_runner_io  # noqa: E402
+from runners import end003_runner, end004_runner, end016_runner, end019_runner, star_runner_io  # noqa: E402
 
 # Stand-in engine: records its arguments, then writes what the model of the module writes (or fails on request).
 ENGINE = textwrap.dedent('''
@@ -92,8 +92,8 @@ class RunnerCase(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.modules_output = self.tmp / "modules_output"
         env = {k: v for k, v in os.environ.items()
-               if k not in ("MATLAB_EXECUTABLE", "STAR_END016_MATLAB_SOURCE", "STAR_END018_EXECUTABLE",
-                            "STAR_END018_MATLAB_SOURCE", "STAR_RUN_MODE", "STAR_RUN_LEVEL")}
+               if k not in ("MATLAB_EXECUTABLE", "STAR_END016_MATLAB_SOURCE", "STAR_END019_EXECUTABLE",
+                            "STAR_END019_MATLAB_SOURCE", "STAR_RUN_MODE", "STAR_RUN_LEVEL")}
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -134,7 +134,7 @@ class TestEnd016Runner(RunnerCase):
             {"needed_by_module_id": "END-016", "parameter": "screening_km", "proposed_value": "5",
              "source": "module_registry_default"},                                              # first guess: ignored
             {"needed_by_module_id": "END-016", "parameter": "mission_lifetime_years", "proposed_value": "TBD"},
-            {"needed_by_module_id": "END-018", "parameter": "hard_body_radius_m", "proposed_value": "3"},
+            {"needed_by_module_id": "END-019", "parameter": "hard_body_radius_m", "proposed_value": "3"},
         ]
         self.assertEqual(end016_runner._approved_inputs(items), {"position_sigma_rtn_m": [30.0, 120.0, 30.0], "pc_threshold": 1e-5})
 
@@ -209,10 +209,10 @@ class TestEnd016Runner(RunnerCase):
         self.assertIn("MATLAB not found", result["evidence"])
 
 
-class TestEnd018Runner(RunnerCase):
+class TestEnd019Runner(RunnerCase):
     def setUp(self):
         super().setUp()
-        self.module_root = self.modules_output / "END-018"
+        self.module_root = self.modules_output / "END-019"
 
     def upstream(self) -> None:
         end001_products(self.modules_output, n=2)
@@ -222,15 +222,15 @@ class TestEnd018Runner(RunnerCase):
         (att / "output_attitude_propagation.csv").write_text("timestamp_utc,q_w\n", encoding="utf-8")
 
     def run_module(self, payload: dict, rows: list | None = None, fail: str | None = None) -> tuple[dict, dict]:
-        exe = make_engine(self.tmp / "engine", {"module": "END-018", "rows": rows or [{"satellite_label": "SAT-01"}], "fail": fail})
-        os.environ["STAR_END018_EXECUTABLE"] = str(exe)
-        result = end018_runner.run_end018(str(self.payload("end018_input", **payload)), str(self.module_root), run_id="RUN_TEST",
+        exe = make_engine(self.tmp / "engine", {"module": "END-019", "rows": rows or [{"satellite_label": "SAT-01"}], "fail": fail})
+        os.environ["STAR_END019_EXECUTABLE"] = str(exe)
+        result = end019_runner.run_end019(str(self.payload("end019_input", **payload)), str(self.module_root), run_id="RUN_TEST",
                                           modules_output_root=str(self.modules_output))
-        info = json.loads((self.module_root / end018_runner.RESULTS_DIRNAME / "thermal_run_info.json").read_text(encoding="utf-8"))
+        info = json.loads((self.module_root / end019_runner.RESULTS_DIRNAME / "thermal_run_info.json").read_text(encoding="utf-8"))
         return result, info
 
     def test_requirements_parsing(self):
-        params, evidence, out_of_scope, cubesat, sar = end018_runner._from_requirements([
+        params, evidence, out_of_scope, cubesat, sar = end019_runner._from_requirements([
             "The 6U CubeSat shall carry a SAR payload with a peak power of 120 W.",
             "Power from deployable solar panels and body-mounted solar cells.",
             "The satellite mass not exceeding 12 kg."])
@@ -238,7 +238,7 @@ class TestEnd018Runner(RunnerCase):
         self.assertTrue(cubesat and sar)
         self.assertEqual(out_of_scope, [])
         self.assertIn("6U CubeSat", evidence["form_factor"])
-        _, _, out_of_scope, _, _ = end018_runner._from_requirements(["A satellite with mass not exceeding 50 kg."])
+        _, _, out_of_scope, _, _ = end019_runner._from_requirements(["A satellite with mass not exceeding 50 kg."])
         self.assertIn("50 kg > 24 kg", out_of_scope[0])
 
     def test_sar_cubesat_with_the_end006_design(self):
@@ -250,7 +250,7 @@ class TestEnd018Runner(RunnerCase):
         result, info = self.run_module({
             "requirements": [requirement("The 6U CubeSat shall carry a SAR payload with a peak power of 120 W."),
                              requirement("Deployable solar panels shall supply the payload.")],
-            "resolved_inputs": [{"needed_by_module_id": "END-018", "parameter": "sar_duty", "proposed_value": "0.1",
+            "resolved_inputs": [{"needed_by_module_id": "END-019", "parameter": "sar_duty", "proposed_value": "0.1",
                                  "source": "module_registry_default"}],
         }, rows=rows)
         self.assertEqual(result["status"], "completed", result["evidence"])
@@ -276,7 +276,7 @@ class TestEnd018Runner(RunnerCase):
         self.upstream()
         result, info = self.run_module({
             "requirements": [requirement("A 3U CubeSat with an optical camera.")],
-            "resolved_inputs": [{"needed_by_module_id": "END-018", "parameter": "sar_power_W", "proposed_value": "200",
+            "resolved_inputs": [{"needed_by_module_id": "END-019", "parameter": "sar_power_W", "proposed_value": "200",
                                  "source": "module_registry_default"}]})
         self.assertEqual(result["status"], "completed", result["evidence"])
         self.assertEqual(info["config"]["n_internal_nodes"], 2)
@@ -299,7 +299,7 @@ class TestEnd018Runner(RunnerCase):
         self.upstream()
         result, _ = self.run_module({"requirements": [requirement("A 3U CubeSat.")]},
                                     fail="Could not find version 26.1 of the MATLAB Runtime")
-        self.assertEqual(result["evidence"], end018_runner.RUNTIME_HINT)
+        self.assertEqual(result["evidence"], end019_runner.RUNTIME_HINT)
 
 
 class TestRunnerHelpers(unittest.TestCase):

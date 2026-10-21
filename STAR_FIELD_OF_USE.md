@@ -1,7 +1,7 @@
 # STAR - current field of use
 
 Which calls for proposals STAR can process today (frontend v4, October 2026).
-STAR federates 18 END modules, 8 of which run (see the README, "The 18 END").
+STAR federates 19 END modules, 8 of which run (see the README, "The 19 END").
 The domain is configured in `Input/input_base_knowledge/config/star_domain.json`
 and checked by `BackEnd/runners/star_domain.py` when the workflow is planned and
 again when the module inputs are approved: outside it STAR stops and gives the
@@ -45,7 +45,7 @@ v6 asked for Sun-synchronous orbits and at most 12 satellites.
 | END-007 Synthetic Data Generation | synthetic optical images of the imaging pass (Unreal), scenario generation included |
 | END-010 Reflectance Determination | brightness and light curve of the satellite seen from an Italian telescope |
 | END-016 Collision Avoidance | close approaches inside the constellation, orbital lifetime, post-mission disposal |
-| END-018 Components Thermal Analysis | temperatures of the CubeSat components over the orbit |
+| END-019 Components Thermal Analysis | temperatures of the CubeSat components over the orbit |
 
 END-001 and END-006 are always in the workflow; the others when the call asks
 for their results. The results page shows every module and a "Requirements &

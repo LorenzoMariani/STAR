@@ -95,7 +95,7 @@ A valle, il progetto iniziale (`spacecraft_definition.json`):
 | END-004 Power Budget | sottosistemi con le potenze dichiarate, batteria, pannelli solari e facce su cui sono montati |
 | END-010 Reflectance Determination | classe del CubeSat (modello 3D per Unity) e area di riferimento |
 | END-016 Collision Avoidance | massa, area e Cd, attraverso l'input di END-001 |
-| END-018 Components Thermal Analysis | classe del CubeSat |
+| END-019 Components Thermal Analysis | classe del CubeSat |
 | STAR (scheda dei risultati END006) | progetto iniziale e finale, distinta dei componenti, budget |
 
 ## Output

@@ -3,7 +3,7 @@
 END-003 calcola l'assetto del satellite durante i passaggi che END-001 ha scelto: il passaggio di imaging sull'area di interesse e il passaggio notturno visibile dall'osservatorio.
 L'orbita non viene propagata qui: arriva dalle effemeridi di END-001, quindi i satelliti sono esattamente quelli progettati.
 L'assetto segue una legge di guida (nadir o puntamento del sito), chiusa da un controllo PD con ruote di reazione e magnetotorquer, oppure evolve libero sotto le coppie di disturbo.
-Il modulo esporta l'assetto dei passaggi per END-004, END-007, END-010 ed END-018, insieme ai KPI e ai grafici.
+Il modulo esporta l'assetto dei passaggi per END-004, END-007, END-010 ed END-019, insieme ai KPI e ai grafici.
 
 ## In breve
 
@@ -85,7 +85,7 @@ A valle:
 | END-004 Power Budget | l'orbita del satellite scelto (`selected_passes.json`) e la frazione di eclisse (KPI-14 di `attitude_summary.json`) |
 | END-007 Synthetic Data Generation | `output_attitude_propagation.csv` (quaternione ECI→body per Unreal) e `selected_passes.json` |
 | END-010 Reflectance Determination | il passaggio notturno (`output_attitude_propagation_lightcurve_ECI.csv`, `selected_passes.json`) |
-| END-018 Components Thermal Analysis | `selected_pass_summary.csv` e l'assetto del passaggio (`output_attitude_propagation_ECI.csv`, altrimenti il file per Unreal) |
+| END-019 Components Thermal Analysis | `selected_pass_summary.csv` e l'assetto del passaggio (`output_attitude_propagation_ECI.csv`, altrimenti il file per Unreal) |
 | STAR (conformità ai requisiti, scheda dei risultati END003) | i KPI di `attitude_summary.json`, i dati di `attitude_propagation_plots_data.js` |
 
 ## Output

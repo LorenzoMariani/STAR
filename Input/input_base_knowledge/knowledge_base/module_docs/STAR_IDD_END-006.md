@@ -96,7 +96,7 @@ Status: `completed` when the design ran (unmet requirements are listed in the ev
 
 ## Relationship with other modules
 
-- The initial design (spacecraft_definition.json, step 0) is the satellite of every module of the run: END-001 takes mass, drag area (mean projected area) and Cd; END-003 mass, inertia, areas, Cd, Cr, dimensions, reaction wheels, star tracker and magnetorquers; END-004 the subsystems with their declared powers, the battery and the solar panels with their faces; END-010 the CubeSat class (Unity 3D model, camera size) and the mean projected area; END-016 mass, area and Cd through the END-001 input; END-018 the CubeSat class (a class written in the requirements is only reported when it differs).
+- The initial design (spacecraft_definition.json, step 0) is the satellite of every module of the run: END-001 takes mass, drag area (mean projected area) and Cd; END-003 mass, inertia, areas, Cd, Cr, dimensions, reaction wheels, star tracker and magnetorquers; END-004 the subsystems with their declared powers, the battery and the solar panels with their faces; END-010 the CubeSat class (Unity 3D model, camera size) and the mean projected area; END-016 mass, area and Cd through the END-001 input; END-019 the CubeSat class (a class written in the requirements is only reported when it differs).
 
 - The final design uses END-001 orbit altitudes (GSD and swath of the imagers), END-004 energy per orbit (battery capacity) and END-016 disposal delta-v (propulsion; computed for the mass and drag area END-001 used).
 
@@ -106,7 +106,7 @@ The rules that decide which subsystems are needed are keyword rules on the requi
 
 ## Initial and final design in a STAR workflow (2026-10-17)
 
-- Step 0 (before the other modules): initial design from the requirements; spacecraft_definition.json is the satellite every module uses (END-001, END-003, END-004, END-010, END-016, END-018): class, envelope, mass, inertia of the uniform box, face areas and mean projected area, Cd 2.2 and Cr 1.2 (STAR defaults), solar panels and their body faces, battery, declared peak powers, radios, attitude-control components. Products *_initial.json / .csv and component_selector_data_initial.js (window.componentSelectorDataInitial).
+- Step 0 (before the other modules): initial design from the requirements; spacecraft_definition.json is the satellite every module uses (END-001, END-003, END-004, END-010, END-016, END-019): class, envelope, mass, inertia of the uniform box, face areas and mean projected area, Cd 2.2 and Cr 1.2 (STAR defaults), solar panels and their body faces, battery, declared peak powers, radios, attitude-control components. Products *_initial.json / .csv and component_selector_data_initial.js (window.componentSelectorDataInitial).
 
 - Last step: final design with the results of the modules (altitude, energy per orbit, delta-v); usual products, spacecraft_definition_final.json and design_changes (class, mass, components, battery). The modules are not re-run.
 

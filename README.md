@@ -11,7 +11,7 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
   v5 (2026-10-18) has the workflow panel on the full width, the terminal in the
   bottom row on the left of the STAR modules, the workspace buttons in the window
   header, results tabs like the workflow tabs and larger text.
-  STAR has 18 END since v4: Scenario Generation (the former END-006) is part of
+  STAR has 19 END (18 since v4; END-018 ABEP and END-019 thermal analysis since 2026-10-21): Scenario Generation (the former END-006) is part of
   END-007, and the component selector (END-019 until then) is END-006.
   Older versions (v0-v4) are in `FrontEnd/_old_frontend/` (not in git).
   In the results workspace "Select RUN Folder" opens a folder dialog in
@@ -23,8 +23,8 @@ Python, Unity / Unreal). This repository holds only what running STAR needs.
   base, sample mission requests) and the modules' native input templates.
 - `END001-ConstellationOptimizer/` - git submodule
   (github.com/LorenzoMariani/matlabConstellationOptimizer), see its `USAGE.md`.
-- `END018-ComponentsThermalAnalysis/` - CubeSat thermal model, MATLAB sources
-  in `src/` (see its `README.md`; runner `BackEnd/runners/end018_runner.py`,
+- `END019-ComponentsThermalAnalysis/` - CubeSat thermal model, MATLAB sources
+  in `src/` (see its `README.md`; runner `BackEnd/runners/end019_runner.py`,
   results tab in frontend v4).
 - `END016-CollisionAvoidance/` - space safety of the END-001 constellation
   inside STAR (close approaches between its satellites with collision
@@ -53,9 +53,9 @@ git clone --recursive https://github.com/LorenzoMariani/STAR.git
 
 (or `git submodule update --init` in an existing clone).
 
-## The 18 END
+## The 19 END
 
-STAR federates 18 END modules (frontend v4, `CANONICAL_MODULE_CATALOG`). Since
+STAR federates 19 END modules (frontend v4, `CANONICAL_MODULE_CATALOG`). Since
 2026-10-18 Scenario Generation (the former END-006, TELESPAZIO) is part of
 END-007 Synthetic Data Generation, and the Satellite Design Component Selector,
 END-019 until then, is END-006. The modules marked "runs" have a runner and a
@@ -85,7 +85,8 @@ CubeSat 1U-12U up to 24 kg, optical payload) is described in
 | END-015 | Flexible Components Health Monitoring | UNIRM1 | catalogue only |
 | END-016 | Collision Avoidance | UNIRM1 | runs |
 | END-017 | Clock Anomalies Detection | INRIM | catalogue only |
-| END-018 | Components Thermal Analysis | UNIRM1 | runs |
+| END-018 | ABEP | SITAEL | catalogue only |
+| END-019 | Components Thermal Analysis (END-018 until 2026-10-21) | UNIRM1 | runs |
 
 ## Run modes and smoke test
 
@@ -102,7 +103,7 @@ tooltip). The mode and level go into every module input file (`run_mode`,
 |---|---|---|
 | END-001 | surrogate GA 20 x 5, top 1 re-simulated, no parallel pool (~1 min) | by level, see below |
 | END-016 | mean solar activity | low, mean and high solar activity |
-| END-003, END-004, END-006, END-010, END-018 | complete settings (each takes 1-60 s, mostly MATLAB / Unity start-up) | same |
+| END-003, END-004, END-006, END-010, END-019 | complete settings (each takes 1-60 s, mostly MATLAB / Unity start-up) | same |
 | END-007 (Unreal) | always complete | always complete |
 
 END-001 by level (surrogate GA population x generations x restarts, best

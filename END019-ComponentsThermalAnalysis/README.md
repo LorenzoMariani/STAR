@@ -1,6 +1,6 @@
-# END-018 — Components Thermal Analysis
+# END-019 — Components Thermal Analysis
 
-END-018 calcola le temperature di un CubeSat (1U, 3U, 6U, 12U) lungo tutta la missione di ogni satellite della costellazione.
+END-019 calcola le temperature di un CubeSat (1U, 3U, 6U, 12U) lungo tutta la missione di ogni satellite della costellazione.
 Il modello è a parametri concentrati (Lumped Capacitance Method), calibrato sulle temperature in orbita di un 3U (WildtrackCube / SIMBA).
 In STAR dice se batteria, corpo centrale e payload restano nei loro limiti operativi, con le orbite di END-001 e i passaggi e l'assetto di END-003.
 
@@ -10,7 +10,7 @@ In STAR dice se batteria, corpo centrale e payload restano nei loro limiti opera
 |---|---|
 | Linguaggio | MATLAB (R2024b sul PC di STAR), solo MATLAB di base |
 | Punto d'ingresso | `src/star_thermal_main.m` (funzione `star_thermal_main(cfg_json)`) |
-| In STAR | `BackEnd/runners/end018_runner.py` (`run_end018`) |
+| In STAR | `BackEnd/runners/end019_runner.py` (`run_end019`) |
 | Durata in STAR | da pochi secondi a circa 40 s (5–20 satelliti per 48 h) |
 
 ## Cosa fa
@@ -71,8 +71,8 @@ Il runner scrive `input_termico.json`. Ogni valore registra la sua origine. A pa
   - Se manca usa il file per Unreal, coniugando il quaternione.
 - **Motore:**
   - di default i sorgenti in MATLAB (`matlab -batch`);
-  - `MATLAB_EXECUTABLE` e `STAR_END018_MATLAB_SOURCE` cambiano comando e cartella;
-  - con `STAR_END018_EXECUTABLE` gira invece la black box compilata.
+  - `MATLAB_EXECUTABLE` e `STAR_END019_MATLAB_SOURCE` cambiano comando e cartella;
+  - con `STAR_END019_EXECUTABLE` gira invece la black box compilata.
 
 ## Collegamenti con gli altri moduli
 
@@ -86,13 +86,13 @@ A monte:
 
 A valle:
 
-| Modulo | Cosa usa di END-018 |
+| Modulo | Cosa usa di END-019 |
 |---|---|
-| STAR (conformità ai requisiti, scheda dei risultati END018) | temperature massime e minime di batteria e corpo centrale (`thermal_summary_SAT-XX.json`), serie temporali |
+| STAR (conformità ai requisiti, scheda dei risultati END019) | temperature massime e minime di batteria e corpo centrale (`thermal_summary_SAT-XX.json`), serie temporali |
 
 ## Output
 
-In STAR i file vanno in `Output/RUN_<data>/modules_output/END-018/`:
+In STAR i file vanno in `Output/RUN_<data>/modules_output/END-019/`:
 
 | File | Contenuto |
 |---|---|
@@ -100,21 +100,21 @@ In STAR i file vanno in `Output/RUN_<data>/modules_output/END-018/`:
 | `output_components_thermal_analysis/thermal_summary_SAT-XX.json` | configurazione, orbita (β, periodo, passaggi, orbite di regime), minimi / massimi / medie di ogni nodo e dei pannelli, picchi (SAR anche nel passaggio con l'assetto reale), limiti e superamenti |
 | `output_components_thermal_analysis/thermal_constellation_output.csv` | una riga per satellite: classe, nodi, β, passaggi, massimi di SAR, BAT, CTR e pannelli, batteria oltre il limite |
 | `results_components_thermal_analysis/thermal_run_info.json` | configurazione, provenienza dei valori, note, dominio, esito |
-| `input_termico.json`, `end018_process_log.txt`, `end018_process_result.json` | input effettivo, log, esito del run |
+| `input_termico.json`, `end019_process_log.txt`, `end019_process_result.json` | input effettivo, log, esito del run |
 
 ## Come si lancia
 
 Da MATLAB:
 
 ```matlab
-cd('END018-ComponentsThermalAnalysis');
+cd('END019-ComponentsThermalAnalysis');
 addpath('src')
 star_thermal_main('examples/input_termico.json')   % come STAR, output in examples/output_thermal
 run_star_thermal                                    % idem con i valori di star_config, più i grafici
 run_analisi                                         % analisi diretta da config_analisi.m, senza file STAR
 ```
 
-In STAR il modulo fa parte del workflow, dopo END-001 ed END-003. Test: `python run_all_tests.py END-018`, che lancia `tests/test_end018_thermal.m`:
+In STAR il modulo fa parte del workflow, dopo END-001 ed END-003. Test: `python run_all_tests.py END-019`, che lancia `tests/test_end019_thermal.m`:
 - regime al buio e al Sole costante (bilancio energetico esatto);
 - frazione d'eclisse;
 - ciclo di lavoro del SAR;

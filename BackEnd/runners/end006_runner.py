@@ -78,7 +78,7 @@ def _approved_inputs(items: list[dict[str, Any]], defaults_only: bool | None = N
 
 # Satellite shared by the STAR modules (2026-10-17): END-006 runs first (initial design, step 0 of the
 # workflow) and writes spacecraft_definition.json, which END-001, END-003, END-004, END-010, END-016 and
-# END-018 use; at the end of the workflow it runs again with their results (final design).
+# END-019 use; at the end of the workflow it runs again with their results (final design).
 SPACECRAFT_FILE = "spacecraft_definition.json"
 PANEL_FACE_MM = {"1U": (100.0, 100.0), "2U": (100.0, 227.0), "3U": (100.0, 340.5), "6U": (226.3, 366.0), "12U": (226.3, 366.0)}
 CD_DEFAULT, CR_DEFAULT = 2.2, 1.2
