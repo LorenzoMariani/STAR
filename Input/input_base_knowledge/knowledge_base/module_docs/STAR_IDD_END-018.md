@@ -1,5 +1,7 @@
 # STAR Interface Definition Notes — END-018 Components Thermal Analysis
 
+> Updated 2026-10-21. The formal IDD is STAR/IDD/STAR_IDD_END-018.docx; the module README is END018-ComponentsThermalAnalysis/README.md.
+
 ## Functional role
 
 END-018 computes the thermal behaviour of a CubeSat (1U, 3U, 6U or 12U) along the orbit and the imaging passes produced by the upstream STAR modules: the temperature over time of the six faces (+X/-X, +Y/-Y, +Z/-Z), of the deployable solar panels and of the internal nodes (central body, battery and, when the payload is a SAR, the SAR payload), and the operational limits that are exceeded (for example the battery above 25 degC). It is a lumped-parameter model: a few thermal nodes exchange heat with each other, with the orbital environment (solar flux, albedo, Earth infrared, eclipses) and with deep space. Its parameters were calibrated on temperatures measured in orbit by a 3U CubeSat (WildtrackCube / SIMBA). The analysis lasts as long as the propagation it receives and starts from the periodic thermal regime of the orbit.
@@ -14,7 +16,7 @@ Select END-018 when the mission is a CubeSat (the request or the requirements na
 
 The Python runner `runners.end018_runner.run_end018` reads the module input JSON written by the orchestrator and builds `input_termico.json`:
 
-- `form_factor` (1U / 3U / 6U / 12U): the value approved in the missing-information step, else the class written in the requirements (for example "6U CubeSat"), else the first guess 3U when the mission is a CubeSat;
+- `form_factor` (1U / 3U / 6U / 12U): the class of the END-006 initial design of the run (spacecraft_definition.json, shared by every module); a class the user approves in the missing-information step wins; a class written in the requirements is only reported when it differs; without END-006, the class of the requirements, else the model default;
 - `panels` (body / deployable / both): from the requirements ("deployable solar panels", "body-mounted solar panels"), else the model default;
 - `n_internal_nodes`: 3 (central body, battery, SAR) when the payload is a SAR, else 2 (central body and battery: the model's third node is a SAR payload);
 - `sar_power_W`, `sar_source` (passes / duty), `sar_duty`: for a SAR payload; the SAR is switched on during the END-003 imaging passes unless the user chooses a duty cycle; a SAR power not stated in the requirements is left to the model default.
@@ -35,7 +37,7 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 ## Relationship with other modules
 
 - END-001 provides the orbits, END-003 the imaging passes and the attitude.
-- END-006 Satellite Design Component Selector chooses the CubeSat class and components; END-018 takes the class from the requirements or from the user.
+- END-006 Satellite Design Component Selector chooses the CubeSat class: END-018 analyses the class of the END-006 initial design (the user can override it).
 - END-004 Power Budget and END-018 share the battery and payload duty assumptions only through the requirements.
 
 ## Known limits
@@ -44,7 +46,7 @@ Status: `completed`; `skipped` when the mission is out of scope (no CubeSat, or 
 - The internal payload node is a SAR payload; other payloads are not modelled as a separate node.
 - Integration test case (author's report): SAT-01 of the STAR example, 3U, deployable panels, 3 nodes, SAR 200 W with 30% duty: maximum SAR about 217 degC, central body 172 degC, battery 103 degC, solar panels 192 degC (+-3 degC), battery limit flag active. Reproduced exactly by star_thermal.exe (the delivered version): 216.5 / 172.3 / 103.2 / 192.2 degC; the corrected sources (periodic start, real orbit phase) give 217.8 / 173.1 / 103.3 / 193.3 degC, within the +-3 degC of the report.
 
-1. ## **Satellite of the run (2026-10-17)**
+## Satellite of the run (2026-10-17)
 
 The CubeSat class is the one of the END-006 initial design (spacecraft_definition.json), shared by all the modules of the
 workflow; a class written in the requirements is only reported when it differs.
