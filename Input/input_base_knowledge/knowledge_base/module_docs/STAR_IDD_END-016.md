@@ -1,10 +1,12 @@
 # STAR Interface Definition Notes — END-016 Collision Avoidance
 
+> Updated 2026-10-21. The formal IDD is STAR/IDD/STAR_IDD_END-016.docx; the module README is END016-CollisionAvoidance/README.md.
+
 ## Functional role
 
 Inside STAR, END-016 checks the space safety of the constellation designed by END-001:
 
-1. **Close approaches between the satellites of the constellation.** For every pair of satellites over the END-001 ephemeris window (48 h, 10 s): the time of closest approach (TCA, refined between the samples by cubic Hermite interpolation of positions and velocities), the miss distance and its radial, in-track and cross-track components, the relative speed, the sub-satellite point, and the collision probability Pc (Chan method; validated against NASA CARA Pc2D_Foster to 2e-5) with a declared position uncertainty of each satellite, its circumscribing-square upper bound, and Pc_max, the largest Pc any uncertainty could give (it does not depend on the declared uncertainty). Satellites in different Sun-synchronous planes cross near the poles: the phasing and the altitudes decide how close they come.
+1. **Close approaches between the satellites of the constellation.** For every pair of satellites over the END-001 ephemeris window (48 h, 10 s): the time of closest approach (TCA, refined between the samples by cubic Hermite interpolation of positions and velocities), the miss distance and its radial, in-track and cross-track components, the relative speed, the sub-satellite point, and the collision probability Pc (Chan method, NASA CA Handbook Appendix N: it reproduces the CARA Pc2D of the 53 CARA test conjunctions within a relative 1.1e-8 and CARA PcCircle within 2e-5) with a declared position uncertainty of each satellite, its circumscribing-square upper bound, and Pc_max, the largest Pc any uncertainty could give (it does not depend on the declared uncertainty). Satellites in different Sun-synchronous planes cross near the poles: the phasing and the altitudes decide how close they come.
 2. **Orbital lifetime and post-mission disposal.** For every orbit shell: decay under drag with the NRLMSISE-00 atmosphere (averaged over the orbit and local time) for low, mean and high solar activity (F10.7 70, 140, 220), with the mass, drag area and drag coefficient END-001 used; compliance with the FCC 5-year and IADC 25-year rules; delta-v of the perigee-lowering burn that brings the lifetime within each rule; drag make-up delta-v per year that holds the operational altitude; orbits that decay before the end of the mission.
 
 The module's operational tools (collision probability from a CDM and TLE histories downloaded from space-track.org, main.m) are not used inside STAR.
@@ -32,6 +34,8 @@ Run mode: test = mean solar activity only; full = low, mean and high.
 - `modules_output/END-016/results_collision_avoidance/collision_run_info.json` — configuration passed to the model, provenance of every value, notes and status, read by the STAR FrontEnd results tab (END016 Collision Avoidance).
 
 Status: `completed`; `failed` when the END-001 products (or its ephemerides) are missing or MATLAB cannot run.
+
+The circumscribing-square upper bound is computed with erfc for small values (2026-10-20: before, it cancelled to 0 below Pc ~ 1e-17). The closest pair in the KPIs is named with the lower index first, as the events.
 
 ## Relationship with other modules
 

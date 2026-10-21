@@ -1,252 +1,47 @@
-﻿|![](Aspose.Words.a0eaa821-31c4-4a1c-9a1c-d0c641afc9cd.001.png)|<p>PROGETTO: “SPACE IT UP !”</p><p>Contratto n. 2024-5-E.0. – CUP: I53D24000060005</p><p>Interface Definition Document (IDD)</p><p>END-003: ATTITUDE PROPAGATION</p>|<p>DOCUMENT ID:</p><p>DX.X.X\_Spoke2\_XXX\_2026</p><p></p><p>DATE OF DELIVERY: XX/XX/2026</p><p></p><p>REV.: V0.1</p><p></p><p>Pag: 9 di 34</p>|
-| :-: | :-: | :- |
+﻿# STAR Interface Definition Notes — END-003 Attitude Propagation
 
-**Interface Definition Document (IDD)**
+> Updated 2026-10-21 to the STAR version of the module (star_attitude_propagation_star.m). The formal IDD is STAR/IDD/STAR_IDD_END-003.docx; the module README is END003-AttitudePropagation/README.md.
 
-**END-003: ATTITUDE PROPAGATION**
+## Functional role
 
-# **List of Contents**
+END-003 computes the attitude of the satellite during the passes END-001 chose: the daylight imaging pass over the area of interest (for END-007, END-018, END-004) and the first night pass visible from the observatory (for END-010). The orbit is not propagated by END-003: it comes from the END-001 ephemerides (Hermite interpolation, sub-metre), so the satellites are exactly the ones END-001 designed.
 
-[**1.**	**Introduction**	2](#_toc230170026)
+Attitude modes on a 1 s grid: nadir (+Z to nadir, +X along track; body rate = orbital rate about the orbit normal plus the turn of the orbital plane), follow_site (+Z to the target while it is above the elevation threshold, slews limited) and dynamics (Euler equations with the disturbance torques, free motion). In nadir and follow_site the guidance attitude is the reference of a PD controller with one reaction wheel per body axis, with the wheel torque and momentum limits of the END-006 design, the attitude knowledge error of its star tracker or ADCS unit, and momentum dumping with the magnetorquers (tilted IGRF-13 dipole field). The exported attitude is the controlled one, with its pointing error. Disturbance torques: gravity gradient, solar radiation pressure (with Earth shadow) and drag, and their worst case over all attitudes.
 
-[**1.1.**	**Functionalities description**	2](#_toc230170027)
+## When the planner should select this module
 
-[**1.2.**	**Use case scenarios**	2](#_toc230170028)
+Select END-003 when the request mentions attitude, nadir or target pointing, pointing accuracy or pointing error, quaternions, line of sight, viewing or observation geometry, target tracking, reaction wheels, magnetorquers, momentum, disturbance torques, eclipses, or when a downstream module needs the attitude of a pass: END-007 (synthetic images), END-010 (light curve), END-018 (thermal) and END-004 (power: eclipse and panel illumination). END-003 needs END-001 earlier in the same workflow (ephemerides and pass_selection.json).
 
-[**2.**	**Responsibility**	2](#_toc230170029)
+## Input interface
 
-[**3.**	**Applicable and reference documents**	2](#_toc230170030)
+The runner (BackEnd/runners/end003_runner.py) writes modules_output/END-003/end003_runtime_input.json from Input/input_attitude_propagator.json:
 
-[**4.**	**Definition of terms and abbreviated terms**	3](#_toc230170031)
+- END-001 products of the run: satellite_NN_ephemeris.csv, pass_selection.json and the ground stations of end001_runtime_input.json (the runner stops with a message when they are missing);
+- satellite from the END-006 initial design: mass, inertia (uniform box), mean projected area, Cd, Cr, centre of pressure at 20% of each side of the envelope (CubeSat Design Specification centre-of-gravity tolerance), reaction wheels (momentum, maximum torque), star tracker accuracy (converted to 1 sigma) or ADCS pointing accuracy, magnetorquer dipole (otherwise sized to dump a full wheel in one orbit);
+- optional STAR inputs: attitude_mode (nadir, follow_site, dynamics), initial_attitude_state, environmental_flags (gg, srp, drag), simulation_duration_hours, spacecraft_physical_properties.
 
-[**5.**	**Interface end definition**	3](#_toc230170032)
+Every decision and its origin is in star_runtime.end003_inputs.
 
-[**5.1.**	**Interface end description and data definition**	3](#_toc230170033)
+## Output interface
 
-[**5.2.**	**Units of measure including scale of measure**	3](#_toc230170034)
+In modules_output/END-003/output_attitude_propagation/:
 
-[**5.3.**	**Tolerances or required accuracies**	3](#_toc230170035)
+- output_attitude_propagation.csv — imaging pass every 10 s: timestamp_utc, ECI position [km], quaternion ECI->body (the conjugate, for Unreal / END-007), nadir offset;
+- output_attitude_propagation_lightcurve_ECI.csv — the night pass for END-010 (body->ECI);
+- selected_passes.json and selected_pass_summary.csv — the two passes (satellite, start, end, peak, elevation, site or observer, Sun);
+- pass_candidates.csv; AEM_END003_<satellite>_<pass>_<date>.xml — CCSDS AEM of each pass (1 s, J2000).
 
-[**5.4.**	**In case of using non-SI quantities or units, conversions and conventions**	3](#_toc230170036)
+In modules_output/END-003/results_attitude_propagator/: output_attitude_propagation_ECI.csv (imaging pass, body->ECI), output_attitude_propagation_Unity.csv, attitude_summary.json (KPI-01 to KPI-33: pass found, thresholds, quaternion drift, peak elevation, duration, nadir and target offsets, mean GG / SRP / drag torques, eclipse fraction KPI-14, angular momentum, body rates, closed-loop control, pointing error, wheel momentum and torque, time at the wheel limits, magnetorquer dipole; face illumination for END-004), figures and attitude_propagation_plots_data.js for the END003 results tab.
 
-[**5.5.**	**Interface plane implementation**	3](#_toc230170037)
+## Relationship with other modules
 
-[**5.6.**	**Interface end behaviour**	4](#_toc230170038)
+- END-001 gives orbits, passes and ground stations; END-006 gives mass, inertia, areas and ADCS components.
+- END-004 uses the orbit of the selected satellite, the eclipse fraction and the face illumination.
+- END-007 uses output_attitude_propagation.csv (ECI->body) and selected_passes.json.
+- END-010 uses the light-curve pass CSV and its observer.
+- END-018 uses selected_pass_summary.csv and the body->ECI attitude of the pass.
+- STAR compliance and the END003 results tab read attitude_summary.json.
 
-[**5.7.**	**Interface end data**	4](#_toc230170039)
+## Known limits
 
-[**6.**	**Special Remarks**	4](#_toc230170040)
-
-[**7.**	**Software**	4](#_toc230170041)
-
-[**7.1.**	**Operating system**	4](#_toc230170042)
-
-[**7.2.**	**Operating hardware**	4](#_toc230170043)
-
-[**7.3.**	**Required software libraries**	4](#_toc230170044)
-
-[**7.4.**	**Required compiler, build environment**	5](#_toc230170045)
-
-[**7.5.**	**API definition**	5](#_toc230170046)
-
-[**7.6.**	**Errors and warnings returned**	5](#_toc230170047)
-
-[**7.7.**	**Map of inputs/outputs**	5](#_toc230170048)
-
-
-1. ## <a name="_toc230170026"></a>**Introduction**
-
-This Interface Design Document (IDD) defines the architectural specifications, data structures, and operational protocols governing the interface IF-001 between the ATTITUDE PROPAGATOR (END-003) module and the SYNTHETIC DATA GENERATION (END-007) module.
-
-The primary objective of this document is to formalize the data exchange mechanisms and underlying physical conventions used to export time-series orbital kinematics and spacecraft attitude state profiles during ground station visibility windows. This data exchange provides the downstream module (END-007) with the geometric and telemetry inputs required to synthesize high-fidelity remote sensing and payload telemetry datasets.
-
-1. ### <a name="_toc230164775"></a><a name="_toc230165050"></a><a name="_toc230166006"></a><a name="_toc230166124"></a><a name="_toc230166211"></a><a name="_toc230166292"></a><a name="_toc230166362"></a><a name="_toc230166444"></a><a name="_toc230166529"></a><a name="_toc230166588"></a><a name="_toc230166646"></a><a name="_toc230166695"></a><a name="_toc230170027"></a>**Functionalities description**
-
-The underlying core software handles the simultaneous numerical propagation of the spacecraft's orbital path and its rotational kinematics. The main technical functionalities comprise:
-
-- **Orbital Propagation:** Numerical integration of the Earth-centered orbital state via a variable-step Adams-Bashforth-Moulton solver (ode113), accounting for non-spherical gravitational perturbations up to the third zonal harmonic (J2 and J3).
-- **Attitude Kinematics & Dynamics:** Implementation of a three-tier operational configuration framework:
-  - dynamics: Solves Euler's rotational equations of motion coupled with quaternion kinematics. It accounts for environmental disturbance torques including Gravity Gradient (GG), Solar Radiation Pressure (SRP) with cylindrical Earth shadow transitions, and Aerodynamic Drag based on the NRLMSISE-00 atmospheric model.
-  - nadir: Enforces a deterministic, ideal geometric alignment where the spacecraft's boresight matches the geocentric nadir vector.
-  - follow\_site: Operates in nominal Nadir pointing mode, executing an automated rotational maneuver toward a targeted ground coordinate (Target Tracking) whenever the topocentric elevation angle exceeds a defined threshold.
-- **Visibility Filtering:** Evaluates topocentric elevation profiles relative to the Ground Station. The module isolates continuous tracking windows exceeding the elevation threshold and filters the data to export only the pass containing the absolute maximum elevation peak.
-
-1. ### <a name="_toc230164776"></a><a name="_toc230165051"></a><a name="_toc230166007"></a><a name="_toc230166125"></a><a name="_toc230166212"></a><a name="_toc230166293"></a><a name="_toc230166363"></a><a name="_toc230166445"></a><a name="_toc230166530"></a><a name="_toc230166589"></a><a name="_toc230166647"></a><a name="_toc230166696"></a><a name="_toc230170028"></a>**Use case scenarios**
-
-- **Scenario A - Observation Planning:** This software utility can be used to simulate directed spaceborne observation campaigns where high-accuracy relative geometry between a spacecraft and a ground asset is required. By computing the exact inertial trajectory and matching orientation states during periods of optimal topocentric visibility, the interface delivers highly specialized datasets to downstream simulation toolchains. Analysts can utilize these outputs to synthesize high-fidelity payload data, such as optical remote sensing imagery, synthetic aperture radar (SAR) returns, or directional communication links, accounting for the exact time-varying line-of-sight vector. This scenario is critical for evaluating target-revisit capabilities, planning payload duty cycles, and validating data processing algorithms prior to hardware deployment.
-- **Scenario B: Impact Assessment of Environmental Perturbations on Mission Products** The core architecture serves as an analytical environment to evaluate how non-spherical gravitational harmonics, atmospheric drag variations, and solar radiation pressure affect platform stability and subsequent payload data quality. By propagating the unmitigated attitude drift of a spacecraft subjected to real-world space environmental torques, the interface records the precise pointing errors and angular deviations from the nominal target alignment. Downstream synthetic data generators can ingest these corrupted attitude states to perform sensitivity analyses, quantifying exactly how environmental disturbances degrade image resolution, cause geometric distortions, or introduce noise into remote sensing datasets. This enables system engineers to define strict pointing-budget requirements for the vehicle's stabilization systems.
-
-1. ## <a name="_toc230170029"></a>**Responsibility**
-
-Responsible for END-003:
-
-- Lorenzo Mariani (UNIRM1) Leader
-- Fabrizio Piergentili (UNIRM1) Co-Leader
-
-1. ## <a name="_toc230170030"></a>**Applicable and reference documents**
-
-- STAR\_ProductTree
-
-1. ## <a name="_toc230170031"></a>**Definition of terms and abbreviated terms**
-
-|**Acronym**|**Definition**|
-| :- | :- |
-|***API***|Application Programming Interface|
-|***COE***|Classical Orbital Elements|
-|***CSV***|Comma-Separated Values|
-|***ECEF***|Earth-Centered, Earth-Fixed Rotational Frame|
-|***ECI***|Earth-Centered Inertial Frame|
-|***GG***|Gravity Gradient|
-|***GMST***|Greenwich Mean Sidereal Time|
-|***GS***|Ground Station|
-|***HEO***|Highly Elliptical Orbit|
-|***IDD***|Interface Design Document|
-|***SI***|International System of Units|
-|***SRP***|Solar Radiation Pressure|
-
-1. ## <a name="_toc230170032"></a>**Interface end definition**
-
-1. ### <a name="_toc230170033"></a>**Interface end description and data definition** 
-
-The structural implementation of interface IF-001 is a file-based data exchange using a standardized flat text schema (CSV format), designated as gs\_pass.csv. The interface file contains a singular header row defining the structural fields, followed by N chronologically sorted data vectors sampled natively at the integration steps generated during the selected tracking pass.
-
-|**Column Identifier**|**Data Type**|**Physical Description**|
-| :- | :- | :- |
-|***timestamp\_utc***|String (ISO 8601)|Coordinated Universal Time stamp in YYYY-MM-DDTHH:MM:SSZ format|
-|***eci\_x\_km***|Float|X-component of the spacecraft position vector in the ECI frame [km]|
-|***eci\_y\_km***|Float|Y-component of the spacecraft position vector in the ECI frame [km]|
-|***eci\_z\_km***|Float|Z-component of the spacecraft position vector in the ECI frame [km]|
-|***q\_w***|Float|Scalar component (q0) of the ECI-to-Body orientation quaternion|
-|***q\_x***|Float|Vector X-component (q1) of the ECI-to-Body orientation quaternion|
-|***q\_y***|Float|Vector Y-component (q2) of the ECI-to-Body orientation quaternion|
-|***q\_z***|Float|Vector Z-component (q3) of the ECI-to-Body orientation quaternion|
-|***nadir\_offset\_deg***|Float|Angular pointing boresight deviation relative to true geocentric nadir [deg]|
-
-1. ### <a name="_toc230170034"></a>**Units of measure including scale of measure**
-
-- **Temporal Domain:** Standard UTC with single-second structural resolution.
-- **Spatial Trajectory:** Kilometers [km]. The internal representation in meters is scaled by 10^-3 prior to file-writing operations.
-- **Attitude State:** Dimensionless, unitary norm constraint enforced via algebraic normalization (qw2+qx2+qy2+qz2=1).
-- **Angular Metrics:** Sexagesimal decimal degrees [deg].
-
-1. ### <a name="_toc230170035"></a>**Tolerances or required accuracies**
-
-**Numerical Integration Precision:** Governed by the ode113 solver properties configured with a relative tolerance RelTol = 1e-12 and absolute tolerance AbsTol = 1e-15.
-
-**Export Quantization Layout:** \* Position coordinates: 3 decimal places (1-meter structural quantization).
-
-- Attitude quaternions: 4 decimal places.
-- Pointing offset: 2 decimal places.
-
-1. ### <a name="_toc230170036"></a>**In case of using non-SI quantities or units, conversions and conventions**
-
-- Kinematic Positioning: Conversion from SI meters to kilometers is applied via: rk=rmtr1000
-- Rotational Space: Conversion from native algorithmic radians to output degrees is governed by the scaling factor 180/π.
-- Quaternion Core Convention: The interface uses the scalar-first convention layout: q=qwqxqyqzT
-- This vector represents the passive rotation mapping coordinates from the inertial ECI frame to the rotating spacecraft Body frame.
-
-
-1. ### <a name="_toc230170037"></a>**Interface plane implementation**
-
-The interface is deployed at the File System Level. The END-001 module handles the generation, formatting, and disk storage of the CSV file. The END-007 module retains read-only privileges, executing consumer parsing algorithms sequentially upon termination of the upstream propagation.
-
-1. ### <a name="_toc230170038"></a>**Interface end behaviour**
-
-- Upon execution, END-001 computes the full trajectory envelope and evaluates topocentric elevation histories against the target ground station.
-- An edge-detection algorithm parses continuous visibility segments exceeding the elevation threshold (10 deg). If multiple passes occur over the 48-hour simulation envelope, it isolates the sequence containing the absolute highest elevation apex.
-- The module opens a synchronous file descriptor (fopen), locks execution, writes the formatting streams iteratively, and releases the descriptor handle (fclose).
-
-1. ### <a name="_toc230170039"></a>**Interface end data**
-
-Below is a syntax-compliant structural record sample from genova\_pass.csv:
-
-timestamp\_utc,eci\_x\_km,eci\_y\_km,eci\_z\_km,q\_w,q\_x,q\_y,q\_z,nadir\_offset\_deg
-
-2024-06-21T14:23:10Z,12450.321,-32104.556,15420.112,0.7071,0.0000,0.7071,0.0000,0.15
-
-2024-06-21T14:23:15Z,12452.114,-32101.201,15424.394,0.7065,0.0012,0.7075,0.0021,0.18
-
-1. ## <a name="_toc230170040"></a>**Special Remarks**
-
-Interfaces in STAR:
-
-- IF-002: ATTITUDE PROPAGATION (END-003) – SYNTHETIC DATA GENERATION (END-007)
-- IF-003: ATTITUDE PROPAGATION (END-003) – ATTITUDE VISUALIZATION (END-004)
-
-1. ## <a name="_toc230164789"></a><a name="_toc230165064"></a><a name="_toc230170041"></a>**Software**
-
-1. ### <a name="ecss_e_st_10_24_1290199"></a><a name="ecss_e_st_10_24_1290200"></a><a name="_toc230164790"></a><a name="_toc230165065"></a><a name="_toc230170042"></a>**Operating system**
-
-The software execution layer is cross-platform and OS-agnostic due to the abstract nature of the underlying MATLAB runtime environment. It is fully supported across Windows 10/11, Linux Ubuntu 20.04 LTS (or higher), and macOS.
-
-1. ### <a name="_toc230164791"></a><a name="_toc230165066"></a><a name="_toc230170043"></a>**Operating hardware**
-
-- **Processor Architecture:** x86-64 or Apple Silicon architecture (Minimum: 4 physical cores).
-- **Volatile Memory (RAM):** 8 GB minimum requirement. This memory allocation is required to handle high-dimensional interpolation structures (griddedInterpolant) generated during long-duration runs.
-- **Disk Space Allocation:** Minimal footprint required (< 10 MB for local text telemetry logs).
-
-1. ### <a name="_toc230164792"></a><a name="_toc230165067"></a><a name="_toc230170044"></a>**Required software libraries**
-
-- **Execution Core:** MATLAB Environments (Release R2021a or newer).
-- **Subsystem Dependencies:** *Aerospace Toolbox* (utilized for internal transformations and empirical database evaluations: ecef2lla, atmosnrlmsise00, igrfmagm). If this toolbox is absent, the architecture switches to analytic fallback algorithms (e.g., standard dipole magnetic assumptions above 600 km).
-
-1. ### <a name="_toc230164793"></a><a name="_toc230165068"></a><a name="_toc230170045"></a>**Required compiler, build environment**
-
-No external C/C++ compilation suites or toolchains are required. The module operates natively as an interpreted execution routine within the MATLAB Command Window environment or via Automated headless runners.
-
-1. ### <a name="_toc230164794"></a><a name="_toc230165069"></a><a name="_toc230170046"></a>**API definition** 
-
-- **Input Parameters:**
-  - json\_filepath (String): The absolute or relative system path pointing to the input file (conventionally input\_attitude\_propagator.json). This file contains the serialized orbital elements, satellite mass properties, inertia tensors ($I\_x, I\_y, I\_z$), environmental flags, and ground target coordinates.
-  - output\_dir (String, Optional): The designated target folder where verification plots and data logs are saved. If omitted, it defaults to 'simulation\_outputs'.
-- **Output Artifacts:**
-  - Procedural generation of gs\_pass.csv alongside six validation telemetry figures.
-- **Exceptions & Constraints:**
-  - If the file path specified in json\_filepath does not exist on the host system, the function terminates execution abruptly and throws a fatal runtime error: File JSON not found: <filepath>.
-
-1. ### <a name="_toc230164795"></a><a name="_toc230165070"></a><a name="_toc230170047"></a>**Errors and warnings returned**
-
-"Warning: No passage found over %d deg threshold. Export entire simulation."
-
-Root Cause: The defined orbital parameters parsed from the JSON configuration do not intersect the topocentric visibility cone of the designated ground station within the simulated timeline window.
-
-Mitigation Strategy: To maintain the integrity of the downstream toolchain and prevent execution halts inside END-007, the error handler catches the null pointer exception, overrides the filtering window, and automatically writes the full orbital trajectory dataset to `gs\_pass.csv` while logging the telemetry warning directly to the standard output console.
-
-1. ### <a name="_toc230164796"></a><a name="_toc230165071"></a><a name="_toc230170048"></a>**Map of inputs/outputs**
-
-Input Data Map (Ingested via JSON Serialization structure `cfg`):
-
-- cfg.sim\_start\_date / cfg.sim\_hours: Temporal baseline
-- cfg.sat (attitude\_mode, q0, w0, m, A\_ref, Cr, Cd, r\_cp, Ix, Iy, Iz): Spacecraft physical & initial conditions
-- cfg.orbit (alt\_perigee\_m, alt\_apogee\_m, inclination\_deg, raan\_deg, omega\_deg, nu\_deg): Keplerian initial conditions 
-- cfg.target (site\_lat\_deg, site\_lon\_deg, elev\_threshold): Topocentric station target coordinates
-- cfg.env.flags: Perturbations state array (`gg`, `srp`, `drag`, `pert`, `j2`, `j3`)
-
-Output Data Map (Generated Artifacts):
-
-- gs\_pass.csv: Filtered state telemetry exported to disk 
-- 01\_telemetry.png: Core angular kinematics, torques, and altitude histories 
-- 02\_tracking.png: Elevation profiles and pointing error matrices 
-- 03\_angular\_momentum.png: Spacecraft angular momentum modulus and direction in ECI
-- 04\_ground\_track.png: 2D geographic projection mapping complete and active-pass arcs 
-- 05\_orbit\_3d\_ecef.png: 3D orbital trajectory representation in the Earth-Centered Earth-Fixed rotating frame 
-- 06\_orbit\_3d\_eci.png: 3D orbital trajectory representation in the Earth-Centered Inertial frame 
-
-1. ## **STAR version (2026-10-17)**
-
-STAR runs `star_attitude_propagation_star(configFile, outputFolder)` (END003-AttitudePropagation/star_attitude_propagation_star.m); the legacy `star_attitude_propagation.m` (own orbit propagation, standalone use) is archived in END003-AttitudePropagation/_old/ since 2026-10-17.
-
-- **Orbit from END-001, no propagation.** The runner (BackEnd/runners/end003_runner.py) passes the END-001 ephemerides `satellite_NN_ephemeris.csv` (ECI position and velocity every 10 s from the END-001 epoch, the frame where ECEF = R3(GMST) ECI) in `cfg.end001_ephemeris`; states between rows come from a cubic Hermite interpolation of positions and velocities (5 mm at mid step). Without the ephemerides END-003 stops with an error asking to run END-001 first. The satellites are therefore exactly the ones END-001 designed (the previous version rebuilt them from the mean elements with another Earth radius and drifted by tens of km within a few hours).
-- **Target.** `target_selection`: the STAR `target_site` input when given ({lat, lon}, [lat, lon], "lat, lon" or a known name), otherwise every point of the END-001 area of interest (ROI_2 of END-001 with its RegionSettings, e.g. 498 points for Italy), otherwise the template site. The imaging pass is the best pass over any of the points, with the Sun constraint on the site and on the sub-satellite track.
-- **STAR inputs applied:** `attitude_mode` (nadir, follow_site, dynamics), `initial_attitude_state` (registry scalar-first q0 converted to scalar last), `environmental_flags` (gg, srp, drag), `simulation_duration_hours` (limited to the ephemeris span). The decisions are listed in `star_runtime.end003_inputs` of `end003_runtime_input.json`.
-- **Attitude on a 1 s grid.** nadir: +Z to the geocentric nadir, +X along track, body rate = orbital rate about the orbit normal; follow_site: +Z to the target while it is above the elevation threshold, slews limited to `sat.max_slew_rate_deg_s` (default 3 deg/s), body rate from the quaternion history; dynamics: Euler equations and quaternion kinematics (ode113, RelTol 1e-10) with gravity-gradient, SRP and drag torques (NRLMSISE-00).
-- **Outputs (same names as before):** the CSV of the imaging pass (ECI, Unity, Unreal) and of the light-curve pass every 10 s (`pass_selection.imaging.output_step_s`, `pass_selection.lightcurve.output_step_s`) on the END-001 grid with exact timestamps, `selected_passes.json`, `selected_pass_summary.csv`, `pass_candidates.csv` (with the target point), `attitude_summary.json` (KPI-01..KPI-21; KPI-20/21 mean and maximum body rate during the imaging pass), the dashboard data on a 60 s grid and figures 01-06.
-- **AEM and attitude figures.** For the imaging and the light-curve pass: CCSDS AEM `AEM_END003_<SAT>_<pass>_<start>.xml` in output_attitude_propagation (NDM/XML, S5Lab BILAR layout, Q1 Q2 Q3 QC scalar last = rotation body -> J2000, ANGVEL body frame in rad/s, every `pass_selection.aem_step_s` = 1 s) and, made from the AEM by `end003_aem_figures.m` (usable on any AEM of that layout), in results_attitude_propagator: `07_aem_<pass>_A_inertial_view.png` (8 epochs over the pass or over one turn about H, fixed inertial view with H vertical, CubeSat drawn as the uniform box of the inertia), `_B_view_along_H.png`, `_C_H_orbital_plane.png` (Earth with land mask lit by the Sun, orbit, velocity, H, omega; zoom on the orbital plane with the angles to radial, velocity and normal), `_D_parameters.png` (quaternion, ZYX Euler angles, body angular velocity) and `_rotational_state.json` (rotational state as Table 9 of the ERASE proposal). The END-003 results page shows them in the card "Attitude Description".
-
-1. ## **Passes and satellite from the workflow (2026-10-17)**
-
-END-003 no longer selects the passes: it reads END-001's pass_selection.json (cfg.end001_pass_selection; error when missing) and
-computes the attitude on the imaging pass and on the first night pass from the observatory. Mass, inertia (uniform box of the
-class envelope) and reference area come from the END-006 initial design (spacecraft_definition.json) unless the user gives
-spacecraft_physical_properties. attitude_summary.json also gives "illumination": the mean cosine of the Sun incidence on each body
-face (+X ... -Z) over the sunlit time, used by END-004 for the solar generation.
+The satellite is a uniform box: SRP and drag torques use a conservative lever arm, not the real geometry. The closed loop runs at 1 s only over the passes (plus 300 s); elsewhere only the wheel momentum is followed. The dynamics mode is free motion without control. A run takes about one minute.

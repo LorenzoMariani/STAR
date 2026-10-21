@@ -1,34 +1,79 @@
 # STAR Interface Definition Notes — END-006 Satellite Design Component Selector
 
+> Updated 2026-10-21. The formal IDD is STAR/IDD/STAR_IDD_END-006.docx; the module README is END006-ComponentSelector/README.md.
+
 > Numbered END-019 until 2026-10-18: the number END-006 became free when Scenario Generation was merged into END-007 (STAR has 18 END).
 
 ## Functional role
 
-END-006 designs the CubeSat the mission needs from a catalogue of real components (232 products from public vendor documents: EnduroSat, ISISpace, AAC Clyde Space, CubeSpace, GomSpace, Pumpkin, NanoAvionics, Blue Canyon, Satlab, NPC Spacemind, Hyperion, Alén Space, Innoflight, Dragonfly Aerospace, Simera Sense, Satlantis, Rocket Lab, Enpulsion, ThrustMe, Busek, VACCO, L3Harris and others). Since 2026-10-15 (mission design, `star_selector/mission.py`):
+END-006 designs the CubeSat the mission needs from a catalogue of real components (236 products from public vendor documents: EnduroSat, ISISpace, AAC Clyde Space, CubeSpace, GomSpace, Pumpkin, NanoAvionics, Blue Canyon, Satlab, NPC Spacemind, Hyperion, Alén Space, Innoflight, Dragonfly Aerospace, Simera Sense, Satlantis, Rocket Lab, Enpulsion, ThrustMe, Busek, VACCO, L3Harris and others). Since 2026-10-15 (mission design, `star_selector/mission.py`):
 
 1. **Only the subsystems the mission needs** (declared rules on the requirement texts; every card cites the requirement): the bus always (structure, on-board computer, EPS, battery, solar cells, a radio with its antenna); one radio and one antenna per band named in the requirements (UHF, VHF, S, X); an integrated ADCS unit for stabilisation, pointing, attitude or imaging (the catalogue's ADCS units contain their sensors and actuators, so separate reaction wheels, magnetorquers, star trackers and sun sensors are added only when a requirement names them); GNSS receiver and antenna for on-board position, orbit determination, geolocation, formation, safe separation or collisions, or when propulsion is in the design; propulsion only for manoeuvres (orbit maintenance, phasing, formation, drag compensation, delta-v, controlled re-entry) or when END-016 of the same run finds a disposal delta-v for the deadline written in the requirements; a payload imager for images; an optical terminal for an optical or laser link.
+
 2. **The smallest CubeSat class** (1U, 3U, 6U, 12U), estimated from the performance the requirements ask for (least launch mass and volume, lower launch cost; a class written in the requirements is only reported; inside the class the least launch mass comes before the completeness of the published data), whose selection of those subsystems fits together: CDS Rev. 14.1 mass limit (1U 2 kg, 3U 6 kg, 6U 12 kg, 12U 24 kg, or a lower satellite mass stated in the requirements), volume of the CDS envelope (1.135e-3, 3.405e-3, 8.283e-3, 1.874e-2 m3), the stack of the internal components, and the envelope fit check ("Fits" or "Undetermined" when a component has no published size). A class chosen by the user in the input-resolution step wins; a class written in the requirements is reported (e.g. "REQ-006 states a 6U CubeSat: the subsystems the mission needs fit a 3U").
-3. **Mission requirements checked with the published data**: star trackers when they are in the design or suggested apart (attitude accuracy at 3 sigma on the worst axis, 1-sigma or RMS values times 3, within the pointing and attitude-knowledge requirements; a complete unit, an optical head without its electronics only if nothing else; the update rate if asked; two when the requirements want them redundant), magnetorquers when they are in the design or suggested apart (dipoles on three axes: one three-axis board or three single-axis rods; with separate wheels and a known altitude, a dipole that dumps a wheel's momentum in one orbit, H / (B x T) with B the minimum Earth dipole field at the altitude and T the period), reaction wheels when they are in the design or suggested apart (the CubeSat class their vendor declares, three wheels with three-axis control, the momentum of each for the slew rate of the requirements: inertia of a uniform block with the mass limit and envelope of the class times the rate), EPS (CubeSat classes declared by the vendor, at least one solar input, a regulated output or the integrated battery voltage for every component that publishes its supply voltages, the panel voltage within the solar input, the external battery's voltage and family, maximum output power above the most demanding component; a constraint of the exact search), on-board computer (at least one data interface in common with every component of the design that publishes its interfaces, a constraint of the exact search, so the other components adapt too; radiation dose of the requirements), payload (the vendor's minimum CubeSat class of imagers and optical terminals; the kind of image from the requirements on the published spectral bands: panchromatic, visible, multispectral, hyperspectral, SWIR, thermal infrared, RGB, video; push-broom excludes snapshot cameras; then GSD and swath; for an optical terminal the link type and rate), thruster (delta-v = total impulse / sum of the published masses; the vendor's minimum CubeSat class; an electric thruster only when its firing power does not exceed the peak power of the design's solar panel, chemical and gas thrusters fire briefly on the battery; non-toxic propellant when asked; when no thruster gives the delta-v, the one that comes closest), radios (the radio of the lowest band named has a receiver for the telecommands; with an imager the radio of the highest band downlinks the images: the data rate of the requirements, otherwise the highest published rate among the radios of that single band that fits; a radio sold with its antenna, "+ ANT" in the product name, has no separate antenna), battery capacity (energy the battery gives in an orbit according to END-004 of the same run, worst flown mode with its margin, divided by the depth of discharge of the requirements; when the battery integrated in an EPS is enough there is no separate battery), deployable solar panels when asked, GSD and swath of the imager scaled to the orbit altitude (END-001 orbits of the run, otherwise the worst altitude of the range in the requirements), pointing accuracy of the ADCS unit, three-axis control, radio and antenna bands, delta-v of the thruster (published total impulse / sum of the published masses of the design), satellite mass. When no component of the database meets a requirement the module writes "Does not satisfy REQ-xxx (...): no <component> in the database meets it" and keeps the components that meet the most requirements (for the imager the GSD counts before the swath).
+
+3. **Mission requirements checked with the published data**:
+
+   - star trackers when they are in the design or suggested apart (attitude accuracy at 3 sigma on the worst axis, 1-sigma or RMS values times 3, within the pointing and attitude-knowledge requirements; a complete unit, an optical head without its electronics only if nothing else; the update rate if asked; two when the requirements want them redundant);
+
+   - magnetorquers when they are in the design or suggested apart (dipoles on three axes: one three-axis board or three single-axis rods; with separate wheels and a known altitude, a dipole that dumps a wheel's momentum in one orbit, H / (B x T) with B the minimum Earth dipole field at the altitude and T the period);
+
+   - reaction wheels when they are in the design or suggested apart (the CubeSat class their vendor declares, three wheels with three-axis control, the momentum of each for the slew rate of the requirements: inertia of a uniform block with the mass limit and envelope of the class times the rate);
+
+   - EPS (CubeSat classes declared by the vendor, at least one solar input, a regulated output or the integrated battery voltage for every component that publishes its supply voltages, the panel voltage within the solar input, the external battery's voltage and family, maximum output power above the most demanding component; a constraint of the exact search);
+
+   - on-board computer (at least one data interface in common with every component of the design that publishes its interfaces, a constraint of the exact search, so the other components adapt too; radiation dose of the requirements);
+
+   - payload (the vendor's minimum CubeSat class of imagers and optical terminals; the kind of image from the requirements on the published spectral bands: panchromatic, visible, multispectral, hyperspectral, SWIR, thermal infrared, RGB, video; push-broom excludes snapshot cameras; then GSD and swath; for an optical terminal the link type and rate);
+
+   - thruster (delta-v = total impulse / sum of the published masses; the vendor's minimum CubeSat class; an electric thruster only when its firing power does not exceed the peak power of the design's solar panel, chemical and gas thrusters fire briefly on the battery; non-toxic propellant when asked; when no thruster gives the delta-v, the one that comes closest);
+
+   - radios (the radio of the lowest band named has a receiver for the telecommands; with an imager the radio of the highest band downlinks the images: the data rate of the requirements, otherwise the highest published rate among the radios of that single band that fits; a radio sold with its antenna, "+ ANT" in the product name, has no separate antenna);
+
+   - battery capacity (energy the battery gives in an orbit according to END-004 of the same run, worst flown mode with its margin, divided by the depth of discharge of the requirements; when the battery integrated in an EPS is enough there is no separate battery);
+
+   - deployable solar panels when asked;
+
+   - GSD and swath of the imager scaled to the orbit altitude (END-001 orbits of the run, otherwise the worst altitude of the range in the requirements);
+
+   - pointing accuracy of the ADCS unit;
+
+   - three-axis control;
+
+   - radio and antenna bands;
+
+   - delta-v of the thruster (published total impulse / sum of the published masses of the design);
+
+   - satellite mass;
+
+   When no component of the database meets a requirement the module writes "Does not satisfy REQ-xxx (...): no <component> in the database meets it" and keeps the components that meet the most requirements (for the imager the GSD counts before the swath).
+
 4. **The other subsystems apart** ("Not required by this mission"): for each, why it is not needed, the best component that fits the class and whether it would still fit together with the design. They are not counted in mass, volume, power, bill of materials or placement.
 
 Values a vendor does not publish stay `null` ("Not publicly available"); nothing is estimated. Without a published value a component cannot show that it meets a requirement.
 
 ## When the planner should select this module
 
-Select END-006 when a mission request or reviewed requirement mentions a CubeSat or small-satellite platform, a CubeSat form factor (1U, 3U, 6U, 12U), the selection of components or subsystems, a bill of materials, or whether components fit in a CubeSat. Do not select it when the requirements state a satellite mass above 24 kg: the module then reports that the mission is out of scope and suggests reference platforms (Tyvak, Terran Orbital). END-006 needs no upstream module; when END-001 (orbits) and END-016 (disposal delta-v) are in the same workflow it uses their products.
+Select END-006 when a mission request or reviewed requirement mentions a CubeSat or small-satellite platform, a CubeSat form factor (1U, 3U, 6U, 12U), the selection of components or subsystems, a bill of materials, or whether components fit in a CubeSat. Inside STAR every workflow has END-006, because the STAR domain is CubeSat missions: a satellite that must weigh more than 24 kg is out of scope (reported, with reference platforms such as Tyvak and Terran Orbital), while a requirement that only sets a maximum mass above 24 kg ("mass not exceeding 100 kg") is met by any CubeSat and is kept as a note. END-006 needs no upstream module; when END-001 (orbits) and END-016 (disposal delta-v) are in the same workflow it uses their products.
 
 ## Input interface
 
 - The reviewed requirements of the run (`requirements` of the module input JSON): subsystems, bands, GSD, swath, pointing accuracy, delta-v, mass, disposal deadline, stated class.
+
 - Optional, from the same run: `modules_output/END-004/output_power_budget/power_budget_summary.json` (energy per orbit, battery capacity), `modules_output/END-001/output_constellation_optimizer/satellite_NN.json` (orbit altitudes) and `modules_output/END-016/output_collision_avoidance/space_safety_summary.json` (disposal delta-v at mean solar activity for the deadline of the requirements; drag make-up when the orbit decays before the end of the mission).
+
 - `form_factor_u` (1, 3, 6 or 12) only when the user sets it in the input-resolution step: it then fixes the class. Otherwise the module searches the smallest class whose components meet the requirements; with the user's class, or when no class carries them, it takes in the class the components of the required kind that come closest to the performance and says which class would meet it.
 
 ## Output interface
 
 - `modules_output/END-006/output_component_selector/component_selector_results.json` — class, one entry per subsystem of the design (chosen component with its key data and sources, alternatives that also fit, counts "in database" and "fit", `design`: why it is there, the requirement it comes from and the requirements checked on the component), totals, envelope fit, database statistics, and `mission`: class search (each class tried and why it was not enough), stated and user class, orbit altitude used, delta-v (source, required, given), the mission requirements with status `met` / `not_met` / `not_verifiable` and message, `unmet` messages, `extras` (subsystems not required), notes;
+
 - `component_selector_bom.csv` — bill of materials of the design only;
+
 - `component_selector_requirements_mapping.json` — parameters taken from the requirements;
+
 - `component_selector_power_handoff.json` — maximum powers declared by the vendors of the design's components (not estimates); usable by END-004 Power Budget only as vendor-declared data;
+
 - `modules_output/END-006/results_component_selector/component_selector_data.js` and `component_selector_report.html` — payload and self-contained report for the results tab.
 
 Status: `completed` when the design ran (unmet requirements are listed in the evidence), `skipped` when the mission is out of scope (satellite above 24 kg).
@@ -36,29 +81,35 @@ Status: `completed` when the design ran (unmet requirements are listed in the ev
 ## Selection logic
 
 - Candidates of a design slot: components of the subsystem that meet its requirements (or, when none does, those that meet the most); published mass not above the class limit; footprint and height that fit the stack of the class (internal components) or the envelope (solar panels, antennas, sun sensors and GNSS antennas, mounted on the faces: a declared rule); a structure must be of the class, and the stack and the envelope fit use its published size (a 6U structure 340.5 mm long holds less than one 366 mm long: a long stack picks the longer structure), with a face for the solar panel among its panel_faces; the ADCS unit is one its vendor declares for the class (catalogue field `form_factor_range_u`; when none is, one declared for larger classes or not declared, never one declared only for smaller CubeSats, and products no longer sold only when nothing else fits); products no longer sold are used only when nothing else fits; the solar panel is the one made for the face of the class (catalogue field `face`: 1U, 3U, 6U; a 12U uses the 6U panels, its long faces being those of a 6U; panels for smaller faces only when the class has none), deployable when the requirements ask for it. With a delta-v need, only thrusters with a published total impulse.
+
 - Choice: the candidates with the most complete published key data, then the lightest; if the combination exceeds the mass or volume limit, the stack or the delta-v, an exact search finds the most complete combination that fits.
+
 - Stack layout (declared visualisation convention, `layout.py`): length Z and columns fixed by the class (1U and 3U one column, 6U two, 12U four); internal components stacked in the order radio, OBC, GPS, EPS, battery, ADCS, magnetorquer, reaction wheel, star tracker, propulsion, optical terminal, imager.
+
 - Clear aperture: the imaging payload sits at the bottom of the stack and looks out of the -Z face (nadir) with no other component in front of its lens; it is a constraint of the selection too (a class where it cannot is rejected).
+
 - Stack convention: internal components stack along the long axis in the columns of the class; a component wider than one column takes adjacent columns at the bottom (e.g. the iSIM-90 optics in a 12U) and a product with more boxes (dimensions.extra_mm, e.g. the iSIM-90 electronics) places and counts each box.
+
 - Envelope fit check: "Fits the CDS envelope", "Does not fit", "Not shown to fit" or "Undetermined" (an internal component has no published size), with the positions used by the isometric placement view (drag to rotate). When the fit is not proved, `fit.placed` stays empty and `fit.preview` carries a preview to draw, not a proof: the components with a published size in the declared stack (or a generic arrangement), the free space left below the stack, the components without a published size (not drawn), or the stack extended as much as needed with the parts outside the envelope marked `outside`; the view always shows something.
+
 - The GUI is read-only: class search, mission requirements (met / not met), one card per design slot with its reason and checks, the subsystems not required in a separate section, image and datasheet side by side.
 
 ## Relationship with other modules
 
-- END-001: orbit altitudes for the GSD and swath of the imagers. END-004: energy per orbit for the battery capacity (computed with END-004's own subsystem powers and duty cycles). END-016: disposal delta-v (it is computed for the spacecraft mass and drag area END-001 used; a lighter satellite decays differently).
-- END-004 Power Budget can read the vendor-declared powers from `component_selector_power_handoff.json`. END-018 analyses the thermal behaviour of the CubeSat class written in the requirements.
+- The initial design (spacecraft_definition.json, step 0) is the satellite of every module of the run: END-001 takes mass, drag area (mean projected area) and Cd; END-003 mass, inertia, areas, Cd, Cr, dimensions, reaction wheels, star tracker and magnetorquers; END-004 the subsystems with their declared powers, the battery and the solar panels with their faces; END-010 the CubeSat class (Unity 3D model, camera size) and the mean projected area; END-016 mass, area and Cd through the END-001 input; END-018 the CubeSat class (a class written in the requirements is only reported when it differs).
+
+- The final design uses END-001 orbit altitudes (GSD and swath of the imagers), END-004 energy per orbit (battery capacity) and END-016 disposal delta-v (propulsion; computed for the mass and drag area END-001 used).
 
 ## Known limits
 
-The rules that decide which subsystems are needed are keyword rules on the requirement texts (declared, listed above). Checked against published data only: GSD, swath, pointing accuracy, three-axis, bands, delta-v (total impulse over the sum of the published masses: harness and structure margins are not included) and mass. Not checked: power balance and number of solar panels, electrical and interface compatibility, link budget and data volume, thermal limits, an engineering layout. The envelope fit check ignores walls and keep-out zones. All data are `verified: false` until checked by a person. 82 of the 232 components have no local datasheet and 24 have no image.
+The rules that decide which subsystems are needed are keyword rules on the requirement texts (declared, listed above). Checked against published data only: GSD, swath, pointing accuracy, three-axis, bands, delta-v (total impulse over the sum of the published masses: harness and structure margins are not included) and mass. Not checked: power balance and number of solar panels, electrical and interface compatibility, link budget and data volume, thermal limits, an engineering layout. The envelope fit check ignores walls and keep-out zones. All data are `verified: false` until checked by a person. In the catalogue of 2026-10-21, 80 of the 236 components have no datasheet reference and 28 have no image; the datasheet PDFs are not in the repository.
 
-1. ## **Initial and final design in a STAR workflow (2026-10-17)**
+## Initial and final design in a STAR workflow (2026-10-17)
 
-- Step 0 (before the other modules): initial design from the requirements; spacecraft_definition.json is the satellite every module
-  uses (END-001, END-003, END-004, END-010, END-016, END-018); products *_initial.json / .csv and component_selector_data_initial.js
-  (window.componentSelectorDataInitial).
-- Last step: final design with the results of the modules (altitude, energy per orbit, delta-v); usual products,
-  spacecraft_definition_final.json and design_changes (class, mass, components, battery). The modules are not re-run.
+- Step 0 (before the other modules): initial design from the requirements; spacecraft_definition.json is the satellite every module uses (END-001, END-003, END-004, END-010, END-016, END-018): class, envelope, mass, inertia of the uniform box, face areas and mean projected area, Cd 2.2 and Cr 1.2 (STAR defaults), solar panels and their body faces, battery, declared peak powers, radios, attitude-control components. Products *_initial.json / .csv and component_selector_data_initial.js (window.componentSelectorDataInitial).
+
+- Last step: final design with the results of the modules (altitude, energy per orbit, delta-v); usual products, spacecraft_definition_final.json and design_changes (class, mass, components, battery). The modules are not re-run.
+
 - The results page shows the two designs as tabs of the same panel ("Initial design", "Final design") with the changes.
 
 **Italian requirements (2026-10-17).** The requirement rules of star_selector/mission.py read Italian texts too (accents removed): risoluzione spaziale (GSD), strisciata (swath), banda S / X, assetto / puntamento, immagini / fotocamera, manovre, posizione a bordo / collisioni, profondita di scarica, massa non superiore a, rientro entro N anni, quota tra X e Y km, ruote di reazione, sensori stellari / solari, pannelli solari dispiegabili, tipi di immagine (pancromatico, visibile, multispettrale, iperspettrale, infrarosso termico, a colori). Inside STAR every workflow has END-006 (the CubeSat of the STAR domain).

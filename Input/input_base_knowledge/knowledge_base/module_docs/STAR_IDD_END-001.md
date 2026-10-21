@@ -1,310 +1,52 @@
-﻿|![](Aspose.Words.2132cd9c-5305-4f61-98aa-e07ae76327a7.001.png)|<p>PROGETTO: “SPACE IT UP !”</p><p>Contratto n. 2024-5-E.0. – CUP: I53D24000060005</p><p>Interface Definition Document (IDD)</p><p>END-001: CONSTELLATION OPTIMIZER</p>|<p>DOCUMENT ID:</p><p>DX.X.X\_Spoke2\_XXX\_2026</p><p></p><p>DATE OF DELIVERY: XX/XX/2026</p><p></p><p>REV.: V0.1</p><p></p><p>Pag: 9 di 34</p>|
-| :-: | :-: | :- |
+﻿# STAR Interface Definition Notes — END-001 Constellation Optimizer
 
-**Interface Definition Document (IDD)**
+> Updated 2026-10-21 to the STAR version of the module. The formal IDD is STAR/IDD/STAR_IDD_END-001.docx; the module README is END001-ConstellationOptimizer/README.md (END-001 is a git submodule of STAR).
 
-**END-001: CONSTELLATION OPTIMIZER**
+## Functional role
 
-# **List of Contents**
+END-001 designs the Earth-observation constellation of the mission. Given the area of interest, the ground stations, the sensor (SAR, push-broom, framing or conical optical) and the weights of the objectives, a multi-objective genetic algorithm (NSGA-II) searches the constellation that best balances maximum, 90th-percentile and mean revisit time, maximum latency to a ground station, average ground-station access, area coverage, robustness and cost (number of satellites and planes, collision proxy, launch). Orbit families: Sun-synchronous repeat ground track (SSORGT), Walker delta with a repeat ground track (RGT), Hybrid, or Auto (both families optimised, the better one kept, also compared at equal number of satellites).
 
-[**1.**	**Introduction**	2](#_toc230170069)
+Each candidate is evaluated by a simulator (circular orbits with secular J2, sensor footprints, station visibility on WGS84, Sun constraint for optical sensors) or by a machine-learning surrogate trained on it, which turns hours of optimisation into minutes. The surrogate is valid for an area of interest inside Italy, one ground station in Italy, an optical RECT or push-broom sensor with the Sun constraint and 3-10 planes; outside this domain END-001 falls back to the simulator by itself and says why. The best designs of the surrogate are re-simulated and the best simulated one is exported.
 
-[**1.1.**	**Functionalities description**	2](#_toc230170070)
+END-001 is the first module of the STAR chain. After choosing the constellation it also selects the passes for the downstream modules (the daylight imaging pass over the area of interest and the first night pass visible from the observatory) and counts the daily operations (acquisitions over the area, ground-station contacts in sunlight and eclipse).
 
-[**1.2.**	**Use case scenarios**	2](#_toc230170071)
+## When the planner should select this module
 
-[**2.**	**Responsibility**	2](#_toc230170072)
+Select END-001 when the request asks for a constellation, a number of satellites or orbital planes, orbits, altitude or inclination, revisit time, coverage of an area, acquisition frequency, latency, ground-station access or observation windows. Select it also when a downstream module needs orbits: END-003 (attitude), END-004 (power), END-010 (light curve), END-016 (space safety) and END-018 (thermal) all start from the END-001 products of the same run. The area of interest must be inside Italy (STAR domain): a request for an area outside Italy stops STAR.
 
-[**3.**	**Applicable and reference documents**	2](#_toc230170073)
+## Input interface
 
-[**4.**	**Definition of terms and abbreviated terms**	3](#_toc230170074)
+The runner (BackEnd/runners/end001_runner.py, input built by end001_star_inputs.py) starts from the template Input/input_constellation_optimizer.json and writes modules_output/END-001/end001_runtime_input.json. Priority: STAR input > requirement text > template; every decision and its origin is in star_runtime.end001_inputs.
 
-[**5.**	**Interface end definition**	3](#_toc230170075)
+- Fixed in STAR: surrogate fitness engine, PropagationDays "auto" (one repeat cycle for SSO, a whole lighting-drift cycle for inclined orbits), 10 s step, Sun constraint from the sensor type.
+- From the mission (document or user, not registry defaults): area of interest (named area, polygon, point or known place), constellation type, optical FOV, SAR field of regard, start date, evaluation mode, observatory of the night pass.
+- Rules read from the requirements: "at most / at least N satellites", "N orbital planes", altitude or altitude range, inclination, Sun-synchronous or Walker delta, push-broom / frame camera / SAR, swath, start epoch. No orbit family stated: Orbit_Type Auto; no revisit stated: "auto" revisit thresholds.
+- Satellite: mass, drag area (mean projected area) and Cd from the END-006 initial design (spacecraft_definition.json), unless STAR inputs give them.
+- GA size from the run mode: test 20 x 5 x 1 (population x generations x restarts); full levels 1-5 from 60 x 40 x 1 to 200 x 150 x 6.
 
-[**5.1.**	**Interface end description and data definition**	3](#_toc230170076)
+## Output interface
 
-[**5.2.**	**Units of measure including scale of measure**	3](#_toc230170077)
+In modules_output/END-001/output_constellation_optimizer/:
 
-[**5.3.**	**Tolerances or required accuracies**	3](#_toc230170078)
+- constellation_optimizer_output.csv — one row per satellite: index, JSON file, start, hours, perigee and apogee altitude [m], inclination, RAAN, argument of perigee, true anomaly [deg];
+- satellite_NN.json — the same orbit elements per satellite (sim_start_date, sim_hours, orbit);
+- satellite_NN_ephemeris.csv — ECI position [km], velocity [km/s] and nadir body->ECI quaternion every 10 s for 48 h (IAU-82 GMST frame, as END-003 and END-007);
+- pass_selection.json — imaging pass (satellite, site, start, end, peak elevation, Sun), light-curve pass (satellite, observer, night conditions) and all imaging candidates;
+- operations_summary.json — per satellite and constellation mean: orbits per day, imaging seconds and orbits per day, contact seconds and orbits per day, sunlit and eclipse contact time per contact orbit (an upper bound of the operations).
 
-[**5.4.**	**In case of using non-SI quantities or units, conversions and conventions**	3](#_toc230170079)
+In modules_output/END-001/results_constellation_optimizer/: coverage_summary.json (KPI-01 to KPI-16: run validity, maximum / P90 / mean revisit, maximum latency, average ground-station access, percent of AOI covered, search quality, number of satellites and planes, altitude, inclination; thresholds and meets_requirement; fitness engine used, orbit family choice), the figures 01-11 and constellation_plots_data.js for the END001 results tab.
 
-[**5.5.**	**Interface plane implementation**	3](#_toc230170080)
+## Relationship with other modules
 
-[**5.6.**	**Interface end behaviour**	4](#_toc230170081)
+- END-006 (initial design) gives mass, drag area and Cd.
+- END-003 uses the ephemerides, pass_selection.json and the ground stations: it computes the attitude on the passes END-001 chose.
+- END-004 uses operations_summary.json (duty cycles and orbits per mode) and, through END-003, the orbit period.
+- END-006 (final design) uses the orbit altitudes (GSD and swath of the imager).
+- END-010 receives the night pass through END-003; END-007 receives orbit and attitude through END-003.
+- END-016 uses satellite_NN.json, the ephemerides and the mass, drag area and Cd of end001_runtime_input.json.
+- END-018 uses satellite_NN.json.
+- STAR compliance and the END001 results tab read coverage_summary.json.
 
-[**5.7.**	**Interface end data**	4](#_toc230170082)
+## Known limits
 
-[**6.**	**Special Remarks**	4](#_toc230170083)
-
-[**7.**	**Software**	4](#_toc230170084)
-
-[**7.1.**	**Operating system**	4](#_toc230170085)
-
-[**7.2.**	**Operating hardware**	4](#_toc230170086)
-
-[**7.3.**	**Required software libraries**	4](#_toc230170087)
-
-[**7.4.**	**Required compiler, build environment**	5](#_toc230170088)
-
-[**7.5.**	**API definition**	5](#_toc230170089)
-
-[**7.6.**	**Errors and warnings returned**	5](#_toc230170090)
-
-[**7.7.**	**Map of inputs/outputs**	5](#_toc230170091)
-
-
-1. ## <a name="_toc230170069"></a>**Introduction**
-
-The IDD shall contain a description of the purpose, objective, content and the reason prompting its preparation.
-
-1. ### <a name="_toc230164775"></a><a name="_toc230165050"></a><a name="_toc230166006"></a><a name="_toc230166124"></a><a name="_toc230166211"></a><a name="_toc230166292"></a><a name="_toc230166362"></a><a name="_toc230166444"></a><a name="_toc230166529"></a><a name="_toc230166588"></a><a name="_toc230166646"></a><a name="_toc230166695"></a><a name="_toc230166756"></a><a name="_toc230166819"></a><a name="_toc230170070"></a>**Functionalities description**
-
-The core functionality of this module lies in its ability to solve highly non-linear, multi-objective orbital mechanics problems by balancing user-defined operational constraints against global constellation performance metrics. The functional architecture can be divided into four main processing phases:
-
-- **Space-Environment and Constraints Parsing:** The module ingests raw physical and geodetic constraints, processing the Region of Interest (ROI) and translating Ground Station coordinates into a multi-dimensional topological matrix. It evaluates payload sensor constraints (SAR, PBS, or CON) and maps specific look-angle configurations (e.g., minimum and maximum elevation thresholds), which directly shape the mathematical boundaries of the search space.
-- **Multi-Objective Optimization Search:** Depending on the input profile, the system dynamically scales the optimization parameter space vector. It leverages evolutionary heuristic frameworks, such as the Non-dominated Sorting Genetic Algorithm II (MOGA NSGA-II) or the PlatEMO multi-objective platform, to concurrently minimize variables like maximum revisit time, launch cost, or collision risks, while maximizing average Ground Station access windows and overall constellation robustness.
-- **Analytical SSO/RGT Astrodynamics Decoding:** Once the optimizer converges on the absolute Pareto-optimal front, the module extracts the primary solution vector. It runs analytical orbital perturbation equations to calculate the inclination required to maintain Sun-Synchronous or Repeat Ground Track characteristics based on the optimized target altitude.
-- **Walker Delta Constellation:** The module automatically applies the Walker Delta constellation distribution laws (T/P/F). It structurally computes the Right Ascension of the Ascending Node (RAAN) across the derived orbital planes and distributes individual spacecraft true anomalies to maximize coverage uniformity. Finally, it formats, prints, and writes these states into JSON structures.
-
-
-1. ### <a name="_toc230164776"></a><a name="_toc230165051"></a><a name="_toc230166007"></a><a name="_toc230166125"></a><a name="_toc230166212"></a><a name="_toc230166293"></a><a name="_toc230166363"></a><a name="_toc230166445"></a><a name="_toc230166530"></a><a name="_toc230166589"></a><a name="_toc230166647"></a><a name="_toc230166696"></a><a name="_toc230166757"></a><a name="_toc230166820"></a><a name="_toc230170071"></a>**Use case scenarios**
-
-The software makes it suitable for a variety of operational and research scenarios within the space mission architecture design:
-
-- **Initial Constellation Sizing for Earth Observation Missions:** For newly proposed remote sensing or communication missions where the optimal orbital configuration is unknown, the software, by ingesting regional coordinates, ground station locations, and payload requirements, provides an estimation of coverage performance and satellite count to identify the most cost-effective deployment topologies.
-- **Trade-Off Analysis: C**ompare and evaluate different constellation design against the same mission goals. By systematically varying configuration inputs, such as switching between Sun-Synchronous (SSO) and Repeat Ground Track (RGT) geometries, or testing hybrid orbital types, the tool serves to trade off coverage uniformity, robustness, and ground segment access times across different candidates.
-
-1. ## <a name="_toc230170072"></a>**Responsibility**
-
-Responsible for END-001:
-
-- Lorenzo Mariani (UNIRM1) Leader
-- Fabrizio Piergentili (UNIRM1) Co-Leader
-
-1. ## <a name="_toc230170073"></a>**Applicable and reference documents**
-
-- STAR\_ProductTree
-
-1. ## <a name="_toc230170074"></a>**Definition of terms and abbreviated terms**
-
-|***Term / Abbreviation***|***Definition***|
-| :- | :- |
-|***API***|Application Programming Interface|
-|***CON***|Conventional (Optical/Passive) Sensor operative mode |
-|***FOV***|Field of View of a spacecraft sensor payload |
-|***GS***|Ground Station |
-|***JSON***|JavaScript Object Notation (lightweight data-interchange format) |
-|***MOGA***|Multi-Objective Genetic Algorithm |
-|***MS***|Multi-Sensor operative mode |
-|***NSGA-II***|Non-dominated Sorting Genetic Algorithm II |
-|***OPMOD***|Operative Mode |
-|***PBS***|Push-Broom Sensor operative mode |
-|***RAAN***|Right Ascension of the Ascending Node ($\Omega$) |
-|***RGT***|Repeat Ground Track orbit |
-|***ROI***|Region of Interest |
-|***SAR***|Synthetic Aperture Radar operative mode |
-|***SS***|Single Sensor operative mode |
-|***SSORGT***|Sun-Synchronous Orbit Repeat Ground Track |
-|***WGS-84***|World Geodetic System 1984 (Ellipsoid constants used: Re, mu, J2) |
-**\
-
-
-
-1. ## <a name="_toc230170075"></a>**Interface end definition**
-
-1. ### <a name="_toc230170076"></a>**Interface end description and data definition** 
-
-The **STAR END-001 Constellation Optimizer** software node acts as an autonomous computational engine designed to optimize satellite constellation topologies. The data interface structure relies on a decoupled, file-based input/output subsystem: 
-
-- **Ingress Interface:** A single, structured configuration file in JSON format (input\_constellation\_optimizer.json) containing system-level user constraints, time variables, orbital boundaries, and optimizer configuration profiles. 
-
-**Egress Interface:** A designated directory populated with discrete, parsed JSON files named sequentially (satellite\_01.json, satellite\_02.json, etc.), where each file encapsulates the definitive Keplerian orbital state vectors and metadata for an individual satellite within the optimized constellation.
-
-1. ### <a name="_toc230170077"></a>**Units of measure including scale of measure**
-
-The software utilizes standard SI units for physical and mathematical processing, with specific spatial and orbital engineering conventions: 
-
-- **Time:** Calendar dates are expressed via the Gregorian calendar format (YYYY-MM-DD hh:mm:ss) and internally processed using continuous Julian Dates (JD) or decimal days. Simulation duration is scaled in hours. 
-- **Distance / Altitude:** Scaled from kilometers (km) within the optimizer optimization search space bounds to absolute meters (m) for geodetic, astrodynamic, and output structural models. 
-- **Angles:** Angular geodetic positions (Latitude, Longitude), Sensor Field of Views (FOV), and Ground Station elevation masks are scaled in degrees (deg). Astrodynamic Keplerian elements (RAAN, True Anomaly - nu) are handled in radians (rad) during internal mathematical loops and converted to degrees ranging from 0 deg to 360 deg (or clipped from -180 deg to +180 deg) for external interface synchronization. 
-
-1. ### <a name="_toc230170078"></a>**Tolerances or required accuracies**
-
-
-
-1. ### <a name="_toc230170079"></a>**In case of using non-SI quantities or units, conversions and conventions**
-
-- **Chronological Scale Transformation:** Calendar date inputs are converted into an absolute Julian Date framework.
-- **Optimization Weight Normalization:** User-defined optimization weights (W) are dynamically treated as relative non-dimensional values and scaled into a unified normalized system via a sum-of-elements scaling function: 
-
-W\_i = W\_i \ (sum\_{j=1-10} W\_j)
-
-This guarantees that sum(W\_i) = 1.0 regardless of the initial input scale. 
-
-1. ### <a name="_toc230170080"></a>**Interface plane implementation**
-
-
-
-1. ### <a name="_toc230170081"></a>**Interface end behaviour**
-
-Upon execution, the software responds according to the following execution pipeline: 
-
-1. **Initialization:** Appends internal library folders, algorithm repositories (PlatEMO), and mathematical toolboxes to the executable workspace path. 
-1. **Configuration Loading:** Ingests the specified input JSON configuration structure. 
-1. **Temporal & Spatial Parsing:** Reconstructs the reference starting epoch and instantiates geodetic region constraints (ROI) alongside ground station (GS) matrix allocations. 
-1. **Constraint Setup:** Sets up sensor configuration flags (SAR, PBS, CON) and normalizes optimization performance weights. 
-1. **Bound Enforcement:** Establishes low-bound (lb) and up-bound (ub) vectors based on the selected operational mode (Multi-Sensor vs. Single Sensor). 
-1. **Optimization Engine Routine:** Directs execution flow to the core optimization blocks (MOGA or PLATEMO) according to the designated algorithm type (e.g., MOGA NSGA-II, PSO-based, PlatEMO) and orbital class (SSORGT, RGT, Hybrid). 
-1. **Pareto Front Selection:** Extracts the absolute primary optimized solution vector (x\_best) from the generated Pareto optimal front. 
-1. **Walker Delta Decoding:** Analytically computes the distinct Keplerian parameters for each satellite, enforcing uniform RAAN separation across calculated orbital planes and applying Walker phasing steps for the true anomaly (nu) of each asset. 
-1. **Serialization:** Commits individual satellite structural objects to disk in standardized JSON syntax with 'PrettyPrint' legibility formatting. 
-
-1. ### <a name="_toc230170082"></a>**Interface end data**
-
-Each generated satellite output JSON structure conforms to the following schema definition: 
-
-{
-
-`  `"sim\_start\_date": "YYYY-MM-DD hh:mm:ss",
-
-`  `"sim\_hours": 48,
-
-`  `"orbit": {
-
-`    `"alt\_perigee\_m": double,
-
-`    `"alt\_apogee\_m": double,
-
-`    `"inclination\_deg": double,
-
-`    `"raan\_deg": double,
-
-`    `"omega\_deg": 0,
-
-`    `"nu\_deg": double
-
-`  `}
-
-}
-
-sim\_start\_date: String representing the absolute initial simulation epoch. 
-
-sim\_hours: Constant numerical double defining simulation duration window (hardcoded to 48 hours). 
-
-orbit: Sub-structure grouping the physical Keplerian parameters: 
-
-- alt\_perigee\_m / alt\_apogee\_m: Orbit altitudes in meters, assuming circular configurations derived from the optimized kilometer parameter. 
-- inclination\_deg: Orbital inclination expressed in degrees, calculated via analytical perturbation models for SSO or set to a fallback standard value (98 deg). 
-- raan\_deg: Right Ascension of the Ascending Node for the specific orbital plane, ranging within (-180 deg, 180 deg], in the ECI frame of the downstream modules: ECEF = R3(GMST) ECI, with the IAU-82 GMST of the epoch (as END-003 and END-007). The simulator measures RAAN from an axis where Greenwich is at the lla2eci angle, 0.34 deg below GMST in 2026; the exported value includes that shift (until 2026-10-15 it did not, and downstream ground tracks were 0.34 deg of longitude west of the optimized ones). 
-- omega\_deg: Argument of perigee in degrees (fixed to 0 for circular assumptions). 
-- nu\_deg: True anomaly of the spacecraft at the starting epoch, derived via Walker Delta positioning laws.
-
-For END-007, one `satellite_NN_ephemeris.csv` per satellite (same window as the JSON: sim\_start\_date, sim\_hours; step `DownstreamEphemerisStep_s` of the input JSON, default 10 s, 0 = not written), columns:
-
-time\_utc, x\_eci\_km, y\_eci\_km, z\_eci\_km, vx\_eci\_km\_s, vy\_eci\_km\_s, vz\_eci\_km\_s, qw\_body2eci, qx\_body2eci, qy\_body2eci, qz\_body2eci
-
-- time\_utc: ISO 8601 UTC (`2026-05-21T13:41:10Z`; milliseconds only when the epoch has a fraction of a second).
-- x/y/z\_eci\_km, vx/vy/vz\_eci\_km\_s: position and velocity in the ECI frame above (ECEF = R3(GMST(time\_utc)) ECI), from END-001's propagator (J2 secular, circular orbits); the velocity is the time derivative of the tabulated positions. Through GMST the Earth-fixed positions are the simulator's (within 1 mm).
-- q\*\_body2eci: scalar-first Hamilton quaternion of the nadir-pointing attitude, rotating body vectors into ECI (v\_eci = q v\_body q\*; its matrix has the body axes in ECI as columns): +Z body = geocentric nadir (sensor boresight), +X body = velocity component normal to +Z (forward, the framing sensor's along-track axis), +Y body = +Z x +X (right of the track, the cross-track axis). The same axes as END-003's 'nadir' mode; the sign is kept continuous from row to row. Note: END-003's Unreal CSV (output\_attitude\_propagation.csv) carries the conjugate quaternion (ECI to body) with other column names.
-
-1. ## <a name="_toc230170083"></a>**Special Remarks**
-
-Interfaces in STAR:
-
-- **IF-001: CONSTELLATION OPTIMIZER (END-001) – SYNTHETIC DATA GENERATION (END-007)** The output data produced by END-001 serves as the primary initialization for the Synthetic Data Generation node (END-007). By establishing standardized Keplerian parameters, and time-tagged positions strings, IF-001 ensures synchronization between the orbital configuration found by the optimizer and the subsequent payload data simulation routines within the STAR framework. 
-
-1. ## <a name="_toc230164789"></a><a name="_toc230165064"></a><a name="_toc230170084"></a>**Software**
-
-1. ### <a name="ecss_e_st_10_24_1290199"></a><a name="ecss_e_st_10_24_1290200"></a><a name="_toc230164790"></a><a name="_toc230165065"></a><a name="_toc230170085"></a>**Operating system**
-
-The script is designed for compatibility with cross-platform operating systems (Microsoft Windows, Linux, or macOS) capable of hosting the target MATLAB environment. Absolute file paths specified in the execution driver script utilize standard Windows-style syntax conventions (C:\Users\...). 
-
-1. ### <a name="_toc230164791"></a><a name="_toc230165066"></a><a name="_toc230170086"></a>**Operating hardware**
-
-Standard computational engineering workstation configuration. The software handles multi-variable multi-objective evolutionary algorithms, which require adequate RAM allocation and CPU capabilities proportional to the population sizes (N\_pop) and iteration loops (N\_gen) defined inside the input configuration file. 
-
-1. ### <a name="_toc230164792"></a><a name="_toc230165067"></a><a name="_toc230170087"></a>**Required software libraries**
-
-The runtime path environment requires the mandatory inclusion of the following software packages and analytical suites: 
-
-- **MATLAB Core Environment** (including JSON handling features). 
-- **PlatEMO Library Subsystem:** Specifically requires access to the path hierarchy located at \lib\FUNCTIONS\PlatEMO, including user-defined evolutionary problem spaces (\Problems\My Problems\). 
-- **MOGA NSGA-II Toolbox:** Located at \lib\FUNCTIONS\MOGA NSGA-II. 
-
-**Geodetic and Orbital Functions:** Internal custom helper functions located in the \lib\FUNCTIONS\ root subdirectory.
-
-1. ### <a name="_toc230164793"></a><a name="_toc230165068"></a><a name="_toc230170088"></a>**Required compiler, build environment**
-
-
-
-1. ### <a name="_toc230164794"></a><a name="_toc230165069"></a><a name="_toc230170089"></a>**API definition** 
-
-The system exposes its primary programmatic access via a single main entry-point function: 
-
-**Function Prototype / Signature**
-
-STAR\_END001\_CONSTELLATION\_OPTIMIZER(configFile, output\_folder)
-
-**Input Parameters**
-
-1. configFile
-   1. *Type:* string or char array. 
-   1. *Format:* Absolute or relative system file path referencing a valid, unencrypted .json configuration file. 
-1. output\_folder
-   1. *Type:* string or char array. 
-   1. *Format:* Absolute or relative system path pointing to the destination directory where individual output files will be written. 
-
-**Output Parameters**
-
-- *Direct Return Values:* None (Function communicates results entirely via file-system data serialization). 
-
-**Internal Constraints & Exceptions**
-
-- **Array Pre-allocation:** Ground Station parameters are parsed into a pre-allocated matrix of dimensions num\_gs x 4. If an optional elevation mask field (mask) is omitted from the input JSON configuration block, the API forces an automatic fallback default value of 5 deg.
-- **Optimization Dimension Bounds:** Optimization bounding vectors (lb, ub) scale dynamically based on sensor settings. In Multi-Sensor (MS) configurations, the search space expands to include an upper bound vector length sizing up to a maximum parameter capacity array dimension (nMax = 40). 
-
-1. ### <a name="_toc230164795"></a><a name="_toc230165070"></a><a name="_toc230170090"></a>**Errors and warnings returned**
-
-The routine incorporates deterministic runtime validations that trigger standard MATLAB execution interrupts or terminal notifications: 
-
-- error('Configuration file %s not found.', configFile); Triggered when the system file validator returns a negative value for the provided configFile path string. Stops execution immediately. 
-- error('Invalid Optimizer\_Type configuration.'); Triggered if the parameter Opt.Optimizer\_Type contains a token that is not equal to 'MOGA NSGA-II', 'PSO-based', or 'PlatEMO'. 
-- error('Invalid Orbit\_Type specified in input configuration.'); Triggered if Opt.Orbit\_Type fails to match the valid system tokens: 'SSORGT', 'RGT (generally inclined)', or 'Hybrid (SSORGT and RGT)'. 
-- error('Impossible to write output files: %s', filename); Triggered if the operating system file system rejects write access permissions during an execution of fopen(filename, 'w'). 
-- warning(No valid solution found.'); Low-severity execution warning displayed in the Command Window if the core optimization matrices return empty arrays (isempty(x\_opt)), forcing an elegant early exit from the function without crashing the program pipeline. 
-
-1. ### <a name="_toc230164796"></a><a name="_toc230165071"></a><a name="_toc230170091"></a>**Map of inputs/outputs**
-
-The following matrix describes the file access maps, including specific read/write access permissions: 
-
-|***Target File Entity***|***I/O Category***|***File Data Format***|***Description / Content Scope***|***Access Permission***|
-| - | - | - | - | - |
-|***configFile***|Input|Structured JSON|Comprehensive configuration parameters (Time, ROI, Ground Stations, Sensor Settings, Algorithm Iterations, Optimization Weights). |**Read-Only (**r**)**|
-|***satellite\_XX.json***|Output|Standardized JSON|Individual orbital configurations, true anomaly profiles, inclination calculations, and Keplerian matrices for satellite ID XX. |**Write-Only (**w**)**|
-
-1. ## **STAR workflow, 2026-10-17**
-
-- **Spacecraft properties** (SpacecraftProperties Mass, ADrag, CD): from the END-006 initial design of the run
-  (spacecraft_definition.json: mass of the selected components, mean projected area = surface / 4, Cd 2.2) unless the user gives
-  them in STAR; END-016 reads them from END-001.
-- **Passes for the downstream modules** (before chosen by END-003): after writing satellite_NN_ephemeris.csv END-001 runs
-  lib/FUNCTIONS/select_downstream_passes.m and writes pass_selection.json: the imaging pass (best peak elevation over any AOI point,
-  daylight at the point and along the sub-satellite track, PassSelection.Imaging) and the FIRST useful light-curve pass from the
-  observatory (PassSelection.LightCurve: observer Sun <= -12 deg, relaxed to -6 / 0 only without windows, satellite sunlit,
-  elevation >= 10 + 1 deg, >= 120 s). The observatory is the STAR input `observatory` (an END-010 station name or city, "lat, lon"
-  or an object; default Matera, SPADE telescope).
-
-- **Operations for the power budget** (2026-10-17): lib/FUNCTIONS/downstream_operations.m writes operations_summary.json:
-  per satellite and as constellation mean, the seconds per day an AOI point is in the sensor footprint (PBS/CON/RECT full FOV
-  angles, SAR look angles, daylight for an optical sensor with the Sun constraint; points on the far side of the Earth
-  excluded), the orbits per day with acquisitions, the contacts with the END-001 ground stations (seconds per day, orbits per
-  day, sunlit and eclipse seconds per contact orbit) and the orbits with both. Upper bound of the operations (no tasking, no
-  data-volume model); per-day values over the ephemeris window (48 h).
-
-**STAR domain, area, stations, thresholds (2026-10-17).**
-- STAR works only inside its domain (config/star_domain.json): area of interest in Italy, Earth orbit 400-1200 km, CubeSat 1U-12U up to 24 kg, Italian stations and observatories; outside it STAR stops before planning and gives the reasons (runners/star_domain.py).
-- Area of interest: STAR input, else the Italian area the requirements or the mission request name (Italy, Italian Coasts, regions, macro areas, cities and sites of config/italy_places.json, or coordinates); a sub-area of Italy is simulated (the surrogate is trained on the whole Italy grid).
-- Ground stations: STAR input ground_stations, else those the request names, else the Italian station (config/italian_ground_stations.json) nearest to the area of interest among those supporting the downlink band of the CubeSat radios. Observatory: STAR input, else named, else LightCurve.Candidates (every confirmed Italian telescope): select_downstream_passes keeps the darkest-sky, earliest, highest first night pass.
-- Requirement thresholds: a revisit (maximum, mean, 90th percentile) or latency the call states drives MissionRequirements with ok = the value and bad = twice it; a revisit metric not stated follows a stated one that bounds it, else its weight is 0.
-- Surrogate safety: surrogate_domain_check also rejects GA ranges outside the trained ones (planes, satellites per plane, Walker inclination / altitude / repeat cycle); STAR asks for the simulation when the requirements reach outside the domain (fewer satellites than the trained minimum, a single satellite, 2 planes, a 97 deg Walker inclination, a sub-area of Italy, several stations, SAR) instead of clipping them.
+Circular orbits with secular J2 only. The surrogate domain is Italy with one station; elsewhere the simulator is used and runs are much slower (a level-3 run over the whole of Italy takes about 2 hours with the per-site surrogate; test mode about 1 minute). With the Sun constraint the maximum revisit cannot drop below the night length. Weights.EndOfLife and SensorSettings.Optic_Steerable have no effect.
