@@ -331,10 +331,32 @@ def _clean(obj: Any) -> Any:
     return obj
 
 
+def critical_fallbacks(run_path: Path) -> dict[str, list[str]]:
+    """{module: [items]} of the modules that completed with a critical fallback (star_provenance.json of the run)."""
+    data = _load(run_path / "star_provenance.json") or {}
+    out: dict[str, list[str]] = {}
+    for m in data.get("modules", []):
+        if m.get("status") == "completed_with_fallback" and m.get("fallback_severity") == "critical":
+            out.setdefault(str(m.get("module_id")), []).extend(str(f.get("item")) for f in m.get("fallbacks", []))
+    return out
+
+
+def apply_fallbacks(rows: list[dict[str, Any]], fallbacks: dict[str, list[str]]) -> None:
+    """A 'met' verdict computed from a module that used a critical fallback is only partially verified."""
+    for r in rows:
+        if r["status"] != "met":
+            continue
+        used = sorted({c["module"] for c in r["checks"] if c["module"] in fallbacks})
+        if used:
+            r["status"] = "partially_verified"
+            r["reason"] = "; ".join(f"{m} used a critical fallback ({', '.join(fallbacks[m][:3])})" for m in used)
+
+
 def build(run_path: str | Path, requirements: list[dict[str, Any]], run_mode: str = "test", workflow: list | None = None) -> dict[str, Any]:
     run_path = Path(run_path)
     kpis = collect_kpis(run_path / "modules_output")
     rows = [check_requirement(r, kpis) for r in requirements or [] if isinstance(r, dict) and r.get("text")]
+    apply_fallbacks(rows, critical_fallbacks(run_path))
     counts = {s: sum(1 for r in rows if r["status"] == s) for s in ("met", "not_met", "partially_verified", "applied", "not_verifiable")}
     data = {
         "generated_at": datetime.now().isoformat(),

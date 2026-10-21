@@ -1062,7 +1062,7 @@ async function buildRunDiagnostics() {
       : typeof artifacts === 'string'
         ? artifacts.split(';').map(item => item.trim()).filter(Boolean).length
         : step.generated_artifacts_count ?? step.generatedArtifacts ?? '—';
-    modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
+    modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: (Array.isArray(step.fallbacks) && step.fallbacks.length ? `Fallback (${step.fallback_severity || 'minor'}): ${step.fallbacks.map(f => f.item).join(', ')}` : '') || step.skipped_because || step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
   for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-019']) {

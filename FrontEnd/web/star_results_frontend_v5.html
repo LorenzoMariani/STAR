@@ -4369,7 +4369,7 @@ function renderBanner(){
   if (!s &amp;&amp; !info) { b.hidden = true; return; }
   let cls = &#x27;good&#x27;, icon = &#x27;✓&#x27;, head = &#x27;&lt;b&gt;No safety issue found&lt;/b&gt;&#x27;;
   const items = [];
-  if (info &amp;&amp; info.status &amp;&amp; info.status !== &#x27;completed&#x27;) {
+  if (info &amp;&amp; info.status &amp;&amp; ![&#x27;completed&#x27;,&#x27;completed_with_fallback&#x27;].includes(info.status)) {
     cls = info.status === &#x27;failed&#x27; ? &#x27;critical&#x27; : &#x27;warning&#x27;; icon = info.status === &#x27;failed&#x27; ? &#x27;✕&#x27; : &#x27;!&#x27;;
     head = `&lt;b&gt;END-016 ${esc(info.status)}&lt;/b&gt; — ${esc(info.evidence_text || &#x27;&#x27;)}`;
   } else if (s) {
@@ -4500,7 +4500,7 @@ function renderAll(){
   renderBanner(); renderConfig(); renderKpis(); renderTables();
   if (state.summary) { renderPairs(c); renderHistory(c); renderDecay(c); renderDv(c); }
   else {
-    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; state.runInfo.status !== &#x27;completed&#x27; ? `END-016 ${state.runInfo.status}: no result to show.` : &#x27;No space_safety_summary.json loaded.&#x27;;
+    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; ![&#x27;completed&#x27;,&#x27;completed_with_fallback&#x27;].includes(state.runInfo.status) ? `END-016 ${state.runInfo.status}: no result to show.` : &#x27;No space_safety_summary.json loaded.&#x27;;
     [&#x27;plotPairs&#x27;, &#x27;plotHistory&#x27;, &#x27;plotDecay&#x27;, &#x27;plotDv&#x27;].forEach(id =&gt; empty(id, why));
   }
 }
@@ -4807,7 +4807,7 @@ function renderBanner(){
   const sat = state.current &amp;&amp; state.sats[state.current];
   const items = [];
   let cls = &#x27;good&#x27;, icon = &#x27;✓&#x27;, head = &#x27;&#x27;;
-  if (info &amp;&amp; info.status &amp;&amp; info.status !== &#x27;completed&#x27;) {
+  if (info &amp;&amp; info.status &amp;&amp; ![&#x27;completed&#x27;,&#x27;completed_with_fallback&#x27;].includes(info.status)) {
     cls = info.status === &#x27;failed&#x27; ? &#x27;critical&#x27; : &#x27;warning&#x27;; icon = info.status === &#x27;failed&#x27; ? &#x27;✕&#x27; : &#x27;!&#x27;;
     head = `&lt;b&gt;END-019 ${esc(info.status)}&lt;/b&gt; — ${esc(info.evidence_text || &#x27;&#x27;)}`;
   } else {
@@ -4934,7 +4934,7 @@ function renderAll(){
   const sat = state.current &amp;&amp; state.sats[state.current];
   if (sat &amp;&amp; sat.series) { renderSeries(&#x27;plotExternal&#x27;, &#x27;external&#x27;, c, sat.series); renderSeries(&#x27;plotInternal&#x27;, &#x27;internal&#x27;, c, sat.series); renderRange(c, sat.series); }
   else {
-    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; state.runInfo.status !== &#x27;completed&#x27; ? `END-019 ${state.runInfo.status}: no temperatures to show.` : &#x27;No temperature time series (output_thermal_SAT-XX.csv) loaded.&#x27;;
+    const why = state.runInfo &amp;&amp; state.runInfo.status &amp;&amp; ![&#x27;completed&#x27;,&#x27;completed_with_fallback&#x27;].includes(state.runInfo.status) ? `END-019 ${state.runInfo.status}: no temperatures to show.` : &#x27;No temperature time series (output_thermal_SAT-XX.csv) loaded.&#x27;;
     empty(&#x27;plotExternal&#x27;, why); empty(&#x27;plotInternal&#x27;, why); empty(&#x27;plotRange&#x27;, why);
   }
 }
@@ -6683,7 +6683,7 @@ async function buildRunDiagnostics() {
       : typeof artifacts === 'string'
         ? artifacts.split(';').map(item => item.trim()).filter(Boolean).length
         : step.generated_artifacts_count ?? step.generatedArtifacts ?? '—';
-    modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: step.error || step.message || step.output_dir || step.module_input_file || '' });
+    modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: (Array.isArray(step.fallbacks) && step.fallbacks.length ? `Fallback (${step.fallback_severity || 'minor'}): ${step.fallbacks.map(f => f.item).join(', ')}` : '') || step.skipped_because || step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
   for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-019']) {

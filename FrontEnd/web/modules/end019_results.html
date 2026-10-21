@@ -243,7 +243,7 @@ function renderBanner(){
   const sat = state.current && state.sats[state.current];
   const items = [];
   let cls = 'good', icon = '✓', head = '';
-  if (info && info.status && info.status !== 'completed') {
+  if (info && info.status && !['completed','completed_with_fallback'].includes(info.status)) {
     cls = info.status === 'failed' ? 'critical' : 'warning'; icon = info.status === 'failed' ? '✕' : '!';
     head = `<b>END-019 ${esc(info.status)}</b> — ${esc(info.evidence_text || '')}`;
   } else {
@@ -370,7 +370,7 @@ function renderAll(){
   const sat = state.current && state.sats[state.current];
   if (sat && sat.series) { renderSeries('plotExternal', 'external', c, sat.series); renderSeries('plotInternal', 'internal', c, sat.series); renderRange(c, sat.series); }
   else {
-    const why = state.runInfo && state.runInfo.status && state.runInfo.status !== 'completed' ? `END-019 ${state.runInfo.status}: no temperatures to show.` : 'No temperature time series (output_thermal_SAT-XX.csv) loaded.';
+    const why = state.runInfo && state.runInfo.status && !['completed','completed_with_fallback'].includes(state.runInfo.status) ? `END-019 ${state.runInfo.status}: no temperatures to show.` : 'No temperature time series (output_thermal_SAT-XX.csv) loaded.';
     empty('plotExternal', why); empty('plotInternal', why); empty('plotRange', why);
   }
 }

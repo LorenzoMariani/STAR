@@ -2314,6 +2314,26 @@ body[data-theme="light"] .module-card .status-pill.Error {
   color: #991b1b;
 }
 
+/* phase C: Skipped (out of scope / blocked: not an error) and Fallback (completed with a critical fallback) */
+.status-light.Skipped {
+  background: #94a3b8;
+}
+
+.status-pill.Skipped {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.status-light.Fallback {
+  background: #f59e0b;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.55);
+}
+
+.status-pill.Fallback {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 body[data-theme="light"] .danger-button {
   color: #991b1b;
   background: #fee2e2;

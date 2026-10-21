@@ -25,6 +25,8 @@ from runners.star_runner_io import (
     upstream_product,
     write_json,
 )
+from runners.star_provenance import from_runtime_decisions
+from runners.star_status import evidence as star_evidence, finalize
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END004_DIR = STAR_ROOT / "END004-PowerBudget"
@@ -314,6 +316,8 @@ def _apply_star_inputs(runtime_data: dict[str, Any], star_payload: dict[str, Any
         if "eclipse_min" not in orbit:          # no END-003 shadow fraction: keep the template eclipse, sunlight from the period
             runtime_data["orbit"]["sunlight_min"] = round(orbit["period_min"] - float(tmpl_orbit.get("eclipse_min", 35.0)), 4)
         report["orbit"] = {"value": runtime_data["orbit"], "source": orbit["source"]}
+        if "eclipse_min" not in orbit:
+            report["orbit"]["source"] += f"; eclipse template {tmpl_orbit.get('eclipse_min', 35.0)} min (END-003 shadow fraction KPI-14 not available)"
     else:
         report["orbit"] = {"value": tmpl_orbit, "source": "template (END-003/END-001 products not found)"}
     _apply_satellite(runtime_data, star_payload, load_spacecraft_definition(star_payload), report)
@@ -755,8 +759,17 @@ def run_end004(
     })
 
     _emit(log_callback, "EXECUTION", f"END-004 finished with status={status}. Execution time: {_duration(duration)} ({duration:.2f} s).")
+    prov = from_runtime_decisions("END-004", runtime_data, "end004_inputs")
+    final_status, severity = finalize(status, prov)
+    orbit_src = str(decisions["orbit"]["source"]).split(";")[0]
+    facts = (f"Power budget: orbit from {orbit_src} (eclipse {o.get('eclipse_min')} min of {o.get('period_min')} min), "
+             f"duty cycles from {str(decisions.get('duty_cycles', {}).get('source', 'n/a')).split(' (')[0]}, "
+             f"loads and generation from {str(decisions.get('subsystems', {}).get('source', decisions.get('satellite', {}).get('source', 'n/a'))).split(' (')[0]}")
     return {
-        "status": status,
-        "evidence": "Power budget computed from END-003 attitude/orbit products and native END-004 power-budget configuration." if status == "completed" else f"END-004 ended with status={status}.",
+        "status": final_status,
+        "fallback_severity": severity,
+        "fallbacks": prov.fallbacks(),
+        "provenance": prov.to_json(final_status),
+        "evidence": star_evidence("END-004", final_status, prov, facts) if status == "completed" else f"END-004 ended with status={status}.",
         "generated_artifacts": artifacts,
     }

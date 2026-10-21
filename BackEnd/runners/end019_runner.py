@@ -42,8 +42,12 @@ from datetime import datetime
 
 try:
     from .star_runner_io import load_spacecraft_definition, upstream_product
+    from .star_provenance import Provenance
+    from .star_status import FALLBACK, evidence as star_evidence, finalize
 except ImportError:          # loaded outside the runners package
     from star_runner_io import load_spacecraft_definition, upstream_product
+    from star_provenance import Provenance
+    from star_status import FALLBACK, evidence as star_evidence, finalize
 from pathlib import Path
 from typing import Any, Callable
 
@@ -285,7 +289,13 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     generated: list[str] = []
 
     def finish(status: str, message: str, **extra: Any) -> dict[str, Any]:
-        info.update({"status": status, "evidence_text": message, **extra})
+        # the class of the CubeSat drives the model; a registry first guess for it is a fallback (other first guesses are tuning)
+        prov = Provenance(MODULE_ID)
+        prov.add_origins({k: v for k, v in info.get("provenance", {}).items() if k == "form_factor"})
+        status, severity = finalize(status, prov)
+        if status == FALLBACK:
+            message = star_evidence(MODULE_ID, status, prov, message)
+        info.update({"status": status, "evidence_text": message, "fallback_severity": severity, **extra})
         path = results_dir / "thermal_run_info.json"
         path.write_text(json.dumps(info, indent=1, ensure_ascii=False), encoding="utf-8")
         generated.append(str(path))
@@ -293,11 +303,12 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
                    "return_code": info.get("return_code"), "evidence": message}
         (module_root / "end019_process_result.json").write_text(json.dumps(process, indent=1, ensure_ascii=False), encoding="utf-8")
         log("EXECUTION" if status == "completed" else "WARNING", f"END-019 {status}: {message}")
-        return {"status": status, "generated_artifacts": generated, "evidence": message}
+        return {"status": status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(status, message),
+                "generated_artifacts": generated, "evidence": message}
 
     if out_of_scope:
         info.update({"config": {}, "provenance": {}, "notes": []})      # nothing is configured for a mission outside the domain
-        return finish("skipped", "Mission out of scope for the CubeSat thermal model: " + "; ".join(out_of_scope))
+        return finish("skipped_out_of_scope", "Mission out of scope for the CubeSat thermal model: " + "; ".join(out_of_scope))
 
     # 3. upstream products of this run
     staging = module_root / "star_input"

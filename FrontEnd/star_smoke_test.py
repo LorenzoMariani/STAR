@@ -97,9 +97,9 @@ def main() -> int:
             secs = (datetime.fromisoformat(str(r["completed_at"])) - datetime.fromisoformat(str(r["started_at"]))).total_seconds()
         except (KeyError, ValueError, TypeError):
             secs = None
-        ok = status in ("completed", "skipped")
+        ok = status in ("completed", "completed_with_fallback", "skipped_out_of_scope")
         bad += not ok
-        print(f"{mid:8s} {status:10s} {(f'{float(secs):.0f} s' if secs is not None else '-'):>8s} "
+        print(f"{mid:8s} {status:24s} {(f'{float(secs):.0f} s' if secs is not None else '-'):>8s} "
               f"{str(round(est['per_module'].get(mid, 0))) + ' s':>7s}  {str(r.get('evidence', ''))[:150]}")
     bad += check_products(api, rows)
     print(f"\n{'PASS' if not bad and rows else 'FAIL'}: {len(rows)} module(s), {bad} not completed or inconsistent, total {time.time() - t_start:.0f} s; run folder {api.current_run_path}")
@@ -113,11 +113,25 @@ def check_products(api, rows) -> int:
     run = api.current_run_path
     modules_output = run / "modules_output"
     graph = api.workflow_graph_of_steps(api.workflow_steps)
-    completed = {r.get("node") or r.get("module_id") for r in rows if r.get("status") == "completed"}
+    completed = {r.get("node") or r.get("module_id") for r in rows if r.get("status") in ("completed", "completed_with_fallback")}
     for node_id in graph.node_ids:
         if node_id in completed or (graph.node(node_id).phase is None and graph.node(node_id).module_id in completed):
             for product in graph.missing_outputs(node_id, modules_output):
                 problems.append(f"{node_id}: guaranteed product {product} missing from the run")
+    prov_path = run / "star_provenance.json"
+    if not prov_path.is_file():
+        problems.append("star_provenance.json not written")
+    else:
+        prov = json.loads(prov_path.read_text(encoding="utf-8"))
+        in_prov = {m.get("node") for m in prov.get("modules", [])}
+        for r in rows:
+            if (r.get("node") or r.get("module_id")) not in in_prov:
+                problems.append(f"{r.get('node') or r.get('module_id')}: missing from star_provenance.json")
+        for m in prov.get("modules", []):
+            if m.get("status") == "failed" or not m.get("evidence"):
+                problems.append(f"{m.get('node')}: provenance status {m.get('status')} / empty evidence")
+            if m.get("status") == "completed_with_fallback":
+                print(f"  fallback {m.get('fallback_severity')}: {m.get('node')} - " + "; ".join(f['item'] for f in m.get("fallbacks", [])))
     if not (run / "planning" / "workflow_graph.json").is_file():
         problems.append("planning/workflow_graph.json not written")
     for path in sorted((run / "module_inputs").glob("STEP_*_input.json")):

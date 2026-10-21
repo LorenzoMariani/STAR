@@ -39,8 +39,12 @@ from typing import Any, Callable
 
 try:
     from .star_runner_io import load_spacecraft_definition, star_run_mode, upstream_product
+    from .star_provenance import Provenance
+    from .star_status import FALLBACK, evidence as star_evidence, finalize
 except ImportError:
     from star_runner_io import load_spacecraft_definition, star_run_mode, upstream_product
+    from star_provenance import Provenance
+    from star_status import FALLBACK, evidence as star_evidence, finalize
 
 MODULE_ID = "END-016"
 OUTPUT_DIRNAME = "output_collision_avoidance"
@@ -253,7 +257,13 @@ def run_end016(input_file: str, output_dir: str, run_id: str | None = None,
     generated: list[str] = []
 
     def finish(status: str, message: str, **extra: Any) -> dict[str, Any]:
-        info.update({"status": status, "evidence_text": message, **extra})
+        # only the spacecraft values drive the result; screening distance and thresholds are declared defaults, not fallbacks
+        prov = Provenance(MODULE_ID)
+        prov.add_origins({k: v for k, v in provenance.items() if k.startswith("spacecraft.")})
+        status, severity = finalize(status, prov)
+        if status == FALLBACK:
+            message = star_evidence(MODULE_ID, status, prov, message)
+        info.update({"status": status, "evidence_text": message, "fallback_severity": severity, **extra})
         path = results_dir / "collision_run_info.json"
         path.write_text(json.dumps(info, indent=1, ensure_ascii=False), encoding="utf-8")
         generated.append(str(path))
@@ -261,7 +271,8 @@ def run_end016(input_file: str, output_dir: str, run_id: str | None = None,
             {"run_id": run_id, "status": status, "started_at": started, "completed_at": datetime.now().isoformat(),
              "return_code": info.get("return_code"), "evidence": message}, indent=1, ensure_ascii=False), encoding="utf-8")
         log("EXECUTION" if status == "completed" else "WARNING", f"END-016 {status}: {message}")
-        return {"status": status, "generated_artifacts": generated, "evidence": message}
+        return {"status": status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(status, message),
+                "generated_artifacts": generated, "evidence": message}
 
     staging = module_root / "star_input"
     if staging.exists():

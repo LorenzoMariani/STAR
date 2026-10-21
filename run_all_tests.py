@@ -160,7 +160,7 @@ def run_script(suite: dict) -> dict:
     tail = next((x for x in reversed(lines) if re.match(r"(PASS|FAIL): |Smoke test stopped", x)), None)
     head = next((i for i, x in enumerate(lines) if re.match(r"module\s+status\s", x)), len(lines))
     not_passed = [f"{m.group(1)} {m.group(2)}" for x in lines[head + 1:]
-                  if (m := re.match(r"(END-\d{3})\s+(\S+)\s", x)) and m.group(2) not in ("completed", "skipped")]
+                  if (m := re.match(r"(END-\d{3})\s+(\S+)\s", x)) and m.group(2) not in ("completed", "completed_with_fallback", "skipped_out_of_scope", "skipped")]
     return {"suite": suite["id"], "status": "PASS" if proc.returncode == 0 else "FAIL", "seconds": seconds,
             "detail": tail.split("; run folder")[0] if tail else f"ended with code {proc.returncode}, no report",
             "not_passed": not_passed}

@@ -169,7 +169,7 @@ function renderBanner(){
   if (!s && !info) { b.hidden = true; return; }
   let cls = 'good', icon = '✓', head = '<b>No safety issue found</b>';
   const items = [];
-  if (info && info.status && info.status !== 'completed') {
+  if (info && info.status && !['completed','completed_with_fallback'].includes(info.status)) {
     cls = info.status === 'failed' ? 'critical' : 'warning'; icon = info.status === 'failed' ? '✕' : '!';
     head = `<b>END-016 ${esc(info.status)}</b> — ${esc(info.evidence_text || '')}`;
   } else if (s) {
@@ -300,7 +300,7 @@ function renderAll(){
   renderBanner(); renderConfig(); renderKpis(); renderTables();
   if (state.summary) { renderPairs(c); renderHistory(c); renderDecay(c); renderDv(c); }
   else {
-    const why = state.runInfo && state.runInfo.status && state.runInfo.status !== 'completed' ? `END-016 ${state.runInfo.status}: no result to show.` : 'No space_safety_summary.json loaded.';
+    const why = state.runInfo && state.runInfo.status && !['completed','completed_with_fallback'].includes(state.runInfo.status) ? `END-016 ${state.runInfo.status}: no result to show.` : 'No space_safety_summary.json loaded.';
     ['plotPairs', 'plotHistory', 'plotDecay', 'plotDv'].forEach(id => empty(id, why));
   }
 }

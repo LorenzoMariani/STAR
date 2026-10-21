@@ -36,6 +36,7 @@ import webview
 from modules.module_registry import load_module_registry
 from ai.openai_compatible_provider import OpenAICompatibleProvider
 from runners.star_workflow_graph import Registry, WorkflowGraph, WorkflowGraphError, module_number
+from runners import star_status
 
 
 ALLOWED_REQUIREMENT_CATEGORIES = [
@@ -88,8 +89,11 @@ ALLOWED_EXECUTION_STATUSES = [
     "pending",
     "running",
     "completed",
+    "completed_with_fallback",
     "failed",
     "skipped",
+    "skipped_out_of_scope",
+    "skipped_blocked",
     "stopped",
     "approved",
 ]
@@ -643,7 +647,7 @@ class StarApi:
         return self.modules
 
     def set_module_status(self, module_id: str, status: str) -> dict[str, Any]:
-        allowed_statuses = {"Idle", "Ready", "Running", "Completed", "Error", "Stopped"}
+        allowed_statuses = {"Idle", "Ready", "Running", "Completed", "Fallback", "Skipped", "Error", "Stopped"}
 
         if status not in allowed_statuses:
             return {"ok": False, "error": f"Unsupported status: {status}", "modules": self.modules}
@@ -2522,7 +2526,7 @@ Return only valid JSON:
                 raise ValueError(f"Execution step {step_value} has empty output artifacts.")
             if status not in ALLOWED_EXECUTION_STATUSES:
                 raise ValueError(f"Execution step {step_value} has invalid status '{status}'.")
-            if not generated_artifacts and status not in {"stopped", "skipped", "failed"}:
+            if not generated_artifacts and status not in {"stopped", "skipped", "skipped_out_of_scope", "skipped_blocked", "failed"}:
                 raise ValueError(f"Execution step {step_value} has empty generated artifacts.")
             if not evidence:
                 raise ValueError(f"Execution step {step_value} has empty evidence.")
@@ -2818,7 +2822,7 @@ Return only valid JSON:
         completed_modules = [
             result.get("module", "unknown module")
             for result in self.execution_results
-            if result.get("status") in {"completed", "approved"}
+            if result.get("status") in {"completed", "completed_with_fallback", "approved"}
         ]
 
         lines = [
@@ -4502,16 +4506,19 @@ Return only valid JSON:
             skip_reason = self.blocked_reason(node_id, graph, blocked)
             if skip_reason:
                 result = self.build_stopped_execution_result(workflow_step, f"Not run: {skip_reason}.")
-                result["status"] = "skipped"
+                result["status"] = star_status.SKIP_BLOCKED
                 result["skipped_because"] = skip_reason
+                result["node"] = node_id
+                result["evidence"] = star_status.evidence(str(module_id), star_status.SKIP_BLOCKED, reason=skip_reason)
                 if node.phase == "initial":
                     result.update({"phase": "initial", "module": label})
                 execution_results.append(result)
                 self.execution_results = execution_results
+                self.save_star_provenance(execution_results)
                 blocked[node_id] = skip_reason
                 for module in self.modules:
                     if module.get("module_name") == module_name:
-                        module["status"] = "Stopped"
+                        module["status"] = star_status.ui_status(star_status.SKIP_BLOCKED)
                 self.add_log("WARNING", f"{label} ({module_id}) not run: {skip_reason}.")
                 continue
 
@@ -4522,10 +4529,12 @@ Return only valid JSON:
                 result = self.build_stopped_execution_result(workflow_step, evidence)
                 result["status"] = "failed"
                 result["missing_required_inputs"] = missing_required
+                result["node"] = node_id
                 if node.phase == "initial":
                     result.update({"phase": "initial", "module": label})
                 execution_results.append(result)
                 self.execution_results = execution_results
+                self.save_star_provenance(execution_results)
                 blocked[node_id] = f"{module_id} failed: {evidence[:160]}"
                 for module in self.modules:
                     if module.get("module_name") == module_name:
@@ -4583,7 +4592,8 @@ Return only valid JSON:
                 result["status"] = "stopped"
                 result["evidence"] = f"Stop was requested while or immediately after executing {module_name}."
 
-            if result.get("status") == "completed":
+            result["status"] = star_status.normalize(result.get("status"))
+            if star_status.is_success(result["status"]):
                 missing_outputs = graph.missing_outputs(node_id, modules_root)
                 if missing_outputs:
                     result["missing_outputs"] = missing_outputs
@@ -4592,17 +4602,17 @@ Return only valid JSON:
 
             execution_results.append(result)
             self.execution_results = execution_results
+            self.save_star_provenance(execution_results)
 
+            # a runner's skipped_out_of_scope is a decision about the mission, not an error: it gets the Skipped card
+            ui = star_status.ui_status(result["status"], result.get("fallback_severity"))
             for module in self.modules:
                 if module.get("module_name") == module_name:
-                    if result["status"] == "completed":
-                        module["status"] = "Completed"
-                    elif result["status"] == "stopped":
-                        module["status"] = "Stopped"
-                    elif node.phase == "initial":
-                        module["status"] = "Ready"
-                    else:
-                        module["status"] = "Error"
+                    module["status"] = "Ready" if (node.phase == "initial" and ui == "Error") else ui
+            if result["status"] == star_status.FALLBACK:
+                self.add_log("WARNING" if result.get("fallback_severity") == "critical" else "EXECUTION",
+                             f"{label} completed with {result.get('fallback_severity')} fallback(s): "
+                             + "; ".join(f"{f.get('item')} ({f.get('source')})" for f in result.get("fallbacks", [])[:4]))
 
             self.add_log("EXECUTION", f"Finished {step_label}: {label} -> {result['status']} ({self.format_duration(duration)}).")
             if node.phase != "initial":
@@ -4616,7 +4626,7 @@ Return only valid JSON:
                 workflow_stopped = True
                 break
 
-            if result.get("status") != "completed":
+            if not star_status.is_success(result.get("status")):
                 blocked[node_id] = f"{module_id} {result.get('status')}: {str(result.get('evidence', ''))[:160]}"
             if result.get("status") == "failed":
                 self.add_log("ERROR", f"{label} failed: the modules that need its data are skipped, the others run.")
@@ -4640,6 +4650,7 @@ Return only valid JSON:
         self.execution_results = execution_results
         self.execution_review_status = "not_reviewed"
         self.execution_approved = False
+        self.save_star_provenance(execution_results)
 
         active_path = self.save_execution_results_json(
             execution_results=execution_results,
@@ -4671,6 +4682,33 @@ Return only valid JSON:
             "execution_results_extracted_path": str(extracted_path),
             "message": "Workflow execution stopped by user." if workflow_stopped else f"{len(execution_results)} workflow step(s) executed from approved workflow.",
         }
+
+    def save_star_provenance(self, execution_results: list[dict[str, Any]]) -> None:
+        """<run>/star_provenance.json (phase C): status, evidence, inputs with their source and fallbacks of every module run,
+        rewritten after each module so that a crashed or stopped run still leaves it."""
+        if not self.current_run_path:
+            return
+        modules = []
+        for r in execution_results:
+            status = star_status.normalize(r.get("status"))
+            prov = r.get("provenance") or {}
+            modules.append({
+                "node": r.get("node") or r.get("module_id"), "module_id": r.get("module_id"), "phase": r.get("phase", ""),
+                "status": status, "fallback_severity": r.get("fallback_severity"), "evidence": r.get("evidence", ""),
+                "inputs": prov.get("entries", []), "fallbacks": r.get("fallbacks", []),
+                "missing_required_inputs": r.get("missing_required_inputs", []), "missing_optional_inputs": r.get("missing_optional_inputs", []),
+                "missing_outputs": r.get("missing_outputs", []), "skipped_because": r.get("skipped_because", ""),
+                "started_at": r.get("started_at"), "completed_at": r.get("completed_at"), "duration_seconds": r.get("duration_seconds"),
+            })
+        counts: dict[str, int] = {}
+        for m in modules:
+            counts[m["status"]] = counts.get(m["status"], 0) + 1
+        try:
+            (self.current_run_path / "star_provenance.json").write_text(json.dumps({
+                "schema_version": 1, "run_id": self.current_run_id, "generated_at": datetime.now().isoformat(),
+                "run_mode": self.run_mode, "counts": counts, "modules": modules}, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+        except Exception as exc:
+            self.add_log("WARNING", f"star_provenance.json not saved: {exc}")
 
     def blocked_reason(self, node_id: str, graph: WorkflowGraph, blocked: dict[str, str]) -> str:
         """Why a node cannot run: its module is not executable here, or a node it requires (graph upstream, required products
@@ -4734,7 +4772,7 @@ Return only valid JSON:
 
         self.add_log("EXECUTION", f"Runner for {module_name} returned status={status}; generated_artifacts={len(generated_artifacts)}.")
 
-        return {
+        step_result = {
             "step": step,
             "module": module_name,
             "module_id": module_id,
@@ -4748,6 +4786,10 @@ Return only valid JSON:
             "completed_at": completed_at,
             "reviewed_by_user": False,
         }
+        for key in ("fallback_severity", "fallbacks", "provenance"):
+            if key in runner_result:
+                step_result[key] = runner_result[key]
+        return step_result
 
     def get_modules_output_root(self) -> Path:
         """Return the central per-run folder that contains all END module outputs."""
@@ -5002,14 +5044,16 @@ Return only valid JSON:
                 if png_report and png_report not in generated_relative:
                     generated_relative.append(png_report)
 
-                runner_status = result.get("status", "completed") if isinstance(result, dict) else "completed"
+                runner_status = star_status.normalize(result.get("status", "completed") if isinstance(result, dict) else "completed")
                 if self.execution_stop_event.is_set():
                     runner_status = "stopped"
                 runner_evidence = result.get("evidence") if isinstance(result, dict) else None
+                extra = {k: result[k] for k in ("fallback_severity", "fallbacks", "provenance") if isinstance(result, dict) and k in result}
                 return {
                     "status": runner_status,
                     "generated_artifacts": generated_relative,
                     "evidence": runner_evidence or f"Python runner {runner_module_name}.{runner_function_name} executed for {module_name}.",
+                    **extra,
                 }
             except Exception as exc:
                 error_path = output_dir / "runner_error.json"

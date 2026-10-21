@@ -304,7 +304,7 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
     result: dict[str, Any]
     if out_of_scope:
         result = {"ok": True, "error": None, "within_limits": False, "subsystems": [], "messages": out_of_scope}
-        status, evidence = "skipped", "Mission out of scope for the CubeSat selector: " + "; ".join(out_of_scope)
+        status, evidence = "skipped_out_of_scope", "Mission out of scope for the CubeSat selector: " + "; ".join(out_of_scope)
     else:
         result = service.design({"requirements": requirements, "context": context, "form_factor_u": forced}, with_images=True)
         mission = result["mission"]

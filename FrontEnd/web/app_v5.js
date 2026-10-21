@@ -75,8 +75,12 @@ let allowedExecutionStatuses = [
   "pending",
   "running",
   "completed",
+  "completed_with_fallback",
   "failed",
   "skipped",
+  "skipped_out_of_scope",
+  "skipped_blocked",
+  "stopped",
   "approved",
 ];
 
@@ -1090,7 +1094,7 @@ function validateExecutionBeforeSave(results) {
     if (!moduleNames.includes(result.module)) return `Execution step ${result.step} has invalid module: ${result.module}`;
     if (!result.output_artifacts) return `Execution step ${result.step} has empty output artifacts.`;
     if (!allowedExecutionStatuses.includes(result.status)) return `Execution step ${result.step} has invalid status: ${result.status}`;
-    if (!result.generated_artifacts && !["stopped", "failed", "skipped"].includes(String(result.status || "").toLowerCase())) {
+    if (!result.generated_artifacts && !["stopped", "failed", "skipped", "skipped_out_of_scope", "skipped_blocked"].includes(String(result.status || "").toLowerCase())) {
       return `Execution step ${result.step} has empty generated artifacts.`;
     }
     if (!result.evidence) return `Execution step ${result.step} has empty evidence.`;

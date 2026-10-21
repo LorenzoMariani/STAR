@@ -28,6 +28,8 @@ from runners.star_runner_io import (
     upstream_product,
     write_json,
 )
+from runners.star_provenance import from_runtime_decisions
+from runners.star_status import evidence as star_evidence, finalize
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END003_DIR = STAR_ROOT / "END003-AttitudePropagation"
@@ -415,4 +417,10 @@ def run_end003(
         return {"status": "stopped", "evidence": "END-003 stopped by user request.", "generated_artifacts": artifacts, "return_code": rc}
     if status != "completed":
         return {"status": "failed", "evidence": f"END-003 MATLAB attitude propagation failed. See {stdout_path}.", "generated_artifacts": artifacts, "return_code": rc}
-    return {"status": "completed", "evidence": "END-003 MATLAB attitude propagation executed successfully and generated output_attitude_propagation.csv.", "generated_artifacts": artifacts, "return_code": rc}
+    prov = from_runtime_decisions("END-003", config, "end003_inputs")
+    final_status, severity = finalize(status, prov)
+    n_ecl = len(ephemerides)
+    facts = (f"END-003 attitude propagation ({config['sat'].get('attitude_mode')}) on {n_ecl} END-001 ephemeris file(s), "
+             f"passes from END-001 pass_selection; mass/inertia from {decisions['spacecraft']['source'].split(' (')[0]}")
+    return {"status": final_status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(final_status),
+            "evidence": star_evidence("END-003", final_status, prov, facts), "generated_artifacts": artifacts, "return_code": rc}

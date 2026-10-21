@@ -19,6 +19,8 @@ from runners.star_runner_io import (
     normalize_direct_module_outputs,
     write_json,
 )
+from runners.star_provenance import Provenance
+from runners.star_status import evidence as star_evidence, finalize
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 END001_DIR = STAR_ROOT / "END001-ConstellationOptimizer"
@@ -238,4 +240,16 @@ def run_end001(
         return {"status": "stopped", "evidence": "END-001 stopped by user request.", "generated_artifacts": artifacts, "return_code": rc}
     if status != "completed":
         return {"status": "failed", "evidence": f"END-001 MATLAB constellation optimizer failed. See {stdout_path}.", "generated_artifacts": artifacts, "return_code": rc}
-    return {"status": "completed", "evidence": "END-001 MATLAB constellation optimizer executed successfully and generated constellation_optimizer_output.csv.", "generated_artifacts": artifacts, "return_code": rc}
+    prov = Provenance("END-001")
+    cov: dict[str, Any] = {}
+    for p in output_path.rglob("coverage_summary.json"):
+        cov = load_json(p) or {}
+        break
+    if cov.get("surrogate_fallback_reason"):
+        prov.record("fitness_engine", cov.get("fitness_engine_used"), f"fallback: {cov['surrogate_fallback_reason']}", kind="fallback", severity="minor")
+    n_sat = sum(1 for _ in product_dir.glob("satellite_*.json"))
+    facts = (f"END-001 constellation optimizer: {n_sat} satellite(s), orbit type {cov.get('orbit_type', '?')}, "
+             f"fitness engine {cov.get('fitness_engine_used', '?')}, constellation_optimizer_output.csv and ground_stations.json written")
+    final_status, severity = finalize(status, prov)
+    return {"status": final_status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(final_status),
+            "evidence": star_evidence("END-001", final_status, prov, facts), "generated_artifacts": artifacts, "return_code": rc}

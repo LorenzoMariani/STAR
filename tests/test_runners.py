@@ -192,7 +192,11 @@ class TestEnd016Runner(RunnerCase):
     def test_test_mode_and_defaults(self):
         end001_products(self.modules_output)
         result, info, _ = self.run_module({"requirements": []}, kpis={"passive_lifetime_years_mean_activity": "Inf"})
-        self.assertEqual(result["status"], "completed", result["evidence"])
+        # no END-006 design: mass, area and Cd are defaults, a critical fallback (the orchestrator would fail it first when
+        # END-006 is a required upstream of the workflow)
+        self.assertEqual(result["status"], "completed_with_fallback", result["evidence"])
+        self.assertEqual(result["fallback_severity"], "critical")
+        self.assertEqual([f["item"] for f in result["fallbacks"]], ["spacecraft.mass_kg", "spacecraft.drag_area_m2", "spacecraft.cd"])
         cfg = info["config"]
         self.assertEqual(cfg["solar_f107"], [140.0])
         self.assertEqual(cfg["spacecraft"], {"mass_kg": 100.0, "drag_area_m2": 1.0, "cd": 2.2})
@@ -297,10 +301,10 @@ class TestEnd019Runner(RunnerCase):
 
     def test_out_of_the_cubesat_domain(self):
         result, info = self.run_module({"requirements": [requirement("A 3U CubeSat with mass not exceeding 50 kg.")]})
-        self.assertEqual(result["status"], "skipped")
+        self.assertEqual(result["status"], "skipped_out_of_scope")
         self.assertEqual(info["config"], {})
         result, _ = self.run_module({"requirements": [requirement("A microsatellite for Earth observation.")]})
-        self.assertEqual(result["status"], "skipped")
+        self.assertEqual(result["status"], "skipped_out_of_scope")
         self.assertIn("names no CubeSat", result["evidence"])
 
     def test_failures(self):

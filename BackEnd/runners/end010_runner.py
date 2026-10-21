@@ -20,6 +20,8 @@ from runners.star_runner_io import (
     normalize_direct_module_outputs,
     write_json,
 )
+from runners.star_provenance import Provenance
+from runners.star_status import evidence as star_evidence, finalize
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 END010_DIR = STAR_ROOT / "END010-ReflectanceDetermination"
@@ -198,4 +200,10 @@ def run_end010(
         return {"status": "stopped", "evidence": "END-010 stopped by user request.", "generated_artifacts": artifacts, "return_code": rc}
     if status != "completed":
         return {"status": "failed", "evidence": f"END-010 MATLAB reflectance determination failed. See {stdout_path}.", "generated_artifacts": artifacts, "return_code": rc}
-    return {"status": "completed", "evidence": "END-010 MATLAB reflectance determination executed successfully.", "generated_artifacts": artifacts, "return_code": rc}
+    prov = Provenance("END-010")
+    prov.record("attitude_propagation_csv", str(end003_csv) if end003_csv else None, "END-003 output_attitude_propagation.csv" if end003_csv
+                else "not found: no END-003 attitude upstream", kind="input" if end003_csv else "fallback")
+    final_status, severity = finalize(status, prov)
+    facts = f"END-010 reflectance determination from the END-003 attitude ({Path(str(end003_csv)).name if end003_csv else 'none'}); {len(artifacts)} file(s) written"
+    return {"status": final_status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(final_status),
+            "evidence": star_evidence("END-010", final_status, prov, facts), "generated_artifacts": artifacts, "return_code": rc}
