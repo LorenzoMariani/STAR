@@ -166,6 +166,28 @@ function test_weak_wheels_hold_their_limits(tc)
     verifyGreaterThan(tc, K('KPI-24'), 1, 'the slews towards the site cannot be followed with these wheels');
 end
 
+function test_follow_site_tracks_the_site_only_over_the_imaging_pass(tc)
+    % selected imaging pass of +-60 s around the overhead pass, while the site stays above the 10 deg threshold for
+    % about +-4 min: +Z on the site from the start of the pass (slew started in time), back to nadir after it, although
+    % the site is still in view (until 2026-10-19 it was tracked at every visibility, day or night)
+    O = tc.TestData.O;
+    work = fullfile(tc.TestData.work, 'follow_window');
+    mkdir(work);
+    in = write_end001_inputs(work, O, 60);
+    out = run_end003(tc, 'follow_window', 'follow_site', struct('enabled', false), struct('gg', true, 'srp', false, 'drag', false), in);
+    d = jsondecode(fileread(fullfile(out, 'results_attitude_propagator', 'attitude_propagation_plots_data.json')));
+    t = d.time_s; off = d.nadir_offset_deg; el = d.elevation_deg; tgt = d.target_offset_deg;
+    after = t >= O.t_peak + 120 & t <= O.t_peak + 200;
+    verifyNotEmpty(tc, find(after));
+    verifyGreaterThan(tc, min(el(after)), 10, 'the site is still above the threshold after the selected pass');
+    verifyLessThan(tc, max(off(after)), 1, 'nadir again after the selected pass');
+    verifyLessThan(tc, max(off(t < O.t_peak - 300 | t > O.t_peak + 300)), 1, 'nadir away from the pass');
+    inside = t >= O.t_peak - 60 & t <= O.t_peak + 60;
+    verifyLessThan(tc, max(tgt(inside)), 0.5, '+Z on the site over the selected pass');
+    K = read_kpis(out);
+    verifyLessThan(tc, K('KPI-10'), 0.5, 'on the site from the first sample of the pass (slew started before AOS)');
+end
+
 function test_magnetorquers_dump_the_wheel_momentum(tc)
     % wheels starting at 0.02 N m s per axis, no disturbance torque but the gravity gradient of the controlled attitude:
     % without dumping the stored momentum stays (it only turns in the body frame), the magnetorquers take most of it out
@@ -251,9 +273,10 @@ function F = nadir_frame(O, t)
     F = [x y z];
 end
 
-function in = write_end001_inputs(work, O)
+function in = write_end001_inputs(work, O, half)
     % END-001 ephemeris (10 s, ECI km and km/s) and pass_selection.json with the imaging pass over the
-    % sub-satellite point at O.t_peak (equator crossing).
+    % sub-satellite point at O.t_peak (equator crossing), O.t_peak +- half [s] (default 240).
+    if nargin < 3, half = 240; end
     t = (0:10:O.hours*3600)';
     [r, v] = orbit_rv(O, t);
     in.eph = fullfile(work, 'satellite_01_ephemeris.csv');
@@ -268,7 +291,7 @@ function in = write_end001_inputs(work, O)
     th = deg2rad(mod(280.46061837 + 360.98564736629*(juliandate(O.epoch + seconds(O.t_peak)) - 2451545.0), 360));
     re = [cos(th)*rp(1) + sin(th)*rp(2), -sin(th)*rp(1) + cos(th)*rp(2), rp(3)];
     site = struct('name', 'test site', 'lat_deg', asind(re(3)/norm(re)), 'lon_deg', atan2d(re(2), re(1)), 'alt_m', 0, 'index', 1);
-    t0 = O.t_peak - 240; t1 = O.t_peak + 240;
+    t0 = O.t_peak - half; t1 = O.t_peak + half;
     utc = @(s) char(string(O.epoch + seconds(s), 'yyyy-MM-dd''T''HH:mm:ss''Z'''));
     im = struct('found', true, 'pass_found', true, 'constraint_met', true, 'satellite_index', 1, 'satellite_label', 'SAT-01', ...
         'site', site, 'start_t_s', t0, 'end_t_s', t1, 'peak_t_s', O.t_peak, 'start_utc', utc(t0), 'end_utc', utc(t1), ...
@@ -287,13 +310,14 @@ function in = write_end001_inputs(work, O)
     fid = fopen(in.pass, 'w'); fprintf(fid, '%s', jsonencode(P)); fclose(fid);
 end
 
-function out = run_end003(tc, name, mode, control, flags)
+function out = run_end003(tc, name, mode, control, flags, in)
+    if nargin < 6, in = tc.TestData.input; end
     out = fullfile(tc.TestData.work, name);
     sat = struct('attitude_mode', mode, 'm', 8.1, 'Ix', 0.125, 'Iy', 0.125, 'Iz', 0.0691, 'A_ref', 0.108, ...
         'Cr', 1.2, 'Cd', 2.2, 'r_cp', [0.002 0.002 0.005], 'control', control);
     cfg = struct('sat', sat, 'env', struct('flags', flags), 'target', struct('elev_threshold', 10), ...
-        'end001_ephemeris', {{struct('satellite_index', 1, 'file', tc.TestData.input.eph)}}, ...
-        'end001_pass_selection', tc.TestData.input.pass);
+        'end001_ephemeris', {{struct('satellite_index', 1, 'file', in.eph)}}, ...
+        'end001_pass_selection', in.pass);
     f = fullfile(tc.TestData.work, [name '.json']);
     fid = fopen(f, 'w'); fprintf(fid, '%s', jsonencode(cfg)); fclose(fid);
     evalc('star_attitude_propagation_star(f, out)');

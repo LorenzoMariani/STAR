@@ -112,6 +112,18 @@ def _end001_ground_stations(star_payload: dict[str, Any], end001_csv: Path | Non
     return out
 
 
+def _reviewed(star_payload: dict[str, Any], name: str) -> bool:
+    """False for a registry first guess the user has not reviewed (as END-004 _user_input), True otherwise."""
+    for item in star_payload.get("resolved_inputs") or []:
+        if isinstance(item, dict) and item.get("parameter") == name:
+            return not (item.get("source") in ("module_registry_default", "module_registry_required_input") and not item.get("reviewed_by_user"))
+    return True
+
+
+def _source(star_payload: dict[str, Any], name: str) -> str:
+    return "STAR input" if _reviewed(star_payload, name) else "registry default (not reviewed by the user)"
+
+
 def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> dict[str, Any]:
     """STAR inputs over the native template; returns the decisions (star_runtime.end003_inputs)."""
     report: dict[str, Any] = {}
@@ -119,7 +131,7 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
     mode = str(input_value(star_payload, "attitude_mode", "") or "").strip().lower()
     if mode in ATTITUDE_MODES:
         sat["attitude_mode"] = mode
-        report["attitude_mode"] = {"value": mode, "source": "STAR input"}
+        report["attitude_mode"] = {"value": mode, "source": _source(star_payload, "attitude_mode")}
     else:
         report["attitude_mode"] = {"value": sat.get("attitude_mode", "nadir"), "source": "template"}
     state = input_value(star_payload, "initial_attitude_state", None)
@@ -131,14 +143,21 @@ def _apply_star_inputs(config: dict[str, Any], star_payload: dict[str, Any]) -> 
         w0 = state.get("w0_rad_s", state.get("w0"))
         if isinstance(w0, list) and len(w0) == 3:
             sat["w0"] = [float(v) for v in w0]
-        report["initial_attitude_state"] = {"q0_scalar_last": sat.get("q0"), "w0_rad_s": sat.get("w0"), "source": "STAR input"}
-    flags = input_value(star_payload, "environmental_flags", None)
+        report["initial_attitude_state"] = {"q0_scalar_last": sat.get("q0"), "w0_rad_s": sat.get("w0"),
+                                            "source": _source(star_payload, "initial_attitude_state")}
+    # disturbance torques: only flags the user gave or reviewed switch a model off; an unreviewed registry first guess
+    # keeps the template (gravity gradient, solar radiation pressure and drag on). Until 2026-10-19 the registry default
+    # (srp and drag off) silently left the controller, the wheels and the magnetorquers with almost no disturbance.
+    flags = input_value(star_payload, "environmental_flags", None) if _reviewed(star_payload, "environmental_flags") else None
     env_flags = config.setdefault("env", {}).setdefault("flags", {})
     if isinstance(flags, dict):
         for key in ("gg", "srp", "drag"):
             if key in flags:
                 env_flags[key] = coerce_bool(flags.get(key), bool(env_flags.get(key, True)))
         report["environmental_flags"] = {"value": {k: env_flags.get(k) for k in ("gg", "srp", "drag")}, "source": "STAR input"}
+    else:
+        report["environmental_flags"] = {"value": {k: env_flags.get(k, True) for k in ("gg", "srp", "drag")},
+                                         "source": "template (the registry default was not reviewed by the user)"}
     hours = coerce_float(input_value(star_payload, "simulation_duration_hours", None), 0.0)
     if hours > 0:
         config["sim_hours"] = hours

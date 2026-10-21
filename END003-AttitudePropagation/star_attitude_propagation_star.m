@@ -17,8 +17,9 @@ function star_attitude_propagation_star(configFile, outputFolder)
 %   - ATTITUDE on a 1 s grid: 'nadir' (+Z to nadir, +X along track, body rate
 %     = rate of the orbital frame: orbital rate about the orbit normal plus the
 %     turn of the orbital plane about the radial direction), 'follow_site' (+Z
-%     to the target while it is above the elevation threshold, nadir otherwise,
-%     slews limited to sat.max_slew_rate_deg_s) and 'dynamics' (Euler equations
+%     to the target over the selected imaging pass only, the slew starting early
+%     enough to be on it at AOS, nadir otherwise and for the light-curve
+%     satellite; slews limited to sat.max_slew_rate_deg_s) and 'dynamics' (Euler equations
 %     + quaternion kinematics with gravity-gradient, SRP and drag torques, free
 %     motion).
 %   - CONTROL (2026-10-19): in 'nadir' and 'follow_site' the attitude above is
@@ -80,14 +81,14 @@ function star_attitude_propagation_star(configFile, outputFolder)
         if plan.lightcurve.sat_pos == ki, win_img = [win_img; win_lc]; end
     end
     fprintf('Attitude of %s on a %g s grid...\n', eph(ki).label, S.base_step);
-    A_img = attitude_history(eph(ki), tb, S, ctx, site, win_img);
+    A_img = attitude_history(eph(ki), tb, S, ctx, site, win_img, [plan.imaging.aos_t, plan.imaging.los_t]);
     A_lc = [];
     if plan.lightcurve.found
         if plan.lightcurve.sat_pos == ki
             A_lc = A_img;
         else
             fprintf('Attitude of %s (light-curve pass)...\n', eph(plan.lightcurve.sat_pos).label);
-            A_lc = attitude_history(eph(plan.lightcurve.sat_pos), tb, S, ctx, site, win_lc);
+            A_lc = attitude_history(eph(plan.lightcurve.sat_pos), tb, S, ctx, site, win_lc, zeros(0, 2));   % no imaging: nadir
         end
     end
 
@@ -531,8 +532,9 @@ end
 %% =========================================================================
 %  ATTITUDE
 %  =========================================================================
-function A = attitude_history(E, tb, S, ctx, site, windows)
+function A = attitude_history(E, tb, S, ctx, site, windows, track)
     % windows: [t0 t1] rows (s) of the passes where the attitude control runs on 1 s steps (closed_loop)
+    % track: [aos los] rows (s) of the imaging passes where 'follow_site' points +Z at the site (none: nadir)
     [r, v, acc] = eph_eval(E, tb);
     n = numel(tb);
     A.t = tb; A.r = r; A.v = v; A.qnorm_drift = zeros(n, 1);
@@ -548,9 +550,19 @@ function A = attitude_history(E, tb, S, ctx, site, windows)
             p_eci = rot_ecef2eci(repmat(p, n, 1), th);
             el = elevation_deg(rot_eci2ecef(r, th), p, up);
             zb = -r./vecnorm(r, 2, 2);
-            vis = el > S.elev_threshold;
-            los = p_eci(vis, :) - r(vis, :);
-            zb(vis, :) = los./vecnorm(los, 2, 2);
+            los = p_eci - r;
+            % the site only over the selected imaging pass, from early enough before AOS for the slew from nadir to end
+            % on it (angle / slew rate + 5 s, with the site above the horizon). Until 2026-10-19 the site was tracked at
+            % every visibility in the window, day or night, and the light-curve satellite tracked the imaging site
+            % during the night pass seen from the observatory.
+            vis = false(n, 1);
+            for k = 1:size(track, 1)
+                i0 = find(tb >= track(k, 1), 1);
+                if isempty(i0), continue; end
+                lead = angle_deg(zb(i0, :), los(i0, :))/rad2deg(S.max_slew_rate) + 5;
+                vis = vis | (tb >= track(k, 1) - lead & tb <= track(k, 2) & el > 0);
+            end
+            zb(vis, :) = los(vis, :)./vecnorm(los(vis, :), 2, 2);
             xb = v - sum(v.*zb, 2).*zb; xb = xb./vecnorm(xb, 2, 2);
             yb = cross(zb, xb, 2); yb = yb./vecnorm(yb, 2, 2);
             xb = cross(yb, zb, 2);

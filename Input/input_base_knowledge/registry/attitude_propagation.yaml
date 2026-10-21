@@ -218,8 +218,8 @@ required_inputs:
     required: true
     default_value:
       gg: true
-      srp: false
-      drag: false
+      srp: true
+      drag: true
       pert: true
       j2: true
       j3: true
@@ -309,7 +309,8 @@ outputs:
     data_type: png
     description: >
       Validation figure representing spacecraft angular momentum modulus and
-      direction in ECI.
+      direction in ECI (only with the 'dynamics' attitude: with the guided
+      attitudes |H| and its direction are constant).
 
   - name: ground_track_plot
     kind: artifact
@@ -318,19 +319,13 @@ outputs:
     description: >
       Two-dimensional geographic projection of complete and active-pass arcs.
 
-  - name: orbit_3d_ecef_plot
+  - name: orbit_3d_plot
     kind: artifact
-    artifact_name: 05_orbit_3d_ecef.png
+    artifact_name: 05_orbit_3d.png
     data_type: png
     description: >
-      Three-dimensional orbital trajectory representation in the ECEF frame.
-
-  - name: orbit_3d_eci_plot
-    kind: artifact
-    artifact_name: 06_orbit_3d_eci.png
-    data_type: png
-    description: >
-      Three-dimensional orbital trajectory representation in the ECI frame.
+      Three-dimensional orbital trajectory in the ECEF and ECI frames, side by
+      side (one figure since 2026-10-19).
 
   - name: selected_passes
     kind: result

@@ -546,10 +546,8 @@ def create_attitude_bridge_outputs(
     for name in [
         "01_telemetry.png",
         "02_tracking.png",
-        "03_angular_momentum.png",
         "04_ground_track.png",
-        "05_orbit_3d_ecef.png",
-        "06_orbit_3d_eci.png",
+        "05_orbit_3d.png",
     ]:
         write_valid_png(results_dir / name)
     return [str(p) for p in sorted(product_dir.rglob("*")) if p.is_file()] + [str(p) for p in sorted(results_dir.rglob("*")) if p.is_file()]
