@@ -110,7 +110,6 @@ required_inputs:
     data_type: csv_or_json
     required: false
     default_value: null
-    produced_by: observation_module
     assumption_allowed: false
     description: >
       Timeline of acquisitions or operational events affecting the EPS load
@@ -159,9 +158,6 @@ outputs:
 execution:
   estimated_runtime: 3
   execution_mode: sequential_or_live_synchronized
-  upstream_dependencies:
-    - observation_module
-  downstream_dependencies: []
 
 interface_notes: >
   For early STAR demonstrations without real telemetry, the module can operate

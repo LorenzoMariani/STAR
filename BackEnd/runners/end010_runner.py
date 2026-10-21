@@ -14,7 +14,7 @@ from runners.star_runner_io import (
     build_end010_config,
     describe_pass,
     ensure_module_output_layout,
-    find_upstream_artifact,
+    upstream_product,
     load_json,
     load_selected_passes,
     normalize_direct_module_outputs,
@@ -124,14 +124,7 @@ def run_end010(
     # does its own Unity-axis conversion internally, so it must consume the _ECI file --
     # consuming the base-name file (the Unreal-flavored, Y-flipped one) silently corrupts
     # every downstream geometry/visibility computation (elevation, range, phase angle).
-    end003_csv = (
-        find_upstream_artifact(star_payload, ["output_attitude_propagation_eci.csv"], [".csv"])
-        or find_upstream_artifact(star_payload, ["output_attitude_propagation_eci"], [".csv"])
-        or find_upstream_artifact(star_payload, ["output_attitude_propagation.csv"], [".csv"])
-        or find_upstream_artifact(star_payload, ["output_attitude_propagation"], [".csv"])
-        or find_upstream_artifact(star_payload, ["attitude"], [".csv"])
-    )
-    end001_csv = find_upstream_artifact(star_payload, ["constellation_optimizer_output"], [".csv"]) or find_upstream_artifact(star_payload, ["constellation"], [".csv"])
+    end003_csv = upstream_product(star_payload, "attitude_propagation_eci")
     # END-003 publishes a dedicated night pass visible from the light-curve
     # observer (Matera): when available it replaces the daylight imaging pass
     # above as END-010's ephemeris (a light curve needs a dark observer and a
@@ -159,7 +152,7 @@ def run_end010(
 
     _prepare_runtime_script(END010_SCRIPT, runtime_script, config_path, output_path)
     command = f"cd('{_quote(END010_DIR)}'); run('{_quote(runtime_script)}');"
-    write_json(invocation_path, {"run_id": run_id, "started_at": started_at, "star_input_file": str(input_path), "runtime_input_file": str(config_path), "runtime_matlab_file": str(runtime_script), "output_dir": str(output_path), "product_output_dir": str(product_dir), "results_output_dir": str(results_dir), "end003_output_csv": str(end003_csv) if end003_csv else None, "end001_output_csv": str(end001_csv) if end001_csv else None, "matlab_command": command})
+    write_json(invocation_path, {"run_id": run_id, "started_at": started_at, "star_input_file": str(input_path), "runtime_input_file": str(config_path), "runtime_matlab_file": str(runtime_script), "output_dir": str(output_path), "product_output_dir": str(product_dir), "results_output_dir": str(results_dir), "end003_output_csv": str(end003_csv) if end003_csv else None, "matlab_command": command})
     if stop_event is not None and stop_event.is_set():
         write_json(process_info_path, {"run_id": run_id, "status": "stopped", "reason": "Stop requested before MATLAB launch."})
         return {"status": "stopped", "evidence": "END-010 stopped before MATLAB launch.", "generated_artifacts": _collect(output_path)}
@@ -183,9 +176,6 @@ def run_end010(
     if end003_csv:
         env["STAR_END003_OUTPUT_CSV"] = str(end003_csv)
         env["STAR_ATTITUDE_PROPAGATION_OUTPUT_CSV"] = str(end003_csv)
-    if end001_csv:
-        env["STAR_END001_OUTPUT_CSV"] = str(end001_csv)
-        env["STAR_CONSTELLATION_OPTIMIZER_OUTPUT_CSV"] = str(end001_csv)
 
     _emit(log_callback, "EXECUTION", f"END-010 Reflectance Determination started. MATLAB: {matlab}")
     _emit(log_callback, "EXECUTION", f"END-010 runtime config: {config_path}")

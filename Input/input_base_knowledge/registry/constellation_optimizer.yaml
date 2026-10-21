@@ -433,83 +433,57 @@ required_inputs:
     the default is the Matera telescope.
 
     '
-outputs:
-- name: revisit_time
-  kind: result
-  artifact_name: revisit_time.csv
-  data_type: csv
-  description: 'Estimated revisit time statistics over the Area of Interest.
-
-    '
-- name: latency
-  kind: result
-  artifact_name: latency.csv
-  data_type: csv
-  description: 'Estimated observation or acquisition latency metrics.
-
-    '
-- name: coverage
-  kind: result
-  artifact_name: coverage_summary.json
-  data_type: json
-  description: 'Coverage metrics over the Area of Interest.
-
-    '
-- name: acquisition_frequency
-  kind: result
-  artifact_name: acquisition_frequency.csv
-  data_type: csv
-  description: 'Estimated acquisition frequency over the Area of Interest.
-
-    '
-- name: constellation_trajectories
-  kind: artifact
-  artifact_name: satellite_NN_ephemeris.csv
-  data_type: csv
-  description: 'One file per satellite for END-007, over the window of satellite_NN.json (sim_start_date,
-    sim_hours) every DownstreamEphemerisStep_s seconds (default 10): time_utc, x/y/z_eci_km, vx/vy/vz_eci_km_s
-    (ECI with ECEF = R3(GMST) ECI, as END-003 and END-007; J2-secular propagation of END-001), qw/qx/qy/qz_body2eci
-    (scalar-first quaternion body to ECI of the nadir-pointing attitude: +Z nadir, +X forward, +Y right of the
-    track).
-
-    '
-- name: pass_selection
-  kind: result
-  artifact_name: pass_selection.json
-  data_type: json
-  description: 'Passes of the designed constellation for the downstream modules (2026-10-17,
-    before chosen by END-003): imaging_pass, the best pass in daylight over the AOI (daylight
-    at the AOI point and along the sub-satellite track) for END-003/END-007; lightcurve_pass,
-    the FIRST pass visible from the observatory at night (observer Sun below -12 deg, relaxed
-    to -6 and 0 only if no window exists) with the satellite sunlit, for END-003/END-010;
-    imaging_candidates. Times in seconds from the ephemeris epoch and UTC.
-
-    '
-- name: operations_summary
-  kind: result
-  artifact_name: operations_summary.json
-  data_type: json
-  description: 'Daily operations of each satellite and constellation mean (2026-10-17, END-004 duty cycles):
-    acquisitions while an AOI point is in the sensor footprint (full FOV angles of PBS/CON/RECT, SAR
-    look angles; daylight for an optical sensor with the Sun constraint), contacts with the END-001 ground
-    stations above their mask (sunlit and eclipse parts), orbits per day with acquisitions, contacts or
-    both. Upper bound: acquisitions whenever possible, transmitters on for the whole contact.
-
-    '
+always_in_workflow: true
+consumes:
+- product: spacecraft_definition
+  required: false
+  used_for: mass, drag area and Cd of the satellite, and its radio bands (choice of the ground stations)
+  fallback: ground stations of the mission request
+produces:
+- product: constellation_output
+  path: output_constellation_optimizer/constellation_optimizer_output.csv
+  format: csv
+  guaranteed: true
+  description: one row per satellite with the Keplerian elements and the epoch
+- product: satellite_orbits
+  path: output_constellation_optimizer/satellite_*.json
+  format: json
+  guaranteed: true
+  description: orbit, window and sensor of every satellite (satellite_NN.json)
+- product: satellite_ephemerides
+  path: output_constellation_optimizer/satellite_*_ephemeris.csv
+  format: csv
+  guaranteed: true
+  description: ECI position, velocity and nadir attitude of every satellite over the downstream window
+- product: pass_selection
+  path: output_constellation_optimizer/pass_selection.json
+  format: json
+  required_keys: [imaging_pass, lightcurve_pass]
+  guaranteed: true
+  description: imaging pass over the AOI in daylight and first night pass visible from the observatory
+- product: operations_summary
+  path: output_constellation_optimizer/operations_summary.json
+  format: json
+  required_keys: [constellation_mean]
+  guaranteed: true
+  description: acquisitions and ground-station contacts per orbit (duty cycles of END-004)
+- product: ground_stations
+  path: output_constellation_optimizer/ground_stations.json
+  format: json
+  required_keys: [ground_stations]
+  guaranteed: true
+  description: ground stations used by the run (name, lat, lon, alt, mask)
+- product: coverage_summary
+  path: results_constellation_optimizer/coverage_summary.json
+  format: json
+  guaranteed: false
+  description: numbered KPI catalog (coverage, revisit, latency, ground-station access)
 execution:
   estimated_runtime: 2
   execution_mode: sequential_or_optimization_loop
   input_filename: END-001_input.json
   runner_module: runners.end001_runner
   runner_function: run_end001
-  upstream_dependencies: []
-  downstream_dependencies:
-  - END-003
-  - END-004
-  - END-007
-  - END-010
-  - END-016
-  - END-019
 interface_notes: This module provides orbit/constellation-level outputs required by
   downstream attitude propagation and synthetic/observation simulation modules. END-003
   may consume the optimized orbital configuration for attitude and pointing propagation;

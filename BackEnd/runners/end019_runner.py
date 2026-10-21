@@ -41,9 +41,9 @@ import time
 from datetime import datetime
 
 try:
-    from .star_runner_io import load_spacecraft_definition
+    from .star_runner_io import load_spacecraft_definition, upstream_product
 except ImportError:          # loaded outside the runners package
-    from star_runner_io import load_spacecraft_definition
+    from star_runner_io import load_spacecraft_definition, upstream_product
 from pathlib import Path
 from typing import Any, Callable
 
@@ -132,26 +132,23 @@ def _approved_inputs(items: list[dict[str, Any]], reviewed: bool) -> dict[str, A
     return out
 
 
-def _stage_upstream(modules_output: Path, staging: Path) -> tuple[list[str], list[str]]:
-    """END-001 orbits and END-003 passes / attitude of this run, copied into one star_input_dir.
+def _stage_upstream(payload: dict[str, Any], staging: Path) -> tuple[list[str], list[str]]:
+    """END-001 orbits and END-003 passes / attitude of this run (registry consumes), copied into one star_input_dir.
     Returns (staged satellite files, missing items)."""
     missing: list[str] = []
-    orbits_src = modules_output / "END-001" / "output_constellation_optimizer"
-    sats = sorted(orbits_src.glob("satellite_*.json")) if orbits_src.is_dir() else []
+    sats = sorted(upstream_product(payload, "satellite_orbits", many=True))
     if not sats:
-        missing.append(f"END-001 orbits (satellite_XX.json) not found in {orbits_src}")
-    att_src = modules_output / "END-003" / "output_attitude_propagation"
-    passes = att_src / "selected_pass_summary.csv"
-    if not passes.is_file():
-        missing.append(f"END-003 {passes.name} not found in {att_src}")
+        missing.append("END-001 orbits (product satellite_orbits, satellite_XX.json) not found")
+    passes = upstream_product(payload, "selected_pass_summary")
+    if not passes:
+        missing.append("END-003 selected_pass_summary.csv not found")
     # pass attitude: END-003 writes the body->ECI quaternion in its results folder
     # (output_attitude_propagation_ECI.csv) and the conjugate, for Unreal / END-007,
     # in output_attitude_propagation.csv; the model reads the first, or the second
     # conjugated when the first is missing.
-    att_files = [f for f in (modules_output / "END-003" / "results_attitude_propagator" / "output_attitude_propagation_ECI.csv",
-                             att_src / "output_attitude_propagation.csv") if f.is_file()]
+    att_files = [f for f in (upstream_product(payload, "attitude_propagation_eci"), upstream_product(payload, "attitude_propagation_csv")) if f]
     if not att_files:
-        missing.append(f"END-003 pass attitude (output_attitude_propagation[_ECI].csv) not found under {modules_output / 'END-003'}")
+        missing.append("END-003 pass attitude (output_attitude_propagation[_ECI].csv) not found")
     if missing:
         return [], missing
     (staging / "output_constellation_optimizer").mkdir(parents=True, exist_ok=True)
@@ -245,7 +242,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     notes: list[str] = []
     # the satellite of the run (2026-10-17): the class of the END-006 initial design, the one every module uses;
     # only a class the user approved explicitly wins, a class written in the requirements is only reported
-    sat = load_spacecraft_definition(payload, Path(output_dir).resolve().parent)
+    sat = load_spacecraft_definition(payload)
     if sat and sat.get("form_factor") in CLASSES and "form_factor" not in approved:
         if req_params.get("form_factor") and req_params["form_factor"] != sat["form_factor"]:
             notes.append(f"The requirements state a {req_params['form_factor']} CubeSat; the END-006 design of the run is a "
@@ -303,11 +300,10 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
         return finish("skipped", "Mission out of scope for the CubeSat thermal model: " + "; ".join(out_of_scope))
 
     # 3. upstream products of this run
-    modules_output = Path(modules_output_root) if modules_output_root else (Path(run_output_dir) / "modules_output" if run_output_dir else module_root.parent)
     staging = module_root / "star_input"
     if staging.exists():
         shutil.rmtree(staging)
-    satellites, missing = _stage_upstream(modules_output, staging)
+    satellites, missing = _stage_upstream(payload, staging)
     if missing:
         return finish("failed", "Upstream products missing: " + "; ".join(missing) + ". END-019 needs END-001 and END-003 earlier in the workflow.")
     info["satellites"] = satellites

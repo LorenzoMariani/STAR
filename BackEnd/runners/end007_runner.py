@@ -44,7 +44,7 @@ from typing import Any, Callable
 from runners.star_runner_io import (
     describe_pass,
     ensure_module_output_layout,
-    find_upstream_artifact,
+    upstream_product,
     load_selected_passes,
     normalize_direct_module_outputs,
 )
@@ -588,19 +588,7 @@ def run_end007(
 
     modules_output_root_path = star_run_dir / "modules_output"
 
-    end003_csv = find_upstream_artifact(
-        star_payload,
-        include_tokens=["output_attitude_propagation.csv"],
-        suffixes=[".csv"],
-    ) or find_upstream_artifact(
-        star_payload,
-        include_tokens=["output_attitude_propagation"],
-        suffixes=[".csv"],
-    ) or find_upstream_artifact(
-        star_payload,
-        include_tokens=["attitude"],
-        suffixes=[".csv"],
-    )
+    end003_csv = upstream_product(star_payload, "attitude_propagation_csv")
 
     # END-003 selects the satellite and the daylight pass END-007 has to render.
     # Record it next to the images so the run is self-describing.

@@ -38,6 +38,25 @@ def _quote(path: Path | str) -> str:
     return str(path).replace("\\", "/").replace("'", "''")
 
 
+def _write_ground_stations(config_path: Path, product_dir: Path) -> None:
+    """Product `ground_stations` (registry, phase B): the ground stations of the run (GroundStations of the END-001 runtime input),
+    which END-003 and END-016 read instead of end001_runtime_input.json."""
+    try:
+        stations = (load_json(config_path) or {}).get("GroundStations") or []
+    except (OSError, ValueError):
+        stations = []
+    if isinstance(stations, dict):
+        stations = [stations]
+    out = []
+    for i, gs in enumerate(stations, 1):
+        try:
+            out.append({"name": str(gs.get("name") or f"GS {i}"), "lat": float(gs["lat"]), "lon": float(gs["lon"]),
+                        "alt": float(gs.get("alt") or 0.0), "mask": float(gs["mask"] if gs.get("mask") is not None else 5.0)})   # 5 deg: END-001 default
+        except (AttributeError, KeyError, TypeError, ValueError):
+            continue
+    write_json(product_dir / "ground_stations.json", {"module_id": "END-001", "generated_at": datetime.now().isoformat(), "ground_stations": out})
+
+
 def _duration(seconds: float) -> str:
     if seconds < 1:
         return f"{seconds*1000:.0f} ms"
@@ -206,6 +225,8 @@ def run_end001(
     elif status == "failed":
         reason = f"MATLAB END-001 failed with return code {rc}. See {stdout_path}."
         _emit(log_callback, "ERROR", reason)
+    if status == "completed":
+        _write_ground_stations(config_path, product_dir)
 
     normalize_direct_module_outputs(output_path, product_dir, results_dir, keep_names={"end001_runner_invocation.json", "end001_runtime_input.json", "star_constellation_optimizer_runtime.m", "matlab_stdout.txt", "matlab_stderr.txt", "end001_process_result.json"}, log_callback=log_callback, module_label="END-001")
     artifacts = _collect(output_path)

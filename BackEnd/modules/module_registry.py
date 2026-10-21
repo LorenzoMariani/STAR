@@ -120,6 +120,18 @@ def normalize_module(raw: dict[str, Any], registry_path: Path) -> dict[str, Any]
     for key, value in raw.items():
         normalized.setdefault(key, value)
 
+    # Phase B (2026-10-21): the registry declares `produces`; `outputs` (name, artifact_name, data_type, description) is
+    # derived from it for the results tab and the planner text.
+    if not normalized["outputs"]:
+        products = list(raw.get("produces") or [])
+        for block in (raw.get("phases") or {}).values():
+            products.extend((block or {}).get("produces") or [])
+        normalized["outputs"] = [
+            {"name": p.get("product"), "artifact_name": p.get("path"), "data_type": p.get("format"),
+             "description": p.get("description", ""), "guaranteed": bool(p.get("guaranteed"))}
+            for p in products if isinstance(p, dict)
+        ]
+
     return normalized
 
 

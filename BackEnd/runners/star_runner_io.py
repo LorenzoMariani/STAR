@@ -179,6 +179,58 @@ def find_upstream_artifact(
     return candidates[0] if candidates else None
 
 
+# Phase B (2026-10-21): the orchestrator writes "upstream_products" into every module input file, {product: {"from", "required",
+# "paths"}} for the products the registry says the module consumes (BackEnd/runners/star_workflow_graph.py). Runners read them
+# with upstream_product(); the token match below is the fallback for hand-built payloads (tests) without that block.
+_LEGACY_PRODUCT_MATCH: dict[str, tuple[list[str], list[str]]] = {
+    "constellation_output": (["constellation_optimizer_output"], [".csv"]),
+    "operations_summary": (["operations_summary.json"], [".json"]),
+    "pass_selection": (["pass_selection.json"], [".json"]),
+    "ground_stations": (["ground_stations.json"], [".json"]),
+    "spacecraft_definition": (["spacecraft_definition.json"], [".json"]),
+    "attitude_propagation_csv": (["output_attitude_propagation.csv"], [".csv"]),
+    "attitude_propagation_eci": (["output_attitude_propagation_eci.csv"], [".csv"]),
+    "lightcurve_ephemeris": (["output_attitude_propagation_lightcurve_eci.csv"], [".csv"]),
+    "selected_passes": (["selected_passes.json"], [".json"]),
+    "selected_pass_summary": (["selected_pass_summary.csv"], [".csv"]),
+    "attitude_summary": (["attitude_summary.json"], [".json"]),
+    "attitude_orbit_window": (["orbit_and_window.json"], [".json"]),
+    "power_budget_summary": (["power_budget_summary.json"], [".json"]),
+    "space_safety_summary": (["space_safety_summary.json"], [".json"]),
+}
+_LEGACY_PRODUCT_PATTERN = {"satellite_orbits": r"satellite_\d+\.json$", "satellite_ephemerides": r"satellite_\d+_ephemeris\.csv$"}
+
+
+def _legacy_product_paths(star_payload: dict[str, Any], product: str) -> list[Path]:
+    import re
+    pattern = _LEGACY_PRODUCT_PATTERN.get(product)
+    if pattern:
+        found: list[Path] = []
+        for key in ("upstream_artifacts_absolute", "upstream_artifacts"):
+            items = star_payload.get(key, []) or []
+            for item in ([items] if isinstance(items, str) else items):
+                if re.search(pattern, Path(str(item)).name) and Path(str(item)) not in found:
+                    found.append(Path(str(item)))
+        return sorted(found)
+    tokens, suffixes = _LEGACY_PRODUCT_MATCH.get(product, ([product], [""]))
+    path = find_upstream_artifact(star_payload, tokens, suffixes)
+    return [path] if path else []
+
+
+def upstream_product(star_payload: dict[str, Any], product: str, required: bool = False, many: bool = False) -> Any:
+    """Files of an upstream product the module consumes (registry `consumes`): the first Path (None when missing), or with
+    many=True the list of Paths (products with several files: satellite_orbits, satellite_ephemerides). required=True raises
+    FileNotFoundError when it is missing (the orchestrator already stops the module before the runner in that case)."""
+    products = star_payload.get("upstream_products")
+    if isinstance(products, dict):
+        paths = [Path(str(p)) for p in ((products.get(product) or {}).get("paths") or []) if p]
+    else:
+        paths = _legacy_product_paths(star_payload, product)
+    if required and not paths:
+        raise FileNotFoundError(f"required upstream product {product} not found in the module input")
+    return paths if many else (paths[0] if paths else None)
+
+
 def normalize_direct_module_outputs(
     module_root: Path,
     product_dir: Path,
@@ -461,7 +513,7 @@ def create_constellation_bridge_outputs(
 
 
 def read_constellation_first_orbit(star_payload: dict[str, Any]) -> dict[str, Any]:
-    csv_path = first_upstream_file(star_payload, ".csv", ["constellation"])
+    csv_path = upstream_product(star_payload, "constellation_output")
     if csv_path and csv_path.exists():
         try:
             with csv_path.open("r", encoding="utf-8") as f:
@@ -562,7 +614,7 @@ def create_reflectance_bridge_outputs(
     product_dir.mkdir(parents=True, exist_ok=True)
     (results_dir / "Plots").mkdir(parents=True, exist_ok=True)
     (results_dir / "Frames").mkdir(parents=True, exist_ok=True)
-    input_csv = first_upstream_file(star_payload, ".csv", ["output_attitude_propagation"])
+    input_csv = upstream_product(star_payload, "attitude_propagation_csv")
     rows: list[dict[str, Any]] = []
     if input_csv and input_csv.exists():
         try:
@@ -780,7 +832,7 @@ def build_end003_config(star_payload: dict[str, Any]) -> dict[str, Any]:
         module_folder_names=["END003-AttitudePropagation", "END003-Attitude Propagation", "END003_AttitudePropagation", "END003"],
     )
     extra: dict[str, Any] = {}
-    end001_csv = first_upstream_file(star_payload, ".csv", ["constellation_optimizer_output"])
+    end001_csv = upstream_product(star_payload, "constellation_output")
     if end001_csv:
         extra["end001_output_csv"] = str(end001_csv)
     if template:
@@ -807,19 +859,17 @@ def build_end003_config(star_payload: dict[str, Any]) -> dict[str, Any]:
     return _attach_runtime_metadata_v6(cfg, star_payload, "END-003", None, {**extra, "warning": "native input template not found; generated conservative fallback config"})
 
 
-def _end003_target_site_v6(end003_csv: Path) -> dict[str, float] | None:
-    """Read the ground-site lat/lon END-003 actually computed the pass for.
+def _end003_target_site_v6(star_payload: dict[str, Any]) -> dict[str, float] | None:
+    """Read the ground-site lat/lon/alt END-003 actually computed the pass for (product attitude_orbit_window of END-003).
 
-    END-003 writes end003_runtime_input.json into its module root, one level
-    above the output_attitude_propagation/ folder that end003_csv lives in.
-    Returns None (never raises) if the file, or the target fields, are
+    Returns None (never raises) if the product, or the target fields, are
     missing -- callers fall back to the named station in the END-010 template.
     """
     try:
-        runtime_input_path = end003_csv.parent.parent / "end003_runtime_input.json"
-        if not runtime_input_path.exists():
+        path = upstream_product(star_payload, "attitude_orbit_window")
+        if not path or not Path(path).exists():
             return None
-        data = json.loads(runtime_input_path.read_text(encoding="utf-8-sig"))
+        data = json.loads(Path(path).read_text(encoding="utf-8-sig"))
         target = data.get("target") or {}
         lat = target.get("site_lat_deg")
         lon = target.get("site_lon_deg")
@@ -893,9 +943,8 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
 
     lightcurve_pass = (selected_passes or {}).get("lightcurve_pass") or {}
     lightcurve_csv: Path | None = None
-    if lightcurve_pass.get("found") and lightcurve_pass.get("ephemeris_csv"):
-        source_path = (selected_passes or {}).get("_source_path")
-        candidate = Path(str(source_path)).parent / str(lightcurve_pass["ephemeris_csv"]) if source_path else None
+    if lightcurve_pass.get("found"):
+        candidate = upstream_product(star_payload, "lightcurve_ephemeris")
         if candidate is not None and candidate.exists():
             lightcurve_csv = candidate
 
@@ -913,7 +962,7 @@ def build_end010_config(star_payload: dict[str, Any], product_dir: Path, results
         cfg["paths"]["inputCsv"] = str(end003_csv)
         cfg.setdefault("flags", {})["useInputCsv"] = True
 
-        end003_target = _end003_target_site_v6(end003_csv)
+        end003_target = _end003_target_site_v6(star_payload)
         if end003_target:
             sim = cfg.setdefault("simulation", {})
             sim["observatoryLat"] = end003_target["lat"]
@@ -951,27 +1000,11 @@ def end010_cubesat_options(star_payload: dict[str, Any], product_dir: Path) -> d
     otherwise END010_DEFAULT_CLASS_U. camSize (orthographic half-height, m) = half the diagonal of the class envelope x 1.1, so the
     model stays in the frame whatever its attitude; sceneScale divides the km positions of the csv."""
     class_u, source = None, None
-    # the satellite of the run: END-006 initial design (spacecraft_definition.json, step 0 of the workflow)
+    # the satellite of the run: END-006 initial design (product spacecraft_definition, step 0 of the workflow)
     modules_output = next((p for p in Path(product_dir).resolve().parents if p.name == "modules_output"), None)
     sat = load_spacecraft_definition(star_payload, modules_output)
     if sat and int(sat.get("class_u") or 0) in CUBESAT_ENVELOPE_MM:
         class_u, source = int(sat["class_u"]), "END-006 initial design of this run (spacecraft_definition.json)"
-    found = None if class_u else find_upstream_artifact(star_payload, ["component_selector_results.json"], [".json"])
-    candidates = [found] if found else []
-    # modules_output/<END-010>/output_... -> modules_output/END-006/output_component_selector/component_selector_results.json
-    for parent in Path(product_dir).resolve().parents:
-        if parent.name == "modules_output":
-            candidates.append(parent / "END-006" / "output_component_selector" / "component_selector_results.json")
-            break
-    for path in ([] if class_u else candidates):
-        try:
-            data = load_json(Path(path))
-            u = int(((data.get("result") or {}).get("cubesat") or {}).get("class_u"))
-        except Exception:
-            continue
-        if u in CUBESAT_ENVELOPE_MM:
-            class_u, source = u, f"END-006 of this run ({Path(path).name})"
-            break
     if class_u is None:
         class_u, source = END010_DEFAULT_CLASS_U, f"default {END010_DEFAULT_CLASS_U}U (END-006 is not in this run)"
     x, y, z = CUBESAT_ENVELOPE_MM[class_u]
@@ -1070,7 +1103,7 @@ def load_selected_passes(
     """Load END-003's selected_passes.json (None if this run does not have it)."""
     candidates: list[Path] = []
     if star_payload:
-        found = find_upstream_artifact(star_payload, [SELECTED_PASSES_FILENAME], [".json"])
+        found = upstream_product(star_payload, "selected_passes")
         if found:
             candidates.append(found)
     if near_csv:
@@ -1116,13 +1149,10 @@ def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_outp
     declared powers. None when the workflow has no END-006 (the modules keep their own templates then)."""
     candidates: list[Path] = []
     if star_payload:
-        found = find_upstream_artifact(star_payload, [SPACECRAFT_DEFINITION_FILENAME], [".json"])
+        found = upstream_product(star_payload, "spacecraft_definition")
         if found:
             candidates.append(Path(found))
-        root = star_payload.get("modules_output_root")
-        if root:
-            candidates.append(Path(root) / "END-006" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
-    if modules_output:
+    if modules_output and not candidates:
         candidates.append(Path(modules_output) / "END-006" / "output_component_selector" / SPACECRAFT_DEFINITION_FILENAME)
     for path in candidates:
         try:

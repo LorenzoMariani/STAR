@@ -101,8 +101,45 @@ def main() -> int:
         bad += not ok
         print(f"{mid:8s} {status:10s} {(f'{float(secs):.0f} s' if secs is not None else '-'):>8s} "
               f"{str(round(est['per_module'].get(mid, 0))) + ' s':>7s}  {str(r.get('evidence', ''))[:150]}")
-    print(f"\n{'PASS' if not bad and rows else 'FAIL'}: {len(rows)} module(s), {bad} not completed, total {time.time() - t_start:.0f} s; run folder {api.current_run_path}")
+    bad += check_products(api, rows)
+    print(f"\n{'PASS' if not bad and rows else 'FAIL'}: {len(rows)} module(s), {bad} not completed or inconsistent, total {time.time() - t_start:.0f} s; run folder {api.current_run_path}")
     return 0 if not bad and rows else 1
+
+
+def check_products(api, rows) -> int:
+    """Phase B: the products the registry promises are in the run, every module received only what it consumes, the workflow
+    graph is saved; writes tests/fixtures/smoke_products_manifest.json (files under modules_output) for the CI contract test."""
+    problems: list[str] = []
+    run = api.current_run_path
+    modules_output = run / "modules_output"
+    graph = api.workflow_graph_of_steps(api.workflow_steps)
+    completed = {r.get("node") or r.get("module_id") for r in rows if r.get("status") == "completed"}
+    for node_id in graph.node_ids:
+        if node_id in completed or (graph.node(node_id).phase is None and graph.node(node_id).module_id in completed):
+            for product in graph.missing_outputs(node_id, modules_output):
+                problems.append(f"{node_id}: guaranteed product {product} missing from the run")
+    if not (run / "planning" / "workflow_graph.json").is_file():
+        problems.append("planning/workflow_graph.json not written")
+    for path in sorted((run / "module_inputs").glob("STEP_*_input.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        step = payload.get("workflow_step") or {}
+        module_id = str(step.get("module_id", "")).upper()
+        node_id = f"{module_id}/{step['phase']}" if step.get("phase") in ("initial", "final") else module_id
+        if node_id not in graph.node_ids:
+            continue
+        consumed = {str(c.get("product")) for c in graph.node(node_id).consumes}
+        if set(payload.get("upstream_products") or {}) != consumed:
+            problems.append(f"{path.name}: upstream_products {sorted(payload.get('upstream_products') or {})} != consumed {sorted(consumed)}")
+    manifest = {"generated_from": run.name, "files": {
+        m.name: sorted(p.relative_to(m).as_posix() for p in m.rglob("*") if p.is_file())
+        for m in sorted(modules_output.iterdir()) if m.is_dir()}}
+    target = STAR_ROOT / "tests" / "fixtures" / "smoke_products_manifest.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+    for line in problems:
+        print(f"[PRODUCTS] {line}", flush=True)
+    print(f"[PRODUCTS] {len(problems)} problem(s); manifest {target}", flush=True)
+    return len(problems)
 
 
 def check(result: dict, step: str) -> None:

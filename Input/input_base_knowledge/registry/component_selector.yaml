@@ -62,11 +62,6 @@ activation_rules:
     - star tracker
     - propulsion
     - payload accommodation
-  required_upstream_modules: []
-  optional_upstream_modules:
-    - END-001
-    - END-004
-    - END-016
 planning_guidance: >
   Select END-006 when the mission request asks to design or size a small satellite or CubeSat, to choose its components or
   subsystems, or to check which commercial components can be put inside a 1U, 3U, 6U or 12U CubeSat. END-006 needs no upstream
@@ -80,45 +75,91 @@ required_inputs:
     allowed_values: [1, 3, 6, 12]
     description: Optional CubeSat class in units (1U, 3U, 6U or 12U) chosen by the user. When it is empty END-006 uses the smallest class that carries the subsystems the mission needs; a class written in the requirements is only reported.
     assumption_allowed: false
-outputs:
-  - name: component_selector_results
-    artifact_name: output_component_selector/component_selector_results.json
-    data_type: json
-    description: Selected component for every subsystem, with its published data, the counts in the database, the totals against the class limits and the parameters used.
-  - name: component_selector_bom
-    artifact_name: output_component_selector/component_selector_bom.csv
-    data_type: csv
-    description: Bill of materials of the selected components with masses, volumes, declared powers and datasheet links.
-  - name: component_selector_requirements_mapping
-    artifact_name: output_component_selector/component_selector_requirements_mapping.json
-    data_type: json
-    description: Parameters extracted from the requirements, with the sentence that supports each, and out-of-scope notes.
-  - name: component_selector_power_handoff
-    artifact_name: output_component_selector/component_selector_power_handoff.json
-    data_type: json
-    description: Maximum powers declared by the vendors for the selected components (no estimate), usable as a starting point by END-004 Power Budget.
-  - name: spacecraft_definition
-    artifact_name: output_component_selector/spacecraft_definition.json
-    data_type: json
-    description: The satellite of the END-006 initial design (class, mass, inertia, areas, Cd/Cr, solar panels, battery, declared powers, radios, attitude actuators) used by END-001, END-003, END-004, END-010, END-016 and END-019; spacecraft_definition_final.json is the final design.
-  - name: component_selector_frontend_data
-    artifact_name: results_component_selector/component_selector_data.js
-    data_type: javascript
-    description: JavaScript payload consumed by the STAR FrontEnd results tab.
-  - name: component_selector_report
-    artifact_name: results_component_selector/component_selector_report.html
-    data_type: html
-    description: Self-contained report with the component cards, the indicators and the mass and power budgets (opens in any browser).
+always_in_workflow: true
+phases:
+  initial:
+    produces:
+    - product: spacecraft_definition
+      path: output_component_selector/spacecraft_definition.json
+      format: json
+      required_keys: [mass_kg, class_u]
+      guaranteed: true
+      description: the satellite of the initial design (class, mass, inertia, areas, Cd/Cr, panels, battery, powers, radios)
+    - product: component_selector_results_initial
+      path: output_component_selector/component_selector_results_initial.json
+      format: json
+      description: components of the initial design
+    - product: component_selector_bom_initial
+      path: output_component_selector/component_selector_bom_initial.csv
+      format: csv
+      description: bill of materials of the initial design
+    - product: component_selector_power_handoff_initial
+      path: output_component_selector/component_selector_power_handoff_initial.json
+      format: json
+      description: declared powers of the initial design
+    - product: component_selector_requirements_mapping_initial
+      path: output_component_selector/component_selector_requirements_mapping_initial.json
+      format: json
+      description: parameters extracted from the requirements (initial design)
+  final:
+    consumes:
+    - product: spacecraft_definition
+      required: false
+      used_for: initial design the final design is compared with
+      fallback: no comparison
+    - product: satellite_orbits
+      required: false
+      used_for: altitude for the GSD and swath of the imagers
+      fallback: altitude of the requirements
+    - product: power_budget_summary
+      required: false
+      used_for: energy per orbit for the battery capacity
+      fallback: battery of the initial design
+    - product: space_safety_summary
+      required: false
+      used_for: disposal delta-v for the propulsion
+      fallback: no disposal delta-v
+    produces:
+    - product: spacecraft_definition_final
+      path: output_component_selector/spacecraft_definition_final.json
+      format: json
+      required_keys: [mass_kg, class_u]
+      guaranteed: true
+      description: the satellite of the final design and its changes with respect to the initial one
+    - product: component_selector_results
+      path: output_component_selector/component_selector_results.json
+      format: json
+      guaranteed: true
+      description: selected component for every subsystem, totals against the class limits and parameters used
+    - product: component_selector_bom
+      path: output_component_selector/component_selector_bom.csv
+      format: csv
+      guaranteed: true
+      description: bill of materials with masses, volumes, declared powers and datasheet links
+    - product: component_selector_requirements_mapping
+      path: output_component_selector/component_selector_requirements_mapping.json
+      format: json
+      guaranteed: true
+      description: parameters extracted from the requirements with the supporting sentence
+    - product: component_selector_power_handoff
+      path: output_component_selector/component_selector_power_handoff.json
+      format: json
+      guaranteed: true
+      description: maximum powers declared by the vendors for the selected components
+    - product: component_selector_frontend_data
+      path: results_component_selector/component_selector_data.js
+      format: javascript
+      guaranteed: true
+      description: JavaScript payload of the STAR results tab
+    - product: component_selector_report
+      path: results_component_selector/component_selector_report.html
+      format: html
+      guaranteed: true
+      description: self-contained report with the component cards, indicators and budgets
 execution:
   execution_mode: python_runner
   runner_module: runners.end006_runner
   runner_function: run_end006
-  upstream_dependencies: []
-  optional_upstream_dependencies:
-  - END-001
-  - END-004
-  - END-016
-  downstream_dependencies: []
   estimated_runtime: 2
 interface_notes: >
   Two runs per STAR workflow (2026-10-17): the orchestrator runs END-006 first, as step 0, for the INITIAL design (requirements

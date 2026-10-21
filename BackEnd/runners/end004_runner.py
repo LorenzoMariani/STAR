@@ -16,13 +16,13 @@ from typing import Any, Callable
 from runners.star_runner_io import (
     coerce_float,
     ensure_module_output_layout,
-    find_upstream_artifact,
     input_value,
     load_json,
     load_selected_passes,
     load_spacecraft_definition,
     make_runtime_input_copy,
     normalize_direct_module_outputs,
+    upstream_product,
     write_json,
 )
 
@@ -52,7 +52,7 @@ def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, 
     period_min = 2.0 * math.pi * math.sqrt(a ** 3 / MU_EARTH) / 60.0
     out: dict[str, Any] = {"period_min": round(period_min, 4), "daily_orbits": round(1440.0 / period_min, 3),
                            "source": f"END-001 orbit of the satellite selected by END-003 (altitude {alt / 1000:.1f} km)"}
-    summary = find_upstream_artifact(star_payload, ["attitude_summary.json"], [".json"])
+    summary = upstream_product(star_payload, "attitude_summary")
     if summary and Path(summary).exists():
         for kpi in (load_json(Path(summary)) or {}).get("kpis", []):
             if kpi.get("id") == "KPI-14" and isinstance(kpi.get("value"), (int, float)):
@@ -128,7 +128,7 @@ def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, An
 def _operations(star_payload: dict[str, Any]) -> dict[str, Any] | None:
     """Daily operations END-001 computed on the ephemerides (operations_summary.json): acquisitions over the AOI and
     ground-station contacts, constellation mean."""
-    path = find_upstream_artifact(star_payload, ["operations_summary.json"], [".json"])
+    path = upstream_product(star_payload, "operations_summary")
     if path and Path(path).exists():
         data = load_json(Path(path)) or {}
         if isinstance(data.get("constellation_mean"), dict):
@@ -219,7 +219,7 @@ def _apply_duty_cycles(runtime_data: dict[str, Any], ops: dict[str, Any] | None,
 def _illumination(star_payload: dict[str, Any]) -> tuple[dict[str, float] | None, dict[str, Any] | None]:
     """END-003 face illumination: whole window in the attitude of the run, and during the ground-station contacts
     (attitude of the run and ground-station pointing, since 2026-10-19)."""
-    summary = find_upstream_artifact(star_payload, ["attitude_summary.json"], [".json"])
+    summary = upstream_product(star_payload, "attitude_summary")
     if summary and Path(summary).exists():
         ill = (load_json(Path(summary)) or {}).get("illumination") or {}
         return ill.get("mean_cos_sunlit") or None, ill.get("contacts") or None
@@ -420,18 +420,8 @@ def _find_native_template(folder: Path, star_root: str | None = None) -> Path:
 
 
 def _find_end003_runtime_json(star_payload: dict[str, Any]) -> Path | None:
-    for key in ("upstream_artifacts_absolute", "upstream_artifacts"):
-        items = star_payload.get(key, []) or []
-        if isinstance(items, str):
-            items = [items]
-        for item in items:
-            path = Path(str(item))
-            text = str(path).lower().replace("\\", "/")
-            if "end-003" in text and path.name.lower() == "end003_runtime_input.json":
-                if path.exists():
-                    return path
-                return path
-    return None
+    """Orbit, epoch, window and attitude mode of END-003 (product attitude_orbit_window); the MATLAB reads it as its attitude config."""
+    return upstream_product(star_payload, "attitude_orbit_window")
 
 
 def _prepare_runtime_script(source: Path, runtime: Path, config: Path, output_folder: Path, module_folder: Path) -> None:
@@ -622,11 +612,7 @@ def run_end004(
     script = _find_script(folder)
     native_template = _find_native_template(folder, star_root)
 
-    end003_csv = (
-        find_upstream_artifact(star_payload, ["output_attitude_propagation.csv"], [".csv"])
-        or find_upstream_artifact(star_payload, ["output_attitude_propagation"], [".csv"])
-        or find_upstream_artifact(star_payload, ["attitude", "propagation"], [".csv"])
-    )
+    end003_csv = upstream_product(star_payload, "attitude_propagation_csv")
     end003_runtime_json = _find_end003_runtime_json(star_payload)
 
     runtime_extra = {

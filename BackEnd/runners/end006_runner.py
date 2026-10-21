@@ -19,6 +19,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
+try:
+    from .star_runner_io import upstream_product
+except ImportError:          # loaded outside the runners package
+    from star_runner_io import upstream_product
+
 MODULE_ID = "END-006"
 OUTPUT_DIRNAME = "output_component_selector"
 RESULTS_DIRNAME = "results_component_selector"
@@ -199,15 +204,13 @@ def design_changes(initial: dict[str, Any] | None, final: dict[str, Any]) -> lis
     return out
 
 
-def mission_context(modules_output: Path | None) -> dict[str, Any]:
-    """Products of the same run that END-006 uses when they are there: the orbit altitudes of END-001 (GSD and swath of the imagers),
-    the END-004 power budget (energy the battery gives in an orbit -> battery capacity) and the END-016 space-safety summary
-    (disposal delta-v -> propulsion)."""
+def mission_context(payload: dict[str, Any]) -> dict[str, Any]:
+    """Products of the same run that the final design uses when they are there (registry consumes of END-006/final): the orbit
+    altitudes of END-001 (GSD and swath of the imagers), the END-004 power budget (energy the battery gives in an orbit ->
+    battery capacity) and the END-016 space-safety summary (disposal delta-v -> propulsion)."""
     ctx: dict[str, Any] = {}
-    if not modules_output:
-        return ctx
     alts = []
-    for p in sorted((modules_output / "END-001" / "output_constellation_optimizer").glob("satellite_*.json")):
+    for p in upstream_product(payload, "satellite_orbits", many=True):
         try:
             orbit = json.loads(p.read_text(encoding="utf-8")).get("orbit") or {}
             alts.append((float(orbit["alt_perigee_m"]) + float(orbit["alt_apogee_m"])) / 2000.0)
@@ -216,9 +219,9 @@ def mission_context(modules_output: Path | None) -> dict[str, Any]:
     if alts:
         ctx["altitude_km"] = [min(alts), max(alts)]
         ctx["altitude_source"] = f"END-001 of this run ({len(alts)} satellite orbits)"
-    for key, path in (("end004", modules_output / "END-004" / "output_power_budget" / "power_budget_summary.json"),
-                      ("end016", modules_output / "END-016" / "output_collision_avoidance" / "space_safety_summary.json")):
-        if path.is_file():
+    for key, path in (("end004", upstream_product(payload, "power_budget_summary")),
+                      ("end016", upstream_product(payload, "space_safety_summary"))):
+        if path and path.is_file():
             try:
                 ctx[key] = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
@@ -278,7 +281,7 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
     notes = [n for n in mapping["notes"] if "CubeSat class not stated" not in n]
     if forced:
         notes.append(f"CubeSat class chosen by the user: {forced}U")
-    context = mission_context(Path(output_dir).resolve().parent) if phase == "final" else {}
+    context = mission_context(payload) if phase == "final" else {}
     used = [k for k in ("altitude_km", "end004", "end016") if k in context]
     log("EXECUTION", f"END-006 {phase} design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
 
@@ -328,7 +331,7 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
             write(product_dir / SPACECRAFT_FILE, dumps(sc))
             record["evidence"] = evidence = "Initial design, used by the other modules: " + evidence
         else:
-            initial_path = product_dir / SPACECRAFT_FILE
+            initial_path = upstream_product(payload, "spacecraft_definition") or product_dir / SPACECRAFT_FILE
             initial = json.loads(initial_path.read_text(encoding="utf-8")) if initial_path.is_file() else None
             changes = design_changes(initial, sc)
             record["initial_spacecraft"] = initial

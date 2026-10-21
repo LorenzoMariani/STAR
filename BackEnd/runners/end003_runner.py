@@ -18,7 +18,6 @@ from runners.star_runner_io import (
     coerce_float,
     describe_pass,
     ensure_module_output_layout,
-    find_upstream_artifact,
     input_value,
     load_end001_constellation,
     load_json,
@@ -26,6 +25,7 @@ from runners.star_runner_io import (
     load_spacecraft_definition,
     merge_pass_selection_defaults,
     normalize_direct_module_outputs,
+    upstream_product,
     write_json,
 )
 
@@ -79,29 +79,38 @@ def _find_script(folder: Path) -> Path:
     raise FileNotFoundError(f"END-003 MATLAB function {STAR_SCRIPT_NAME} not found in {folder}")
 
 
-def _end001_ephemerides(end001_csv: Path | None) -> list[dict[str, Any]]:
-    """satellite_NN_ephemeris.csv written by END-001 next to its constellation CSV."""
-    if not end001_csv:
-        return []
+def _end001_ephemerides(star_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """satellite_NN_ephemeris.csv written by END-001 (product satellite_ephemerides)."""
     found = []
-    for path in sorted(Path(end001_csv).parent.glob("satellite_*_ephemeris.csv")):
+    for path in upstream_product(star_payload, "satellite_ephemerides", many=True):
         m = re.match(r"satellite_(\d+)_ephemeris\.csv$", path.name)
         if m:
             found.append({"satellite_index": int(m.group(1)), "file": str(path)})
     return sorted(found, key=lambda item: item["satellite_index"])
 
 
-def _end001_ground_stations(star_payload: dict[str, Any], end001_csv: Path | None) -> list[dict[str, Any]]:
-    """Ground stations of the END-001 run (end001_runtime_input.json GroundStations): END-003 computes the face
-    illumination during their contacts for the END-004 solar generation (2026-10-19)."""
-    path = find_upstream_artifact(star_payload, ["end001_runtime_input"], [".json"])
-    if not path and end001_csv:
-        path = Path(end001_csv).parent.parent / "end001_runtime_input.json"
+def _write_orbit_and_window(config: dict[str, Any], product_dir: Path, selected: dict[str, Any] | None) -> None:
+    """Product attitude_orbit_window: elements of the satellite the imaging pass was selected on (the first satellite when there is
+    no pass), epoch, propagation window, attitude mode and target site. END-004 and END-010 read it instead of
+    end003_runtime_input.json (same key names, so the END-004 MATLAB reads it as its attitude configuration)."""
+    orbit = ((selected or {}).get("imaging_pass") or {}).get("orbit") or config.get("orbit") or {}
+    write_json(product_dir / "orbit_and_window.json", {
+        "module_id": "END-003", "generated_at": datetime.now().isoformat(),
+        "selected_satellite_index": ((selected or {}).get("imaging_pass") or {}).get("satellite_index"),
+        "orbit": orbit, "sim_start_date": config.get("sim_start_date"), "sim_hours": config.get("sim_hours"),
+        "sat": {"attitude_mode": (config.get("sat") or {}).get("attitude_mode")},
+        "env": {"Re": (config.get("env") or {}).get("Re")},
+        "target": config.get("target") or {},
+    })
+
+
+def _end001_ground_stations(star_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Ground stations of the END-001 run (product ground_stations): END-003 computes the face illumination during their
+    contacts for the END-004 solar generation (2026-10-19)."""
+    path = upstream_product(star_payload, "ground_stations")
     if not path or not Path(path).exists():
         return []
-    stations = (load_json(Path(path)) or {}).get("GroundStations") or []
-    if isinstance(stations, dict):
-        stations = [stations]
+    stations = (load_json(Path(path)) or {}).get("ground_stations") or []
     out = []
     for i, gs in enumerate(stations, 1):
         try:
@@ -295,7 +304,7 @@ def run_end003(
         results_dir = Path(module_results_dir); results_dir.mkdir(parents=True, exist_ok=True)
     star_payload = load_json(input_path)
 
-    end001_csv = find_upstream_artifact(star_payload, ["constellation_optimizer_output"], [".csv"]) or find_upstream_artifact(star_payload, ["constellation"], [".csv"])
+    end001_csv = upstream_product(star_payload, "constellation_output")
     config = build_end003_config(star_payload)
     if end001_csv:
         config.setdefault("star_runtime", {})["end001_output_csv"] = str(end001_csv)
@@ -312,7 +321,7 @@ def run_end003(
         _emit(log_callback, "EXECUTION", f"END-003: {len(constellation)} satellite(s) loaded from END-001 for pass selection.")
     process_info_path = output_path / "end003_process_result.json"
     # The STAR version of END-003 takes the orbits from END-001 and does not propagate them.
-    ephemerides = _end001_ephemerides(end001_csv)
+    ephemerides = _end001_ephemerides(star_payload)
     if not ephemerides:
         reason = ("END-003 needs the END-001 ephemerides (satellite_NN_ephemeris.csv next to constellation_optimizer_output.csv): "
                   "run END-001 in the same workflow first." + ("" if end001_csv else " No END-001 constellation CSV was found upstream."))
@@ -322,15 +331,15 @@ def run_end003(
     config["end001_ephemeris"] = ephemerides
     # The passes are chosen by END-001 (2026-10-17): imaging pass over the AOI and
     # first night pass from the observatory; END-003 computes the attitude on them.
-    pass_selection = Path(end001_csv).parent / "pass_selection.json"
-    if not pass_selection.exists():
-        reason = (f"END-003 needs the passes selected by END-001 ({pass_selection.name} next to the END-001 ephemerides, "
-                  "written by END-001 since 2026-10-17): run END-001 in the same workflow first.")
+    pass_selection = upstream_product(star_payload, "pass_selection")
+    if not pass_selection or not pass_selection.exists():
+        reason = ("END-003 needs the passes selected by END-001 (product pass_selection, pass_selection.json): "
+                  "run END-001 in the same workflow first.")
         _emit(log_callback, "ERROR", reason)
         write_json(process_info_path, {"run_id": run_id, "status": "failed", "reason": reason})
         return {"status": "failed", "evidence": reason, "generated_artifacts": _collect(output_path)}
     config["end001_pass_selection"] = str(pass_selection)
-    stations = _end001_ground_stations(star_payload, end001_csv)
+    stations = _end001_ground_stations(star_payload)
     if stations:
         config["ground_stations"] = stations
     config.pop("target_selection", None)
@@ -395,6 +404,7 @@ def run_end003(
     write_json(process_info_path, {"run_id": run_id, "started_at": started_at, "completed_at": datetime.now().isoformat(), "duration_seconds": round(duration, 3), "duration_human": _duration(duration), "return_code": rc, "status": status, "stdout_file": str(stdout_path), "stderr_file": str(stderr_path), "pid": proc.pid})
     _emit(log_callback, "EXECUTION", f"END-003 finished with status={status}. Execution time: {_duration(duration)} ({duration:.2f} s).")
     if status == "completed":
+        _write_orbit_and_window(config, product_dir, load_selected_passes(None, product_dir / "output_attitude_propagation.csv"))
         selected = load_selected_passes(None, product_dir / "output_attitude_propagation.csv")
         if selected:
             _emit(log_callback, "EXECUTION", "END-003 selected imaging pass (END-007, daylight): " + describe_pass(selected.get("imaging_pass")))

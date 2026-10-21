@@ -27,6 +27,7 @@ if str(STAR / "BackEnd") not in sys.path:
     sys.path.insert(0, str(STAR / "BackEnd"))
 
 from runners import end003_runner, end004_runner, end016_runner, end019_runner, star_runner_io  # noqa: E402
+from runners.star_workflow_graph import Registry, WorkflowGraph  # noqa: E402
 
 # Stand-in engine: records its arguments, then writes what the model of the module writes (or fails on request).
 ENGINE = textwrap.dedent('''
@@ -98,11 +99,20 @@ class RunnerCase(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
+    node = ""       # workflow node of the module under test: its consumed products are resolved as the orchestrator does
+
+    def upstream_products(self) -> dict:
+        registry = Registry.load(STAR / "Input" / "input_base_knowledge" / "registry")
+        return WorkflowGraph(registry, list(registry.nodes)).resolve_inputs(self.node, self.modules_output) if self.node else {}
+
     def payload(self, name: str, **data) -> Path:
+        data.setdefault("upstream_products", self.upstream_products())
         return write_json(self.tmp / f"{name}.json", data)
 
 
 class TestEnd016Runner(RunnerCase):
+    node = "END-016"
+
     def run_module(self, payload: dict, kpis: dict | None = None, fail: str | None = None) -> tuple[dict, dict, Path]:
         exe = make_engine(self.tmp / "engine", {"module": "END-016", "kpis": kpis or {}, "fail": fail})
         os.environ["MATLAB_EXECUTABLE"] = str(exe)
@@ -140,8 +150,8 @@ class TestEnd016Runner(RunnerCase):
 
     def test_configuration_provenance_command_and_evidence(self):
         end001_products(self.modules_output, n=2)
-        write_json(self.modules_output / "END-001" / "end001_runtime_input.json",
-                   {"SpacecraftProperties": {"Mass": 8, "ADrag": 0.05, "CD": 2.1}})
+        write_json(self.modules_output / "END-006" / "output_component_selector" / "spacecraft_definition.json",
+                   {"class_u": 6, "mass_kg": 8, "area_mean_projected_m2": 0.05, "cd": 2.1})
         kpis = {"n_pairs": 1, "min_separation_km": 12.3456, "min_separation_pair": "SAT-01 - SAT-02",
                 "n_events_below_screening": 0, "passive_lifetime_years_mean_activity": 6.0,
                 "complies_5y_rule_mean_activity": False, "disposal_dv_m_s_5y_rule_mean_activity": 3.21,
@@ -156,8 +166,8 @@ class TestEnd016Runner(RunnerCase):
         }, kpis=kpis)
         self.assertEqual(result["status"], "completed", result["evidence"])
         cfg = info["config"]
-        self.assertEqual(cfg["spacecraft"], {"mass_kg": 8.0, "drag_area_m2": 0.05, "cd": 2.1})       # END-001 wins
-        self.assertEqual(info["provenance"]["spacecraft.mass_kg"], "END-001 input of this run")
+        self.assertEqual(cfg["spacecraft"], {"mass_kg": 8.0, "drag_area_m2": 0.05, "cd": 2.1})       # the END-006 initial design
+        self.assertEqual(info["provenance"]["spacecraft.mass_kg"], "END-006 initial design (spacecraft_definition.json)")
         self.assertEqual(cfg["hard_body_radius_m"], round(2 * (0.05 / 3.141592653589793) ** 0.5, 3))
         self.assertEqual(cfg["position_sigma_rtn_m"], [30.0, 120.0, 30.0])
         self.assertEqual(info["provenance"]["position_sigma_rtn_m"], "approved by the user")
@@ -210,6 +220,8 @@ class TestEnd016Runner(RunnerCase):
 
 
 class TestEnd019Runner(RunnerCase):
+    node = "END-019"
+
     def setUp(self):
         super().setUp()
         self.module_root = self.modules_output / "END-019"
@@ -294,7 +306,7 @@ class TestEnd019Runner(RunnerCase):
     def test_failures(self):
         result, _ = self.run_module({"requirements": [requirement("A 3U CubeSat.")]})
         self.assertEqual(result["status"], "failed")
-        self.assertIn("END-001 orbits (satellite_XX.json) not found", result["evidence"])
+        self.assertIn("END-001 orbits (product satellite_orbits, satellite_XX.json) not found", result["evidence"])
         self.assertIn("selected_pass_summary.csv not found", result["evidence"])
         self.upstream()
         result, _ = self.run_module({"requirements": [requirement("A 3U CubeSat.")]},
@@ -355,8 +367,11 @@ class TestRunnerHelpers(unittest.TestCase):
             write_json(path, {"form_factor": "6U"})                                         # no mass: not a design
             self.assertIsNone(star_runner_io.load_spacecraft_definition({}, mo))
             write_json(path, {"form_factor": "6U", "mass_kg": 7.8})
-            sat = star_runner_io.load_spacecraft_definition({"modules_output_root": str(mo)})
+            sat = star_runner_io.load_spacecraft_definition({"upstream_products": {"spacecraft_definition": {"paths": [str(path)]}}})
             self.assertEqual((sat["form_factor"], sat["_source_path"]), ("6U", str(path)))
+            # a payload without the upstream_products block (hand-built): token match on the upstream artifacts
+            sat = star_runner_io.load_spacecraft_definition({"upstream_artifacts_absolute": [str(path)]})
+            self.assertEqual(sat["_source_path"], str(path))
 
 
 if __name__ == "__main__":

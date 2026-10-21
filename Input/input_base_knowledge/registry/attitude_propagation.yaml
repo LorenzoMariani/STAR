@@ -119,34 +119,6 @@ required_inputs:
       Required to define the time span over which visibility windows, attitude
       states and pointing errors are computed.
 
-  - name: orbit_initial_conditions
-    kind: parameter_group
-    data_type: object
-    unit: mixed
-    required: true
-    default_value: null
-    assumption_allowed: true
-    produced_by:
-      module_id: END-001
-      output: constellation_trajectories
-    fields:
-      - alt_perigee_m
-      - alt_apogee_m
-      - inclination_deg
-      - raan_deg
-      - omega_deg
-      - nu_deg
-    description: >
-      Orbits of the constellation. In STAR they are the END-001 ephemerides
-      (satellite_NN_ephemeris.csv next to constellation_optimizer_output.csv),
-      interpolated with a cubic Hermite polynomial on the tabulated positions and
-      velocities; END-003 stops with an error when they are missing. cfg.orbit
-      keeps the elements of the first satellite for the modules that read it.
-    missing_information_reason: >
-      Required to initialize the orbital propagation. These values may be
-      provided by the user, assumed for a preliminary case, or derived from an
-      upstream orbit/constellation analysis.
-
   - name: attitude_mode
     kind: parameter
     data_type: string
@@ -253,144 +225,67 @@ required_inputs:
       Required only for execution management; if not provided, the module uses
       its default output folder.
 
-outputs:
-  - name: ground_station_pass_telemetry
-    kind: artifact
-    artifact_name: gs_pass.csv
-    data_type: csv
-    description: >
-      Visibility-filtered trajectory and attitude telemetry for the selected
-      tracking pass. The file includes timestamp_utc, ECI position components,
-      scalar-first ECI-to-Body quaternion components and nadir pointing offset.
-
-  - name: eci_position_profile
-    kind: result
-    artifact_name: gs_pass.csv
-    data_type: csv
-    description: >
-      Time-tagged spacecraft ECI position profile expressed in kilometres and
-      embedded in the gs_pass.csv telemetry artifact.
-
-  - name: attitude_quaternion_profile
-    kind: result
-    artifact_name: gs_pass.csv
-    data_type: csv
-    description: >
-      Time-tagged scalar-first ECI-to-Body attitude quaternion profile embedded
-      in the gs_pass.csv telemetry artifact.
-
-  - name: pointing_error_profile
-    kind: result
-    artifact_name: gs_pass.csv
-    data_type: csv
-    description: >
-      Time-tagged nadir pointing-offset profile expressed in degrees and
-      embedded in the gs_pass.csv telemetry artifact.
-
-  - name: telemetry_validation_plot
-    kind: artifact
-    artifact_name: 01_telemetry.png
-    data_type: png
-    description: >
-      Validation figure containing angular kinematics, torque and altitude
-      histories.
-
-  - name: tracking_validation_plot
-    kind: artifact
-    artifact_name: 02_tracking.png
-    data_type: png
-    description: >
-      Validation figure containing elevation profiles and pointing-error
-      matrices.
-
-  - name: angular_momentum_plot
-    kind: artifact
-    artifact_name: 03_angular_momentum.png
-    data_type: png
-    description: >
-      Validation figure representing spacecraft angular momentum modulus and
-      direction in ECI (only with the 'dynamics' attitude: with the guided
-      attitudes |H| and its direction are constant).
-
-  - name: ground_track_plot
-    kind: artifact
-    artifact_name: 04_ground_track.png
-    data_type: png
-    description: >
-      Two-dimensional geographic projection of complete and active-pass arcs.
-
-  - name: orbit_3d_plot
-    kind: artifact
-    artifact_name: 05_orbit_3d.png
-    data_type: png
-    description: >
-      Three-dimensional orbital trajectory in the ECEF and ECI frames, side by
-      side (one figure since 2026-10-19).
-
-  - name: selected_passes
-    kind: result
-    artifact_name: selected_passes.json
-    data_type: json
-    description: >
-      Satellite and pass selected by the END-003 pass planner: imaging pass in
-      daylight over the target site (consumed by END-007) and night light-curve
-      pass visible from the observer, e.g. Matera (consumed by END-010), each
-      with satellite index, pass date, start time, end time (UTC), peak
-      elevation and Sun elevation.
-
-  - name: selected_pass_summary
-    kind: result
-    artifact_name: selected_pass_summary.csv
-    data_type: csv
-    description: Flat table of the selected imaging and light-curve passes.
-
-  - name: pass_candidates
-    kind: result
-    artifact_name: pass_candidates.csv
-    data_type: csv
-    description: All evaluated imaging pass candidates over the target site, with the selected one flagged.
-
-  - name: lightcurve_pass_ephemeris
-    kind: artifact
-    artifact_name: output_attitude_propagation_lightcurve_ECI.csv
-    data_type: csv
-    description: >
-      ECI position and nadir attitude of the satellite during the selected night
-      pass visible from the observer, sampled every 10 s; ephemeris input of END-010.
-
-  - name: attitude_ephemeris_message
-    kind: artifact
-    artifact_name: AEM_END003_<SAT>_<imaging|lightcurve>_<start>.xml
-    data_type: xml
-    description: >
-      CCSDS AEM (NDM/XML, S5Lab BILAR layout, QUATERNION/ANGVEL) of the selected
-      imaging pass and of the light-curve pass, every 1 s: quaternion Q1 Q2 Q3 QC
-      (scalar last, rotation body -> J2000) and body angular velocity in rad/s.
-
-  - name: attitude_description_figures
-    kind: artifact
-    artifact_name: 07_aem_<imaging|lightcurve>_<A|B|C|D>_*.png
-    data_type: png
-    description: >
-      Figures made from each AEM (end003_aem_figures.m), as for the Sentinel-1B
-      attitude of the ERASE proposal: A attitude sequence in a fixed inertial view
-      with H vertical, B the same along H, C H and omega with respect to the orbit,
-      D quaternion, ZYX Euler angles and body angular velocity; with
-      07_aem_<pass>_rotational_state.json (rotational state table).
-
-  - name: performance_kpi_catalog
-    kind: result
-    artifact_name: attitude_summary.json
-    data_type: json
-    description: >
-      Numbered key-performance-indicator catalog (run_validity,
-      pointing_performance, disturbance_environment and momentum_and_rates
-      categories) summarizing the propagation run -- ground-station pass
-      validity, pointing accuracy during the selected pass, mean disturbance
-      torques, eclipse fraction and angular-momentum accumulation. Intended to
-      support orchestrator-driven decisions on whether to re-run the module
-      with different parameters.
-
+consumes:
+- product: constellation_output
+  required: true
+  used_for: Keplerian elements and epoch of the satellites
+- product: satellite_ephemerides
+  required: true
+  used_for: orbits of the satellites (END-003 does not propagate them)
+- product: pass_selection
+  required: true
+  used_for: imaging pass and first night pass the attitude is computed on
+- product: ground_stations
+  required: false
+  used_for: face illumination during the ground-station contacts
+  fallback: no illumination in the contacts
+- product: spacecraft_definition
+  required: true
+  used_for: mass, inertia, areas and attitude actuators of the satellite
+produces:
+- product: attitude_propagation_csv
+  path: output_attitude_propagation/output_attitude_propagation.csv
+  format: csv
+  guaranteed: true
+  description: timestamped position and attitude of the imaging pass (Unreal axes)
+- product: attitude_propagation_eci
+  path: results_attitude_propagator/output_attitude_propagation_ECI.csv
+  format: csv
+  guaranteed: true
+  description: the same pass in ECI axes, quaternion body to ECI
+- product: lightcurve_ephemeris
+  path: output_attitude_propagation/output_attitude_propagation_lightcurve_ECI.csv
+  format: csv
+  guaranteed: false
+  description: ECI position and nadir attitude during the night pass visible from the observer (only when the pass exists)
+- product: selected_passes
+  path: output_attitude_propagation/selected_passes.json
+  format: json
+  required_keys: [imaging_pass, lightcurve_pass]
+  guaranteed: true
+  description: satellite and pass selected for the imaging and the light curve
+- product: selected_pass_summary
+  path: output_attitude_propagation/selected_pass_summary.csv
+  format: csv
+  guaranteed: true
+  description: flat table of the selected passes
+- product: pass_candidates
+  path: output_attitude_propagation/pass_candidates.csv
+  format: csv
+  guaranteed: false
+  description: all the imaging pass candidates over the target site
+- product: attitude_summary
+  path: results_attitude_propagator/attitude_summary.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: numbered KPI catalog and face illumination of the run
+- product: attitude_orbit_window
+  path: output_attitude_propagation/orbit_and_window.json
+  format: json
+  required_keys: [orbit, sim_hours, sim_start_date]
+  guaranteed: true
+  description: elements of the selected satellite, epoch, propagation window and target site
 execution:
   estimated_runtime: 5
   execution_mode: sequential
@@ -398,13 +293,6 @@ execution:
   input_filename: input_attitude_propagator.json
   runner_module: runners.end003_runner
   runner_function: run_end003
-  upstream_dependencies:
-    - END-001
-  downstream_dependencies:
-    - END-004
-    - END-007
-    - END-010
-    - END-019
   software:
     operating_system:
       - Windows 10/11

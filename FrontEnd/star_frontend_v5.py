@@ -35,6 +35,7 @@ import webview
 
 from modules.module_registry import load_module_registry
 from ai.openai_compatible_provider import OpenAICompatibleProvider
+from runners.star_workflow_graph import Registry, WorkflowGraph, WorkflowGraphError, module_number
 
 
 ALLOWED_REQUIREMENT_CATEGORIES = [
@@ -405,47 +406,41 @@ class StarApi:
                 return module
         return None
 
-    # 2026-10-18: the component selector (END-006, END-019 until then) is the last step of the workflow, the final design
-    # with the results of the other modules (its initial design runs as step 0); by number it would run before END-007.
-    LAST_MODULES = {"END-006": 900}
-
+    # ------------------------------------------------------------------
+    # Workflow graph (phase B, 2026-10-21): one dependency source, the produces/consumes of the registry
+    # (BackEnd/runners/star_workflow_graph.py). Ordering, closure, blocking, runner inputs and the planner prompt use it.
+    # ------------------------------------------------------------------
     def get_module_order_score(self, module: dict[str, Any]) -> int:
-        module_id = str(module.get("module_id", "")).upper()
-        if module_id in self.LAST_MODULES:
-            return self.LAST_MODULES[module_id]
-        match = re.search(r"END-(\d+)", module_id)
-        if match:
-            return int(match.group(1))
+        return module_number(str(module.get("module_id", "")))
 
-        upstream_dependencies = module.get("execution", {}).get("upstream_dependencies", []) or []
-        return 100 + len(upstream_dependencies) * 10
+    def workflow_registry(self) -> Registry:
+        cached = self.__dict__.get("_workflow_registry")
+        if cached is None or self.__dict__.get("_workflow_registry_for") is not self.modules:
+            cached = Registry.from_modules(self.modules)
+            self.__dict__["_workflow_registry"] = cached
+            self.__dict__["_workflow_registry_for"] = self.modules
+        return cached
+
+    def build_workflow_graph(self, module_ids: list[str], executable_only: bool = True) -> WorkflowGraph:
+        """Closure over the required products of the modules, END-001/END-006 always in; modules STAR cannot run left out."""
+        return WorkflowGraph.build(self.workflow_registry(), module_ids,
+                                   executable=(lambda m: self.module_executable(m)[0]) if executable_only else None)
+
+    def workflow_graph_of_steps(self, steps: list[dict[str, Any]]) -> WorkflowGraph:
+        """The graph of exactly the modules of a workflow table (no closure): what is executed and checked."""
+        registry = self.workflow_registry()
+        nodes = [n for s in steps for n in registry.nodes_of.get(str(s.get("module_id", "")).upper(), [])]
+        return WorkflowGraph(registry, nodes)
 
     def order_by_dependencies(self, modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """END order, except that a module runs after the modules of the same workflow it depends on: upstream_dependencies and
-        optional_upstream_dependencies of the registry (2026-10-16: END-010 renders the CubeSat class chosen by END-006, so it runs after it).
-        A dependency cycle keeps the END order for the modules involved."""
-        ordered = sorted(modules, key=self.get_module_order_score)
-        ids = [str(m.get("module_id", "")).upper() for m in ordered]
-        present = set(ids)
-        deps: dict[str, set[str]] = {}
-        for module, module_id in zip(ordered, ids):
-            execution = module.get("execution", {}) or {}
-            wanted = list(execution.get("upstream_dependencies") or []) + list(execution.get("optional_upstream_dependencies") or [])
-            deps[module_id] = {str(d).upper() for d in wanted} & present - {module_id}
-        result: list[dict[str, Any]] = []
-        done: set[str] = set()
-        remaining = list(zip(ordered, ids))
-        while remaining:
-            for k, (module, module_id) in enumerate(remaining):
-                if deps[module_id] <= done:
-                    result.append(module)
-                    done.add(module_id)
-                    remaining.pop(k)
-                    break
-            else:
-                result.extend(module for module, _ in remaining)
-                break
-        return result
+        """The modules in execution order of the workflow graph; a module is placed where its last node runs (END-006: after the
+        modules that feed its final design). A dependency cycle raises (the registry is wrong, CI catches it)."""
+        graph = self.workflow_graph_of_steps([{"module_id": m.get("module_id", "")} for m in modules])
+        position: dict[str, int] = {}
+        for index, node_id in enumerate(graph.order()):
+            position[graph.node(node_id).module_id] = index
+        return sorted(modules, key=lambda m: (position.get(str(m.get("module_id", "")).upper(), 10 ** 6),
+                                              self.get_module_order_score(m)))
 
     def apply_canonical_module_catalog(self, loaded_modules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
@@ -503,8 +498,6 @@ class StarApi:
                     "execution": {
                         "estimated_runtime": 1,
                         "execution_mode": "not_connected_yet",
-                        "upstream_dependencies": [],
-                        "downstream_dependencies": [],
                     },
                 }
 
@@ -517,27 +510,7 @@ class StarApi:
             module.setdefault("required_inputs", [])
             module.setdefault("outputs", [])
             module.setdefault("capabilities", [])
-            execution_cfg = module.setdefault("execution", {})
-
-            # Default real runners for the modules already integrated in STAR.
-            # This avoids placeholder execution when the registry YAML lacks
-            # execution.runner_module / execution.runner_function metadata.
-            default_runner_by_id = {
-                "END-001": ("runners.end001_runner", "run_end001"),
-                "END-003": ("runners.end003_runner", "run_end003"),
-                "END-004": ("runners.end004_runner", "run_end004"),
-                "END-007": ("runners.end007_runner", "run_end007"),
-                "END-010": ("runners.end010_runner", "run_end010"),
-                "END-016": ("runners.end016_runner", "run_end016"),
-                "END-019": ("runners.end019_runner", "run_end019"),
-                "END-006": ("runners.end006_runner", "run_end006"),
-            }
-            if module_id in default_runner_by_id:
-                runner_module, runner_function = default_runner_by_id[module_id]
-                if not execution_cfg.get("runner_module") and not execution_cfg.get("python_module"):
-                    execution_cfg["runner_module"] = runner_module
-                if not execution_cfg.get("runner_function") and not execution_cfg.get("function"):
-                    execution_cfg["runner_function"] = runner_function
+            module.setdefault("execution", {})      # runner_module / runner_function come from the registry (CI checks them)
 
             canonical_modules.append(module)
 
@@ -565,9 +538,6 @@ class StarApi:
         "END-006": ("Design the CubeSat every module uses (initial design) and update it with their results (final design): the "
                     "smallest class whose real components meet the requirements.", "engineering_feasibility", "high"),
     }
-    # Always in the chain inside the STAR domain: the orbits (END-001) and the CubeSat (END-006) every module uses.
-    CORE_MODULES = ("END-001", "END-006")
-
     def module_executable(self, module_or_id: Any) -> tuple[bool, str]:
         """(True, "") when the module has a runner that imports and the programs it needs are on this machine; STAR plans
         and runs only these modules (a module without them is left out instead of producing placeholder results)."""
@@ -598,38 +568,24 @@ class StarApi:
         return [module for module in self.modules if self.module_executable(module)[0]]
 
     def complete_workflow(self, workflow: list[dict[str, Any]], rationale_prefix: str = "Added by STAR") -> list[dict[str, Any]]:
-        """Executable modules only, END-001 and END-006 always (the orbits and the CubeSat of the STAR domain), and the
-        upstream modules each one needs (registry upstream_dependencies), in execution order."""
-        kept = []
+        """The workflow graph closes the workflow: executable modules only, the always_in_workflow ones (END-001 and END-006:
+        the orbits and the CubeSat of the STAR domain) and the producers of the products each module requires, in execution
+        order. A module whose required producer cannot run is left out with it."""
+        steps_by_id: dict[str, dict[str, Any]] = {}
         for step in workflow:
-            ok, why = self.module_executable(str(step.get("module_id", "")))
-            if ok:
-                kept.append(step)
-            else:
-                self.add_log("AI", f"{step.get('module_id')} left out of the workflow: {why}.")
-        present = {str(s.get("module_id", "")).upper() for s in kept}
-
-        def add(module_id: str, reason: str) -> None:
-            module = self.get_module_by_id(module_id)
-            if module and module_id not in present and self.module_executable(module)[0]:
+            steps_by_id.setdefault(str(step.get("module_id", "")).upper(), step)
+        graph = self.build_workflow_graph(list(steps_by_id))
+        for module_id in steps_by_id:
+            if module_id not in graph.module_ids:
+                self.add_log("AI", f"{module_id} left out of the workflow: {graph.dropped.get(module_id) or 'not in the module registry'}.")
+        kept = []
+        for module_id in graph.module_ids:
+            step = steps_by_id.get(module_id)
+            if step is None:
+                module = self.get_module_by_id(module_id)
                 step = self.build_workflow_step_for_module(module)
-                step["rationale"] = reason
-                kept.append(step)
-                present.add(module_id)
-
-        for module_id in self.CORE_MODULES:
-            add(module_id, f"{rationale_prefix}: always in the STAR chain ("
-                + ("orbits and passes for every module" if module_id == "END-001" else "the CubeSat every module uses") + ").")
-        changed = True
-        while changed:
-            changed = False
-            for step in list(kept):
-                module = self.get_module_by_id(str(step.get("module_id", ""))) or {}
-                for upstream in (module.get("execution", {}) or {}).get("upstream_dependencies") or []:
-                    upstream = str(upstream).upper()
-                    if upstream.startswith("END-") and upstream not in present:
-                        add(upstream, f"{rationale_prefix}: {step.get('module_id')} needs its data.")
-                        changed = changed or upstream in present
+                step["rationale"] = f"{rationale_prefix}: {graph.why(module_id)}."
+            kept.append(step)
         return self.sort_and_renumber_workflow(kept)
 
     PREVIEW_FIELDS = ("RegionSettings", "GroundStations", "PassSelection.LightCurve.Observer", "Single_Sensor_Type", "Orbit_Type",
@@ -1627,51 +1583,41 @@ class StarApi:
         return output_path
 
 
-    def compact_module_registry_for_llm(self) -> list[dict[str, Any]]:
-        """Return a compact, JSON-serializable registry view for LLM prompts (executable modules only, 2026-10-17)."""
-        compact = []
-
-        for module in self.executable_modules():
-            compact.append(
+    def llm_parameters_view(self, modules: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+        """Parameters view for the missing-information prompts (phase B): per module only the user-facing required_inputs
+        (name, unit, required, default, one-line description); no consumed products, interface notes or outputs."""
+        view = []
+        for module in (modules if modules is not None else self.executable_modules()):
+            view.append(
                 {
                     "module_id": module.get("module_id"),
                     "module_name": module.get("module_name"),
-                    "aliases": module.get("aliases", []),
-                    "short_description": module.get("short_description", ""),
-                    "description": module.get("description", ""),
-                    "capabilities": module.get("capabilities", []),
-                    "activation_rules": module.get("activation_rules", {}),
-                    "planning_guidance": module.get("planning_guidance", ""),
-                    "domain_of_validity": module.get("domain_of_validity", {}),
                     "required_inputs": [
                         {
                             "name": input_item.get("name"),
-                            "data_type": input_item.get("data_type"),
                             "unit": input_item.get("unit", "-"),
                             "required": bool(input_item.get("required", False)),
                             "default_value": input_item.get("default_value"),
                             "assumption_allowed": bool(input_item.get("assumption_allowed", False)),
-                            "produced_by": input_item.get("produced_by"),
-                            "description": input_item.get("description", ""),
-                            "missing_information_reason": input_item.get("missing_information_reason", ""),
+                            "description": " ".join(str(input_item.get("description", "")).split())[:200],
                         }
                         for input_item in (module.get("required_inputs", []) or [])
                     ],
-                    "outputs": [
-                        {
-                            "name": output.get("name"),
-                            "artifact_name": output.get("artifact_name"),
-                            "data_type": output.get("data_type"),
-                            "description": output.get("description", ""),
-                        }
-                        for output in (module.get("outputs", []) or [])
-                    ],
-                    "execution": module.get("execution", {}),
-                    "interface_notes": module.get("interface_notes", ""),
                 }
             )
+        return view
 
-        return compact
+    def llm_planning_view(self) -> str:
+        """Planning view for the workflow and RAG planning prompts (phase B): one line per executable module (what it does,
+        what it needs, what it feeds, its triggers), a few thousand characters instead of the whole registry. The workflow
+        graph adds the required upstream modules and orders the workflow itself."""
+        lines = self.workflow_registry().planning_view(executable=lambda m: self.module_executable(m)[0])
+        text = ("MODULES (id name | purpose | needs = modules whose products it requires | feeds = modules using its products | triggers)\n"
+                + lines + "\nSTAR adds the required upstream modules itself and orders the workflow: select only what the requirements need.")
+        if self.__dict__.get("_planning_view_logged") != len(text):
+            self.__dict__["_planning_view_logged"] = len(text)
+            self.add_log("AI", f"Planner registry view: {len(text)} characters.")
+        return text
 
     def parse_llm_json_response(self, content: str) -> dict[str, Any]:
         """Parse JSON returned by the local LLM, tolerating markdown fences."""
@@ -1789,7 +1735,7 @@ class StarApi:
 
     def llm_assisted_missing_information_analysis(self, requirements: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Use the local LLM to map requirements onto registry-declared module inputs."""
-        registry = self.compact_module_registry_for_llm()
+        registry = self.llm_parameters_view()
         module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
 
         system_prompt = (
@@ -1950,7 +1896,7 @@ Return only valid JSON:
 
     def llm_assisted_workflow_proposal(self) -> list[dict[str, Any]]:
         """Use the local LLM to propose a workflow using only registry modules."""
-        registry = self.compact_module_registry_for_llm()
+        registry = self.llm_planning_view()
         module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
 
         approved_assumptions = [
@@ -1976,13 +1922,13 @@ INPUTS
 {json.dumps(approved_assumptions, indent=2)}
 
 3. Module registry:
-{json.dumps(registry, indent=2)}
+{registry}
 
 STRICT RULES
 - Use only these module names: {json.dumps(module_names)}
 - Do not invent modules.
 - Select only modules needed to satisfy the active requirements and approved assumptions.
-- Respect dependencies implied by produced_by, upstream_dependencies, and downstream_dependencies when available.
+- STAR adds the required upstream modules (the "needs" of each module) and orders the workflow by itself.
 - A constellation/orbit-level module should usually precede an observation module.
 - A battery/EPS module should usually follow mission/observation timeline definition when selected.
 - Every selected module must appear at most once.
@@ -2075,17 +2021,8 @@ Return only valid JSON:
         if skipped_count:
             self.add_log("AI", f"Discarded {skipped_count} LLM workflow step(s) not compliant with the registry.")
 
-        normalized.sort(
-            key=lambda row: self.get_module_order_score(self.get_module_by_name(row["module"]) or {})
-        )
-        rank = {id(m): k for k, m in enumerate(self.order_by_dependencies([self.get_module_by_name(r["module"]) or {} for r in normalized]))}
-        order_of = {r["module"]: rank.get(id(self.get_module_by_name(r["module"]) or {}), k) for k, r in enumerate(normalized)}
-        normalized.sort(key=lambda row: order_of.get(row["module"], 0))
-
-        for index, row in enumerate(normalized, start=1):
-            row["step"] = index
-
-        return normalized
+        # The LLM only selects modules: the workflow graph adds the required upstream modules and orders them.
+        return self.complete_workflow(normalized, "Added by STAR")
 
 
     # ------------------------------------------------------------------
@@ -2217,7 +2154,7 @@ Return only valid JSON:
                 }
             )
 
-        return workflow
+        return self.complete_workflow(workflow, "Added by STAR")
 
     def build_workflow_input_summary(self, module: dict[str, Any], related_items: list[dict[str, Any]]) -> str:
         if related_items:
@@ -2310,20 +2247,28 @@ Return only valid JSON:
 
         original_count = len(self.workflow_steps)
         target = self.normalize_text(module_name_or_id)
-        core = [m for m in self.CORE_MODULES if target in (self.normalize_text(m), self.normalize_text((self.get_module_by_id(m) or {}).get("module_name", "")))]
+        registry = self.workflow_registry()
+        core = [m for m in registry.always_in_workflow() if target in (self.normalize_text(m), self.normalize_text((self.get_module_by_id(m) or {}).get("module_name", "")))]
         if core:
             return {"ok": False, "error": f"{core[0]} is always in the STAR chain (the orbits and the CubeSat every module uses) and cannot be removed.",
                     **self.state_payload()}
-        self.workflow_steps = [
+        remaining = [
             step for step in self.workflow_steps
             if self.normalize_text(str(step.get("module", ""))) != target
             and self.normalize_text(str(step.get("module_id", ""))) != target
         ]
 
-        if len(self.workflow_steps) == original_count:
+        if len(remaining) == original_count:
             return {"ok": False, "error": f"Module not found in current workflow: {module_name_or_id}", **self.state_payload()}
 
-        self.workflow_steps = self.sort_and_renumber_workflow(self.workflow_steps)
+        removed_ids = {str(s.get("module_id", "")).upper() for s in self.workflow_steps} - {str(s.get("module_id", "")).upper() for s in remaining}
+        for removed in sorted(removed_ids):
+            users = [str(s.get("module_id", "")).upper() for s in remaining
+                     if removed in registry.required_producer_modules(str(s.get("module_id", "")))]
+            if users:
+                return {"ok": False, "error": f"{removed} cannot be removed: {', '.join(users)} need its products (remove them first).",
+                        **self.state_payload()}
+        self.workflow_steps = self.sort_and_renumber_workflow(remaining)
         self.workflow_review_status = "edited_not_saved" if self.workflow_steps else "not_available"
         self.workflow_approved = False
         self.missing_information = []
@@ -2439,60 +2384,14 @@ Return only valid JSON:
                 }
             )
 
-        return normalized
-
-    def approve_workflow(self) -> dict[str, Any]:
-        if not self.workflow_steps:
-            return {"ok": False, "error": "No workflow proposal is available to approve.", "logs": self.logs}
-        if self.workflow_review_status == "edited_not_saved":
-            return {"ok": False, "error": "Save the reviewed workflow before approving it.", **self.state_payload()}
-
-        approved_steps = []
-        approved_module_names = set()
-
-        for step in self.workflow_steps:
-            approved_step = dict(step)
-            approved_step["status"] = "approved"
-            approved_step["approved_by_user"] = True
-            approved_steps.append(approved_step)
-            approved_module_names.add(approved_step.get("module"))
-
-        self.workflow_steps = approved_steps
-        self.workflow_review_status = "approved_by_user"
-        self.workflow_approved = True
-        self.reset_downstream_from_workflow()
-
-        for module in self.modules:
-            if module.get("module_name") in approved_module_names:
-                module["status"] = "Ready"
-            else:
-                module["status"] = "Idle"
-
-        approved_path = self.save_workflow_json(
-            workflow=approved_steps,
-            review_status="approved_by_user",
-            output_filename="approved_workflow.json",
-            source="user_approved_workflow",
-        )
-
-        active_path = self.save_workflow_json(
-            workflow=approved_steps,
-            review_status="approved_by_user",
-            output_filename="workflow_proposal.json",
-            source="approved_active_workflow",
-        )
-
-        self.add_log("USER", "Workflow approved by user.")
-        self.add_log("SYSTEM", f"approved_workflow.json saved: {approved_path}")
-        self.add_log("SYSTEM", f"Active workflow proposal updated: {active_path}")
-
-        return {
-            "ok": True,
-            **self.state_payload(),
-            "approved_workflow_path": str(approved_path),
-            "workflow_proposal_path": str(active_path),
-            "message": "Workflow approved.",
-        }
+        # The user's edits are closed again over the required products: a removed hard upstream module (or END-001 / END-006)
+        # is put back with a log line and its rationale, an added module brings its upstream.
+        before = {str(step["module_id"]).upper() for step in normalized}
+        closed = self.complete_workflow(normalized, "Re-added by STAR")
+        for step in closed:
+            if str(step["module_id"]).upper() not in before:
+                self.add_log("AI", f"{step['module_id']} added back to the reviewed workflow: {step.get('rationale', '')}")
+        return closed
 
     def save_workflow_json(
         self,
@@ -2523,179 +2422,6 @@ Return only valid JSON:
 
         return output_path
 
-
-    # ------------------------------------------------------------------
-    # Execution
-    # ------------------------------------------------------------------
-    def execute_workflow(self) -> dict[str, Any]:
-        if not self.workflow_approved:
-            return {
-                "ok": False,
-                "error": "Approve the workflow before executing it.",
-                "logs": self.logs,
-            }
-
-        if not self.current_run_path:
-            return {"ok": False, "error": "No active run is available.", "logs": self.logs}
-
-        if not self.workflow_steps:
-            return {"ok": False, "error": "No approved workflow steps are available.", "logs": self.logs}
-
-        self.add_log("EXECUTION", "Starting deterministic workflow execution.")
-
-        execution_results = []
-
-        for module in self.modules:
-            if module.get("module_name") in {step.get("module") for step in self.workflow_steps}:
-                module["status"] = "Running"
-
-        for workflow_step in self.workflow_steps:
-            result = self.execute_workflow_step(workflow_step)
-            execution_results.append(result)
-
-            module_name = workflow_step.get("module")
-            for module in self.modules:
-                if module.get("module_name") == module_name:
-                    module["status"] = "Completed" if result["status"] == "completed" else "Error"
-
-        for module in self.modules:
-            if module.get("module_name") not in {step.get("module") for step in self.workflow_steps}:
-                module["status"] = "Idle"
-
-        self.execution_results = execution_results
-        self.execution_review_status = "not_reviewed"
-        self.execution_approved = False
-
-        if any(result.get("status") == "stopped" for result in execution_results):
-            self.add_log("EXECUTION", "Execution ended with status: stopped by user.")
-
-        active_path = self.save_execution_results_json(
-            execution_results=execution_results,
-            review_status="not_reviewed",
-            output_filename="execution_results.json",
-            source="deterministic_workflow_execution",
-        )
-
-        extracted_path = self.save_execution_results_json(
-            execution_results=execution_results,
-            review_status="not_reviewed",
-            output_filename="execution_results_extracted.json",
-            source="deterministic_workflow_execution_raw_output",
-        )
-
-        self.add_log("EXECUTION", f"{len(execution_results)} workflow steps executed.")
-        self.add_log("SYSTEM", f"Active execution results saved: {active_path}")
-        self.add_log("SYSTEM", f"Raw execution results saved: {extracted_path}")
-
-        return {
-            "ok": True,
-            **self.state_payload(),
-            "execution_results_path": str(active_path),
-            "execution_results_extracted_path": str(extracted_path),
-            "message": f"{len(execution_results)} workflow steps executed deterministically.",
-        }
-
-    def execute_workflow_step(self, workflow_step: dict[str, Any]) -> dict[str, Any]:
-        started_at = datetime.now().isoformat()
-
-        step = workflow_step.get("step", "")
-        module_name = workflow_step.get("module", "")
-        module_id = workflow_step.get("module_id", "unknown")
-        input_data_artifacts = workflow_step.get("input_data_artifacts", "")
-        output_artifacts = workflow_step.get("output_artifacts", "")
-
-        generated_artifacts = self.generate_execution_artifacts(
-            step=step,
-            module_name=module_name,
-            output_artifacts=output_artifacts,
-        )
-
-        completed_at = datetime.now().isoformat()
-
-        evidence = (
-            f"Deterministic execution completed for {module_name}. "
-            f"{len(generated_artifacts)} artifact(s) generated in the module output folder."
-        )
-
-        return {
-            "step": step,
-            "module": module_name,
-            "module_id": module_id,
-            "input_data_artifacts": input_data_artifacts,
-            "output_artifacts": output_artifacts,
-            "generated_artifacts": "; ".join(generated_artifacts),
-            "evidence": evidence,
-            "status": "completed",
-            "started_at": started_at,
-            "completed_at": completed_at,
-            "reviewed_by_user": False,
-        }
-
-    def generate_execution_artifacts(
-        self,
-        step: str | int,
-        module_name: str,
-        output_artifacts: str,
-    ) -> list[str]:
-        if not self.current_run_path:
-            raise RuntimeError("No active run folder is available.")
-
-        artifacts_dir = self.current_run_path / "modules_output" / self.sanitize_artifact_name(module_name)
-        artifacts_dir.mkdir(parents=True, exist_ok=True)
-
-        artifact_names = self.parse_output_artifact_names(output_artifacts)
-        generated_paths: list[str] = []
-
-        if not artifact_names:
-            artifact_names = [f"step_{step}_{module_name}_result.json"]
-
-        for artifact_name in artifact_names:
-            clean_name = self.sanitize_artifact_name(artifact_name)
-
-            if "." not in Path(clean_name).name:
-                clean_name = f"{clean_name}.json"
-
-            artifact_path = artifacts_dir / clean_name
-            suffix = artifact_path.suffix.lower()
-
-            if suffix == ".csv":
-                content = (
-                    "field,value\n"
-                    f"run_id,{self.current_run_id}\n"
-                    f"step,{step}\n"
-                    f"module,{module_name}\n"
-                    "status,completed\n"
-                )
-                artifact_path.write_text(content, encoding="utf-8")
-            elif suffix == ".txt":
-                artifact_path.write_text(
-                    f"STAR execution artifact\n"
-                    f"run_id: {self.current_run_id}\n"
-                    f"step: {step}\n"
-                    f"module: {module_name}\n"
-                    f"status: completed\n",
-                    encoding="utf-8",
-                )
-            else:
-                artifact_path.write_text(
-                    json.dumps(
-                        {
-                            "run_id": self.current_run_id,
-                            "generated_at": datetime.now().isoformat(),
-                            "step": step,
-                            "module": module_name,
-                            "status": "completed",
-                            "artifact_name": clean_name,
-                            "note": "Deterministic placeholder artifact generated by STAR desktop prototype.",
-                        },
-                        indent=4,
-                    ),
-                    encoding="utf-8",
-                )
-
-            generated_paths.append(artifact_path.relative_to(self.current_run_path).as_posix())
-
-        return generated_paths
 
     def parse_output_artifact_names(self, output_artifacts: str) -> list[str]:
         if not output_artifacts:
@@ -3760,10 +3486,10 @@ Return only valid JSON:
         query = "\n".join([
             self.uploaded_text or "",
             json.dumps(self.requirements, ensure_ascii=False),
-            json.dumps(self.compact_module_registry_for_llm(), ensure_ascii=False),
+            self.llm_planning_view(),
         ])[:12000]
         rag_sources = self.retrieve_knowledge_context(query, max_chunks=8)
-        registry = self.compact_module_registry_for_llm()
+        registry = self.llm_planning_view()
         module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
 
         system_prompt = (
@@ -3787,7 +3513,7 @@ INPUTS
 {json.dumps(self.requirements, indent=2)}
 
 3. Module registry. Use only these modules and their declared interfaces:
-{json.dumps(registry, indent=2)}
+{registry}
 
 4. Retrieved local knowledge-base context:
 {self.format_rag_context_for_prompt(rag_sources)}
@@ -3910,7 +3636,7 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
         modules_of_steps = [module_by_id.get(str(step.get("module_id")), step) for step in deduplicated]
         rank = {id(m): k for k, m in enumerate(self.order_by_dependencies(modules_of_steps))}
         deduplicated = [step for _, step in sorted(zip(modules_of_steps, deduplicated), key=lambda pair: rank[id(pair[0])])]
-        for index, step in enumerate(deduplicated, start=1):
+        for index, step in enumerate(deduplicated, start=1):      # order_by_dependencies: the workflow graph
             step["step"] = index
         return deduplicated
 
@@ -4267,18 +3993,7 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
 
     def llm_assisted_workflow_input_resolution(self) -> list[dict[str, Any]]:
         selected_modules = self.get_modules_for_current_workflow()
-        registry_by_module = []
-        for module in selected_modules:
-            registry_by_module.append(
-                {
-                    "module_id": module.get("module_id"),
-                    "module_name": module.get("module_name"),
-                    "description": module.get("description", ""),
-                    "required_inputs": module.get("required_inputs", []) or [],
-                    "outputs": module.get("outputs", []) or [],
-                    "execution": module.get("execution", {}),
-                }
-            )
+        registry_by_module = self.llm_parameters_view(selected_modules)
 
         query = "\n".join([
             self.uploaded_text or "",
@@ -4423,6 +4138,12 @@ Return only valid JSON:
             return {"ok": False, "error": "No workflow proposal is available to approve.", "logs": self.logs}
         if self.workflow_review_status == "edited_not_saved":
             return {"ok": False, "error": "Save the reviewed workflow before approving it.", **self.state_payload()}
+
+        issues = self.workflow_graph_of_steps(self.workflow_steps).validate()
+        if issues:
+            for issue in issues:
+                self.add_log("ERROR", f"Workflow graph: {issue}")
+            return {"ok": False, "error": "The workflow is not consistent: " + "; ".join(issues), **self.state_payload()}
 
         approved_steps = []
         approved_module_names = set()
@@ -4740,74 +4461,91 @@ Return only valid JSON:
             self.get_module_output_layout(str(workflow_step.get("module_id", "UNKNOWN")))
 
         workflow_stopped = False
-        initial_failed = False
 
-        # END-006 initial design (2026-10-17): the satellite every module of the workflow uses
-        # (modules_output/END-006/output_component_selector/spacecraft_definition.json), run as step 0
-        # before the other modules; the END-006 step of the workflow, the last one, is the final design
-        # made with their results.
-        end006_step = next((s for s in self.workflow_steps if str(s.get("module_id", "")).upper() == "END-006"), None)
-        if end006_step is not None and not self.execution_stop_event.is_set():
-            initial_step = {**end006_step, "step": 0, "phase": "initial"}
-            name019 = end006_step.get("module")
-            self.add_log("EXECUTION", f"Starting step 0: {name019} (END-006) initial design, the satellite the other modules use.")
-            for module in self.modules:
-                if module.get("module_name") == name019:
-                    module["status"] = "Running"
-            started_perf = time.perf_counter()
-            try:
-                result = self.execute_workflow_step(initial_step)
-            except Exception as exc:
-                result = {"step": 0, "module": name019, "module_id": "END-006", "status": "failed",
-                          "evidence": f"END-006 initial design failed: {exc}", "generated_artifacts": "",
-                          "started_at": datetime.now().isoformat(), "completed_at": datetime.now().isoformat(), "reviewed_by_user": False}
-            duration = time.perf_counter() - started_perf
-            result.update({"phase": "initial", "module": f"{name019} (initial design)",
-                           "duration_seconds": round(duration, 3), "duration_human": self.format_duration(duration)})
-            execution_results.append(result)
-            self.execution_results = execution_results
-            for module in self.modules:
-                if module.get("module_name") == name019:
-                    module["status"] = "Ready"
-            self.add_log("EXECUTION", f"Finished step 0: END-006 initial design -> {result.get('status')} ({self.format_duration(duration)}).")
-            if result.get("status") in ("failed", "stopped") or self.execution_stop_event.is_set():
-                initial_failed = True
-                self.add_log("ERROR", "END-006 initial design not available: the modules that need the CubeSat ("
-                             + ", ".join(sorted(self.INITIAL_DESIGN_DEPENDENTS)) + ") are skipped, the others run.")
-
-        # A failed module stops only the modules that need its data (2026-10-17): registry upstream_dependencies,
-        # also through a skipped module, and the END-006 initial design for the modules using the CubeSat.
-        blocked: dict[str, str] = {}
-        for workflow_step in self.workflow_steps:
-            module_name = workflow_step.get("module")
-            module_id = workflow_step.get("module_id", "unknown")
+        # One generic loop over the nodes of the workflow graph (phase B): END-006 is two nodes, the initial design (step 0,
+        # the satellite every module uses) and the final design (the last step, made with their results); the order, the
+        # blocking and the product checks all come from the registry produces/consumes.
+        graph = self.workflow_graph_of_steps(self.workflow_steps)
+        order = graph.order()
+        try:
+            graph_path = self.current_run_path / "planning" / "workflow_graph.json"
+            graph_path.parent.mkdir(parents=True, exist_ok=True)
+            graph_path.write_text(json.dumps(graph.to_json(), indent=2, ensure_ascii=False), encoding="utf-8")
+        except Exception as exc:
+            self.add_log("WARNING", f"workflow_graph.json not saved: {exc}")
+        modules_root = self.get_modules_output_root()
+        steps_by_module = {str(s.get("module_id", "")).upper(): s for s in self.workflow_steps}
+        blocked: dict[str, str] = {}        # node id -> why its products are not there
+        for node_id in order:
+            node = graph.node(node_id)
+            module_id = node.module_id
+            base_step = steps_by_module[module_id]
+            module_name = base_step.get("module")
+            if node.phase == "initial":
+                workflow_step = {**base_step, "step": 0, "phase": "initial"}
+                label = f"{module_name} (initial design)"
+            elif node.phase == "final":
+                workflow_step = {**base_step, "phase": "final"}
+                label = str(module_name)
+            else:
+                workflow_step = base_step
+                label = str(module_name)
+            step_label = "step 0" if node.phase == "initial" else f"module step {workflow_step.get('step')}"
 
             if self.execution_stop_event.is_set():
-                self.add_log("EXECUTION", f"Workflow execution stopped before module step {workflow_step.get('step')}: {module_name}.")
+                self.add_log("EXECUTION", f"Workflow execution stopped before {step_label}: {label}.")
                 execution_results.append(self.build_stopped_execution_result(workflow_step, "Execution stopped before this module started."))
                 self.execution_results = execution_results
                 workflow_stopped = True
                 break
 
-            skip_reason = self.blocked_reason(str(module_id).upper(), blocked, initial_failed)
+            skip_reason = self.blocked_reason(node_id, graph, blocked)
             if skip_reason:
                 result = self.build_stopped_execution_result(workflow_step, f"Not run: {skip_reason}.")
                 result["status"] = "skipped"
                 result["skipped_because"] = skip_reason
+                if node.phase == "initial":
+                    result.update({"phase": "initial", "module": label})
                 execution_results.append(result)
                 self.execution_results = execution_results
-                blocked[str(module_id).upper()] = skip_reason
+                blocked[node_id] = skip_reason
                 for module in self.modules:
                     if module.get("module_name") == module_name:
                         module["status"] = "Stopped"
-                self.add_log("WARNING", f"{module_name} ({module_id}) not run: {skip_reason}.")
+                self.add_log("WARNING", f"{label} ({module_id}) not run: {skip_reason}.")
                 continue
+
+            # Products the module requires must be on disk, usable and with their keys before the runner starts.
+            missing_required = graph.check_products(node_id, modules_root, required_only=True)
+            if missing_required:
+                evidence = "; ".join(missing_required)
+                result = self.build_stopped_execution_result(workflow_step, evidence)
+                result["status"] = "failed"
+                result["missing_required_inputs"] = missing_required
+                if node.phase == "initial":
+                    result.update({"phase": "initial", "module": label})
+                execution_results.append(result)
+                self.execution_results = execution_results
+                blocked[node_id] = f"{module_id} failed: {evidence[:160]}"
+                for module in self.modules:
+                    if module.get("module_name") == module_name:
+                        module["status"] = "Error"
+                for line in missing_required:
+                    self.add_log("ERROR", line)
+                self.add_log("ERROR", f"{label} not launched: a required product is missing; the modules that need its data are skipped, the others run.")
+                continue
+            optional_missing = [m for m in graph.check_products(node_id, modules_root, required_only=False) if m not in missing_required]
+            for line in optional_missing:
+                self.add_log("WARNING", f"{line} (optional: the module uses its fallback)")
 
             self.active_module_name = module_name
             self.active_module_id = module_id
-            self.add_log("EXECUTION", f"Starting module step {workflow_step.get('step')}: {module_name} ({module_id}).")
-            self.add_log("EXECUTION", f"Input artifacts declared for {module_name}: {workflow_step.get('input_data_artifacts', '-')}")
-            self.add_log("EXECUTION", f"Expected outputs for {module_name}: {workflow_step.get('output_artifacts', '-')}")
+            if node.phase == "initial":
+                self.add_log("EXECUTION", f"Starting step 0: {module_name} ({module_id}) initial design, the satellite the other modules use.")
+            else:
+                self.add_log("EXECUTION", f"Starting module step {workflow_step.get('step')}: {module_name} ({module_id}).")
+                self.add_log("EXECUTION", f"Input artifacts declared for {module_name}: {workflow_step.get('input_data_artifacts', '-')}")
+                self.add_log("EXECUTION", f"Expected outputs for {module_name}: {workflow_step.get('output_artifacts', '-')}")
 
             for module in self.modules:
                 if module.get("module_name") == module_name:
@@ -4826,19 +4564,31 @@ Return only valid JSON:
                     result["duration_seconds"] = round(duration, 3)
                     result["duration_human"] = self.format_duration(duration)
                 else:
-                    self.add_log("ERROR", f"Module {module_name} failed after {self.format_duration(duration)}: {exc}")
+                    self.add_log("ERROR", f"Module {label} failed after {self.format_duration(duration)}: {exc}")
                     now = datetime.now().isoformat()
                     result = {"step": workflow_step.get("step", ""), "module": module_name, "module_id": module_id,
-                              "status": "failed", "evidence": f"{module_name} raised an error: {exc}", "generated_artifacts": "",
+                              "status": "failed", "evidence": f"{label} raised an error: {exc}", "generated_artifacts": "",
                               "started_at": now, "completed_at": now, "reviewed_by_user": False}
 
             duration = time.perf_counter() - module_started_perf
             result["duration_seconds"] = round(duration, 3)
             result["duration_human"] = self.format_duration(duration)
+            result["node"] = node_id
+            if node.phase == "initial":
+                result.update({"phase": "initial", "module": label})
+            if optional_missing:
+                result["missing_optional_inputs"] = optional_missing
 
             if self.execution_stop_event.is_set() and result.get("status") != "stopped":
                 result["status"] = "stopped"
                 result["evidence"] = f"Stop was requested while or immediately after executing {module_name}."
+
+            if result.get("status") == "completed":
+                missing_outputs = graph.missing_outputs(node_id, modules_root)
+                if missing_outputs:
+                    result["missing_outputs"] = missing_outputs
+                    self.add_log("WARNING", f"{label} completed without its guaranteed products: {', '.join(missing_outputs)}; "
+                                            "the modules that need them are stopped with a clear message.")
 
             execution_results.append(result)
             self.execution_results = execution_results
@@ -4849,11 +4599,14 @@ Return only valid JSON:
                         module["status"] = "Completed"
                     elif result["status"] == "stopped":
                         module["status"] = "Stopped"
+                    elif node.phase == "initial":
+                        module["status"] = "Ready"
                     else:
                         module["status"] = "Error"
 
-            self.add_log("EXECUTION", f"Finished module step {workflow_step.get('step')}: {module_name} -> {result['status']}.")
-            self.add_log("EXECUTION", f"Module {module_name} execution time: {self.format_duration(duration)} ({duration:.2f} s).")
+            self.add_log("EXECUTION", f"Finished {step_label}: {label} -> {result['status']} ({self.format_duration(duration)}).")
+            if node.phase != "initial":
+                self.add_log("EXECUTION", f"Module {module_name} execution time: {self.format_duration(duration)} ({duration:.2f} s).")
 
             self.active_module_name = None
             self.active_module_id = None
@@ -4864,9 +4617,9 @@ Return only valid JSON:
                 break
 
             if result.get("status") != "completed":
-                blocked[str(module_id).upper()] = f"{module_id} {result.get('status')}: {str(result.get('evidence', ''))[:160]}"
+                blocked[node_id] = f"{module_id} {result.get('status')}: {str(result.get('evidence', ''))[:160]}"
             if result.get("status") == "failed":
-                self.add_log("ERROR", f"{module_name} failed: the modules that need its data are skipped, the others run.")
+                self.add_log("ERROR", f"{label} failed: the modules that need its data are skipped, the others run.")
 
         for module in self.modules:
             if module.get("module_name") not in selected_modules:
@@ -4919,23 +4672,16 @@ Return only valid JSON:
             "message": "Workflow execution stopped by user." if workflow_stopped else f"{len(execution_results)} workflow step(s) executed from approved workflow.",
         }
 
-    # Modules that use the CubeSat of the END-006 initial design (inertia, loads, class, form factor); END-001 and
-    # END-016 can run without it (mass and drag area from the requirements).
-    INITIAL_DESIGN_DEPENDENTS = {"END-003", "END-004", "END-010", "END-019"}
-
-    def blocked_reason(self, module_id: str, blocked: dict[str, str], initial_failed: bool) -> str:
-        """Why a module cannot run: not executable here, an upstream module of the workflow without its data, or the
-        END-006 initial design missing for a module that uses the CubeSat; "" when it can run."""
+    def blocked_reason(self, node_id: str, graph: WorkflowGraph, blocked: dict[str, str]) -> str:
+        """Why a node cannot run: its module is not executable here, or a node it requires (graph upstream, required products
+        only) did not produce its data - also through a skipped node; "" when it can run."""
+        module_id = graph.node(node_id).module_id
         executable, why = self.module_executable(module_id)
         if not executable:
             return f"{module_id} cannot run on this machine ({why})"
-        module = self.get_module_by_id(module_id) or {}
-        upstream = [str(u).upper() for u in ((module.get("execution") or {}).get("upstream_dependencies") or [])]
-        missing = [u for u in upstream if u in blocked]
+        missing = [u for u in graph.upstream(node_id, required_only=True) if u in blocked]
         if missing:
-            return "; ".join(f"{u} did not produce the data it needs ({blocked[u]})" for u in missing)
-        if initial_failed and module_id in self.INITIAL_DESIGN_DEPENDENTS:
-            return "the END-006 initial design (the CubeSat this module uses) is not available"
+            return "; ".join(f"{graph.node(u).label} did not produce the data it needs ({blocked[u]})" for u in missing)
         return ""
 
     def build_stopped_execution_result(self, workflow_step: dict[str, Any], evidence: str) -> dict[str, Any]:
@@ -5061,18 +4807,18 @@ Return only valid JSON:
         input_path = input_dir / f"STEP_{step}_{module_id}_input.json"
 
         module_inputs = [item for item in self.missing_information if item.get("needed_by_module_id") == module_id or item.get("needed_by") == workflow_step.get("module")]
-        upstream_artifacts = []
+        # Phase B: the module receives only the products the registry says it consumes (graph resolve_inputs), no longer
+        # every artifact of the earlier steps.
+        phase = str(workflow_step.get("phase") or "")
+        node_id = f"{module_id}/{phase}" if phase in ("initial", "final") else module_id
+        graph = self.workflow_graph_of_steps(self.workflow_steps)
+        upstream_products = graph.resolve_inputs(node_id, self.get_modules_output_root()) if node_id in graph.node_ids else {}
         upstream_artifacts_absolute = []
-        current_step_number = int(str(workflow_step.get("step", 0)).strip() or 0)
-        for result in self.execution_results:
-            try:
-                result_step = int(str(result.get("step", 0)).strip() or 0)
-            except ValueError:
-                result_step = 0
-            if result_step < current_step_number:
-                for artifact in [path.strip() for path in str(result.get("generated_artifacts", "")).split(";") if path.strip()]:
-                    upstream_artifacts.append(artifact)
-                    upstream_artifacts_absolute.append(str(self.resolve_run_artifact_path(artifact)))
+        for entry in upstream_products.values():
+            for path in entry["paths"]:
+                if path not in upstream_artifacts_absolute:
+                    upstream_artifacts_absolute.append(path)
+        upstream_artifacts = [self.make_run_relative_or_absolute(path) for path in upstream_artifacts_absolute]
 
         output_layout = self.get_module_output_layout(module_id)
 
@@ -5086,6 +4832,7 @@ Return only valid JSON:
                 "owner": module.get("owner"),
             },
             "resolved_inputs": module_inputs,
+            "upstream_products": upstream_products,
             "upstream_artifacts": upstream_artifacts,
             "upstream_artifacts_absolute": upstream_artifacts_absolute,
             "star_root": str(self.star_root),
