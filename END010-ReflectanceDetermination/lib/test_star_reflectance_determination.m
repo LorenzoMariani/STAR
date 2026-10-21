@@ -8,9 +8,10 @@
 
 clear; clc; close all;
 
-% I/O folders
-file_input = 'C:\Users\s5oss\Desktop\software_s5lab\STAR\Input\input_reflectance_determination.json';
-path_output = 'C:\Users\s5oss\Desktop\software_s5lab\STAR\Output';
+% I/O folders: rispetto alla cartella dello script (lib/ di END-010)
+star_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+file_input = fullfile(star_root, 'Input', 'input_reflectance_determination.json');
+path_output = fullfile(star_root, 'Output');
 
 % RUN
 status = STAR_END010_REFLECTANCE_DETERMINATION(file_input, path_output);
@@ -21,7 +22,7 @@ status = STAR_END010_REFLECTANCE_DETERMINATION(file_input, path_output);
 %=========================================================================%
 function [status] = STAR_END010_REFLECTANCE_DETERMINATION(configFile, output_folder)
     %% INITIALIZATION AND PATH SETUP
-    main_folder = "C:\Users\s5oss\Desktop\software_s5lab\STAR\END010-ReflectanceDetermination";
+    main_folder = string(fileparts(fileparts(mfilename('fullpath'))));     % END010-ReflectanceDetermination
     addpath(fullfile(main_folder, "lib"))
     addpath(fullfile(main_folder, "lib", "data"))
     addpath(fullfile(main_folder, "lib", "sgp4"));

@@ -124,6 +124,7 @@ kp = struct();
 kp.n_satellites = n; kp.n_pairs = n*(n - 1)/2;
 if n > 1
     [m, ij] = min(pairMin(:)); [pi_, pj] = ind2sub([n n], ij);
+    if pi_ > pj, [pi_, pj] = deal(pj, pi_); end           % named as the events: lower index first
     kp.min_separation_km = m; kp.min_separation_pair = sprintf('%s - %s', labels{pi_}, labels{pj});
     best = pairInfo(min(pi_, pj), max(pi_, pj));
     kp.min_separation_tca_utc = best.tca_utc;

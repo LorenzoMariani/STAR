@@ -13,10 +13,10 @@ clear, clc, close all
 %% INPUT
 debug = true;
 
-% Set environment
-parentDir = pwd;
+% Set environment: lib/ di END-010, da qualunque cartella si lanci lo script
+parentDir = fileparts(mfilename('fullpath'));
 addpath(genpath(parentDir));
-dataFiles = {fullfile('sgp4','nut80.dat'), fullfile('data','DE440.mat')};
+dataFiles = {fullfile(parentDir,'sgp4','nut80.dat'), fullfile(parentDir,'data','DE440.mat')};
 
 for f = dataFiles
     if ~exist(f{1},'file')
@@ -32,12 +32,13 @@ nutParams.rar80 = rar80;
 ii = 11;
 
 % Files
-eopfile     = "C:\Users\s5oss\Desktop\software_s5lab\STAR\END010-ReflectanceDetermination\data\EOP.txt";
-tlefile     = "C:\Users\s5oss\Desktop\software_s5lab\STAR\END010-ReflectanceDetermination\data\TLE_AQUA27052026.txt";
-pathjson    = "C:\Users\s5oss\Desktop\software_s5lab\STAR\END010-ReflectanceDetermination\data\stations.json";
+eopfile     = fullfile(parentDir, "data", "EOP.txt");
+tlefile     = fullfile(parentDir, "data", "TLE_AQUA27052026.txt");
+pathjson    = fullfile(parentDir, "data", "stations.json");
 
-% Output
-outF        = "C:\Users\Lorenzo\Desktop\mariani";
+% Output: la cartella Output di STAR
+outF        = fullfile(fileparts(fileparts(parentDir)), "Output");
+if ~isfolder(outF), mkdir(outF); end
 
 % Enable ephemeris
 orbitEphemeris = false;

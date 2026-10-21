@@ -3,10 +3,11 @@
 %  against CARA reference values (cara2DPc), matched by Conjunction ID.
 
 clear; clc; close all;
-addpath("C:\Users\s5oss\Desktop\software_s5lab\STAR\END016-CollisionAvoidance\CARA_Analysis_Tools\DistributedMatlab\ProbabilityOfCollision")
+caraDir = fullfile(fileparts(fileparts(mfilename('fullpath'))), "CARA_Analysis_Tools");   % END016-CollisionAvoidance
+addpath(fullfile(caraDir, "DistributedMatlab", "ProbabilityOfCollision"))
 
 %% ── Paths ───────────────────────────────────────────────────────────────
-folder   = "C:\Users\s5oss\Desktop\software_s5lab\STAR\END016-CollisionAvoidance\CARA_Analysis_Tools\DataFiles\PcTestCaseCDMs";
+folder   = fullfile(caraDir, "DataFiles", "PcTestCaseCDMs");
 fileCara = fullfile(folder, "CARA_PcMethod_Test_Conjunctions.xlsx");
 
 %% ── Load CARA reference data ────────────────────────────────────────────

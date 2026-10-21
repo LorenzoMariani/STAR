@@ -1,0 +1,11 @@
+# Dependabot (2026-10-20): once a month GitHub opens a pull request when a new version of an action used by the
+# workflows in .github/workflows (actions/checkout, actions/setup-python) is out; the tests of the workflow run
+# on that pull request. It acts on the default branch (main) only.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "CI"
