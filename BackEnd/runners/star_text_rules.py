@@ -6,8 +6,8 @@ means EPS. English and Italian forms; accents, typographic quotes and dashes are
 - ``requirement_sentences``: the sentences of a mission request that are requirements (a modal verb such as shall /
   must / dovra' / deve, or a requirement identifier such as REQ-04), kept verbatim with their numbers;
 - ``mission_parameters``: numbers and choices END-001 and the other modules need (altitude, satellites, planes, orbit
-  family, inclination, sensor, swath, GSD, mass, CubeSat class, revisit and latency thresholds, re-entry and
-  lifetime, depth of discharge, magnitude, temperatures, single satellite);
+  family, inclination, sensor, swath, GSD, mass, CubeSat class, pointing accuracy, revisit and latency thresholds,
+  re-entry and lifetime, depth of discharge, magnitude, temperatures, single satellite);
 - ``area_of_interest``: the Italian area named in the request (config/italy_places.json) or its coordinates, the
   foreign areas and the global coverage words (for the domain check);
 - ``MODULE_KEYWORDS``: what the planner looks for to propose a module.
@@ -313,6 +313,12 @@ def mission_parameters(requirements) -> dict[str, tuple[Any, str]]:
         classes = sorted({int(c) for c in re.findall(r"(?<![a-z0-9.,])(\d{1,2})\s*-?\s*u(?![a-z0-9])", t)}) if has_any(t, ("cubesat", "cubesats", "u cubesat")) or re.search(r"\d\s*u\s+cubesat", t) else []
         if classes:
             put("class_u", classes, rid)
+        # pointing accuracy (phase E): "a pointing accuracy better than 0.1 deg", in degrees
+        m = re.search(r"(?:pointing (?:accuracy|error)|accuratezza di puntamento|precisione di puntamento|errore di puntamento)[^.;]{0,30}?"
+                      r"(?:better than|of at most|at most|below|lower than|less than|within|under|not exceeding|migliore di|inferiore a|"
+                      r"entro|non superiore a|of|di|<=|<)\s*" + NUM + r"\s*(deg|degrees|degree|°|gradi|grado|arcsec|arcmin)(?![a-z])", t)
+        if m:
+            put("pointing_deg", num(m.group(1)) / {"arcsec": 3600.0, "arcmin": 60.0}.get(m.group(2), 1.0), rid)
         # thresholds
         for c in _clauses(t):
             if re.search(REVISIT_MEAN, c):

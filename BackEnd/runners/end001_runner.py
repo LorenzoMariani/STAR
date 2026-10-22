@@ -21,6 +21,7 @@ from runners.star_runner_io import (
 )
 from runners.star_provenance import Provenance
 from runners.star_status import evidence as star_evidence, finalize
+from runners.star_kpi_adapters import write_module_kpis
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 END001_DIR = STAR_ROOT / "END001-ConstellationOptimizer"
@@ -258,6 +259,7 @@ def run_end001(
     if env:
         facts += (f"; eclipses over {ecl.get('mission_life_years')} year(s) of mission life: {env.get('eclipse_min_min', 0):.1f}"
                   f"-{env.get('eclipse_max_min', 0):.1f} min per orbit (eclipse_summary.json)")
+    write_module_kpis("END-001", output_path, run_id, log=lambda lvl, msg: _emit(log_callback, lvl, msg))
     final_status, severity = finalize(status, prov)
     return {"status": final_status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(final_status),
             "evidence": star_evidence("END-001", final_status, prov, facts), "generated_artifacts": artifacts, "return_code": rc}

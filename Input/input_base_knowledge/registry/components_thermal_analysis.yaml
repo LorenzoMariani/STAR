@@ -117,6 +117,12 @@ consumes:
   used_for: internal dissipation (nominal for the window, hot = payload and transmitters, cold = idle)
   fallback: the model's constant internal powers (7 W), completed with a critical fallback
 produces:
+- product: kpis_end019
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-019 (star_kpis format, one file per run)
 - product: thermal_time_series
   path: output_components_thermal_analysis/output_thermal_SAT-*.csv
   format: csv

@@ -243,6 +243,12 @@ consumes:
   required: true
   used_for: mass, inertia, areas and attitude actuators of the satellite
 produces:
+- product: kpis_end003
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-003 (star_kpis format, one file per run)
 - product: attitude_propagation_csv
   path: output_attitude_propagation/output_attitude_propagation.csv
   format: csv

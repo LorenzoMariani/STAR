@@ -1,338 +1,530 @@
-"""STAR requirement compliance and KPI summary (2026-10-17).
+"""STAR requirement compliance (phase E, 2026-10-22): a generic engine over the common KPIs.
 
-After the workflow, every requirement with a number STAR can read (runners/star_text_rules.py) is compared with the
-KPI of the module that computes it; END-006's own per-requirement checks are added. Each requirement gets
-met / not met / not verifiable (with the reason), and the KPIs of every module are collected in one table.
-Files: <run>/compliance/compliance.json and compliance_data.js (window.starComplianceData, read by the results tab).
+After the workflow, the KPIs of every module (``kpis.json``, ``star_kpis``; rebuilt by ``star_kpi_adapters`` for a run that has
+none) are compared with the requirements through the table of rules ``config/requirement_kpi_rules.yaml``. The rules and
+the evaluation semantics are described in the header of that file. Nothing here knows a module: a new check is a new rule.
+
+For each requirement the engine builds the rows ``requirement x check`` (the per-run map ``requirement_kpi_map.json``,
+also written at planning time with the thresholds that do not depend on a run), evaluates them and gives the status
+met / not_met / evidence_provided / partially_verified / applied / not_verifiable. A failed check carries the violating
+value as evidence ("battery min -36.8 C (cold case, SAT-03) < 0 C ...").
+
+Files: <run>/compliance/compliance.json, compliance_data.js (window.starComplianceData, read by the results tab),
+requirement_kpi_map.json, traceability.json / traceability.csv (star_traceability).
 """
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 try:
     from . import star_text_rules as R
+    from . import star_kpis as K
+    from . import star_kpi_adapters as A
 except ImportError:
     import star_text_rules as R
+    import star_kpis as K
+    import star_kpi_adapters as A
+
+RULES_PATH = Path(__file__).resolve().parents[2] / "Input" / "input_base_knowledge" / "config" / "requirement_kpi_rules.yaml"
+STATUSES = ("met", "not_met", "evidence_provided", "partially_verified", "applied", "not_verifiable")
+_RULES_CACHE: dict[str, Any] = {}
 
 
 def _load(path: Path) -> dict | None:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(Path(path).read_text(encoding="utf-8-sig"))
     except Exception:
         return None
 
 
-def _first(root: Path, pattern: str) -> Path | None:
-    hits = sorted(p for p in root.glob(pattern) if "_initial" not in p.name and "_copy" not in p.name)
-    return hits[0] if hits else None
+def load_rules(path: str | Path | None = None) -> dict[str, Any]:
+    """The parsed requirement_kpi_rules.yaml (cached by modification time)."""
+    import yaml
+    p = Path(path or RULES_PATH)
+    key = f"{p}:{p.stat().st_mtime_ns}"
+    if key not in _RULES_CACHE:
+        _RULES_CACHE.clear()
+        _RULES_CACHE[key] = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    return _RULES_CACHE[key]
 
 
-def _kpi_by_name(kpis: list, name: str) -> Any:
-    for k in kpis or []:
-        if str(k.get("name", "")).lower() == name.lower():
-            return k.get("value")
+# --------------------------------------------------------------------------- KPIs of a run
+def run_kpis(run_path: str | Path) -> dict[str, dict[str, Any]]:
+    """{kpi_id: entry} of the run: every kpis.json, and the adapters for a module that has none (runs older than phase E)."""
+    run_path = Path(run_path)
+    kpis = K.load_run(run_path)
+    have = {e.get("module_id") for e in kpis.values()}
+    root = run_path / "modules_output"
+    for mdir in sorted(p for p in root.glob("END-*") if p.is_dir()):
+        mid = mdir.name
+        if mid in have:
+            continue
+        phases = ("final", "initial") if mid == "END-006" else ("",)
+        for phase in phases:
+            doc = A.build_document(mid, mdir, phase, run_path.name)
+            if doc.get("kpis"):
+                for k in doc["kpis"]:
+                    kpis[k["id"]] = {**k, "module_id": mid, "node": doc.get("node"), "_file": f"{mdir.name} (rebuilt from the module products)"}
+                break
+    return kpis
+
+
+# --------------------------------------------------------------------------- the plan of a requirement (rules -> rows)
+def _fmt(v: Any) -> str:
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float):
+        return f"{v:.4g}"
+    if isinstance(v, (list, tuple)):
+        return "[" + ", ".join(_fmt(x) for x in v) + "]"
+    return str(v)
+
+
+def _unit(u: Any) -> str:
+    u = str(u or "")
+    return {"C": "°C", "-": "", "bool": ""}.get(u, u)
+
+
+def _param_value(ref: Any, p: dict[str, Any], key: str | None) -> Any:
+    """'$param', '$param.field', '$param[i]' of the rule's parameter; anything else is a constant."""
+    if not (isinstance(ref, str) and ref.startswith("$param")):
+        return ref
+    v = p.get(key) if key else None
+    rest = ref[len("$param"):]
+    if v is None or not rest:
+        return v
+    if rest.startswith(".") and isinstance(v, dict):
+        return v.get(rest[1:])
+    m = re.match(r"^\[(\d+)\]$", rest)
+    if m and isinstance(v, (list, tuple)) and int(m.group(1)) < len(v):
+        return v[int(m.group(1))]
     return None
 
 
-def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
-    """Normalised KPIs of the modules that ran: {module: {metric: value, "_source": file}}."""
-    out: dict[str, dict[str, Any]] = {}
-    p = _first(modules_root, "END-001/*/coverage_summary.json")
-    d = _load(p) if p else None
-    if d:
-        k = d.get("kpis") or []
-        out["END-001"] = {
-            "_source": str(p), "fitness_engine": d.get("fitness_engine_used"), "fallback": d.get("surrogate_fallback_reason"),
-            "orbit_type": d.get("orbit_type"), "run_mode": d.get("star_run_mode"),
-            "max_revisit_h": _kpi_by_name(k, "Maximum Revisit Time"), "p90_revisit_h": _kpi_by_name(k, "P90 Revisit Time"),
-            "mean_revisit_h": _kpi_by_name(k, "Mean Revisit Time"), "max_latency_h": _kpi_by_name(k, "Maximum Latency"),
-            "gs_access_h": _kpi_by_name(k, "Average Ground Station Access Time"), "aoi_covered_pct": _kpi_by_name(k, "Percent AOI Covered"),
-            "n_satellites": _kpi_by_name(k, "Number of Satellites"), "n_planes": _kpi_by_name(k, "Number of Planes"),
-            "altitude_km": _kpi_by_name(k, "Altitude"), "inclination_deg": _kpi_by_name(k, "Inclination"),
-            # 2026-10-18: the family END-001 chose ("Auto" when the call names no orbit type)
-            "orbit_family": ("Sun-synchronous (SSO-RGT)" if d.get("orbit_type") == "SSORGT" else
-                             "Walker delta (inclined RGT)" if str(d.get("orbit_type", "")).startswith("RGT") else str(d.get("orbit_type") or "-"))
-                            + (" - chosen by END-001" if str(d.get("orbit_type_requested", "")).lower() == "auto" else ""),
-        }
-    p = _first(modules_root, "END-004/*/power_budget_summary.json")
-    d = _load(p) if p else None
-    if d:
-        flown = [m for m in d.get("mode_summaries", []) if (m.get("orbits_per_day") or 0) > 0]
-        n_flown = sum(float(m.get("orbits_per_day") or 0) for m in flown)
-        out["END-004"] = {"_source": str(p), "daily_balance_Wh": (d.get("analysis") or {}).get("daily_balance_Wh"),
-                          "max_dod_pct": 100 * max((m.get("orbital_DoD") or 0) for m in flown) if flown else None,
-                          # generation per mode since 2026-10-19 (attitude of each mode): the mean over the orbits of the day
-                          "generation_per_orbit_Wh": sum(float(m.get("orbits_per_day") or 0) * float(m.get("power_generated_per_orbit_Wh") or 0)
-                                                         for m in flown) / n_flown if flown else None,
-                          "peak_power_W": max((m.get("peak_power_W") or 0) for m in flown) if flown else None}
-        # phase D: the depth of discharge checked is the battery worst case (longest eclipse over the mission life,
-        # generation reduced by the shorter sunlight); the nominal one stays as a KPI
-        cases = _load(p.parent / "power_design_cases.json") if (p.parent / "power_design_cases.json").exists() else None
-        out["END-004"]["nominal_max_dod_pct"] = out["END-004"]["max_dod_pct"]
-        if cases and isinstance(cases.get("worst_dod_pct"), (int, float)):
-            out["END-004"]["max_dod_pct"] = cases["worst_dod_pct"]
-            out["END-004"]["worst_case_eclipse_min"] = (cases.get("battery_worst_case") or {}).get("eclipse_min")
-    p = _first(modules_root, "END-016/*/space_safety_summary.json")
-    d = _load(p) if p else None
-    if d:
-        k = d.get("kpis") or {}
-        out["END-016"] = {"_source": str(p), **{key: k.get(key) for key in (
-            "min_separation_km", "n_events_below_screening", "n_events_below_1km", "passive_lifetime_years_mean_activity",
-            "complies_5y_rule_mean_activity", "disposal_dv_m_s_5y_rule_mean_activity", "complies_25y_rule_mean_activity",
-            "disposal_dv_m_s_25y_rule_mean_activity", "orbit_maintenance_needed")}}
-    files = sorted((modules_root / "END-019").glob("*/thermal_summary_SAT-*.json"))
-    if files:
-        bat_max, bat_min, ctr_max, over = [], [], [], []
-        for f in files:
-            t = _load(f) or {}
-            pk = t.get("peaks") or {}
-            nodes = t.get("nodes") or {}
-            if pk.get("BAT_max_C") is not None:
-                bat_max.append(pk["BAT_max_C"])
-            if isinstance(nodes.get("BAT"), dict) and nodes["BAT"].get("min_C") is not None:
-                bat_min.append(nodes["BAT"]["min_C"])
-            if pk.get("CTR_max_C") is not None:
-                ctr_max.append(pk["CTR_max_C"])
-            # phase D: the hot and cold design cases over the mission life bound the battery and the central body
-            dc = t.get("design_cases") or {}
-            for case, key, acc in (("hot", "max_C", bat_max), ("cold", "min_C", bat_min), ("hot", "max_C", ctr_max)):
-                node = "CTR" if acc is ctr_max else "BAT"
-                v = (((dc.get(case) or {}).get("nodes") or {}).get(node) or {}).get(key)
-                if isinstance(v, (int, float)):
-                    acc.append(v)
-            over += [k for k, v in (t.get("violations") or {}).items() if v]
-        out["END-019"] = {"_source": str(files[0].parent), "battery_max_C": max(bat_max) if bat_max else None,
-                          "battery_min_C": min(bat_min) if bat_min else None, "central_body_max_C": max(ctr_max) if ctr_max else None,
-                          "limits_exceeded": sorted(set(over)), "n_satellites": len(files)}
-    p = _first(modules_root, "END-010/*/reflectance_summary.json")
-    d = _load(p) if p else None
-    if d:
-        k = d.get("kpis") or []
-        out["END-010"] = {"_source": str(p), "observatory": d.get("observatory"),
-                          "peak_magnitude": _kpi_by_name(k, "Peak Apparent Visual Magnitude (Est.)"),
-                          "limiting_magnitude": _kpi_by_name(k, "Site Limiting Visual Magnitude"),
-                          "max_elevation_deg": _kpi_by_name(k, "Max Elevation"), "pass_duration_s": _kpi_by_name(k, "Pass Duration")}
-    p = _first(modules_root, "END-003/*/attitude_summary.json")
-    d = _load(p) if p else None
-    if d:
-        k = d.get("kpis") or []
-        out["END-003"] = {"_source": str(p), "eclipse_pct": _kpi_by_name(k, "Eclipse Fraction"),
-                          "imaging_pass_found": _kpi_by_name(k, "Ground Station Pass Found"),
-                          "night_pass_found": _kpi_by_name(k, "Night Light-Curve Pass Found"),
-                          "max_body_rate_deg_s": _kpi_by_name(k, "Max Body Rate During Imaging Pass")}
-    p = modules_root / "END-006" / "output_component_selector" / "component_selector_results.json"
-    d = _load(p)
-    if d:
-        res = d.get("result") or {}
-        mission = res.get("mission") or {}
-        sc = d.get("spacecraft") or {}
-        out["END-006"] = {"_source": str(p), "phase": d.get("phase"), "status": d.get("status"),
-                          "class_u": mission.get("chosen_class_u") or (res.get("cubesat") or {}).get("form_factor_u"),
-                          "mass_kg": (res.get("totals") or {}).get("mass_kg"),
-                          "mass_limit_kg": (res.get("totals") or {}).get("mass_limit_kg"),
-                          "checks": mission.get("requirements") or [], "unmet": mission.get("unmet") or [],
-                          "subsystems": sorted({str(s.get("id") or s.get("subsystem") or "") for s in res.get("subsystems") or []} - {""}),
-                          "propulsion": any("propulsion" in str(s.get("id") or s.get("subsystem") or "") and s.get("selected")
-                                            for s in res.get("subsystems") or []),
-                          "spacecraft_mass_kg": sc.get("mass_kg")}
-    return out
-
-
-KPI_ROWS = [
-    ("END-001", "orbit_family", "Orbit family", "-"),
-    ("END-001", "n_satellites", "Satellites", "-"), ("END-001", "n_planes", "Orbital planes", "-"),
-    ("END-001", "altitude_km", "Altitude", "km"), ("END-001", "inclination_deg", "Inclination", "deg"),
-    ("END-001", "max_revisit_h", "Maximum revisit time", "h"), ("END-001", "p90_revisit_h", "90th percentile revisit time", "h"),
-    ("END-001", "mean_revisit_h", "Mean revisit time", "h"), ("END-001", "max_latency_h", "Maximum data latency", "h"),
-    ("END-001", "gs_access_h", "Average ground-station access", "h"), ("END-001", "aoi_covered_pct", "Area of interest covered", "%"),
-    ("END-001", "fitness_engine", "Fitness engine used", "-"),
-    ("END-003", "eclipse_pct", "Eclipse fraction", "%"), ("END-003", "max_body_rate_deg_s", "Max body rate (imaging pass)", "deg/s"),
-    ("END-004", "daily_balance_Wh", "Daily energy balance", "Wh"), ("END-004", "max_dod_pct", "Max depth of discharge per orbit (worst case: longest eclipse over the mission life)", "%"),
-    ("END-004", "nominal_max_dod_pct", "Max depth of discharge per orbit (eclipse of the run)", "%"),
-    ("END-004", "worst_case_eclipse_min", "Longest eclipse over the mission life", "min"),
-    ("END-004", "generation_per_orbit_Wh", "Generation per orbit (mean of the day)", "Wh"),
-    ("END-010", "peak_magnitude", "Peak apparent magnitude", "mag"), ("END-010", "observatory", "Observatory", "-"),
-    ("END-016", "min_separation_km", "Minimum separation between satellites", "km"),
-    ("END-016", "n_events_below_screening", "Close approaches below screening", "-"),
-    ("END-016", "passive_lifetime_years_mean_activity", "Passive orbital lifetime", "years"),
-    ("END-016", "disposal_dv_m_s_5y_rule_mean_activity", "Disposal delta-v (5-year rule)", "m/s"),
-    ("END-019", "battery_max_C", "Battery max temperature (window and hot case)", "C"), ("END-019", "battery_min_C", "Battery min temperature (window and cold case)", "C"),
-    ("END-019", "central_body_max_C", "Central body max temperature", "C"),
-    ("END-006", "class_u", "CubeSat class", "U"), ("END-006", "mass_kg", "Satellite mass", "kg"),
-]
-
-
-def kpi_table(kpis: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
-    rows = []
-    for module, key, name, unit in KPI_ROWS:
-        v = (kpis.get(module) or {}).get(key)
-        if v is not None:
-            rows.append({"module": module, "name": name, "value": round(v, 4) if isinstance(v, float) else v, "unit": unit})
-    return rows
-
-
-def _check(module: str, metric: str, op: str, threshold: Any, unit: str, kpis: dict, label: str, value_key: str | None = None) -> dict[str, Any]:
-    data = kpis.get(module)
-    c = {"module": module, "metric": label, "operator": op, "threshold": threshold, "unit": unit}
-    if data is None:
-        return {**c, "value": None, "status": "not_verifiable", "reason": f"{module} did not run in this workflow"}
-    v = data.get(value_key or metric)
+def _range(spec: dict[str, Any], p: dict[str, Any], key: str | None) -> list[float] | None:
+    v = _param_value(spec.get("param_range"), p, key)
     if v is None:
-        return {**c, "value": None, "status": "not_verifiable", "reason": f"{module} did not report {label.lower()}"}
+        return None
+    t = float(spec.get("tolerance") or 0)
+    if isinstance(v, (int, float)):
+        return [v - t, v + t]
+    items = list(v)
+    default = spec.get("default")
+    if default and len(items) == 2:
+        lo = items[0] if items[0] is not None else default[0]
+        hi = items[1] if items[1] is not None else default[1]
+    else:
+        vals = [x for x in items if x is not None]
+        if not vals:
+            return None
+        lo, hi = min(vals), max(vals)
+    if lo == hi and spec.get("widen_if_point"):
+        lo, hi = lo - float(spec["widen_if_point"]), hi + float(spec["widen_if_point"])
+    return [lo, hi]
+
+
+def _threshold(spec: Any, p: dict[str, Any], key: str | None) -> tuple[Any, str]:
+    """(threshold, source): a number / list from the requirement text, a constant, or a dict {kpi} / {kpi_limit} to resolve later."""
+    if isinstance(spec, dict) and "param_range" in spec:
+        return _range(spec, p, key), "requirement"
+    if isinstance(spec, dict) and "kpi" in spec:
+        pv = p.get(key) if key else None
+        kid = str(spec["kpi"]).replace("{param}", str(int(pv)) if isinstance(pv, (int, float)) else "{param}")
+        return {"kpi": kid}, "kpi"
+    if isinstance(spec, dict) and "kpi_limit" in spec:
+        return {"kpi_limit": spec["kpi_limit"]}, "module_limit"
+    if isinstance(spec, str) and spec.startswith("$param"):
+        return _param_value(spec, p, key), "requirement"
+    return spec, "rule"
+
+
+def _fires(rule: dict[str, Any], p: dict[str, Any], low: str, is_evidence: bool) -> bool:
+    key = rule.get("param")
+    if key is not None and key not in p:
+        return False
+    if rule.get("param_any") and not any(k in p for k in rule["param_any"]):
+        return False
+    if rule.get("unless_param") and rule["unless_param"] in p:
+        return False
+    if rule.get("unless_equal_param") and key in p and p.get(key) == p.get(rule["unless_equal_param"]):
+        return False
+    for field, want in (rule.get("where") or {}).items():
+        if not (isinstance(p.get(key), dict) and p[key].get(field) == want):
+            return False
+    for field, want in (rule.get("where_not") or {}).items():
+        if isinstance(p.get(key), dict) and p[key].get(field) == want:
+            return False
+    if rule.get("match") and not all(R.has_any(low, g) for g in rule["match"]):
+        return False
+    if rule.get("unless_match") and all(R.has_any(low, g) for g in rule["unless_match"]):
+        return False
+    if rule.get("evidence") and not is_evidence:
+        return False
+    if rule.get("unless_evidence") and is_evidence:
+        return False
+    return True
+
+
+def _check_row(rule: dict[str, Any], c: dict[str, Any], p: dict[str, Any], group: str) -> dict[str, Any]:
+    thr, src = _threshold(c.get("threshold"), p, rule.get("param"))
+    kid = str(c["kpi"])
+    return {"rule": rule["id"], "kind": "check", "group": group, "kpi_id": kid, "module": kid.split(".")[0], "operator": c.get("op", "<="),
+            "threshold": thr, "threshold_source": src, "unit": K.norm_unit(c.get("unit", "-")), "label": c.get("label") or kid,
+            "note_not_met": rule.get("note_not_met", "")}
+
+
+def plan_requirement(req: dict[str, Any], rules: dict[str, Any]) -> dict[str, Any]:
+    """The rules that fire on a requirement and the rows they give (no run data needed)."""
+    rid, text = str(req.get("id", "REQ")), str(req.get("text", ""))
+    p = {k: v[0] for k, v in R.mission_parameters([(rid, text)]).items()}
+    low = R.norm(text)
+    is_evidence = R.has_any(low, [str(x) for x in rules.get("evidence_phrases") or []])
+    rows: list[dict[str, Any]] = []
+    status_rules: list[dict[str, Any]] = []
+    fired: list[str] = []
+    for rule in rules.get("rules") or []:
+        if not _fires(rule, p, low, is_evidence):
+            continue
+        fired.append(rule["id"])
+        for c in rule.get("checks") or []:
+            rows.append(_check_row(rule, c, p, "all"))
+        for i, branch in enumerate(rule.get("any_of") or []):
+            for c in branch:
+                rows.append(_check_row(rule, c, p, f"any_of[{i}]"))
+        for kid in rule.get("kpis") or []:
+            rows.append({"rule": rule["id"], "kind": "evidence", "group": "evidence", "kpi_id": kid, "module": kid.split(".")[0],
+                         "operator": "", "threshold": None, "threshold_source": "", "unit": "", "label": kid, "note_not_met": ""})
+        if rule.get("module_checks"):
+            rows.append({"rule": rule["id"], "kind": "module", "group": "module", "kpi_id": None, "module": rule["module_checks"],
+                         "operator": "", "threshold": None, "threshold_source": "component", "unit": "", "label": "", "note_not_met": ""})
+        if rule.get("status"):
+            status_rules.append({"rule": rule["id"], "status": rule["status"], "reason": rule.get("reason", "")})
+    # the same kpi / operator / threshold is kept once, the rule's first
+    seen: set[str] = set()
+    unique = []
+    for r in rows:
+        k = json.dumps([r["kind"], r["group"] if r["group"].startswith("any_of") else "", r["kpi_id"], r["operator"], r["threshold"]], default=str)
+        if r["kind"] != "module" and k in seen:
+            continue
+        seen.add(k)
+        unique.append(r)
+    return {"id": rid, "text": text, "parameters": p, "is_evidence": is_evidence, "rules": fired, "rows": unique, "status_rules": status_rules}
+
+
+# --------------------------------------------------------------------------- evaluation
+def _ctx_text(entry: dict[str, Any]) -> str:
+    c = entry.get("context") or {}
+    parts = []
+    if c.get("case"):
+        parts.append(f"{c['case']} case")
+    if c.get("satellite"):
+        parts.append(str(c["satellite"]))
+    return f" ({', '.join(parts)})" if parts else ""
+
+
+_NEG = {"<=": ">", ">=": "<", "==": "!=", "<": ">=", ">": "<="}
+
+
+def _compare(v: Any, op: str, thr: Any) -> str:
+    """'met' | 'not_met' | 'unverifiable' (a bound such as '> 200' decides only when it settles the comparison)."""
     if isinstance(v, str) and v.strip().lower().lstrip("+") in ("inf", "infinity"):
         v = float("inf")                                       # e.g. END-016 lifetime of an orbit that does not decay
     if isinstance(v, str) and op in ("<=", ">=", "in"):
-        import re
         m = re.match(r"\s*([<>])=?\s*(-?\d+(?:\.\d+)?)", v)     # e.g. END-016 lifetime "> 200": a bound, not a value
-        if not m:
-            return {**c, "value": v, "status": "not_verifiable", "reason": f"{module} reported '{v}'"}
+        if not m or not isinstance(thr, (int, float)):
+            return "unverifiable"
         bound, side = float(m.group(2)), m.group(1)
-        if op in ("<=", ">=") and ((op == "<=" and side == ">" and bound >= threshold) or (op == ">=" and side == "<" and bound <= threshold)):
-            return {**c, "value": v, "status": "not_met", "reason": ""}
-        if op in ("<=", ">=") and ((op == "<=" and side == "<" and bound <= threshold) or (op == ">=" and side == ">" and bound >= threshold)):
-            return {**c, "value": v, "status": "met", "reason": ""}
-        return {**c, "value": v, "status": "not_verifiable", "reason": f"{module} reported only a bound ({v})"}
-    if op == "<=":
-        ok = v <= threshold + 1e-9
-    elif op == ">=":
-        ok = v >= threshold - 1e-9
-    elif op == "==":
-        ok = v == threshold
-    elif op == "in":
-        ok = threshold[0] - 1e-9 <= v <= threshold[1] + 1e-9
-    else:
-        ok = bool(v)
-    return {**c, "value": round(v, 4) if isinstance(v, float) else v, "status": "met" if ok else "not_met", "reason": ""}
+        if (op == "<=" and side == ">" and bound >= thr) or (op == ">=" and side == "<" and bound <= thr):
+            return "not_met"
+        if (op == "<=" and side == "<" and bound <= thr) or (op == ">=" and side == ">" and bound >= thr):
+            return "met"
+        return "unverifiable"
+    try:
+        if op == "<=":
+            ok = v <= thr + 1e-9
+        elif op == ">=":
+            ok = v >= thr - 1e-9
+        elif op == "<":
+            ok = v < thr
+        elif op == ">":
+            ok = v > thr
+        elif op == "in":
+            ok = thr[0] - 1e-9 <= v <= thr[1] + 1e-9
+        elif isinstance(v, str) and isinstance(thr, str):
+            t = thr.strip().lower()
+            ok = v.strip().lower().startswith("rgt") if t.startswith("rgt") else v.strip().lower() == t
+        else:
+            ok = v == thr
+    except TypeError:
+        return "unverifiable"
+    return "met" if ok else "not_met"
 
 
-def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    rid, text = str(req.get("id", "REQ")), str(req.get("text", ""))
-    p = {k: v[0] for k, v in R.mission_parameters([(rid, text)]).items()}
+def _resolve(row: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Row with a concrete threshold: {kpi} -> that KPI's value, {kpi_limit} -> the limit the module used and its source."""
+    r = dict(row)
+    thr = r["threshold"]
+    if isinstance(thr, dict) and "kpi" in thr:
+        e = kpis.get(thr["kpi"])
+        r["threshold"] = e.get("value") if e else None
+        r["threshold_ref"] = thr["kpi"]
+        r["threshold_source"] = "kpi"
+    elif isinstance(thr, dict) and "kpi_limit" in thr:
+        e = kpis.get(thr["kpi_limit"])
+        a = (e or {}).get("assessment") or {}
+        r["threshold"] = a.get("threshold")
+        r["threshold_ref"] = thr["kpi_limit"]
+        r["threshold_source"] = a.get("threshold_source") or "module_limit"
+        r["threshold_note"] = a.get("note") or ""
+    return r
+
+
+def _evaluate(row: dict[str, Any], kpis: dict[str, dict[str, Any]], modules_run: set[str]) -> dict[str, Any]:
+    r = _resolve(row, kpis)
+    module, label, unit = r["module"], r["label"], _unit(r["unit"])
+    c = {"module": module, "metric": label, "operator": r["operator"], "threshold": r["threshold"], "unit": r["unit"], "kpi_id": r["kpi_id"],
+         "rule": r["rule"], "group": r["group"], "threshold_source": r["threshold_source"], "value": None, "status": "not_verifiable",
+         "reason": "", "evidence": ""}
+    e = kpis.get(r["kpi_id"])
+    if module not in modules_run:
+        c["reason"] = c["evidence"] = f"{module} did not run in this workflow"
+        return c
+    if e is None or e.get("value") is None:
+        c["reason"] = c["evidence"] = f"{module} did not report {label.lower()}"
+        return c
+    if r["threshold"] is None:
+        what = r.get("threshold_ref") or "its threshold"
+        c["value"] = e["value"]
+        c["reason"] = c["evidence"] = f"{label}: no value for {what}" + (" (the module reported no limit)" if r["threshold_source"] not in ("kpi", "requirement") else "")
+        return c
+    v = e["value"]
+    res = _compare(v, r["operator"], r["threshold"])
+    c["value"] = round(v, 4) if isinstance(v, float) else v
+    shown = f"{_fmt(v)}{(' ' + unit) if unit else ''}{_ctx_text(e)}"
+    lim = _fmt(r["threshold"]) + ((" " + unit) if unit else "")
+    if res == "unverifiable":
+        c["reason"] = c["evidence"] = f"{label}: the module reported '{v}', not a value that settles {r['operator']} {lim}"
+        return c
+    c["status"] = res
+    if res == "met":
+        c["evidence"] = f"{label}: {shown} {r['operator']} {lim}"
+        return c
+    sym = "outside" if r["operator"] == "in" else _NEG.get(r["operator"], "!=")
+    src = ""
+    if r.get("threshold_ref") and r["threshold_source"] not in ("kpi",):
+        note = r.get("threshold_note") or ""
+        src = f" ({r['threshold_source'].replace('_', ' ')} limit{': ' + note if note else ''})"
+    c["evidence"] = f"{label}: {shown} {sym} {lim}{src}"
+    c["reason"] = c["evidence"] + (f". {r['note_not_met']}" if r.get("note_not_met") else "")
+    return c
+
+
+def _module_checks(rid: str, module: str, kpis: dict[str, dict[str, Any]], modules_run: set[str]) -> list[dict[str, Any]]:
+    """The module's own checks that name the requirement (assessment.requirement_ids, threshold_source requirement / component)."""
+    out = []
+    for kid, e in kpis.items():
+        a = e.get("assessment") or {}
+        if module and e.get("module_id") != module:
+            continue
+        if rid in (a.get("requirement_ids") or []) and a.get("threshold_source") in ("requirement", "component"):
+            out.append({"rule": f"M-{e.get('module_id')}", "kind": "module", "group": "module", "kpi_id": kid, "module": e.get("module_id"),
+                        "operator": a.get("operator") or "", "threshold": a.get("threshold"), "threshold_source": a.get("threshold_source"),
+                        "unit": a.get("unit") or e.get("unit") or "", "label": e.get("name") or kid, "note_not_met": ""})
+    return out
+
+
+def _evaluate_module(row: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """A check the module made itself: meets true / false / null, its message as evidence."""
+    e = kpis[row["kpi_id"]]
+    a = e.get("assessment") or {}
+    meets = a.get("meets")
+    note = str(a.get("note") or "")
+    c = {"module": row["module"], "metric": row["label"], "operator": row["operator"] if row["operator"] != "==" or not isinstance(a.get("threshold"), bool) else "",
+         "threshold": None if isinstance(a.get("threshold"), bool) else a.get("threshold"), "unit": row["unit"] if row["unit"] != "bool" else "",
+         "kpi_id": row["kpi_id"], "rule": row["rule"], "group": "module", "threshold_source": row["threshold_source"],
+         "value": e.get("value"), "status": "met" if meets is True else "not_met" if meets is False else "not_verifiable",
+         "reason": note if meets is not True else "", "evidence": f"{row['label']}: {note}" if note else row["label"]}
+    return c
+
+
+def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]], rules: dict[str, Any] | None = None,
+                      plan: dict[str, Any] | None = None) -> dict[str, Any]:
+    rules = rules or load_rules()
+    plan = plan or plan_requirement(req, rules)
+    rid = plan["id"]
+    modules_run = {e.get("module_id") for e in kpis.values()}
+    rows = list(plan["rows"])
+    module_rows: list[dict[str, Any]] = []
+    for r in [x for x in rows if x["kind"] == "module"]:
+        mine = _module_checks(rid, r["module"], kpis, modules_run)
+        if mine:
+            module_rows += mine
+        elif r["module"] not in modules_run:
+            module_rows.append({**r, "kind": "module_missing"})
+    # module checks that name the requirement, rule or not
+    named = {x["kpi_id"] for x in module_rows if x["kind"] == "module"}
+    module_rows += [x for x in _module_checks(rid, "", kpis, modules_run) if x["kpi_id"] not in named]
+    rows = [x for x in rows if x["kind"] != "module"] + module_rows
+
     checks: list[dict[str, Any]] = []
-    for key, label in (("revisit_max_h", "Maximum revisit time"), ("revisit_mean_h", "Mean revisit time"),
-                       ("revisit_p90_h", "90th percentile revisit time"), ("latency_h", "Maximum data latency")):
-        if key in p:
-            metric = {"revisit_max_h": "max_revisit_h", "revisit_mean_h": "mean_revisit_h", "revisit_p90_h": "p90_revisit_h",
-                      "latency_h": "max_latency_h"}[key]
-            checks.append(_check("END-001", metric, "<=", round(p[key], 4), "h", kpis, label))
-    if "sats_max" in p:
-        checks.append(_check("END-001", "n_satellites", "<=", p["sats_max"], "-", kpis, "Number of satellites"))
-    if "sats_min" in p and p.get("sats_min") != p.get("sats_max"):
-        checks.append(_check("END-001", "n_satellites", ">=", p["sats_min"], "-", kpis, "Number of satellites"))
-    if p.get("single"):
-        checks.append(_check("END-001", "n_satellites", "==", 1, "-", kpis, "Number of satellites"))
-    if "planes" in p:
-        checks.append(_check("END-001", "n_planes", "==", p["planes"], "-", kpis, "Number of orbital planes"))
-    if "alt" in p:
-        lo, hi = p["alt"]
-        if lo is not None and hi is not None and lo == hi:
-            lo, hi = lo - 25, hi + 25
-        checks.append(_check("END-001", "altitude_km", "in", [lo if lo is not None else 0, hi if hi is not None else 1e9], "km", kpis, "Altitude"))
-    if "incl" in p:
-        checks.append(_check("END-001", "inclination_deg", "in", [p["incl"] - 0.5, p["incl"] + 0.5], "deg", kpis, "Inclination"))
-    if "mass" in p:
-        checks.append(_check("END-006", "mass_kg", "<=", p["mass"][0], "kg", kpis, "Satellite mass"))
-    low = R.norm(text)
-    from_catalogue = R.has_any(low, ("datasheet", "commercially available", "off-the-shelf", "off the shelf"))
-    if from_catalogue and "END-006" in kpis:
-        # "components selected among commercial products with datasheets": END-006 selects only from its vendor catalogue;
-        # a "6U" in the sentence only names the platform, it is not a class requirement
-        checks.append({"module": "END-006", "metric": "Components selected from the vendor-datasheet catalogue", "operator": "", "threshold": None,
-                       "unit": "", "value": True, "status": "met", "reason": "END-006 chooses only among catalogued components with vendor datasheets"})
-    if "class_u" in p and not from_catalogue:
-        c = _check("END-006", "class_u", "in", [min(p["class_u"]), max(p["class_u"])], "U", kpis, "CubeSat class")
-        if c["status"] == "not_met":
-            c["reason"] = "END-006 chooses the smallest class whose components meet the performance requirements (stated class only reported)"
+    units: dict[str, list[dict[str, Any]]] = {}            # evaluation unit -> its checks (an any_of rule is one unit)
+    evidence_kpis: list[dict[str, Any]] = []
+    seen: set[tuple] = set()
+    for r in rows:
+        if r["kind"] == "evidence":
+            e = kpis.get(r["kpi_id"])
+            evidence_kpis.append({"kpi_id": r["kpi_id"], "module": r["module"], "rule": r["rule"], "present": bool(e and e.get("value") is not None),
+                                  "name": (e or {}).get("name") or r["kpi_id"], "value": (e or {}).get("value"), "unit": (e or {}).get("unit", ""),
+                                  "context": (e or {}).get("context", {})})
+            continue
+        if r["kind"] == "module_missing":
+            msg = f"{r['module']} did not run in this workflow"
+            c = {"module": r["module"], "metric": f"{r['module']} checks", "operator": "", "threshold": None, "unit": "", "kpi_id": None, "rule": r["rule"],
+                 "group": "module", "threshold_source": "component", "value": None, "status": "not_verifiable", "reason": msg, "evidence": msg}
+        else:
+            thr = r["threshold"]
+            sig = (r["kpi_id"], r["operator"], float(thr) if isinstance(thr, (int, float)) and not isinstance(thr, bool) else json.dumps(thr, default=str),
+                   r["group"].startswith("any_of"))
+            if sig in seen:                                 # the same kpi / operator / threshold is kept once, the rule's first
+                continue
+            seen.add(sig)
+            c = _evaluate_module(r, kpis) if r["kind"] == "module" else _evaluate(r, kpis, modules_run)
         checks.append(c)
-    if "dod_max_pct" in p:
-        checks.append(_check("END-004", "max_dod_pct", "<=", p["dod_max_pct"], "%", kpis, "Depth of discharge per orbit (worst case, longest eclipse over the mission life)"))
-    if p.get("energy_balance_positive"):
-        checks.append(_check("END-004", "daily_balance_Wh", ">=", 0, "Wh", kpis, "Daily energy balance"))
-    if "magnitude_min" in p:
-        checks.append(_check("END-010", "peak_magnitude", ">=", p["magnitude_min"], "mag", kpis, "Peak apparent magnitude (fainter = larger)"))
-    if p.get("separation_check"):
-        checks.append(_check("END-016", "n_events_below_screening", "==", 0, "-", kpis, "Close approaches below the screening distance"))
-    if "reentry_years" in p:
-        c = _check("END-016", "passive_lifetime_years_mean_activity", "<=", p["reentry_years"], "years", kpis, "Passive orbital lifetime")
-        if c["status"] == "not_met":
-            # only the delta-v check END-006 made for THIS requirement (disposal deadline), not any delta-v of the design
-            dv = [x for x in (kpis.get("END-006") or {}).get("checks", []) if "delta-v" in str(x.get("what", "")).lower()
-                  and x.get("status") == "met" and (x.get("requirement") or {}).get("id") == rid]
-            if dv:
-                c.update({"status": "met", "reason": "disposal manoeuvre: " + str(dv[0].get("what"))})
+        units.setdefault(f"any:{r['rule']}" if r["group"].startswith("any_of") else f"all:{len(checks)}", []).append(c)
+
+    unit_status: list[tuple[str, list[dict[str, Any]]]] = []
+    for key, cs in units.items():
+        if key.startswith("any:"):
+            branches: dict[str, list[dict[str, Any]]] = {}
+            for c in cs:
+                branches.setdefault(c["group"], []).append(c)
+            bs = ["met" if all(c["status"] == "met" for c in b) else "not_met" if any(c["status"] == "not_met" for c in b) else "not_verifiable"
+                  for b in branches.values()]
+            st = "met" if "met" in bs else "not_met" if all(s == "not_met" for s in bs) else "not_verifiable"
+        else:
+            st = cs[0]["status"]
+        unit_status.append((st, cs))
+
+    statuses = [s for s, _ in unit_status]
+    reason = ""
+    ev_missing = [e for e in evidence_kpis if not e["present"]]
+    if "not_met" in statuses:
+        status = "not_met"
+        bad = []
+        for s, cs in unit_status:
+            if s != "not_met":
+                continue
+            if cs[0]["group"].startswith("any_of"):
+                bad.append("none of the alternatives is met: " + "; ".join(c["evidence"] for c in cs)
+                           + next((f". {r['note_not_met']}" for r in rows if r.get("rule") == cs[0]["rule"] and r.get("note_not_met")), ""))
             else:
-                c["reason"] = "the orbit decays too slowly: a disposal manoeuvre is needed"
-        checks.append(c)
-    if "lifetime_years" in p and "reentry_years" not in p:
-        checks.append(_check("END-016", "passive_lifetime_years_mean_activity", ">=", p["lifetime_years"], "years", kpis,
-                             "Passive orbital lifetime vs mission lifetime"))
-    if "temp_range_c" in p:
-        tr = p["temp_range_c"]
-        if tr["item"] == "battery":
-            checks.append(_check("END-019", "battery_max_C", "<=", tr["max"], "C", kpis, "Battery max temperature"))
-            checks.append(_check("END-019", "battery_min_C", ">=", tr["min"], "C", kpis, "Battery min temperature"))
+                bad.append(cs[0]["reason"] or cs[0]["evidence"])
+        reason = " | ".join(dict.fromkeys(bad))
+    elif statuses:
+        if all(s == "met" for s in statuses):
+            status = "met" if not ev_missing else "partially_verified"
+            if ev_missing:
+                reason = "not reported: " + ", ".join(e["kpi_id"] for e in ev_missing[:6])
+        elif "met" in statuses:
+            status = "partially_verified"
+            reason = "some checks could not be verified: " + "; ".join(dict.fromkeys(c["reason"] for _, cs in unit_status for c in cs if c["status"] == "not_verifiable" and c["reason"]))[:300]
         else:
-            checks.append({"module": "END-019", "metric": f"{tr['item']} temperature", "operator": "in", "threshold": [tr["min"], tr["max"]],
-                           "unit": "C", "value": None, "status": "not_verifiable",
-                           "reason": "END-019 models the faces, panels, central body, battery and SAR payload nodes"})
-    if p.get("orbit") == "SSORGT" and "END-001" in kpis:
-        checks.append(_check("END-001", "orbit_type", "==", "SSORGT", "", kpis, "Sun-synchronous orbit"))
-    # reference passes: daylight imaging pass and night pass of END-001 / END-003
-    if R.has_any(low, ("daylight", "in daylight", "di giorno", "diurno")) and R.has_any(low, ("image", "imaging", "acquire", "immagine", "acquisire")):
-        checks.append(_check("END-003", "imaging_pass_found", "==", True, "", kpis, "Daylight imaging pass found"))
-    if R.has_any(low, ("at night", "night pass", "di notte", "notturno")) and R.has_any(low, ("cross the sky", "visible", "light curve", "observ",
-                                                                                            "illuminated", "visibile", "curva di luce")):
-        checks.append(_check("END-003", "night_pass_found", "==", True, "", kpis, "Night pass visible from the observatory found"))
-    if R.has_any(low, ("battery temperature", "temperatura della batteria")) and R.has_any(low, ("limit", "limits", "limite", "limiti")):
-        data = kpis.get("END-019")
-        if data is None:
-            checks.append({"module": "END-019", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "", "value": None,
-                           "status": "not_verifiable", "reason": "END-019 did not run in this workflow"})
+            status = "not_verifiable"
+            reason = "; ".join(dict.fromkeys(c["reason"] for _, cs in unit_status for c in cs if c["reason"]))[:300]
+    elif evidence_kpis:
+        present = [e for e in evidence_kpis if e["present"]]
+        if not ev_missing:
+            status, reason = "evidence_provided", "the analysis the requirement asks for is in the results of " + ", ".join(sorted({e["module"] for e in evidence_kpis})) + " (no threshold to verify)"
+        elif present:
+            status, reason = "partially_verified", "evidence from " + ", ".join(sorted({e["module"] for e in present})) + "; not reported: " + ", ".join(e["kpi_id"] for e in ev_missing[:6])
         else:
-            over = [v for v in data.get("limits_exceeded", []) if v.startswith("BAT")]
-            checks.append({"module": "END-019", "metric": "Battery temperature limit", "operator": "", "threshold": None, "unit": "C",
-                           "value": data.get("battery_max_C"), "status": "not_met" if over else "met",
-                           "reason": "limit exceeded on at least one satellite" if over else ""})
-    # an analysis the call asks for: the module that makes it produced its results; this is evidence for the reader, not a
-    # verified threshold, so it is never "met" by itself (2026-10-21)
-    if R.has_any(low, ("shall be assessed", "shall be provided", "shall provide evidence", "evidence of", "shall be computed", "shall be simulated",
-                       "shall be estimated", "shall be analysed", "shall be analyzed", "shall be verified", "shall be evaluated",
-                       "dovra essere fornito", "dovra essere fornita", "dovranno essere forniti", "dovranno essere fornite", "dovra essere valutato", "dovra essere valutata", "dovranno essere valutati", "dovranno essere valutate", "dovra essere calcolato", "dovra essere calcolata", "dovranno essere calcolati", "dovranno essere calcolate", "dovra essere simulato", "dovra essere simulata", "dovranno essere simulati", "dovranno essere simulate", "dovra essere stimato", "dovra essere stimata", "dovranno essere stimati", "dovranno essere stimate", "dovra essere analizzato", "dovra essere analizzata", "dovranno essere analizzati", "dovranno essere analizzate", "dovra essere verificato", "dovra essere verificata", "dovranno essere verificati", "dovranno essere verificate")):
-        named = list(R.modules_requested(text))
-        specific = [m for m in named if m in ("END-004", "END-007", "END-010", "END-016", "END-019")]
-        for module_id in (specific or named):     # the module that makes the analysis, not the generic orbit / CubeSat ones
-            if module_id in kpis and not any(c["module"] == module_id for c in checks):
-                checks.append({"module": module_id, "metric": "Analysis produced", "operator": "", "threshold": None, "unit": "", "value": True,
-                               "status": "not_verifiable",
-                               "reason": f"{module_id} produced its results (see its results tab); the requirement states no threshold STAR can verify"})
-    for x in (kpis.get("END-006") or {}).get("checks", []):
-        if (x.get("requirement") or {}).get("id") == rid:
-            st = str(x.get("status", "")).replace("-", "_")
-            checks.append({"module": "END-006", "metric": str(x.get("what", "")), "operator": "", "threshold": None, "unit": "",
-                           "value": None, "status": st if st in ("met", "not_met", "not_verifiable") else "not_verifiable",
-                           "reason": str(x.get("message", ""))})
-    statuses = [c["status"] for c in checks]
-    applied = [k for k in ("adrag", "cd", "start") if k in p] or \
-        (["objective"] if R.has_any(low, ("minimise the revisit", "minimize the revisit", "maximise the coverage", "maximize the coverage",
-                                          "minimizzare il tempo di rivisita", "massimizzare la copertura")) else [])
-    if not checks and applied:
-        status = "applied"
-        reason = ("an objective END-001 optimises (revisit, coverage)" if applied == ["objective"]
-                  else "used as an input of the modules (" + ", ".join({"adrag": "drag area", "cd": "drag coefficient", "start": "start epoch"}[k] for k in applied) + ")")
-    elif not checks:
-        status, reason = "not_verifiable", "no quantity STAR computes is stated in this requirement"
-    elif "not_met" in statuses:
-        status, reason = "not_met", ""
-    elif all(s == "met" for s in statuses):
-        status, reason = "met", ""
-    elif "met" in statuses:
-        status, reason = "partially_verified", "some checks could not be verified"
+            status = "not_verifiable"
+            reason = ", ".join(sorted({e["module"] for e in evidence_kpis})) + " did not run in this workflow or reported none of the evidence"
+    elif plan["status_rules"]:
+        applied = [s for s in plan["status_rules"] if s["status"] == "applied"]
+        if applied:
+            status = "applied"
+            reason = "; ".join(dict.fromkeys(s["reason"] for s in applied if s["reason"]))
+        else:
+            status = "not_verifiable"
+            reason = "; ".join(dict.fromkeys(s["reason"] for s in plan["status_rules"] if s["reason"]))
+    elif plan["rules"]:
+        status, reason = "not_verifiable", "the modules reported no check for this requirement"
     else:
-        status, reason = "not_verifiable", "; ".join(sorted({c["reason"] for c in checks if c.get("reason")}))[:300]
-    return {"id": rid, "text": text, "status": status, "reason": reason, "checks": checks}
+        status, reason = "not_verifiable", "no quantity STAR computes is stated in this requirement"
+    return {"id": rid, "text": plan["text"], "status": status, "reason": reason, "rules": plan["rules"], "checks": checks,
+            "evidence_kpis": evidence_kpis}
+
+
+# --------------------------------------------------------------------------- per-run map requirement x check
+def map_rows(plans: list[dict[str, Any]], kpis: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """requirement_kpi_map rows: req_id, rule, kpi_id, module, operator, threshold, threshold_source, unit, group.
+    With the KPIs of a run the thresholds that come from another KPI are resolved and the module checks are listed."""
+    out = []
+    for pl in plans:
+        for r in pl["rows"]:
+            if r["kind"] == "module" and kpis is not None:
+                continue
+            if kpis is not None and r["kind"] == "check":
+                r = _resolve(r, kpis)
+            out.append({"req_id": pl["id"], "rule": r["rule"], "kpi_id": r["kpi_id"] or f"{r['module']}.<module checks naming the requirement>",
+                        "module": r["module"], "operator": r["operator"], "threshold": r["threshold"],
+                        "threshold_source": r["threshold_source"], "unit": r["unit"], "group": r["group"]})
+        if kpis is not None:
+            for r in _module_checks(pl["id"], "", kpis, set()):
+                out.append({"req_id": pl["id"], "rule": r["rule"], "kpi_id": r["kpi_id"], "module": r["module"], "operator": r["operator"],
+                            "threshold": r["threshold"], "threshold_source": r["threshold_source"], "unit": r["unit"], "group": "module"})
+    return out
+
+
+def build_map(requirements: list[dict[str, Any]], kpis: dict[str, dict[str, Any]] | None = None, rules: dict[str, Any] | None = None) -> dict[str, Any]:
+    rules = rules or load_rules()
+    plans = [plan_requirement(r, rules) for r in requirements or [] if isinstance(r, dict) and r.get("text")]
+    return _clean({"schema_version": 1, "generated_at": datetime.now().isoformat(timespec="seconds"), "rules_file": RULES_PATH.name,
+                   "stage": "planning" if kpis is None else "run", "read_only": True,
+                   "rows": map_rows(plans, kpis),
+                   "requirements": [{"id": p["id"], "parameters": p["parameters"], "rules": p["rules"]} for p in plans],
+                   "no_kpi": [p["id"] for p in plans if not any(r["kind"] != "module" or True for r in p["rows"]) and not p["status_rules"]]})
+
+
+def write_map(path: str | Path, requirements: list[dict[str, Any]], kpis: dict[str, dict[str, Any]] | None = None) -> Path:
+    """Write requirement_kpi_map.json (the planning version when no run KPIs are given)."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(build_map(requirements, kpis), indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+    return path
+
+
+# --------------------------------------------------------------------------- KPI table, fallbacks, build
+def kpi_table(kpis: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    rows = []
+    for kid, e in kpis.items():
+        if e.get("value") is None or ".check_" in kid:
+            continue
+        v = e["value"]
+        rows.append({"id": kid, "module": e.get("module_id"), "name": e.get("name"), "value": round(v, 4) if isinstance(v, float) else v,
+                     "unit": _unit(e.get("unit")) if e.get("unit") not in ("C", "U", "bool", "-") else e.get("unit"),
+                     "category": e.get("category"), "native_id": e.get("native_id"), "context": e.get("context") or {},
+                     "node": e.get("node")})
+    return rows
+
+
+def module_assessments(kpis: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    """The modules' own verdicts. Those with a threshold the module chose (auto, module_default) are informative only."""
+    out = []
+    for kid, e in kpis.items():
+        a = e.get("assessment")
+        if not a:
+            continue
+        out.append({"kpi_id": kid, "module": e.get("module_id"), "name": e.get("name"), "value": e.get("value"), "unit": e.get("unit"),
+                    "meets": a.get("meets"), "operator": a.get("operator"), "threshold": a.get("threshold"),
+                    "threshold_source": a.get("threshold_source"), "requirement_ids": a.get("requirement_ids") or [], "note": a.get("note") or "",
+                    "informative": a.get("threshold_source") in ("auto", "module_default")})
+    return out
 
 
 def _clean(obj: Any) -> Any:
@@ -358,36 +550,54 @@ def critical_fallbacks(run_path: Path) -> dict[str, list[str]]:
 
 
 def apply_fallbacks(rows: list[dict[str, Any]], fallbacks: dict[str, list[str]]) -> None:
-    """A 'met' verdict computed from a module that used a critical fallback is only partially verified."""
+    """A 'met' or 'evidence_provided' verdict computed from a module that used a critical fallback is only partially verified."""
     for r in rows:
-        if r["status"] != "met":
+        if r["status"] not in ("met", "evidence_provided"):
             continue
-        used = sorted({c["module"] for c in r["checks"] if c["module"] in fallbacks})
+        used = sorted({c["module"] for c in r["checks"] if c["module"] in fallbacks} |
+                      {e["module"] for e in r.get("evidence_kpis", []) if e["module"] in fallbacks})
         if used:
             r["status"] = "partially_verified"
             r["reason"] = "; ".join(f"{m} used a critical fallback ({', '.join(fallbacks[m][:3])})" for m in used)
 
 
-def build(run_path: str | Path, requirements: list[dict[str, Any]], run_mode: str = "test", workflow: list | None = None) -> dict[str, Any]:
+def build(run_path: str | Path, requirements: list[dict[str, Any]], run_mode: str = "test", workflow: list | None = None,
+          write: bool = True, out_dir: str | Path | None = None) -> dict[str, Any]:
+    """Compliance of a run: compliance.json (+ _data.js), requirement_kpi_map.json, traceability.json / .csv in <run>/compliance
+    (or out_dir, to recompute a finished run without touching it)."""
     run_path = Path(run_path)
-    kpis = collect_kpis(run_path / "modules_output")
-    rows = [check_requirement(r, kpis) for r in requirements or [] if isinstance(r, dict) and r.get("text")]
-    apply_fallbacks(rows, critical_fallbacks(run_path))
-    counts = {s: sum(1 for r in rows if r["status"] == s) for s in ("met", "not_met", "partially_verified", "applied", "not_verifiable")}
+    out = Path(out_dir) if out_dir else run_path / "compliance"
+    rules = load_rules()
+    kpis = run_kpis(run_path)
+    reqs = [r for r in requirements or [] if isinstance(r, dict) and r.get("text")]
+    plans = [plan_requirement(r, rules) for r in reqs]
+    rows = [check_requirement(r, kpis, rules, pl) for r, pl in zip(reqs, plans)]
+    fallbacks = critical_fallbacks(run_path)
+    apply_fallbacks(rows, fallbacks)
+    counts = {s: sum(1 for r in rows if r["status"] == s) for s in STATUSES}
+    modules_run = sorted({e.get("module_id") for e in kpis.values() if e.get("module_id")})
     data = {
         "generated_at": datetime.now().isoformat(),
         "run_mode": run_mode,
         "note": ("Test mode: every module ran with its fastest settings, the values are not meaningful." if run_mode != "full" else ""),
-        "modules_run": sorted(kpis),
+        "modules_run": modules_run,
         "workflow": [s.get("module_id") for s in (workflow or [])],
         "counts": counts,
         "requirements": rows,
+        "module_assessments": module_assessments(kpis),
         "kpis": kpi_table(kpis),
-        "sources": {m: v.get("_source") for m, v in kpis.items()},
+        "sources": {m: next((e.get("_file") for e in kpis.values() if e.get("module_id") == m), None) for m in modules_run},
     }
+    try:
+        from . import star_traceability as T
+    except ImportError:
+        import star_traceability as T
+    trace = T.build(run_path, rows, build_map(reqs, kpis, rules), kpis, write=write, out_dir=out)
+    data["traceability"] = {"gaps": trace["gaps"], "file": "compliance/traceability.json"}
     data = _clean(data)
-    out = run_path / "compliance"
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "compliance.json").write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
-    (out / "compliance_data.js").write_text("window.starComplianceData = " + json.dumps(data, ensure_ascii=False, default=str) + ";\n", encoding="utf-8")
+    if write:
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "compliance.json").write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+        (out / "compliance_data.js").write_text("window.starComplianceData = " + json.dumps(data, ensure_ascii=False, default=str) + ";\n", encoding="utf-8")
+        (out / "requirement_kpi_map.json").write_text(json.dumps(build_map(reqs, kpis, rules), indent=2, ensure_ascii=False, default=str), encoding="utf-8")
     return data

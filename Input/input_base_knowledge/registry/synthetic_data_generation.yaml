@@ -284,6 +284,12 @@ consumes:
   required: true
   used_for: satellite and pass to render
 produces:
+- product: kpis_end007
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-007 (star_kpis format, one file per run)
 - product: synthetic_images
   path: output_synthetic_data_generation/*.png
   format: image

@@ -92,10 +92,13 @@ class TestComplianceFallback(unittest.TestCase):
         from runners import star_compliance as sc
         rows = [{"id": "R1", "status": "met", "reason": "", "checks": [{"module": "END-004"}]},
                 {"id": "R2", "status": "met", "reason": "", "checks": [{"module": "END-001"}]},
-                {"id": "R3", "status": "not_met", "reason": "", "checks": [{"module": "END-004"}]}]
+                {"id": "R3", "status": "not_met", "reason": "", "checks": [{"module": "END-004"}]},
+                {"id": "R4", "status": "evidence_provided", "reason": "", "checks": [], "evidence_kpis": [{"module": "END-004", "kpi_id": "END-004.worst_dod_pct"}]},
+                {"id": "R5", "status": "evidence_provided", "reason": "", "checks": [], "evidence_kpis": [{"module": "END-001", "kpi_id": "END-001.n_satellites"}]}]
         sc.apply_fallbacks(rows, {"END-004": ["duty_cycles"]})
-        self.assertEqual([r["status"] for r in rows], ["partially_verified", "met", "not_met"])
+        self.assertEqual([r["status"] for r in rows], ["partially_verified", "met", "not_met", "partially_verified", "evidence_provided"])
         self.assertIn("END-004 used a critical fallback (duty_cycles)", rows[0]["reason"])
+        self.assertIn("END-004 used a critical fallback (duty_cycles)", rows[3]["reason"])
 
 
 if __name__ == "__main__":

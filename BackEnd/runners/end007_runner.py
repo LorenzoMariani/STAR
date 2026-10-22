@@ -41,6 +41,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
+from runners.star_kpi_adapters import write_module_kpis
 from runners.star_runner_io import (
     describe_pass,
     ensure_module_output_layout,
@@ -866,6 +867,7 @@ def run_end007(
         raise RuntimeError(message)
 
     _emit(log_callback, "EXECUTION", f"END-007 Synthetic Data Generation completed successfully. Execution time: {_format_duration(duration)} ({duration:.2f} s).")
+    write_module_kpis("END-007", output_path, run_id, log=lambda lvl, msg: _emit(log_callback, lvl, msg))
 
     return {
         "status": "completed",

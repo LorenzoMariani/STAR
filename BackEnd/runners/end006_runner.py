@@ -21,8 +21,10 @@ from typing import Any, Callable
 
 try:
     from .star_runner_io import upstream_product
+    from .star_kpi_adapters import write_module_kpis
 except ImportError:          # loaded outside the runners package
     from star_runner_io import upstream_product
+    from star_kpi_adapters import write_module_kpis
 
 MODULE_ID = "END-006"
 OUTPUT_DIRNAME = "output_component_selector"
@@ -372,4 +374,6 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
         embedded = "<script>window.componentSelectorData = " + dumps(data).replace("</", "<\\/") + ";</script>\n"
         write(results_dir / f"component_selector_report{sfx}.html", page.replace("<script>\n(() => {", embedded + "<script>\n(() => {", 1))
     log("EXECUTION", f"END-006 {status}: {evidence}")
+    if status == "completed":      # kpis_initial.json for the initial design, kpis.json for the final one
+        write_module_kpis(MODULE_ID, module_root, run_id or "", phase, log=log)
     return {"status": status, "generated_artifacts": generated, "evidence": evidence}

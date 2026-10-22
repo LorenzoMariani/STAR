@@ -97,12 +97,22 @@ consumes:
   used_for: orbit of the satellite END-003 selected
 - product: attitude_summary
   required: false
-  used_for: face illumination for the solar generation (eclipse fraction only when END-001 eclipse_summary is missing)
+  used_for: face illumination for the solar generation
   fallback: template generation
+- product: kpis_end003
+  required: false
+  used_for: eclipse fraction (END-003.eclipse_fraction_pct) when END-001 eclipse_summary is missing
+  fallback: template eclipse
 - product: spacecraft_definition
   required: true
   used_for: loads, battery and solar panels of the satellite
 produces:
+- product: kpis_end004
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-004 (star_kpis format, one file per run)
 - product: power_budget_summary
   path: output_power_budget/power_budget_summary.json
   format: json
@@ -147,7 +157,7 @@ interface_notes: >
   day: payload = orbits with acquisitions, contact mode = orbits with a contact and no acquisition, idle = the rest. Beacon
   and heaters keep the template duty.
   Since 2026-10-17: orbit period from the END-001 altitude of the satellite END-003 selected and eclipse from the END-003 shadow
-  fraction (KPI-14), orbits per day from the period (the template values are only a fallback); loads, battery and solar generation of
+  fraction (kpis.json END-003.eclipse_fraction_pct), orbits per day from the period (the template values are only a fallback); loads, battery and solar generation of
   the END-006 initial design (spacecraft_definition.json): the template entries of the subsystems it selected with their declared
   peak powers, generation = panel peak power x mean cosine of the Sun incidence on the panel faces in the END-003 attitude
   (attitude_summary.json "illumination") x sunlight time. Inputs the user gave or edited in STAR win; registry first guesses do not.

@@ -30,6 +30,7 @@ from runners.star_runner_io import (
 )
 from runners.star_provenance import from_runtime_decisions
 from runners.star_status import evidence as star_evidence, finalize
+from runners.star_kpi_adapters import write_module_kpis
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END003_DIR = STAR_ROOT / "END003-AttitudePropagation"
@@ -417,6 +418,7 @@ def run_end003(
         return {"status": "stopped", "evidence": "END-003 stopped by user request.", "generated_artifacts": artifacts, "return_code": rc}
     if status != "completed":
         return {"status": "failed", "evidence": f"END-003 MATLAB attitude propagation failed. See {stdout_path}.", "generated_artifacts": artifacts, "return_code": rc}
+    write_module_kpis("END-003", output_path, run_id, log=lambda lvl, msg: _emit(log_callback, lvl, msg))
     prov = from_runtime_decisions("END-003", config, "end003_inputs")
     final_status, severity = finalize(status, prov)
     n_ecl = len(ephemerides)

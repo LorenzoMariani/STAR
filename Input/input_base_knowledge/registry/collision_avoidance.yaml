@@ -111,6 +111,12 @@ consumes:
   required: true
   used_for: mass, drag area and Cd of the satellite
 produces:
+- product: kpis_end016
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-016 (star_kpis format, one file per run)
 - product: space_safety_summary
   path: output_collision_avoidance/space_safety_summary.json
   format: json

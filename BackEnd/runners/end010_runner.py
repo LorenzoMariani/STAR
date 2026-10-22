@@ -22,6 +22,7 @@ from runners.star_runner_io import (
 )
 from runners.star_provenance import Provenance
 from runners.star_status import evidence as star_evidence, finalize
+from runners.star_kpi_adapters import write_module_kpis
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 END010_DIR = STAR_ROOT / "END010-ReflectanceDetermination"
@@ -203,6 +204,7 @@ def run_end010(
     prov = Provenance("END-010")
     prov.record("attitude_propagation_csv", str(end003_csv) if end003_csv else None, "END-003 output_attitude_propagation.csv" if end003_csv
                 else "not found: no END-003 attitude upstream", kind="input" if end003_csv else "fallback")
+    write_module_kpis("END-010", output_path, run_id, log=lambda lvl, msg: _emit(log_callback, lvl, msg))
     final_status, severity = finalize(status, prov)
     facts = f"END-010 reflectance determination from the END-003 attitude ({Path(str(end003_csv)).name if end003_csv else 'none'}); {len(artifacts)} file(s) written"
     return {"status": final_status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(final_status),

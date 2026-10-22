@@ -3465,6 +3465,7 @@ Return only valid JSON:
             rag_sources=rag_sources,
         )
 
+        self.save_requirement_kpi_map()
         planned_module_names = {step.get("module") for step in workflow}
         for module in self.modules:
             module["status"] = "Ready" if module.get("module_name") in planned_module_names else "Idle"
@@ -4220,7 +4221,20 @@ Return only valid JSON:
         }
         output_path.write_text(json.dumps(payload, indent=4), encoding="utf-8")
         (self.current_run_path / "intermediate" / "approved_planning_package.json").write_text(json.dumps(payload, indent=4), encoding="utf-8")
+        self.save_requirement_kpi_map()
         return output_path
+
+    def save_requirement_kpi_map(self) -> Path | None:
+        """planning/requirement_kpi_map.json (phase E): the requirement -> KPI rows the reviewed requirements give, read-only.
+        The run's own map (thresholds from other KPIs resolved, module checks listed) is written by the compliance step."""
+        if not self.current_run_path or not self.requirements:
+            return None
+        try:
+            from runners import star_compliance
+            return star_compliance.write_map(self.current_run_path / "planning" / "requirement_kpi_map.json", self.requirements)
+        except Exception as exc:
+            self.add_log("WARNING", f"requirement_kpi_map.json not written: {exc}")
+            return None
 
     # ------------------------------
     # Execution with module input files and runner hook
@@ -4640,9 +4654,9 @@ Return only valid JSON:
             from runners import star_compliance
             compliance = star_compliance.build(self.current_run_path, self.requirements, self.run_mode, self.workflow_steps)
             c = compliance["counts"]
-            self.add_log("SYSTEM", f"Requirement compliance: {c['met']} met, {c['not_met']} not met, {c['partially_verified']} partially "
-                                   f"verified, {c['applied']} applied, {c['not_verifiable']} not verifiable (compliance/compliance.json, "
-                                   f"results tab Requirements & KPIs).")
+            self.add_log("SYSTEM", f"Requirement compliance: {c['met']} met, {c['not_met']} not met, {c['evidence_provided']} evidence provided, "
+                                   f"{c['partially_verified']} partially verified, {c['applied']} applied, {c['not_verifiable']} not verifiable "
+                                   f"(compliance/compliance.json, results tab Requirements & KPIs).")
         except Exception as exc:
             self.add_log("WARNING", f"Requirement compliance not computed: {exc}")
 

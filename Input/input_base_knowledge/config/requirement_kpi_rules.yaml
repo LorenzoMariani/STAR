@@ -1,0 +1,279 @@
+# STAR requirement -> KPI rules (phase E, 2026-10-22). Read-only table: compliance and the planner build the per-run
+# map compliance/requirement_kpi_map.json from it; nobody edits the map.
+#
+# Inputs of a requirement: its text, p = star_text_rules.mission_parameters([(id, text)]) (the parameters of THIS
+# requirement), and the KPIs of the run (star_kpis.load_run). KPI ids are the global ids of star_kpis.CATALOGUE.
+#
+# A rule fires when all its conditions hold:
+#   param: key            the parameter is in p          param_any: [k, ...]  one of them is in p
+#   unless_param: key     the parameter is not in p      where: {field: value}  p[param].field == value
+#   unless_equal_param: k p[param] != p[k]               where_not: {field: value}
+#   match: [[w, ...], ...]         every group has one word / phrase in the text (star_text_rules.has_any)
+#   unless_match: [[w, ...], ...]  skipped when every group has one
+#   evidence: true        the text is an evidence statement (one of evidence_phrases)
+#   unless_evidence: true skipped for evidence statements
+# What it gives:
+#   checks: [check, ...]           every check must be met                         (map group "all")
+#   any_of: [[check, ...], ...]    met when one branch has all its checks met      (map group "any_of[i]")
+#   kpis: [kpi_id, ...]            evidence rule: the KPIs that document it        (map group "evidence")
+#   module_checks: END-xxx         the requirement depends on that module's own checks: its KPIs whose assessment
+#                                  names the requirement (threshold_source requirement or component); one
+#                                  not_verifiable check when the module did not run (map group "module").
+#                                  Such module KPIs are added to every requirement they name, rule or not.
+#   status: applied | not_verifiable, reason: "..."   no KPI, a fixed verdict
+#   note_not_met: "..."            added to the evidence of a failed check
+# A check: {kpi, op, threshold, unit, label}. op: <= >= == in. threshold:
+#   $param, $param.<field>, $param[<i>]            the value from the requirement text
+#   {param_range: $param, tolerance: t, default: [lo, hi], widen_if_point: w}
+#       for op "in": a number v -> [v - t, v + t]; a list -> [min, max] of its non-null items, a null end taken from
+#       default; equal ends widened by +-w
+#   {kpi: <id>}           the value of another KPI ("{param}" in the id = the parameter as an integer)
+#   {kpi_limit: <id>}     the limit the module used for that KPI (its assessment.threshold), with its threshold_source;
+#                         used when the requirement delegates the limit ("within its operational limit")
+#   a constant (number, true / false, text)
+# Values: "inf" is infinite; a text bound such as "> 200" is compared as in today's star_compliance._check.
+#
+# Requirement status (star_compliance, step E3):
+#   1. checks = rule checks + module checks (the same kpi / op / threshold kept once, the rule's first);
+#   2. not_met         if a check is not met (an any_of counts as not met only when no branch is met); the reason is
+#                      the evidence of the failed check(s): value, context (case, satellite), limit and its source;
+#   3. with checks:    met if all are met and every evidence KPI exists; partially_verified if some are met and some
+#                      cannot be verified; not_verifiable if none can;
+#   4. only evidence:  evidence_provided if every evidence KPI exists (never met); partially_verified if some exist;
+#                      not_verifiable if none (the module did not run);
+#   5. only status rules: applied if one says applied (the not_verifiable reasons are appended), else not_verifiable;
+#   6. nothing fired:  not_verifiable, "no quantity STAR computes is stated in this requirement";
+#   7. a module that completed with a critical fallback turns met / evidence_provided into partially_verified.
+#   Module assessments with threshold_source auto / module_default are listed as module_assessments, never a check.
+
+schema_version: 1
+
+# "shall provide evidence / be assessed / report": the requirement asks STAR for an analysis, not for a threshold
+evidence_phrases: [shall be assessed, shall be provided, shall provide evidence, evidence of, shall be computed, shall be simulated,
+  shall be estimated, shall be analysed, shall be analyzed, shall be verified, shall be evaluated, shall provide, shall report,
+  shall be reported, shall show, shall be shown, shall identify, shall generate, shall be generated,
+  dovra essere fornito, dovra essere fornita, dovranno essere forniti, dovranno essere fornite, dovra essere valutato,
+  dovra essere valutata, dovranno essere valutati, dovranno essere valutate, dovra essere calcolato, dovra essere calcolata,
+  dovranno essere calcolati, dovranno essere calcolate, dovra essere simulato, dovra essere simulata, dovranno essere simulati,
+  dovranno essere simulate, dovra essere stimato, dovra essere stimata, dovranno essere stimati, dovranno essere stimate,
+  dovra essere analizzato, dovra essere analizzata, dovranno essere analizzati, dovranno essere analizzate, dovra essere verificato,
+  dovra essere verificata, dovranno essere verificati, dovranno essere verificate, dovra fornire, dovranno fornire, dovra riportare,
+  dovranno riportare, dovra mostrare, dovranno mostrare, dovra identificare, dovra generare, dovranno generare, dovra essere generato,
+  dovra essere generata, dovranno essere generati, dovranno essere generate]
+
+datasheet_words: &datasheet [datasheet, datasheets, commercially available, off-the-shelf, off the shelf, commerciali, disponibili in commercio]
+
+rules:
+# ---------------------------------------------------------------- END-001 constellation and orbit
+- id: R-REVISIT-MAX
+  param: revisit_max_h
+  checks: [{kpi: END-001.max_revisit_h, op: "<=", threshold: $param, unit: h, label: Maximum revisit time}]
+- id: R-REVISIT-MEAN
+  param: revisit_mean_h
+  checks: [{kpi: END-001.mean_revisit_h, op: "<=", threshold: $param, unit: h, label: Mean revisit time}]
+- id: R-REVISIT-P90
+  param: revisit_p90_h
+  checks: [{kpi: END-001.p90_revisit_h, op: "<=", threshold: $param, unit: h, label: 90th percentile revisit time}]
+- id: R-LATENCY
+  param: latency_h
+  checks: [{kpi: END-001.max_latency_h, op: "<=", threshold: $param, unit: h, label: Maximum data latency}]
+- id: R-SATS-MAX
+  param: sats_max
+  checks: [{kpi: END-001.n_satellites, op: "<=", threshold: $param, unit: "-", label: Number of satellites}]
+- id: R-SATS-MIN                       # an exact number ("20 satellites") sets min = max: the <= check is enough
+  param: sats_min
+  unless_equal_param: sats_max
+  checks: [{kpi: END-001.n_satellites, op: ">=", threshold: $param, unit: "-", label: Number of satellites}]
+- id: R-SINGLE
+  param: single
+  checks: [{kpi: END-001.n_satellites, op: "==", threshold: 1, unit: "-", label: Number of satellites}]
+- id: R-PLANES
+  param: planes
+  checks: [{kpi: END-001.n_planes, op: "==", threshold: $param, unit: "-", label: Number of orbital planes}]
+- id: R-ALTITUDE                       # a single altitude ("at 600 km") is checked within +-25 km
+  param: alt
+  checks: [{kpi: END-001.altitude_km, op: in, threshold: {param_range: $param, default: [0, 1.0e9], widen_if_point: 25}, unit: km, label: Altitude}]
+- id: R-INCLINATION
+  param: incl
+  checks: [{kpi: END-001.inclination_deg, op: in, threshold: {param_range: $param, tolerance: 0.5}, unit: deg, label: Inclination}]
+- id: R-ORBIT-FAMILY                   # SSORGT or "RGT (generally inclined)", the values END-001 writes
+  param: orbit
+  checks: [{kpi: END-001.orbit_type, op: "==", threshold: $param, unit: "-", label: Orbit family}]
+- id: R-OBJECTIVE
+  match: [[minimise the revisit, minimize the revisit, maximise the coverage, maximize the coverage, minimizzare il tempo di rivisita,
+           minimizzare la rivisita, massimizzare la copertura]]
+  status: applied
+  reason: an objective END-001 optimises (revisit, coverage)
+- id: R-PROPAGATION                    # END-001 propagates with J2 over its own steady-state window; drag only in END-016
+  match: [[propagate the orbits, propagating the orbits, propagation time, orbit propagation, propagare le orbite, propagazione],
+          [j2, drag, oblateness, days, giorni, resistenza atmosferica]]
+  status: not_verifiable
+  reason: END-001 propagates the orbits with J2 only over its own steady-state window (one repeat cycle); the atmospheric drag is modelled only by END-016 for the orbital lifetime
+
+# ---------------------------------------------------------------- END-003 attitude and reference passes
+- id: R-POINTING                       # beside END-006's own check of the ADCS vendor accuracy (a module check naming the requirement)
+  param: pointing_deg
+  checks: [{kpi: END-003.max_pointing_error_deg, op: "<=", threshold: $param, unit: deg, label: Max pointing error during the imaging pass (END-003 simulation)}]
+- id: R-DAYLIGHT-PASS
+  match: [[daylight, in daylight, sun above the horizon, di giorno, diurno, diurna, sole sopra l'orizzonte],
+          [image, images, imaging, acquire, immagine, immagini, acquisire]]
+  unless_evidence: true                # "assessed during the daylight reference imaging pass" names the pass, it does not ask for it
+  checks: [{kpi: END-003.imaging_pass_found, op: "==", threshold: true, unit: bool, label: Daylight imaging pass found}]
+- id: R-NIGHT-PASS
+  match: [[at night, night pass, night conditions, light-curve pass, light curve pass, di notte, notturno, notturna],
+          [cross the sky, visible, light curve, observed, observable, observation, illuminated, visibile, curva di luce, illuminato]]
+  unless_evidence: true
+  checks: [{kpi: END-003.night_pass_found, op: "==", threshold: true, unit: bool, label: Night pass visible from the observatory found}]
+
+# ---------------------------------------------------------------- END-004 power
+- id: R-DOD
+  param: dod_max_pct
+  checks: [{kpi: END-004.worst_dod_pct, op: "<=", threshold: $param, unit: "%", label: Depth of discharge per orbit (worst case, longest eclipse over the mission life)}]
+- id: R-ENERGY-BALANCE                 # the worst case (longest eclipse, reduced generation) bounds the nominal one
+  param: energy_balance_positive
+  checks: [{kpi: END-004.worst_daily_balance_Wh, op: ">=", threshold: 0, unit: Wh, label: Daily energy balance (worst case)}]
+- id: R-ENERGY-BALANCE-TEXT            # "a non-negative daily energy balance" (v2, v3): not a star_text_rules parameter
+  unless_param: energy_balance_positive
+  match: [[non-negative daily energy balance, non-negative energy balance, nonnegative energy balance, bilancio energetico non negativo]]
+  checks: [{kpi: END-004.worst_daily_balance_Wh, op: ">=", threshold: 0, unit: Wh, label: Daily energy balance (worst case)}]
+
+# ---------------------------------------------------------------- END-006 platform (its own checks: module_checks)
+- id: R-MASS
+  param: mass
+  checks: [{kpi: END-006.mass_kg, op: "<=", threshold: "$param[0]", unit: kg, label: Satellite mass}]
+- id: R-CLASS                          # END-006 picks the smallest class that meets the performance; the stated one is reported
+  param: class_u
+  unless_match: [*datasheet]           # "components of each 6U CubeSat ... with datasheets": the 6U names the platform
+  checks: [{kpi: END-006.class_u, op: in, threshold: {param_range: $param}, unit: U, label: CubeSat class}]
+  note_not_met: END-006 chooses the smallest class whose components meet the performance requirements (stated class only reported)
+- id: R-CLASS-FIT                      # "... and together they shall fit within the mass and volume of the 6U class"
+  param: class_u
+  match: [[fit within the mass and volume, fit within the volume, fit within the mass, rientrare nella massa e nel volume,
+           rientrare nel volume]]
+  checks: [{kpi: END-006.class_u, op: in, threshold: {param_range: $param}, unit: U, label: CubeSat class}]
+  note_not_met: END-006 chooses the smallest class whose components meet the performance requirements (stated class only reported)
+- id: R-FIT
+  match: [[fit within the mass and volume, fit within the volume, fit within the mass, rientrare nella massa e nel volume,
+           rientrare nel volume]]
+  checks:
+  - {kpi: END-006.volume_used_pct, op: "<=", threshold: 100, unit: "%", label: Volume used of the class envelope}
+  - {kpi: END-006.mass_kg, op: "<=", threshold: {kpi: END-006.mass_limit_kg}, unit: kg, label: Satellite mass within the class limit}
+- id: R-CATALOGUE
+  match: [*datasheet]
+  checks: [{kpi: END-006.components_from_catalogue, op: "==", threshold: true, unit: bool, label: Components selected from the vendor-datasheet catalogue}]
+- id: R-PAYLOAD-MODULE                 # swath, GSD: only END-006 checks them (one check per payload property)
+  param_any: [swath, gsd]
+  module_checks: END-006
+- id: R-SENSOR-MODULE                  # the sensor type, when the sentence is about the payload ("SAR constellation" is not)
+  param: sensor
+  match: [[payload shall, payload is, shall carry, carry a, carries a, equipped with, camera, imager, optical sensor, sensor shall,
+           payload sara, dovra trasportare, equipaggiato con, fotocamera]]
+  module_checks: END-006
+- id: R-RADIO-BANDS                    # "send them to the ground through UHF and S-band links": END-006 radio / antenna checks
+  match: [[uhf, s-band, s band, x-band, x band, banda s, banda x], [link, links, radio, radios, collegamento, collegamenti]]
+  module_checks: END-006
+
+# ---------------------------------------------------------------- END-010 brightness
+- id: R-MAGNITUDE
+  param: magnitude_min
+  checks: [{kpi: END-010.peak_magnitude, op: ">=", threshold: $param, unit: mag, label: Peak apparent magnitude (fainter = larger)}]
+- id: R-LUMINOUS-IMPACT                # "a low luminous impact on ground-based astronomy" with no magnitude stated
+  unless_param: magnitude_min
+  unless_evidence: true
+  match: [[luminous impact, low brightness, light pollution impact, light-pollution impact, impatto luminoso]]
+  checks: [{kpi: END-010.peak_magnitude, op: ">=", threshold: {kpi: END-010.limiting_magnitude}, unit: mag, label: Peak apparent magnitude fainter than the site limiting magnitude}]
+
+# ---------------------------------------------------------------- END-016 space safety and end of life
+- id: R-SEPARATION
+  param: separation_check
+  checks: [{kpi: END-016.n_events_below_screening, op: "==", threshold: 0, unit: "-", label: Close approaches below the screening distance}]
+- id: R-REENTRY                        # passive decay, or a disposal manoeuvre the selected propulsion can give
+  param: reentry_years
+  any_of:
+  - [{kpi: END-016.passive_lifetime_years, op: "<=", threshold: $param, unit: years, label: Passive orbital lifetime}]
+  - [{kpi: END-006.dv_capacity_m_s, op: ">=", threshold: {kpi: "END-016.disposal_dv_{param}y_m_s"}, unit: m/s, label: Disposal delta-v of the propulsion}]
+  note_not_met: the orbit decays too slowly and the propulsion cannot give the disposal delta-v
+- id: R-LIFETIME                       # the orbit must last the mission (not asked when a re-entry deadline is the subject)
+  param: lifetime_years
+  unless_param: reentry_years
+  checks: [{kpi: END-016.passive_lifetime_years, op: ">=", threshold: $param, unit: years, label: Passive orbital lifetime vs mission lifetime}]
+
+# ---------------------------------------------------------------- END-019 thermal
+- id: R-TEMP-BATTERY
+  param: temp_range_c
+  where: {item: battery}
+  checks:
+  - {kpi: END-019.battery_max_C, op: "<=", threshold: $param.max, unit: C, label: Battery max temperature (window and hot case)}
+  - {kpi: END-019.battery_min_C, op: ">=", threshold: $param.min, unit: C, label: Battery min temperature (window and cold case)}
+- id: R-TEMP-OTHER
+  param: temp_range_c
+  where_not: {item: battery}
+  status: not_verifiable
+  reason: END-019 models the faces, solar panels, central body, battery and SAR payload nodes, not this item
+- id: R-BATTERY-LIMIT                  # "the battery temperature shall stay within its operational limit"
+  match: [[battery temperature, battery temperatures, temperatura della batteria, temperature della batteria], [limit, limits, limite, limiti]]
+  unless_param: temp_range_c
+  checks:
+  - {kpi: END-019.battery_min_C, op: ">=", threshold: {kpi_limit: END-019.battery_min_C}, unit: C, label: Battery min temperature vs operating minimum}
+  - {kpi: END-019.battery_max_C, op: "<=", threshold: {kpi_limit: END-019.battery_max_C}, unit: C, label: Battery max temperature vs operating maximum}
+
+# ---------------------------------------------------------------- inputs the modules apply
+- id: R-APPLIED-START
+  param: start
+  status: applied
+  reason: used as an input of the modules (start epoch of the reference window)
+- id: R-APPLIED-DRAG                   # since 2026-10-17 END-001 / END-016 take mass, area and Cd from END-006 when it runs
+  param_any: [adrag, cd]
+  status: applied
+  reason: used by END-001 and END-016 only when END-006 does not run; with END-006 the drag area and Cd of its design are used (END-006.drag_area_m2, END-006.drag_coefficient)
+
+# ---------------------------------------------------------------- evidence: "shall provide evidence of / be assessed / report"
+- id: E-CONSTELLATION
+  evidence: true
+  match: [[constellation architecture, optimised constellation, optimized constellation, revisit, revisit-time, revisit time, coverage,
+           orbital architecture, architettura della costellazione, costellazione ottimizzata, rivisita, copertura]]
+  kpis: [END-001.n_satellites, END-001.n_planes, END-001.altitude_km, END-001.inclination_deg, END-001.orbit_type,
+         END-001.max_revisit_h, END-001.mean_revisit_h, END-001.aoi_covered_pct]
+- id: E-ORBIT
+  evidence: true
+  match: [[propagated orbit, propagated orbits, orbit propagation, orbital parameters, satellite orbital parameters, orbite propagate,
+           parametri orbitali]]
+  kpis: [END-001.n_satellites, END-001.altitude_km, END-001.inclination_deg, END-001.orbit_type]
+- id: E-ATTITUDE
+  evidence: true
+  match: [[attitude, assetto]]
+  kpis: [END-003.attitude_mode, END-003.closed_loop_control, END-003.max_pointing_error_deg, END-003.max_body_rate_deg_s]
+- id: E-PASSES
+  evidence: true
+  match: [[reference passes, reference pass, two reference passes, the two cases, reference cases, identify the satellite and the pass,
+           start and end time, start time and end time, passaggi di riferimento]]
+  kpis: [END-003.imaging_pass_found, END-003.night_pass_found, END-003.imaging_satellite_index, END-003.imaging_pass_duration_min]
+- id: E-POWER
+  evidence: true
+  match: [[electrical power budget, power budget tables, power-budget tables, the power budget shall, power budget of, energy balance,
+           bilancio di potenza, bilancio energetico]]   # not "required by the Power Budget module"
+  kpis: [END-004.daily_balance_Wh, END-004.worst_daily_balance_Wh, END-004.worst_dod_pct, END-004.generation_per_orbit_Wh, END-004.peak_power_W]
+- id: E-PLATFORM
+  evidence: true
+  match: [[bill of materials, platform components, selected platform components, distinta base, componenti della piattaforma]]
+  kpis: [END-006.class_u, END-006.mass_kg, END-006.volume_used_pct, END-006.declared_peak_power_W, END-006.components_from_catalogue]
+- id: E-THERMAL
+  evidence: true
+  match: [[temperature, temperatures, thermal, temperatura, temperature, termico, termica]]
+  kpis: [END-019.battery_max_C, END-019.battery_min_C, END-019.central_body_max_C, END-019.solar_panel_max_C, END-019.solar_panel_min_C,
+         END-019.face_max_C, END-019.face_min_C]
+- id: E-IMAGERY
+  evidence: true
+  match: [[simulated imagery, simulated images, synthetic images, synthetic optical images, synthetic imagery, synthetic optical data,
+           synthetic data products, immagini simulate, immagini sintetiche]]
+  kpis: [END-007.imaging_pass_simulated, END-007.images_produced]
+- id: E-LIGHT
+  evidence: true
+  match: [[light curve, reflected, apparent visual magnitude, apparent magnitude, light-pollution, light pollution, brightness,
+           curva di luce, magnitudine, inquinamento luminoso, luminosita]]
+  kpis: [END-010.peak_magnitude, END-010.limiting_magnitude, END-010.mean_phase_angle_deg, END-010.mean_range_km, END-010.max_elevation_deg,
+         END-010.lc_amplitude_mag]
+- id: E-SAFETY
+  evidence: true
+  match: [[separation, disposal, close approaches, collision, collisions, re-entry, reentry, separazione, smaltimento, rientro]]
+  kpis: [END-016.min_separation_km, END-016.n_events_below_screening, END-016.passive_lifetime_years, END-016.disposal_dv_5y_m_s]

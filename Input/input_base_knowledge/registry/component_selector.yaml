@@ -79,6 +79,12 @@ always_in_workflow: true
 phases:
   initial:
     produces:
+    - product: kpis_end006_initial
+      path: kpis_initial.json
+      format: json
+      required_keys: [kpis]
+      guaranteed: true
+      description: common KPI list of the END-006 initial design (star_kpis format)
     - product: spacecraft_definition
       path: output_component_selector/spacecraft_definition.json
       format: json
@@ -120,6 +126,12 @@ phases:
       used_for: disposal delta-v for the propulsion
       fallback: no disposal delta-v
     produces:
+    - product: kpis_end006
+      path: kpis.json
+      format: json
+      required_keys: [kpis]
+      guaranteed: true
+      description: common KPI list of the END-006 final design (star_kpis format)
     - product: spacecraft_definition_final
       path: output_component_selector/spacecraft_definition_final.json
       format: json

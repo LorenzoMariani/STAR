@@ -1,10 +1,11 @@
 {
- "generated_from": "RUN_SMOKETEST_20261022_084651",
+ "generated_from": "RUN_SMOKETEST_20261022_143216",
  "files": {
   "END-001": [
    "end001_process_result.json",
    "end001_runner_invocation.json",
    "end001_runtime_input.json",
+   "kpis.json",
    "matlab_stderr.txt",
    "matlab_stdout.txt",
    "output_constellation_optimizer/constellation_optimizer_output.csv",
@@ -65,14 +66,15 @@
    "results_constellation_optimizer/11_revisit_boxplot_latband.png",
    "results_constellation_optimizer/constellation_plots_data.js",
    "results_constellation_optimizer/coverage_summary.json",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261022_084716.mat",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261022_084728.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261022_143248.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261022_143301.mat",
    "star_constellation_optimizer_runtime.m"
   ],
   "END-003": [
    "end003_process_result.json",
    "end003_runner_invocation.json",
    "end003_runtime_input.json",
+   "kpis.json",
    "matlab_stderr.txt",
    "matlab_stdout.txt",
    "output_attitude_propagation/AEM_END003_SAT11_imaging_20260521T160351.xml",
@@ -108,6 +110,7 @@
    "end004_process_result.json",
    "end004_runner_invocation.json",
    "end004_runtime_input.json",
+   "kpis.json",
    "matlab_stderr.txt",
    "matlab_stdout.txt",
    "output_power_budget/power_budget_foglio1.csv",
@@ -127,6 +130,8 @@
    "star_power_budget_runtime.m"
   ],
   "END-006": [
+   "kpis.json",
+   "kpis_initial.json",
    "output_component_selector/component_selector_bom.csv",
    "output_component_selector/component_selector_bom_initial.csv",
    "output_component_selector/component_selector_power_handoff.json",
@@ -146,6 +151,7 @@
    "end010_process_result.json",
    "end010_runner_invocation.json",
    "end010_runtime_input.json",
+   "kpis.json",
    "matlab_stderr.txt",
    "matlab_stdout.txt",
    "output_reflectance_determination/flux.csv",
@@ -217,6 +223,7 @@
    "end016_process_log.txt",
    "end016_process_result.json",
    "input_collision_avoidance.json",
+   "kpis.json",
    "output_collision_avoidance/disposal_lifetime.csv",
    "output_collision_avoidance/intra_close_approaches.csv",
    "output_collision_avoidance/intra_pair_min_distance.csv",
@@ -267,6 +274,7 @@
    "end019_process_log.txt",
    "end019_process_result.json",
    "input_termico.json",
+   "kpis.json",
    "output_components_thermal_analysis/output_thermal_SAT-01.csv",
    "output_components_thermal_analysis/output_thermal_SAT-02.csv",
    "output_components_thermal_analysis/output_thermal_SAT-03.csv",

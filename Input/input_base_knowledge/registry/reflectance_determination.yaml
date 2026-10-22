@@ -76,6 +76,12 @@ consumes:
   required: true
   used_for: class, mean projected area and orientation of the CubeSat model
 produces:
+- product: kpis_end010
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-010 (star_kpis format, one file per run)
 - product: light_curve
   path: output_reflectance_determination/flux.csv
   format: csv

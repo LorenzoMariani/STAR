@@ -44,10 +44,12 @@ try:
     from .star_runner_io import load_spacecraft_definition, upstream_product
     from .star_provenance import Provenance
     from .star_status import FALLBACK, evidence as star_evidence, finalize
+    from .star_kpi_adapters import write_module_kpis
 except ImportError:          # loaded outside the runners package
     from star_runner_io import load_spacecraft_definition, upstream_product
     from star_provenance import Provenance
     from star_status import FALLBACK, evidence as star_evidence, finalize
+    from star_kpi_adapters import write_module_kpis
 from pathlib import Path
 from typing import Any, Callable
 
@@ -404,6 +406,8 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
                    "return_code": info.get("return_code"), "evidence": message}
         (module_root / "end019_process_result.json").write_text(json.dumps(process, indent=1, ensure_ascii=False), encoding="utf-8")
         log("EXECUTION" if status == "completed" else "WARNING", f"END-019 {status}: {message}")
+        if status in ("completed", FALLBACK):
+            write_module_kpis(MODULE_ID, module_root, run_id or "", log=log)
         return {"status": status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(status, message),
                 "generated_artifacts": generated, "evidence": message}
 

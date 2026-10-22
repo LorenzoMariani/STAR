@@ -440,6 +440,12 @@ consumes:
   used_for: mass, drag area and Cd of the satellite, and its radio bands (choice of the ground stations)
   fallback: ground stations of the mission request
 produces:
+- product: kpis_end001
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-001 (star_kpis format, one file per run)
 - product: constellation_output
   path: output_constellation_optimizer/constellation_optimizer_output.csv
   format: csv

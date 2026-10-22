@@ -41,10 +41,12 @@ try:
     from .star_runner_io import load_spacecraft_definition, star_run_mode, upstream_product
     from .star_provenance import Provenance
     from .star_status import FALLBACK, evidence as star_evidence, finalize
+    from .star_kpi_adapters import write_module_kpis
 except ImportError:
     from star_runner_io import load_spacecraft_definition, star_run_mode, upstream_product
     from star_provenance import Provenance
     from star_status import FALLBACK, evidence as star_evidence, finalize
+    from star_kpi_adapters import write_module_kpis
 
 MODULE_ID = "END-016"
 OUTPUT_DIRNAME = "output_collision_avoidance"
@@ -271,6 +273,8 @@ def run_end016(input_file: str, output_dir: str, run_id: str | None = None,
             {"run_id": run_id, "status": status, "started_at": started, "completed_at": datetime.now().isoformat(),
              "return_code": info.get("return_code"), "evidence": message}, indent=1, ensure_ascii=False), encoding="utf-8")
         log("EXECUTION" if status == "completed" else "WARNING", f"END-016 {status}: {message}")
+        if status in ("completed", FALLBACK):
+            write_module_kpis(MODULE_ID, module_root, run_id or "", log=log)
         return {"status": status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(status, message),
                 "generated_artifacts": generated, "evidence": message}
 

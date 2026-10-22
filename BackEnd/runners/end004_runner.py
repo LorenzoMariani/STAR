@@ -27,6 +27,7 @@ from runners.star_runner_io import (
 )
 from runners.star_provenance import from_runtime_decisions
 from runners.star_status import evidence as star_evidence, finalize
+from runners.star_kpi_adapters import write_module_kpis
 
 STAR_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_END004_DIR = STAR_ROOT / "END004-PowerBudget"
@@ -62,7 +63,7 @@ def _satellite_eclipses(summary: dict[str, Any] | None, index: int | None) -> di
 def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, end003_runtime_json: Path | None) -> dict[str, Any] | None:
     """Period, sunlight and eclipse of the orbit of this run: the period from the semi-major axis of the satellite END-003
     selected (END-001 elements, R = 6378.137 km), the eclipse from END-001 eclipse_summary.json for that satellite (mean
-    complete eclipse over the window, phase D); the END-003 shadow fraction (KPI-14) only when END-001 did not publish it.
+    complete eclipse over the window, phase D); the END-003 shadow fraction (kpis.json END-003.eclipse_fraction_pct) only when END-001 did not publish it.
     None when the upstream products are missing (the template values are used then)."""
     orbit = None
     selected = load_selected_passes(star_payload, end003_csv)
@@ -85,13 +86,16 @@ def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, 
         out.update({"eclipse_min": round(float(eclipse), 4), "sunlight_min": round(period_min - float(eclipse), 4)})
         out["source"] += f"; eclipse {float(eclipse):.2f} min, mean over the window of SAT-{index:02d} (END-001 eclipse_summary.json)"
         return out
-    summary = upstream_product(star_payload, "attitude_summary")
-    if summary and Path(summary).exists():
-        for kpi in (load_json(Path(summary)) or {}).get("kpis", []):
-            if kpi.get("id") == "KPI-14" and isinstance(kpi.get("value"), (int, float)):
+    kpis_json = upstream_product(star_payload, "kpis_end003")
+    if not kpis_json:       # kpis.json sits in the root of the END-003 node, two levels above results_*/attitude_summary.json
+        summary = upstream_product(star_payload, "attitude_summary")
+        kpis_json = Path(summary).parents[1] / "kpis.json" if summary else None
+    if kpis_json and Path(kpis_json).exists():
+        for kpi in (load_json(Path(kpis_json)) or {}).get("kpis", []):
+            if kpi.get("id") == "END-003.eclipse_fraction_pct" and isinstance(kpi.get("value"), (int, float)):
                 eclipse = period_min * float(kpi["value"]) / 100.0
                 out.update({"eclipse_min": round(eclipse, 4), "sunlight_min": round(period_min - eclipse, 4)})
-                out["source"] += (f"; eclipse {float(kpi['value']):.1f}% of the orbit (END-003 KPI-14, "
+                out["source"] += (f"; eclipse {float(kpi['value']):.1f}% of the orbit (END-003 kpis.json END-003.eclipse_fraction_pct, "
                                   f"END-001 eclipse_summary.json not available)")
                 break
     return out
@@ -358,7 +362,7 @@ def _apply_star_inputs(runtime_data: dict[str, Any], star_payload: dict[str, Any
             runtime_data["orbit"]["sunlight_min"] = round(orbit["period_min"] - float(tmpl_orbit.get("eclipse_min", 35.0)), 4)
         report["orbit"] = {"value": runtime_data["orbit"], "source": orbit["source"]}
         if "eclipse_min" not in orbit:
-            report["orbit"]["source"] += f"; eclipse template {tmpl_orbit.get('eclipse_min', 35.0)} min (END-003 shadow fraction KPI-14 not available)"
+            report["orbit"]["source"] += f"; eclipse template {tmpl_orbit.get('eclipse_min', 35.0)} min (END-003 shadow fraction END-003.eclipse_fraction_pct not available)"
     else:
         report["orbit"] = {"value": tmpl_orbit, "source": "template (END-003/END-001 products not found)"}
     _apply_satellite(runtime_data, star_payload, load_spacecraft_definition(star_payload), report)
@@ -897,6 +901,8 @@ def run_end004(
     })
 
     _emit(log_callback, "EXECUTION", f"END-004 finished with status={status}. Execution time: {_duration(duration)} ({duration:.2f} s).")
+    if status == "completed":
+        write_module_kpis("END-004", output_path, run_id, log=lambda lvl, msg: _emit(log_callback, lvl, msg))
     prov = from_runtime_decisions("END-004", runtime_data, "end004_inputs")
     final_status, severity = finalize(status, prov)
     orbit_src = str(decisions["orbit"]["source"]).split(";")[0]

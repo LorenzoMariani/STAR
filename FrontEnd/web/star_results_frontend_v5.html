@@ -5761,6 +5761,40 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
 .st.partially_verified{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
 .st.applied{background:color-mix(in srgb,var(--accent-2) 18%,transparent);color:var(--accent-2)}
 .st.not_verifiable{background:var(--panel-muted);color:var(--muted)}
+.st.evidence_provided{background:color-mix(in srgb,#6aa8ff 20%,transparent);color:#6aa8ff}
+.checks li.bad .ev{color:var(--danger)}
+.checks li .ev{color:var(--muted-2)}
+.checks li.evk .ev{color:var(--muted-2)}
+.checks li.info,.checks li.info .ev{color:var(--muted);opacity:.8}
+.checks li .src{color:var(--muted);font-size:10px}
+.views{display:flex;gap:8px;margin-bottom:12px}
+.view-btn{border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:11px;background:var(--panel-muted);color:var(--muted-2);cursor:pointer;font-family:inherit}
+.view-btn.on{border-color:var(--accent-2);color:var(--text-strong)}
+.kpi-tools{display:flex;gap:10px;align-items:center;margin-bottom:10px;font-size:11px;color:var(--muted-2)}
+.kpi-grp td{background:var(--panel-strong);color:var(--accent-2);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:.04em}
+.kpi-row td:nth-child(2){cursor:help}
+.kpi-row.linked td:nth-child(2)::after{content:&quot; ●&quot;;color:var(--accent-2);font-size:9px}
+.ma-row td{color:var(--muted);font-size:11px}
+.ma-row .tag{border:1px solid var(--border-soft);border-radius:999px;padding:1px 7px;font-size:10px}
+.tr-grid td,.tr-grid th{text-align:center;padding:6px 8px;white-space:nowrap}
+.tr-grid td:first-child,.tr-grid th:first-child{text-align:left}
+.tr-cell{display:inline-block;min-width:34px;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;border:1px solid transparent}
+.tr-cell.met{background:color-mix(in srgb,var(--success) 22%,transparent);color:var(--success)}
+.tr-cell.not_met{background:color-mix(in srgb,var(--danger) 24%,transparent);color:var(--danger)}
+.tr-cell.partially_verified{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.tr-cell.evidence_provided{background:color-mix(in srgb,#6aa8ff 22%,transparent);color:#6aa8ff}
+.tr-cell.not_verifiable{background:var(--panel-muted);color:var(--muted)}
+.tr-cell.sel{border-color:var(--text-strong)}
+.tr-req{cursor:pointer}
+.tr-req:hover td:first-child{color:var(--accent-2)}
+.chain-box{margin-top:14px}
+.chain-item{border:1px solid var(--border-soft);border-left:4px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:8px;background:var(--panel-muted);font-size:11px}
+.chain-item.not_met{border-left-color:var(--danger)}.chain-item.met{border-left-color:var(--success)}.chain-item.evidence_provided{border-left-color:#6aa8ff}.chain-item.partially_verified{border-left-color:var(--accent)}
+.chain-path{color:var(--muted-2);overflow-wrap:anywhere}
+.chain-path b{color:var(--text-strong);font-weight:700}
+.chain-path .arrow{color:var(--muted);margin:0 4px}
+.gaps li{margin-bottom:5px;color:var(--muted-2);font-size:11px}
+.gaps li b{color:var(--text-strong)}
 .req-text{color:var(--text);max-width:560px}
 .req-reason{color:var(--muted);font-size:11px;margin-top:3px}
 .checks{margin:0;padding:0;list-style:none}
@@ -5781,33 +5815,63 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
     &lt;/div&gt;
     &lt;div class=&quot;chips&quot; id=&quot;cmp-chips&quot;&gt;&lt;/div&gt;
   &lt;/div&gt;
-  &lt;div class=&quot;two-col&quot;&gt;
+  &lt;div class=&quot;views&quot;&gt;&lt;button class=&quot;view-btn on&quot; data-v=&quot;comp&quot;&gt;Compliance&lt;/button&gt;&lt;button class=&quot;view-btn&quot; data-v=&quot;trace&quot;&gt;Traceability&lt;/button&gt;&lt;/div&gt;
+  &lt;div id=&quot;view-comp&quot; class=&quot;two-col&quot;&gt;
     &lt;main class=&quot;card&quot;&gt;
       &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Requirement compliance&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;cmp-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;card-body&quot;&gt;
-        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Requirement&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Checks (module · quantity · threshold · value)&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Requirement&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Checks (module · evidence)&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
         &lt;tbody id=&quot;cmp-table&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;No compliance data loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+        &lt;h3 class=&quot;section-title&quot; style=&quot;margin-top:16px&quot;&gt;Module assessments &lt;span class=&quot;muted&quot;&gt;(informative, thresholds chosen by the modules; they never change a status)&lt;/span&gt;&lt;/h3&gt;
+        &lt;div class=&quot;table-wrap&quot; style=&quot;margin-top:8px;max-height:260px&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Module&lt;/th&gt;&lt;th&gt;KPI&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;th&gt;Module verdict&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody id=&quot;ma-table&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;—&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
       &lt;/div&gt;
     &lt;/main&gt;
     &lt;aside class=&quot;card&quot;&gt;
       &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Key performance indicators&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;kpi-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;card-body&quot;&gt;
-        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Module&lt;/th&gt;&lt;th&gt;KPI&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;div class=&quot;kpi-tools&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;kpi-linked&quot;&gt; linked to requirements only&lt;/label&gt;&lt;/div&gt;
+        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;KPI&lt;/th&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
         &lt;tbody id=&quot;kpi-table&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;3&quot; class=&quot;empty&quot;&gt;No KPI loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
         &lt;h3 class=&quot;section-title&quot; style=&quot;margin-top:16px&quot;&gt;Sources&lt;/h3&gt;
         &lt;div id=&quot;cmp-sources&quot; class=&quot;cmp-note&quot;&gt;—&lt;/div&gt;
       &lt;/div&gt;
     &lt;/aside&gt;
   &lt;/div&gt;
+  &lt;div id=&quot;view-trace&quot; style=&quot;display:none&quot;&gt;
+    &lt;div class=&quot;two-col&quot;&gt;
+      &lt;main class=&quot;card&quot;&gt;
+        &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Requirements × modules&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;tr-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;card-body&quot;&gt;
+          &lt;div class=&quot;cmp-note&quot; style=&quot;margin:0 0 10px&quot;&gt;Each cell lists the KPIs a module provides for a requirement, coloured by the worst status. Click a cell or a requirement to see the chain requirement → rule → KPI → product file → module.&lt;/div&gt;
+          &lt;div class=&quot;table-wrap&quot;&gt;&lt;table class=&quot;tr-grid&quot;&gt;&lt;thead id=&quot;tr-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;tr-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No traceability data loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+          &lt;div class=&quot;chain-box&quot; id=&quot;tr-chain&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/main&gt;
+      &lt;aside class=&quot;card&quot;&gt;
+        &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Gaps&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;gap-count&quot;&gt;—&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;card-body&quot;&gt;
+          &lt;h3 class=&quot;section-title&quot;&gt;Requirements with no KPI&lt;/h3&gt;
+          &lt;ul class=&quot;gaps&quot; id=&quot;gap-req&quot;&gt;&lt;li&gt;—&lt;/li&gt;&lt;/ul&gt;
+          &lt;h3 class=&quot;section-title&quot; style=&quot;margin-top:14px&quot;&gt;Mission KPIs linked to no requirement&lt;/h3&gt;
+          &lt;ul class=&quot;gaps&quot; id=&quot;gap-kpi&quot;&gt;&lt;li&gt;—&lt;/li&gt;&lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/aside&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
 &lt;/div&gt;
 &lt;script&gt;
 (() =&gt; {
 &#x27;use strict&#x27;;
 const $ = id =&gt; document.getElementById(id);
-const LABEL = {met: &#x27;Met&#x27;, not_met: &#x27;Not met&#x27;, partially_verified: &#x27;Partially verified&#x27;, applied: &#x27;Applied&#x27;, not_verifiable: &#x27;Not verifiable&#x27;};
-const ORDER = [&#x27;met&#x27;, &#x27;not_met&#x27;, &#x27;partially_verified&#x27;, &#x27;applied&#x27;, &#x27;not_verifiable&#x27;];
+const LABEL = {met: &#x27;Met&#x27;, not_met: &#x27;Not met&#x27;, evidence_provided: &#x27;Evidence provided&#x27;, partially_verified: &#x27;Partially verified&#x27;, applied: &#x27;Applied&#x27;, not_verifiable: &#x27;Not verifiable&#x27;};
+const ORDER = [&#x27;met&#x27;, &#x27;not_met&#x27;, &#x27;evidence_provided&#x27;, &#x27;partially_verified&#x27;, &#x27;applied&#x27;, &#x27;not_verifiable&#x27;];
 let DATA = null;
+let TRACE = null;
 let FILTER = null;
+let VIEW = &#x27;comp&#x27;;
+let LINKED_ONLY = false;
+let SEL = {req: null, node: null};
 function esc(v){return String(v ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;);}
 function fmt(v){
   if (v === null || v === undefined || v === &#x27;&#x27;) return &#x27;—&#x27;;
@@ -5816,15 +5880,56 @@ function fmt(v){
   if (Array.isArray(v)) return v.map(fmt).join(&#x27;–&#x27;);
   return String(v);
 }
+function unitTxt(u){ return u &amp;&amp; u !== &#x27;-&#x27; &amp;&amp; u !== &#x27;bool&#x27; ? ` ${u}` : &#x27;&#x27;; }
 function badge(s){return `&lt;span class=&quot;st ${esc(s)}&quot;&gt;${esc(LABEL[s] || s)}&lt;/span&gt;`;}
+function ctxTxt(c){ const x = c || {}; return [x.case, x.satellite].filter(Boolean).join(&#x27;, &#x27;); }
 function checkLine(c){
+  const tip = [c.kpi_id, c.rule &amp;&amp; `rule ${c.rule}`, c.threshold_source &amp;&amp; `threshold: ${c.threshold_source}`].filter(Boolean).join(&#x27; · &#x27;);
+  if (c.evidence) {
+    return `&lt;li class=&quot;${c.status === &#x27;not_met&#x27; ? &#x27;bad&#x27; : &#x27;&#x27;}&quot; title=&quot;${esc(tip)}&quot;&gt;&lt;span class=&quot;mod&quot;&gt;${esc(c.module)}&lt;/span&gt;${badge(c.status)}&lt;span class=&quot;ev&quot;&gt;${esc(c.evidence)}&lt;/span&gt;&lt;/li&gt;`;
+  }
   const thr = c.threshold === null || c.threshold === undefined ? &#x27;&#x27; : `${esc(c.operator || &#x27;&#x27;)} ${esc(fmt(c.threshold))} ${esc(c.unit || &#x27;&#x27;)}`;
   const val = c.value === null || c.value === undefined ? &#x27;&#x27; : ` → ${esc(fmt(c.value))} ${esc(c.unit || &#x27;&#x27;)}`;
-  return `&lt;li&gt;&lt;span class=&quot;mod&quot;&gt;${esc(c.module)}&lt;/span&gt;${badge(c.status)}&lt;span&gt;${esc(c.metric)} ${thr}${val}&lt;/span&gt;${c.reason ? `&lt;span class=&quot;why&quot;&gt;· ${esc(c.reason)}&lt;/span&gt;` : &#x27;&#x27;}&lt;/li&gt;`;
+  return `&lt;li class=&quot;${c.status === &#x27;not_met&#x27; ? &#x27;bad&#x27; : &#x27;&#x27;}&quot; title=&quot;${esc(tip)}&quot;&gt;&lt;span class=&quot;mod&quot;&gt;${esc(c.module)}&lt;/span&gt;${badge(c.status)}&lt;span class=&quot;ev&quot;&gt;${esc(c.metric)} ${thr}${val}&lt;/span&gt;${c.reason ? `&lt;span class=&quot;why&quot;&gt;· ${esc(c.reason)}&lt;/span&gt;` : &#x27;&#x27;}&lt;/li&gt;`;
 }
-function render(data){
-  DATA = data || null;
-  if (!DATA) return;
+function evidenceLine(e){
+  const ctx = ctxTxt(e.context);
+  const v = e.present ? `${esc(fmt(e.value))}${esc(unitTxt(e.unit))}${ctx ? ` (${esc(ctx)})` : &#x27;&#x27;}` : &#x27;not available&#x27;;
+  return `&lt;li class=&quot;evk&quot; title=&quot;${esc(e.kpi_id)}&quot;&gt;&lt;span class=&quot;mod&quot;&gt;${esc(e.module)}&lt;/span&gt;&lt;span class=&quot;ev&quot;&gt;${esc(e.name || e.kpi_id)}: ${v}&lt;/span&gt;&lt;/li&gt;`;
+}
+function reqRow(r){
+  const lines = (r.checks || []).map(checkLine).join(&#x27;&#x27;) + (r.evidence_kpis || []).map(evidenceLine).join(&#x27;&#x27;);
+  const reasonCls = r.status === &#x27;not_met&#x27; ? &#x27; style=&quot;color:var(--danger)&quot;&#x27; : &#x27;&#x27;;
+  return `&lt;tr&gt;&lt;td&gt;${esc(r.id)}&lt;/td&gt;&lt;td&gt;&lt;div class=&quot;req-text&quot;&gt;${esc(r.text)}&lt;/div&gt;${r.reason ? `&lt;div class=&quot;req-reason&quot;${reasonCls}&gt;${esc(r.reason)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/td&gt;&lt;td&gt;${badge(r.status)}&lt;/td&gt;&lt;td&gt;&lt;ul class=&quot;checks&quot;&gt;${lines || &#x27;&lt;li&gt;&lt;span class=&quot;why&quot;&gt;no check&lt;/span&gt;&lt;/li&gt;&#x27;}&lt;/ul&gt;&lt;/td&gt;&lt;/tr&gt;`;
+}
+function linkedSet(){
+  const s = new Set();
+  if (TRACE) (TRACE.chain || []).forEach(c =&gt; { if (c.kpi_id) s.add(c.kpi_id); });
+  else (DATA.requirements || []).forEach(r =&gt; { (r.checks || []).forEach(c =&gt; c.kpi_id &amp;&amp; s.add(c.kpi_id)); (r.evidence_kpis || []).forEach(e =&gt; s.add(e.kpi_id)); });
+  return s;
+}
+function renderKpis(){
+  const linked = linkedSet();
+  const all = DATA.kpis || [];
+  const kpis = all.filter(k =&gt; !LINKED_ONLY || linked.has(k.id));
+  $(&#x27;kpi-count&#x27;).textContent = `${kpis.length} of ${all.length} KPI`;
+  const groups = {};
+  kpis.forEach(k =&gt; (groups[k.module || &#x27;?&#x27;] = groups[k.module || &#x27;?&#x27;] || []).push(k));
+  const html = Object.keys(groups).sort().map(m =&gt; `&lt;tr class=&quot;kpi-grp&quot;&gt;&lt;td colspan=&quot;3&quot;&gt;${esc(m)}&lt;/td&gt;&lt;/tr&gt;` + groups[m].map(k =&gt; {
+    const tip = [k.id, k.native_id &amp;&amp; `native id ${k.native_id}`, k.category, ctxTxt(k.context)].filter(Boolean).join(&#x27; · &#x27;);
+    return `&lt;tr class=&quot;kpi-row ${linked.has(k.id) ? &#x27;linked&#x27; : &#x27;&#x27;}&quot;&gt;&lt;td class=&quot;muted&quot;&gt;${esc(k.id.split(&#x27;.&#x27;).slice(1).join(&#x27;.&#x27;))}&lt;/td&gt;&lt;td title=&quot;${esc(tip)}&quot;&gt;${esc(k.name)}&lt;/td&gt;&lt;td&gt;${esc(fmt(k.value))}${esc(unitTxt(k.unit))}&lt;/td&gt;&lt;/tr&gt;`;
+  }).join(&#x27;&#x27;)).join(&#x27;&#x27;);
+  $(&#x27;kpi-table&#x27;).innerHTML = html || &#x27;&lt;tr&gt;&lt;td colspan=&quot;3&quot; class=&quot;empty&quot;&gt;No KPI available.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+function renderAssessments(){
+  const ma = DATA.module_assessments || [];
+  $(&#x27;ma-table&#x27;).innerHTML = ma.length ? ma.map(a =&gt; {
+    const verdict = a.meets === true ? &#x27;ok&#x27; : a.meets === false ? &#x27;not ok&#x27; : &#x27;—&#x27;;
+    const thr = a.threshold === null || a.threshold === undefined ? &#x27;&#x27; : ` ${esc(a.operator || &#x27;&#x27;)} ${esc(fmt(a.threshold))}`;
+    return `&lt;tr class=&quot;ma-row&quot; title=&quot;${esc(a.kpi_id)}${a.note ? &#x27; · &#x27; + esc(a.note) : &#x27;&#x27;}&quot;&gt;&lt;td&gt;${esc(a.module)}&lt;/td&gt;&lt;td&gt;${esc(a.name)}&lt;/td&gt;&lt;td&gt;${esc(fmt(a.value))}${esc(unitTxt(a.unit))}&lt;/td&gt;&lt;td&gt;${verdict}${thr} &lt;span class=&quot;tag&quot;&gt;${esc(a.threshold_source || &#x27;&#x27;)}${a.informative ? &#x27; · informative&#x27; : &#x27;&#x27;}&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;`;
+  }).join(&#x27;&#x27;) : &#x27;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;None.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+function renderComp(){
   const counts = DATA.counts || {};
   const total = (DATA.requirements || []).length;
   $(&#x27;cmp-chips&#x27;).innerHTML = ORDER.map(s =&gt; `&lt;span class=&quot;chip ${FILTER === s ? &#x27;on&#x27; : &#x27;&#x27;}&quot; data-s=&quot;${s}&quot;&gt;${LABEL[s]}&lt;b&gt;${counts[s] || 0}&lt;/b&gt;&lt;/span&gt;`).join(&#x27;&#x27;);
@@ -5836,24 +5941,83 @@ function render(data){
   $(&#x27;cmp-note&#x27;).classList.toggle(&#x27;warn&#x27;, false);
   const rows = (DATA.requirements || []).filter(r =&gt; !FILTER || r.status === FILTER);
   $(&#x27;cmp-count&#x27;).textContent = `${rows.length} of ${total} requirements`;
-  $(&#x27;cmp-table&#x27;).innerHTML = rows.length ? rows.map(r =&gt; `&lt;tr&gt;&lt;td&gt;${esc(r.id)}&lt;/td&gt;&lt;td&gt;&lt;div class=&quot;req-text&quot;&gt;${esc(r.text)}&lt;/div&gt;${r.reason ? `&lt;div class=&quot;req-reason&quot;&gt;${esc(r.reason)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/td&gt;&lt;td&gt;${badge(r.status)}&lt;/td&gt;&lt;td&gt;&lt;ul class=&quot;checks&quot;&gt;${(r.checks || []).map(checkLine).join(&#x27;&#x27;) || &#x27;&lt;li&gt;&lt;span class=&quot;why&quot;&gt;no check&lt;/span&gt;&lt;/li&gt;&#x27;}&lt;/ul&gt;&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)
-    : &#x27;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;No requirement with this status.&lt;/td&gt;&lt;/tr&gt;&#x27;;
-  const kpis = DATA.kpis || [];
-  $(&#x27;kpi-count&#x27;).textContent = `${kpis.length} KPI`;
-  $(&#x27;kpi-table&#x27;).innerHTML = kpis.length ? kpis.map(k =&gt; `&lt;tr class=&quot;kpi-mod&quot;&gt;&lt;td&gt;${esc(k.module)}&lt;/td&gt;&lt;td&gt;${esc(k.name)}&lt;/td&gt;&lt;td&gt;${esc(fmt(k.value))} ${k.unit &amp;&amp; k.unit !== &#x27;-&#x27; ? esc(k.unit) : &#x27;&#x27;}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;)
-    : &#x27;&lt;tr&gt;&lt;td colspan=&quot;3&quot; class=&quot;empty&quot;&gt;No KPI available.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+  $(&#x27;cmp-table&#x27;).innerHTML = rows.length ? rows.map(reqRow).join(&#x27;&#x27;) : &#x27;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;No requirement with this status.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+  renderAssessments();
+  renderKpis();
   const src = DATA.sources || {};
   $(&#x27;cmp-sources&#x27;).innerHTML = Object.keys(src).length ? Object.entries(src).map(([m, p]) =&gt; `&lt;div&gt;&lt;b&gt;${esc(m)}&lt;/b&gt; ${esc(String(p || &#x27;&#x27;).split(/[\\/]modules_output[\\/]/).pop())}&lt;/div&gt;`).join(&#x27;&#x27;) : &#x27;—&#x27;;
 }
+function chainItem(c){
+  const thr = c.threshold === null || c.threshold === undefined || c.threshold === &#x27;&#x27; ? &#x27;&#x27; : ` ${esc(c.operator || &#x27;&#x27;)} ${esc(fmt(c.threshold))}${esc(unitTxt(c.unit))}`;
+  const ms = c.module_status ? `${esc(c.module_status)}${(c.fallbacks || []).length ? &#x27; (&#x27; + esc(c.fallbacks.join(&#x27;, &#x27;)) + &#x27;)&#x27; : &#x27;&#x27;}` : &#x27;—&#x27;;
+  return `&lt;div class=&quot;chain-item ${esc(c.link_status)}&quot;&gt;&lt;div class=&quot;chain-path&quot;&gt;&lt;b&gt;${esc(c.req_id)}&lt;/b&gt;&lt;span class=&quot;arrow&quot;&gt;→&lt;/span&gt;${esc(c.rule || &#x27;—&#x27;)}${c.group &amp;&amp; c.group !== &#x27;all&#x27; ? ` [${esc(c.group)}]` : &#x27;&#x27;}&lt;span class=&quot;arrow&quot;&gt;→&lt;/span&gt;&lt;b&gt;${esc(c.kpi_id || &#x27;—&#x27;)}&lt;/b&gt; = ${esc(fmt(c.value))}${esc(unitTxt(c.unit))}${thr}&lt;span class=&quot;arrow&quot;&gt;→&lt;/span&gt;${esc(c.product_file || c.product || &#x27;—&#x27;)}&lt;span class=&quot;arrow&quot;&gt;→&lt;/span&gt;${esc(c.node || c.module || &#x27;—&#x27;)} (${ms})&lt;/div&gt;`
+    + `&lt;div style=&quot;margin-top:4px&quot;&gt;${badge(c.link_status)} ${c.evidence ? `&lt;span class=&quot;${c.link_status === &#x27;not_met&#x27; ? &#x27;ev bad&#x27; : &#x27;muted&#x27;}&quot;${c.link_status === &#x27;not_met&#x27; ? &#x27; style=&quot;color:var(--danger)&quot;&#x27; : &#x27;&#x27;}&gt;${esc(c.evidence)}&lt;/span&gt;` : &#x27;&#x27;}&lt;/div&gt;&lt;/div&gt;`;
+}
+function renderChain(){
+  const box = $(&#x27;tr-chain&#x27;);
+  if (!SEL.req) { box.innerHTML = &#x27;&lt;div class=&quot;cmp-note&quot;&gt;Select a requirement or a cell to see its chain.&lt;/div&gt;&#x27;; return; }
+  const items = (TRACE.chain || []).filter(c =&gt; c.req_id === SEL.req &amp;&amp; (!SEL.node || c.node === SEL.node));
+  box.innerHTML = `&lt;h3 class=&quot;section-title&quot; style=&quot;margin-bottom:8px&quot;&gt;Chain ${esc(SEL.req)}${SEL.node ? &#x27; · &#x27; + esc(SEL.node) : &#x27;&#x27;}&lt;/h3&gt;` + (items.length ? items.map(chainItem).join(&#x27;&#x27;) : &#x27;&lt;div class=&quot;cmp-note&quot;&gt;No KPI is linked to this requirement.&lt;/div&gt;&#x27;);
+}
+function renderTrace(){
+  if (!TRACE) {
+    $(&#x27;tr-head&#x27;).innerHTML = &#x27;&#x27;;
+    $(&#x27;tr-body&#x27;).innerHTML = &#x27;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No compliance/traceability.json in this RUN folder.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+    return;
+  }
+  const nodes = TRACE.nodes || [];
+  const reqs = (DATA &amp;&amp; DATA.requirements) || [];
+  $(&#x27;tr-head&#x27;).innerHTML = `&lt;tr&gt;&lt;th&gt;Requirement&lt;/th&gt;${nodes.map(n =&gt; `&lt;th&gt;${esc(n)}&lt;/th&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;`;
+  $(&#x27;tr-count&#x27;).textContent = `${reqs.length} requirements × ${nodes.length} modules`;
+  $(&#x27;tr-body&#x27;).innerHTML = reqs.map(r =&gt; {
+    const cells = nodes.map(n =&gt; {
+      const c = ((TRACE.matrix || {})[r.id] || {})[n];
+      if (!c) return &#x27;&lt;td&gt;&lt;/td&gt;&#x27;;
+      const sel = SEL.req === r.id &amp;&amp; SEL.node === n ? &#x27; sel&#x27; : &#x27;&#x27;;
+      return `&lt;td&gt;&lt;span class=&quot;tr-cell ${esc(c.status)}${sel}&quot; data-r=&quot;${esc(r.id)}&quot; data-n=&quot;${esc(n)}&quot; title=&quot;${esc((c.kpis || []).join(&#x27;\n&#x27;))}&quot;&gt;${(c.kpis || []).length}&lt;/span&gt;&lt;/td&gt;`;
+    }).join(&#x27;&#x27;);
+    return `&lt;tr class=&quot;tr-req&quot; data-r=&quot;${esc(r.id)}&quot; title=&quot;${esc(r.text)}&quot;&gt;&lt;td&gt;${esc(r.id)} ${badge(r.status)}&lt;/td&gt;${cells}&lt;/tr&gt;`;
+  }).join(&#x27;&#x27;);
+  document.querySelectorAll(&#x27;#tr-body .tr-cell&#x27;).forEach(el =&gt; el.addEventListener(&#x27;click&#x27;, ev =&gt; { ev.stopPropagation(); SEL = {req: el.dataset.r, node: el.dataset.n}; renderTrace(); }));
+  document.querySelectorAll(&#x27;#tr-body .tr-req&#x27;).forEach(el =&gt; el.addEventListener(&#x27;click&#x27;, () =&gt; { SEL = {req: el.dataset.r, node: null}; renderTrace(); }));
+  renderChain();
+  const gaps = TRACE.gaps || {};
+  const gr = gaps.requirements_without_kpi || [];
+  const gk = gaps.kpis_without_requirement || [];
+  $(&#x27;gap-count&#x27;).textContent = `${gr.length} requirements · ${gk.length} KPIs`;
+  $(&#x27;gap-req&#x27;).innerHTML = gr.length ? gr.map(g =&gt; `&lt;li&gt;&lt;b&gt;${esc(g.req_id)}&lt;/b&gt; ${badge(g.status)} ${esc(g.reason || &#x27;&#x27;)}&lt;/li&gt;`).join(&#x27;&#x27;) : &#x27;&lt;li&gt;None.&lt;/li&gt;&#x27;;
+  $(&#x27;gap-kpi&#x27;).innerHTML = gk.length ? gk.map(g =&gt; `&lt;li&gt;&lt;b&gt;${esc(g.kpi_id)}&lt;/b&gt; ${esc(g.name || &#x27;&#x27;)}: ${esc(fmt(g.value))}${esc(unitTxt(g.unit))}&lt;/li&gt;`).join(&#x27;&#x27;) : &#x27;&lt;li&gt;None.&lt;/li&gt;&#x27;;
+}
+function setView(v){
+  VIEW = v;
+  $(&#x27;view-comp&#x27;).style.display = v === &#x27;comp&#x27; ? &#x27;&#x27; : &#x27;none&#x27;;
+  $(&#x27;view-trace&#x27;).style.display = v === &#x27;trace&#x27; ? &#x27;&#x27; : &#x27;none&#x27;;
+  document.querySelectorAll(&#x27;.view-btn&#x27;).forEach(b =&gt; b.classList.toggle(&#x27;on&#x27;, b.dataset.v === v));
+}
+function render(data){
+  if (data) DATA = data;
+  if (!DATA) return;
+  renderComp();
+  renderTrace();
+  setView(VIEW);
+}
+document.querySelectorAll(&#x27;.view-btn&#x27;).forEach(b =&gt; b.addEventListener(&#x27;click&#x27;, () =&gt; setView(b.dataset.v)));
+$(&#x27;kpi-linked&#x27;).addEventListener(&#x27;change&#x27;, e =&gt; { LINKED_ONLY = e.target.checked; if (DATA) renderKpis(); });
 async function fileText(f){ if (!f) return null; if (typeof f.text === &#x27;function&#x27;) return await f.text(); return null; }
 window.receiveComplianceFilesFromParent = async function(payload, labels){
   const files = [...(payload &amp;&amp; payload.productFiles || []), ...(payload &amp;&amp; payload.resultFiles || [])];
-  const json = files.find(f =&gt; String(f.name || &#x27;&#x27;).toLowerCase() === &#x27;compliance.json&#x27;);
+  const byName = n =&gt; files.find(f =&gt; String(f.name || &#x27;&#x27;).toLowerCase() === n);
+  const json = byName(&#x27;compliance.json&#x27;);
   if (!json) {
     $(&#x27;cmp-note&#x27;).textContent = &#x27;No compliance/compliance.json in the selected RUN folder (runs made before 2026-10-17 have no compliance check).&#x27;;
     return;
   }
-  try { render(JSON.parse(await fileText(json))); } catch (e) { $(&#x27;cmp-note&#x27;).textContent = &#x27;compliance.json could not be read: &#x27; + e; }
+  try {
+    TRACE = null;
+    const tr = byName(&#x27;traceability.json&#x27;);
+    if (tr) { try { TRACE = JSON.parse(await fileText(tr)); } catch (e) { TRACE = null; } }
+    render(JSON.parse(await fileText(json)));
+  } catch (e) { $(&#x27;cmp-note&#x27;).textContent = &#x27;compliance.json could not be read: &#x27; + e; }
 };
 window.refreshComplianceDashboard = function(){ if (DATA) render(DATA); };
 window.setTheme = function(theme){ document.documentElement.dataset.theme = theme === &#x27;light&#x27; ? &#x27;light&#x27; : &#x27;dark&#x27;; };
