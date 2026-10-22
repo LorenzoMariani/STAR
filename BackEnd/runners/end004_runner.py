@@ -36,10 +36,34 @@ R_EARTH = 6378137.0                # m, reference of the END-001 altitudes
 MODE_KEYS = ("idle", "tx_uhf", "tx_sband", "payload")
 
 
+def _selected_index(star_payload: dict[str, Any], end003_csv: Path | None = None) -> int | None:
+    """Index of the satellite END-003 selected for the imaging pass (the satellite of the run's power budget)."""
+    selected = load_selected_passes(star_payload, end003_csv) or {}
+    try:
+        return int((selected.get("imaging_pass") or {}).get("satellite_index"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _eclipse_summary(star_payload: dict[str, Any]) -> dict[str, Any] | None:
+    """END-001 eclipse_summary.json (phase D): eclipses per satellite over the window and over the mission life."""
+    path = upstream_product(star_payload, "eclipse_summary")
+    data = load_json(Path(path)) if path and Path(path).exists() else None
+    return data if isinstance(data, dict) and data.get("satellites") else None
+
+
+def _satellite_eclipses(summary: dict[str, Any] | None, index: int | None) -> dict[str, Any] | None:
+    sats = (summary or {}).get("satellites") or []
+    if isinstance(sats, dict):
+        sats = [sats]
+    return next((s for s in sats if index is not None and s.get("satellite_index") == index), None)
+
+
 def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, end003_runtime_json: Path | None) -> dict[str, Any] | None:
-    """Period, sunlight and eclipse of the orbit of this run (2026-10-17): the period from the semi-major axis of the
-    satellite END-003 selected (END-001 elements, R = 6378.137 km), the eclipse from the shadow fraction END-003 computed
-    on its 48 h window (KPI-14). None when the upstream products are missing (the template values are used then)."""
+    """Period, sunlight and eclipse of the orbit of this run: the period from the semi-major axis of the satellite END-003
+    selected (END-001 elements, R = 6378.137 km), the eclipse from END-001 eclipse_summary.json for that satellite (mean
+    complete eclipse over the window, phase D); the END-003 shadow fraction (KPI-14) only when END-001 did not publish it.
+    None when the upstream products are missing (the template values are used then)."""
     orbit = None
     selected = load_selected_passes(star_payload, end003_csv)
     if selected:
@@ -54,13 +78,21 @@ def _orbit_from_upstream(star_payload: dict[str, Any], end003_csv: Path | None, 
     period_min = 2.0 * math.pi * math.sqrt(a ** 3 / MU_EARTH) / 60.0
     out: dict[str, Any] = {"period_min": round(period_min, 4), "daily_orbits": round(1440.0 / period_min, 3),
                            "source": f"END-001 orbit of the satellite selected by END-003 (altitude {alt / 1000:.1f} km)"}
+    index = _selected_index(star_payload, end003_csv)
+    sat_ecl = _satellite_eclipses(_eclipse_summary(star_payload), index)
+    eclipse = ((sat_ecl or {}).get("window") or {}).get("eclipse_mean_min")
+    if isinstance(eclipse, (int, float)) and 0 <= eclipse < period_min:
+        out.update({"eclipse_min": round(float(eclipse), 4), "sunlight_min": round(period_min - float(eclipse), 4)})
+        out["source"] += f"; eclipse {float(eclipse):.2f} min, mean over the window of SAT-{index:02d} (END-001 eclipse_summary.json)"
+        return out
     summary = upstream_product(star_payload, "attitude_summary")
     if summary and Path(summary).exists():
         for kpi in (load_json(Path(summary)) or {}).get("kpis", []):
             if kpi.get("id") == "KPI-14" and isinstance(kpi.get("value"), (int, float)):
                 eclipse = period_min * float(kpi["value"]) / 100.0
                 out.update({"eclipse_min": round(eclipse, 4), "sunlight_min": round(period_min - eclipse, 4)})
-                out["source"] += f"; eclipse {float(kpi['value']):.1f}% of the orbit (END-003 KPI-14)"
+                out["source"] += (f"; eclipse {float(kpi['value']):.1f}% of the orbit (END-003 KPI-14, "
+                                  f"END-001 eclipse_summary.json not available)")
                 break
     return out
 
@@ -129,12 +161,21 @@ def _subsystems_from_satellite(template: list[dict[str, Any]], sat: dict[str, An
 
 def _operations(star_payload: dict[str, Any]) -> dict[str, Any] | None:
     """Daily operations END-001 computed on the ephemerides (operations_summary.json): acquisitions over the AOI and
-    ground-station contacts, constellation mean."""
+    ground-station contacts of the satellite END-003 selected (phase D); the constellation mean only when that satellite
+    is not in the file. Returns {"values", "source"}."""
     path = upstream_product(star_payload, "operations_summary")
     if path and Path(path).exists():
         data = load_json(Path(path)) or {}
+        index = _selected_index(star_payload)
+        sats = data.get("satellites") or []
+        if isinstance(sats, dict):
+            sats = [sats]
+        sat = next((s for s in sats if index is not None and s.get("satellite_index") == index), None)
+        if sat:
+            return {"values": sat, "source": f"END-001 operations_summary.json (SAT-{index:02d}, selected by END-003)"}
         if isinstance(data.get("constellation_mean"), dict):
-            return data
+            return {"values": data["constellation_mean"],
+                    "source": "END-001 operations_summary.json (constellation mean: selected satellite not available)"}
     return None
 
 
@@ -152,7 +193,7 @@ def _apply_duty_cycles(runtime_data: dict[str, Any], ops: dict[str, Any] | None,
     if not ops or not subs or not orbit.get("sunlight_min") or not orbit.get("eclipse_min"):
         report["duty_cycles"] = {"source": "template (END-001 operations_summary.json not available)"}
         return
-    m = ops["constellation_mean"]
+    m = ops["values"]
     sun_min, ecl_min, daily = float(orbit["sunlight_min"]), float(orbit["eclipse_min"]), float(orbit.get("daily_orbits") or 0)
     img_orb = float(m.get("imaging_orbits_per_day") or 0.0)
     img_s = float(m.get("imaging_s_per_imaging_orbit") or 0.0) if img_orb > 0 else 0.0
@@ -208,7 +249,7 @@ def _apply_duty_cycles(runtime_data: dict[str, Any], ops: dict[str, Any] | None,
         alloc[k] = ops_alloc.get(k, 0.0)
     alloc["idle"] = round(max(0.0, daily - sum(v for k, v in alloc.items() if k != "idle")), 3)
     report["duty_cycles"] = {
-        "source": "END-001 operations_summary.json (constellation mean over the ephemeris window)",
+        "source": ops["source"],
         "rules": rules,
         "payload_duty_sun": cam["sun"], "contact_duty": tx, "payload_orbits_with_contact_fraction": round(share, 3),
         "mode_orbits_per_day": dict(alloc),
@@ -344,6 +385,95 @@ def _apply_star_inputs(runtime_data: dict[str, Any], star_payload: dict[str, Any
     ops["idle"] = round(max(0.0, daily - busy), 3)
     report["mode_orbits_per_day"] = {"value": dict(ops), "source": f"idle = {daily:g} orbits/day - the other modes"}
     return report
+
+
+def _mode_budget(cfg: dict[str, Any], sun_min: float, ecl_min: float, gen_scale: float) -> dict[str, dict[str, float]]:
+    """Energy per orbit of each mode as STAR_END004_POWER_BUDGET computes it (consumption with margin, generation of the mode,
+    orbital DoD), for a given sunlight / eclipse split; the generation of each mode is scaled by gen_scale."""
+    subs = cfg.get("subsystems") or []
+    margin = coerce_float((cfg.get("analysis") or {}).get("margin_fraction", cfg.get("margin_fraction", 0.10)), 0.10)
+    gen = cfg.get("generation") or {}
+    by_mode = gen.get("power_generated_per_orbit_Wh_by_mode") or {}
+    capacity = coerce_float((cfg.get("battery") or {}).get("capacity_Wh"), 19.0) or 19.0
+    out = {}
+    for key in MODE_KEYS:
+        sun_wh = sum(float(s.get("powerW") or 0) * float((((s.get("duty") or {}).get(key) or {}).get("sun")) or 0) * sun_min / 60.0 for s in subs)
+        ecl_wh = sum(float(s.get("powerW") or 0) * float((((s.get("duty") or {}).get(key) or {}).get("eclipse")) or 0) * ecl_min / 60.0 for s in subs)
+        total = (sun_wh + ecl_wh) * (1.0 + margin)
+        generated = coerce_float(by_mode.get(key, gen.get("power_generated_per_orbit_Wh")), 0.0) * gen_scale
+        dod = ecl_wh / capacity if generated > sun_wh else (total - generated) / capacity
+        out[key] = {"sun_consumption_Wh": round(sun_wh, 4), "eclipse_consumption_Wh": round(ecl_wh, 4),
+                    "total_consumption_margin_Wh": round(total, 4), "power_generated_per_orbit_Wh": round(generated, 4),
+                    "power_saved_per_orbit_Wh": round(generated - total, 4), "orbital_DoD": round(max(0.0, dod), 6),
+                    "mean_power_W": round((sun_wh + ecl_wh) * 60.0 / (sun_min + ecl_min), 4)}
+    return out
+
+
+def design_cases(cfg: dict[str, Any], eclipses: dict[str, Any] | None, dod_limit_pct: float | None = None) -> dict[str, Any]:
+    """power_design_cases.json (phase D, 2026-10-21), the single source of the powers and of the battery case:
+    - battery worst case: the longest eclipse over the mission life of the constellation (END-001 life envelope), sunlight
+      = period - that eclipse, the generation of every mode reduced in proportion to the shorter sunlight; DoD per mode as
+      the MATLAB budget. Compliance and the CEF loop use worst_dod_pct;
+    - internal dissipation for END-019 (all the electrical power ends as heat inside): hot = every subsystem at its highest
+      orbit-average duty of any mode (payload and transmitters on), cold = idle mode, nominal = mean of the day."""
+    orbit = cfg.get("orbit") or {}
+    sun, ecl = float(orbit.get("sunlight_min") or 0), float(orbit.get("eclipse_min") or 0)
+    period = sun + ecl
+    alloc = (cfg.get("operations") or {}).get("mode_orbits_per_day") or {}
+    nominal = _mode_budget(cfg, sun, ecl, 1.0)
+    env = (eclipses or {}).get("life_envelope") or {}
+    worst_ecl = env.get("eclipse_max_min")
+    if isinstance(worst_ecl, (int, float)) and 0 < worst_ecl < period:
+        worst_ecl, ecl_source = float(worst_ecl), (f"longest eclipse over {eclipses.get('mission_life_years')} year(s) of mission life "
+                                                   f"(SAT-{int(env.get('satellite_eclipse_max') or 0):02d}, END-001 eclipse_summary.json)")
+    else:
+        worst_ecl, ecl_source = ecl, "eclipse of the run (END-001 mission-life envelope not available)"
+    worst_ecl = max(worst_ecl, ecl)
+    worst_sun = period - worst_ecl
+    scale = worst_sun / sun if sun > 0 else 1.0
+    worst = _mode_budget(cfg, worst_sun, worst_ecl, scale)
+    flown = [k for k in MODE_KEYS if float(alloc.get(k) or 0) > 0] or list(MODE_KEYS)
+
+    def daily(b: dict[str, dict[str, float]]) -> float:
+        return round(sum(float(alloc.get(k) or 0) * b[k]["power_saved_per_orbit_Wh"] for k in MODE_KEYS), 4)
+
+    subs = cfg.get("subsystems") or []
+    hot = sum(float(s.get("powerW") or 0) * max((float((((s.get("duty") or {}).get(k) or {}).get("sun")) or 0) * sun
+                                                 + float((((s.get("duty") or {}).get(k) or {}).get("eclipse")) or 0) * ecl) / period
+                                                for k in MODE_KEYS) for s in subs) if period > 0 else 0.0
+    n_orb = sum(float(alloc.get(k) or 0) for k in MODE_KEYS)
+    mean = sum(float(alloc.get(k) or 0) * nominal[k]["mean_power_W"] for k in MODE_KEYS) / n_orb if n_orb > 0 else nominal["idle"]["mean_power_W"]
+    worst_dod = 100.0 * max(worst[k]["orbital_DoD"] for k in flown)
+    out = {
+        "module_id": "END-004", "schema_version": 1,
+        "orbit": {"period_min": round(period, 4), "sunlight_min": round(sun, 4), "eclipse_min": round(ecl, 4)},
+        "battery_capacity_Wh": (cfg.get("battery") or {}).get("capacity_Wh"),
+        "nominal": {"modes": nominal, "max_dod_pct": round(100.0 * max(nominal[k]["orbital_DoD"] for k in flown), 4),
+                    "daily_balance_Wh": daily(nominal), "eclipse_min": round(ecl, 4)},
+        "battery_worst_case": {"modes": worst, "eclipse_min": round(worst_ecl, 4), "sunlight_min": round(worst_sun, 4),
+                               "generation_scale": round(scale, 5), "eclipse_source": ecl_source,
+                               "max_dod_pct": round(worst_dod, 4), "daily_balance_Wh": daily(worst),
+                               "rule": "longest eclipse over the mission life; generation reduced by the shorter sunlight"},
+        "worst_dod_pct": round(worst_dod, 4),
+        "dod_limit_pct": dod_limit_pct,
+        "battery_within_dod_limit": None if dod_limit_pct is None else bool(worst_dod <= dod_limit_pct),
+        "dissipation_W": {"hot": round(hot, 4), "cold": nominal["idle"]["mean_power_W"], "nominal": round(mean, 4),
+                          "rule": "electrical consumption = internal heat; hot: every subsystem at its highest orbit-average duty "
+                                  "(payload and transmitters), cold: idle mode, nominal: mean over the modes of the day"},
+        "flown_modes": flown,
+    }
+    return out
+
+
+def _dod_limit(star_payload: dict[str, Any]) -> float | None:
+    """Maximum depth of discharge stated in the requirements (percent), if any."""
+    try:
+        from runners import star_text_rules as rules
+        reqs = [(str(r.get("id", "REQ")), str(r.get("text", ""))) for r in star_payload.get("requirements") or [] if isinstance(r, dict)]
+        found = rules.mission_parameters(reqs).get("dod_max_pct")
+        return float(found[0]) if found else None
+    except Exception:
+        return None
 
 
 def _emit(cb: LogCallback | None, level: str, msg: str) -> None:
@@ -743,6 +873,14 @@ def run_end004(
         module_label="END-004",
     )
 
+    cases = None
+    if status == "completed":
+        cases = design_cases(runtime_data, _eclipse_summary(star_payload), _dod_limit(star_payload))
+        write_json(product_dir / "power_design_cases.json", cases)
+        wc = cases["battery_worst_case"]
+        _emit(log_callback, "EXECUTION", f"END-004 battery worst case: eclipse {wc['eclipse_min']} min, max DoD {wc['max_dod_pct']:.2f}% "
+              f"(nominal {cases['nominal']['max_dod_pct']:.2f}%); dissipation hot {cases['dissipation_W']['hot']:.2f} W, "
+              f"cold {cases['dissipation_W']['cold']:.2f} W.")
     artifacts = _collect(output_path)
     write_json(process_info_path, {
         "run_id": run_id,
@@ -765,6 +903,13 @@ def run_end004(
     facts = (f"Power budget: orbit from {orbit_src} (eclipse {o.get('eclipse_min')} min of {o.get('period_min')} min), "
              f"duty cycles from {str(decisions.get('duty_cycles', {}).get('source', 'n/a')).split(' (')[0]}, "
              f"loads and generation from {str(decisions.get('subsystems', {}).get('source', decisions.get('satellite', {}).get('source', 'n/a'))).split(' (')[0]}")
+    if cases:
+        wc = cases["battery_worst_case"]
+        facts += (f"; battery worst case (eclipse {wc['eclipse_min']:.1f} min, generation x{wc['generation_scale']:.3f}): "
+                  f"max DoD {wc['max_dod_pct']:.1f}% (nominal {cases['nominal']['max_dod_pct']:.1f}%)")
+        if wc["eclipse_source"].endswith("not available)"):
+            prov.record("battery_worst_case.eclipse_min", wc["eclipse_min"], wc["eclipse_source"], kind="fallback", severity="minor")
+            final_status, severity = finalize(status, prov)
     return {
         "status": final_status,
         "fallback_severity": severity,

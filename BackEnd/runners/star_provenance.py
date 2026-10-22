@@ -20,7 +20,7 @@ CRITICAL_ITEMS: dict[str, tuple[str, ...]] = {
     "END-004": ("orbit", "duty_cycles", "satellite", "power_generated_per_orbit_Wh", "battery_capacity_Wh", "subsystems"),
     "END-010": ("attitude",),
     "END-016": ("spacecraft.",),
-    "END-019": ("form_factor",),
+    "END-019": ("form_factor", "P_internal_W"),
 }
 
 

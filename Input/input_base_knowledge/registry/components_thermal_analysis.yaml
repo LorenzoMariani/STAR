@@ -108,7 +108,14 @@ consumes:
   fallback: the conjugate of the Unreal-axes file
 - product: spacecraft_definition
   required: true
-  used_for: CubeSat class of the thermal model
+  used_for: CubeSat class, envelope, mass, solar faces and battery temperature limits of the thermal model
+- product: eclipse_summary
+  required: true
+  used_for: beta range of the mission life (the hot case is the beta with the hottest battery) and beta of the cold case (longest eclipse), per satellite
+- product: power_design_cases
+  required: false
+  used_for: internal dissipation (nominal for the window, hot = payload and transmitters, cold = idle)
+  fallback: the model's constant internal powers (7 W), completed with a critical fallback
 produces:
 - product: thermal_time_series
   path: output_components_thermal_analysis/output_thermal_SAT-*.csv
@@ -124,7 +131,7 @@ produces:
   path: output_components_thermal_analysis/thermal_constellation_output.csv
   format: csv
   guaranteed: true
-  description: one row per satellite (class, beta angle, passes, maximum temperatures)
+  description: one row per satellite (class, beta angle, passes, maximum temperatures, battery minimum and the hot / cold design cases with limit flags)
 - product: thermal_run_info
   path: results_components_thermal_analysis/thermal_run_info.json
   format: json

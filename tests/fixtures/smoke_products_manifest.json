@@ -1,5 +1,5 @@
 {
- "generated_from": "RUN_SMOKETEST_20261021_205126",
+ "generated_from": "RUN_SMOKETEST_20261022_084651",
  "files": {
   "END-001": [
    "end001_process_result.json",
@@ -8,6 +8,7 @@
    "matlab_stderr.txt",
    "matlab_stdout.txt",
    "output_constellation_optimizer/constellation_optimizer_output.csv",
+   "output_constellation_optimizer/eclipse_summary.json",
    "output_constellation_optimizer/ground_stations.json",
    "output_constellation_optimizer/operations_summary.json",
    "output_constellation_optimizer/pass_selection.json",
@@ -64,8 +65,8 @@
    "results_constellation_optimizer/11_revisit_boxplot_latband.png",
    "results_constellation_optimizer/constellation_plots_data.js",
    "results_constellation_optimizer/coverage_summary.json",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261021_205153.mat",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261021_205205.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261022_084716.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261022_084728.mat",
    "star_constellation_optimizer_runtime.m"
   ],
   "END-003": [
@@ -116,6 +117,7 @@
    "output_power_budget/power_budget_summary.csv",
    "output_power_budget/power_budget_summary.json",
    "output_power_budget/power_budget_tables.xlsx",
+   "output_power_budget/power_design_cases.json",
    "png_validation_report.json",
    "results_power_budget/01_power_balance.png",
    "results_power_budget/02_mode_consumption.png",

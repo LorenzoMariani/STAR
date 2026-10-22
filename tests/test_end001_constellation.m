@@ -133,6 +133,34 @@ function test_ephemeris_as_end003_reads_it(tc)
     end
 end
 
+function test_eclipse_summary(tc)
+    % downstream_eclipses (phase D): window intervals agree with the life envelope at the epoch, the life envelope
+    % brackets the window, the longest eclipse matches the cylindrical shadow at beta = 0
+    out = fullfile(tc.TestData.work, 'ecl');
+    mkdir(out);
+    a = 6378137.0 + [550e3, 627e3]; inc = [97.6, 53.3]; raan = [10, 200]; nu = [0, 90];
+    epoch = datetime(2026, 5, 21, 13, 41, 0);
+    files = export_downstream_ephemeris(out, a, inc, raan, nu, datevec(epoch), epoch, 24, 10);
+    downstream_eclipses(out, files, 1);
+    s = jsondecode(fileread(fullfile(out, 'eclipse_summary.json')));
+    verifyEqual(tc, s.mission_life_years, 1);
+    sats = s.satellites;
+    if ~iscell(sats), sats = num2cell(sats); end      % jsondecode merges objects with the same fields
+    for k = 1:2
+        e = sats{k};
+        verifyGreaterThan(tc, e.window.n_complete, 10, 'complete eclipses in 24 h');
+        verifyEqual(tc, e.sun_factor + e.eclipse_fraction, 1, 'AbsTol', 1e-4);
+        verifyGreaterThanOrEqual(tc, e.life.eclipse_max_min + 0.2, e.window.eclipse_max_min, 'life envelope brackets the window');
+        verifyLessThanOrEqual(tc, e.life.eclipse_min_min - 0.2, e.window.eclipse_min_min, 'life envelope brackets the window');
+        verifyEqual(tc, e.cold_case.eclipse_min, e.life.eclipse_max_min);
+        verifyGreaterThanOrEqual(tc, abs(e.hot_case.beta_deg), abs(e.cold_case.beta_deg));
+    end
+    % 53 deg orbit: beta crosses 0 over a year, longest eclipse = acos(sqrt(r^2 - Re^2)/r)/pi of the period
+    r = a(2); T = 2*pi*sqrt(r^3/3.986004418e14);
+    verifyEqual(tc, sats{2}.life.eclipse_max_min, acosd(sqrt(r^2 - 6378137^2)/r)/180*T/60, 'RelTol', 2e-3);
+    verifyEqual(tc, s.life_envelope.eclipse_max_min, max(cellfun(@(x) x.life.eclipse_max_min, sats)));
+end
+
 %% =========================================================================
 %  HELPERS
 %  =========================================================================

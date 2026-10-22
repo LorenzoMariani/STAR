@@ -17,6 +17,7 @@ if isempty(sats)
     error('star_process:noinput','Nessun satellite_*.json in: %s', cfg.io.sat_dir);
 end
 rows = table();
+cache = containers.Map();
 for k = 1:numel(sats)
     orb    = star_read_orbit(fullfile(sats(k).folder, sats(k).name));
     passes = star_read_passes(cfg.io.pass_csv, orb.index, cfg.io.imaging_purpose, orb.start);
@@ -28,7 +29,35 @@ for k = 1:numel(sats)
             Rp = star_pass_detail(cfg, orb, att, R);
         end
     end
-    row = star_write_output(cfg, orb, R, Rp, passes);
+    % hot and cold design cases of this satellite (phase D): beta of the satellite, else of the window
+    % (the hot case searches the life beta range for the hottest battery, star_hot_case; satellites with the same
+    % altitude, inclination, betas and dissipation share the result)
+    Cs = {};
+    for c = 1:numel(cfg.cases)
+        cs = cfg.cases(c);
+        if iscell(cs), cs = cs{1}; end      % jsondecode gives a cell array when the cases have different fields
+        b = R.beta; range = [];
+        j = [];
+        if isfield(cs,'satellite_index'), j = find(cs.satellite_index(:) == orb.index, 1); end
+        if ~isempty(j) && isfield(cs,'beta_min_deg') && isfield(cs,'beta_max_deg')
+            range = [cs.beta_min_deg(j) cs.beta_max_deg(j)];
+        elseif ~isempty(j) && isfield(cs,'beta_deg')
+            b = cs.beta_deg(j);
+        end
+        key = sprintf('%s|%.0f|%.3f|%.2f|%s|%.4f', cs.name, orb.alt, orb.incl, b, mat2str(round(range, 1)), cs.P_internal_W);
+        if isKey(cache, key)
+            Cs{end+1} = cache(key); %#ok<AGROW>
+            continue
+        end
+        if ~isempty(range)
+            C = star_hot_case(cfg, orb, cs, range(1), range(2));
+        else
+            C = star_design_case(cfg, orb, struct('name',cs.name,'beta_deg',b,'P_internal_W',cs.P_internal_W));
+        end
+        cache(key) = C;
+        Cs{end+1} = C; %#ok<AGROW>
+    end
+    row = star_write_output(cfg, orb, R, Rp, passes, Cs);
     rows = [rows; struct2table(row)]; %#ok<AGROW>
 end
 writetable(rows, fullfile(cfg.io.out_dir,'thermal_constellation_output.csv'));

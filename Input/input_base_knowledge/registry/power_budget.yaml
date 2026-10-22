@@ -82,7 +82,10 @@ required_inputs:
 consumes:
 - product: operations_summary
   required: true
-  used_for: per-mode duty cycles and orbits per day
+  used_for: per-mode duty cycles and orbits per day of the satellite END-003 selected
+- product: eclipse_summary
+  required: true
+  used_for: eclipse of the selected satellite and longest eclipse over the mission life (battery worst case)
 - product: attitude_propagation_csv
   required: true
   used_for: orbit period and pass duration
@@ -94,8 +97,8 @@ consumes:
   used_for: orbit of the satellite END-003 selected
 - product: attitude_summary
   required: false
-  used_for: eclipse fraction and face illumination for the solar generation
-  fallback: template eclipse and generation
+  used_for: face illumination for the solar generation (eclipse fraction only when END-001 eclipse_summary is missing)
+  fallback: template generation
 - product: spacecraft_definition
   required: true
   used_for: loads, battery and solar panels of the satellite
@@ -121,6 +124,12 @@ produces:
   format: json
   guaranteed: true
   description: status of the MATLAB run
+- product: power_design_cases
+  path: output_power_budget/power_design_cases.json
+  format: json
+  required_keys: [battery_worst_case, dissipation_W, worst_dod_pct]
+  guaranteed: true
+  description: battery worst case (longest eclipse over the mission life, reduced generation) and internal dissipation hot / cold / nominal for END-019
 - product: power_budget_frontend_data
   path: results_power_budget/power_budget_tables.js
   format: javascript

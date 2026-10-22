@@ -13,6 +13,15 @@ function cfg = star_config(opts)
 %     sar_duty           0..1
 %     star_input_dir     cartella con gli output STAR (orbite/pass/assetto)
 %     output_dir         cartella dove scrivere i risultati
+%   STAR satellite of the run (phase D, 2026-10-21; defaults unchanged when absent):
+%     dims_m             [x y z] envelope of the END-006 design [m] (else from the class)
+%     mass_kg            mass of the END-006 design [kg] (else 1.33 kg per U)
+%     solar_faces        body faces with solar cells, e.g. {'+X','-X','+Y','-Y'} (END-006)
+%     P_internal_W       internal dissipation of the window run (END-004 nominal), split
+%                        CTR/BAT/SAR in the calibrated ratio of Pconst
+%     bat_min_C, bat_max_C  battery operating limits (END-006 battery)
+%     cases              design cases: struct array name, P_internal_W, satellite_index,
+%                        beta_deg (hot / cold, star_design_case)
 % ------------------------------------------------------------------------------
 if nargin<1 || isempty(opts), opts = struct(); end
 here = fileparts(mfilename('fullpath'));
@@ -57,6 +66,8 @@ switch upper(cfg.sat.form)
     case '12U', cfg.sat.dims = [0.20 0.20 0.30];
     otherwise, error('star_config:form','Form factor "%s" non previsto (1U/3U/6U/12U).',cfg.sat.form);
 end
+dims = getf(opts,'dims_m',[]);
+if numel(dims) == 3 && all(dims(:) > 0), cfg.sat.dims = reshape(dims,1,3); end
 Lx=cfg.sat.dims(1); Ly=cfg.sat.dims(2); Lz=cfg.sat.dims(3);
 cfg.sat.Aface = [Ly*Lz Ly*Lz Lx*Lz Lx*Lz Lx*Ly Lx*Ly];
 cfg.sat.rhoA  = 4.0; cfg.sat.faceCp = 900;
@@ -67,6 +78,14 @@ cfg.sat.alpha_z = 0.88; cfg.sat.eps_z = 0.85;
 cfg.sat.alpha = [cfg.sat.alpha_solar*ones(1,4) cfg.sat.alpha_z cfg.sat.alpha_z];
 cfg.sat.eps   = [cfg.sat.eps_solar*ones(1,4)   cfg.sat.eps_z   cfg.sat.eps_z];
 cfg.sat.solar_faces = [1 2 3 4];
+sf = getf(opts,'solar_faces',{});
+if ischar(sf) || isstring(sf), sf = cellstr(sf); end
+if ~isempty(sf)
+    idx = find(ismember({'+X','-X','+Y','-Y','+Z','-Z'}, sf));
+    cfg.sat.solar_faces = idx;
+    cfg.sat.alpha = cfg.sat.alpha_z*ones(1,6); cfg.sat.eps = cfg.sat.eps_z*ones(1,6);
+    cfg.sat.alpha(idx) = cfg.sat.alpha_solar; cfg.sat.eps(idx) = cfg.sat.eps_solar;
+end
 
 %% ============ pannelli dispiegabili (fronte = ottiche calibrate) ============
 cfg.dep.enable = ismember(lower(cfg.panels.mode), {'deployable','both'});
@@ -79,7 +98,7 @@ cfg.dep.Ghinge = 0.10;
 
 %% ============ NODI INTERNI (scalati sul form factor; SAR su tutti) ============
 cfg.sat.Ucount = max(1, round(prod(cfg.sat.dims)/0.001));
-mtot = 1.33*cfg.sat.Ucount;
+mtot = getf(opts,'mass_kg',1.33*cfg.sat.Ucount);
 switch cfg.nodes.config
     case 1
         cfg.nodes.names={'CTR'};             cfg.nodes.mass=0.60*mtot;             cfg.nodes.cp=900;           cfg.nodes.Pconst=7.0;
@@ -90,6 +109,11 @@ switch cfg.nodes.config
     otherwise, error('star_config:nodes','n_internal_nodes deve essere 1, 2 o 3.');
 end
 cfg.sar.node = 'SAR';
+cfg.nodes.Pdefault = cfg.nodes.Pconst;
+Pint = getf(opts,'P_internal_W',[]);
+if ~isempty(Pint) && Pint >= 0
+    cfg.nodes.Pconst = Pint*cfg.nodes.Pdefault/sum(cfg.nodes.Pdefault);
+end
 
 %% ============ conduttanze [W/K] (scambi con le facce scalano con l'area) ============
 kA = sum(cfg.sat.Aface)/0.14;
@@ -105,7 +129,9 @@ cfg.env = struct('Gs',1361,'albedo',0.30,'qIR',237,'Re',6371e3,'mu',3.986004415e
                  'sigma',5.670374419e-8,'Tspace',3);
 % orbita come END-001 (propagate_orbit_j2): quota sopra il raggio equatoriale, J2 secolare
 cfg.env.Req = 6378137; cfg.env.J2 = 0.0010826261738522227;
-cfg.limits.BAT = 25; cfg.limits.SAR = 85; cfg.limits.CTR = 60;
+cfg.limits.BAT = getf(opts,'bat_max_C',25); cfg.limits.SAR = 85; cfg.limits.CTR = 60;
+cfg.limits.BAT_min = getf(opts,'bat_min_C',NaN);    % NaN: no lower limit checked
+cfg.cases = getf(opts,'cases',[]);
 cfg.T0 = 0;
 end
 

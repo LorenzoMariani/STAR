@@ -247,9 +247,17 @@ def run_end001(
         break
     if cov.get("surrogate_fallback_reason"):
         prov.record("fitness_engine", cov.get("fitness_engine_used"), f"fallback: {cov['surrogate_fallback_reason']}", kind="fallback", severity="minor")
+    for item in ((load_json(config_path) or {}).get("star_runtime") or {}).get("end001_inputs") or []:
+        if isinstance(item, dict) and item.get("field") == "MissionLifetimeYears":
+            prov.record("mission_lifetime_years", item.get("value"), str(item.get("origin")), kind="input")
     n_sat = sum(1 for _ in product_dir.glob("satellite_*.json"))
     facts = (f"END-001 constellation optimizer: {n_sat} satellite(s), orbit type {cov.get('orbit_type', '?')}, "
              f"fitness engine {cov.get('fitness_engine_used', '?')}, constellation_optimizer_output.csv and ground_stations.json written")
+    ecl = load_json(product_dir / "eclipse_summary.json") if (product_dir / "eclipse_summary.json").exists() else {}
+    env = (ecl or {}).get("life_envelope") or {}
+    if env:
+        facts += (f"; eclipses over {ecl.get('mission_life_years')} year(s) of mission life: {env.get('eclipse_min_min', 0):.1f}"
+                  f"-{env.get('eclipse_max_min', 0):.1f} min per orbit (eclipse_summary.json)")
     final_status, severity = finalize(status, prov)
     return {"status": final_status, "fallback_severity": severity, "fallbacks": prov.fallbacks(), "provenance": prov.to_json(final_status),
             "evidence": star_evidence("END-001", final_status, prov, facts), "generated_artifacts": artifacts, "return_code": rc}

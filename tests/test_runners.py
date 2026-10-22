@@ -27,6 +27,7 @@ if str(STAR / "BackEnd") not in sys.path:
     sys.path.insert(0, str(STAR / "BackEnd"))
 
 from runners import end003_runner, end004_runner, end016_runner, end019_runner, star_runner_io  # noqa: E402
+from runners.star_provenance import Provenance, is_fallback_source  # noqa: E402
 from runners.star_workflow_graph import Registry, WorkflowGraph  # noqa: E402
 
 # Stand-in engine: records its arguments, then writes what the model of the module writes (or fails on request).
@@ -236,6 +237,11 @@ class TestEnd019Runner(RunnerCase):
         att.mkdir(parents=True, exist_ok=True)
         (att / "selected_pass_summary.csv").write_text("purpose,satellite_index\n", encoding="utf-8")
         (att / "output_attitude_propagation.csv").write_text("timestamp_utc,q_w\n", encoding="utf-8")
+        # phase D: life envelope of END-001 and internal dissipation of END-004
+        write_json(self.modules_output / "END-001" / "output_constellation_optimizer" / "eclipse_summary.json", {"life_envelope": {}, "satellites": [
+            {"satellite_index": i, "life": {"beta_min_deg": -70.0, "beta_max_deg": 70.0}, "cold_case": {"beta_deg": 1.0}} for i in (1, 2)]})
+        write_json(self.modules_output / "END-004" / "output_power_budget" / "power_design_cases.json",
+                   {"dissipation_W": {"nominal": 3.0, "hot": 8.0, "cold": 1.5}})
 
     def run_module(self, payload: dict, rows: list | None = None, fail: str | None = None) -> tuple[dict, dict]:
         exe = make_engine(self.tmp / "engine", {"module": "END-019", "rows": rows or [{"satellite_label": "SAT-01"}], "fail": fail})
@@ -260,7 +266,7 @@ class TestEnd019Runner(RunnerCase):
     def test_sar_cubesat_with_the_end006_design(self):
         self.upstream()
         write_json(self.modules_output / "END-006" / "output_component_selector" / "spacecraft_definition.json",
-                   {"form_factor": "12U", "mass_kg": 9.5})
+                   {"form_factor": "12U", "mass_kg": 9.5, "battery": {"component": "aac-optimus-30", "temp_op_c": [-10, 45]}})
         rows = [{"satellite_index": 1, "satellite_label": "SAT-01", "BAT_over_limit": "true"},
                 {"satellite_index": 2, "satellite_label": "SAT-02", "BAT_over_limit": "false"}]
         result, info = self.run_module({
@@ -287,6 +293,10 @@ class TestEnd019Runner(RunnerCase):
         self.assertEqual(Path(args[-1]), self.module_root / "input_termico.json")
         self.assertTrue(result["evidence"].startswith("2 satellite(s) analysed; BAT_over_limit on SAT-01 ("), result["evidence"])
         self.assertIn("form_factor=12U", result["evidence"])
+        self.assertEqual((cfg["mass_kg"], cfg["P_internal_W"], cfg["bat_min_C"]), (9.5, 3.0, -10.0))
+        hot, cold = cfg["cases"]
+        self.assertEqual((hot["P_internal_W"], hot["beta_min_deg"], hot["beta_max_deg"]), (8.0, [-70.0, -70.0], [70.0, 70.0]))
+        self.assertEqual((cold["P_internal_W"], cold["beta_deg"]), (1.5, [1.0, 1.0]))
 
     def test_mission_without_sar(self):
         self.upstream()
@@ -294,7 +304,9 @@ class TestEnd019Runner(RunnerCase):
             "requirements": [requirement("A 3U CubeSat with an optical camera.")],
             "resolved_inputs": [{"needed_by_module_id": "END-019", "parameter": "sar_power_W", "proposed_value": "200",
                                  "source": "module_registry_default"}]})
-        self.assertEqual(result["status"], "completed", result["evidence"])
+        # no END-006 design: the battery limits are the default range, a minor fallback
+        self.assertEqual((result["status"], result["fallback_severity"]), ("completed_with_fallback", "minor"), result["evidence"])
+        self.assertEqual([f["item"] for f in result["fallbacks"]], ["bat_min_C"])
         self.assertEqual(info["config"]["n_internal_nodes"], 2)
         self.assertNotIn("sar_power_W", info["config"])
         self.assertIn("The third internal node of the model is a SAR payload: not modelled for this mission", info["notes"])
@@ -351,6 +363,92 @@ class TestRunnerHelpers(unittest.TestCase):
         self.assertAlmostEqual(orbit["period_min"], period, places=4)
         self.assertAlmostEqual(orbit["daily_orbits"], 1440 / period, places=3)
         self.assertIsNone(end004_runner._orbit_from_upstream({}, None, None))
+
+    def test_end004_eclipse_and_operations_of_the_selected_satellite(self):
+        # phase D: eclipse from END-001 eclipse_summary.json and operations of the satellite END-003 selected
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            sel = write_json(t / "selected_passes.json", {"imaging_pass": {"satellite_index": 2, "orbit": {"alt_perigee_m": 550e3, "alt_apogee_m": 550e3}}})
+            ecl = write_json(t / "eclipse_summary.json", {"satellites": [
+                {"satellite_index": 1, "window": {"eclipse_mean_min": 30.0}}, {"satellite_index": 2, "window": {"eclipse_mean_min": 33.5}}],
+                "life_envelope": {"eclipse_max_min": 35.4}})
+            ops = write_json(t / "operations_summary.json", {"constellation_mean": {"contact_orbits_per_day": 9.0},
+                                                             "satellites": [{"satellite_index": 2, "contact_orbits_per_day": 4.0}]})
+            payload = {"upstream_products": {"selected_passes": {"paths": [str(sel)]}, "eclipse_summary": {"paths": [str(ecl)]},
+                                             "operations_summary": {"paths": [str(ops)]}}}
+            orbit = end004_runner._orbit_from_upstream(payload, None, None)
+            self.assertEqual(orbit["eclipse_min"], 33.5)
+            self.assertAlmostEqual(orbit["sunlight_min"], orbit["period_min"] - 33.5, places=3)
+            self.assertIn("SAT-02", orbit["source"])
+            got = end004_runner._operations(payload)
+            self.assertEqual(got["values"]["contact_orbits_per_day"], 4.0)
+            self.assertIn("SAT-02", got["source"])
+            # the selected satellite is not in the file: constellation mean, marked as a fallback
+            del payload["upstream_products"]["selected_passes"]
+            got = end004_runner._operations(payload)
+            self.assertEqual(got["values"]["contact_orbits_per_day"], 9.0)
+            self.assertTrue(is_fallback_source(got["source"]))
+
+    def test_end004_battery_worst_case_and_dissipation(self):
+        on = {"sun": 1, "eclipse": 1}
+        off = {"sun": 0, "eclipse": 0}
+        cfg = {"orbit": {"sunlight_min": 60.0, "eclipse_min": 35.0}, "battery": {"capacity_Wh": 20.0}, "margin_fraction": 0.1,
+               "generation": {"power_generated_per_orbit_Wh": 10.0, "power_generated_per_orbit_Wh_by_mode": {"payload": 12.0}},
+               "operations": {"mode_orbits_per_day": {"idle": 10, "tx_uhf": 0, "tx_sband": 4, "payload": 1}},
+               "subsystems": [{"name": "OBDH", "powerW": 2.0, "duty": {m: on for m in end004_runner.MODE_KEYS}},
+                              {"name": "CAMERAS", "powerW": 10.0, "duty": {**{m: off for m in end004_runner.MODE_KEYS}, "payload": {"sun": 0.5, "eclipse": 0}}},
+                              {"name": "TX S BAND", "powerW": 6.0, "duty": {**{m: off for m in end004_runner.MODE_KEYS}, "tx_sband": {"sun": 0.2, "eclipse": 0.1}}}]}
+        out = end004_runner.design_cases(cfg, {"mission_life_years": 1, "life_envelope": {"eclipse_max_min": 37.0, "satellite_eclipse_max": 3}}, 30.0)
+        wc, nom = out["battery_worst_case"], out["nominal"]
+        self.assertEqual(wc["eclipse_min"], 37.0)
+        self.assertAlmostEqual(wc["sunlight_min"], 58.0)
+        self.assertAlmostEqual(wc["generation_scale"], 58.0 / 60.0, places=5)
+        self.assertAlmostEqual(wc["modes"]["idle"]["power_generated_per_orbit_Wh"], 10.0 * 58.0 / 60.0, places=3)
+        self.assertAlmostEqual(wc["modes"]["payload"]["power_generated_per_orbit_Wh"], 12.0 * 58.0 / 60.0, places=3)
+        # idle: generation 9.67 Wh > sunlit use 1.93 Wh -> DoD = eclipse use / capacity = 2 W x 37 min / 20 Wh
+        self.assertAlmostEqual(wc["modes"]["idle"]["orbital_DoD"], 2.0 * 37.0 / 60.0 / 20.0, places=5)
+        self.assertGreater(out["worst_dod_pct"], nom["max_dod_pct"])
+        self.assertEqual(out["worst_dod_pct"], wc["max_dod_pct"])
+        self.assertTrue(out["battery_within_dod_limit"])
+        self.assertLess(wc["daily_balance_Wh"], nom["daily_balance_Wh"])
+        d = out["dissipation_W"]
+        self.assertAlmostEqual(d["cold"], 2.0)                                                      # idle: OBDH only
+        self.assertAlmostEqual(d["hot"], 2.0 + 10.0 * 0.5 * 60 / 95 + 6.0 * (0.2 * 60 + 0.1 * 35) / 95, places=3)
+        self.assertTrue(d["cold"] <= d["nominal"] <= d["hot"])
+        # no life envelope: the eclipse of the run, recorded as not available
+        out = end004_runner.design_cases(cfg, None)
+        self.assertEqual(out["battery_worst_case"]["eclipse_min"], 35.0)
+        self.assertTrue(is_fallback_source(out["battery_worst_case"]["eclipse_source"]))
+        self.assertIsNone(out["battery_within_dod_limit"])
+
+    def test_end019_design_from_end006_end004_end001(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            pc = write_json(t / "power_design_cases.json", {"dissipation_W": {"nominal": 3.0, "hot": 8.0, "cold": 1.5}})
+            ecl = write_json(t / "eclipse_summary.json", {"satellites": [
+                {"satellite_index": 1, "life": {"beta_min_deg": -60.0, "beta_max_deg": 75.0}, "hot_case": {"beta_deg": 75.0}, "cold_case": {"beta_deg": 0.5}}]})
+            sat = {"dims_m": [0.2263, 0.2263, 0.366], "mass_kg": 7.8, "solar_panels": {"body_faces": ["+X", "-X"]},
+                   "battery": {"component": "aac-optimus-30", "temp_op_c": [-10, 45]}}
+            payload = {"upstream_products": {"power_design_cases": {"paths": [str(pc)]}, "eclipse_summary": {"paths": [str(ecl)]}}}
+            config, prov, notes = {}, {}, []
+            end019_runner._apply_design(payload, sat, config, prov, {}, notes)
+            self.assertEqual((config["mass_kg"], config["solar_faces"], config["panels"]), (7.8, ["+X", "-X"], "body"))
+            self.assertEqual(config["P_internal_W"], 3.0)
+            hot, cold = config["cases"]
+            self.assertEqual((hot["P_internal_W"], hot["beta_min_deg"], hot["beta_max_deg"], cold["P_internal_W"], cold["beta_deg"]),
+                             (8.0, [-60.0], [75.0], 1.5, [0.5]))
+            self.assertEqual((config["bat_min_C"], config["bat_max_C"]), (-10.0, 45.0))
+            self.assertFalse(any(is_fallback_source(v) for v in prov.values()))
+            # no END-004, no END-001 envelope, no battery temperatures: model powers (critical), window beta, default limits
+            config, prov, notes = {}, {}, []
+            end019_runner._apply_design({}, {"mass_kg": 7.8}, config, prov, {}, notes)
+            self.assertEqual(config["cases"][0]["P_internal_W"], end019_runner.MODEL_P_INTERNAL_W)
+            self.assertNotIn("beta_deg", config["cases"][0])
+            self.assertEqual((config["bat_min_C"], config["bat_max_C"]), end019_runner.BATTERY_DEFAULT_C)
+            p = Provenance("END-019")
+            p.add_origins({k: v for k, v in prov.items() if k in ("P_internal_W", "cases", "bat_min_C")})
+            self.assertEqual(p.worst_severity(), "critical")
+            self.assertEqual({e["item"] for e in p.fallbacks()}, {"P_internal_W", "cases", "bat_min_C"})
 
     def test_run_mode_and_level(self):
         with mock.patch.dict(os.environ, {}, clear=True):

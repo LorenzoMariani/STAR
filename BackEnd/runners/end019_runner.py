@@ -164,6 +164,87 @@ def _stage_upstream(payload: dict[str, Any], staging: Path) -> tuple[list[str], 
     return [f.name for f in sats], []
 
 
+MODEL_P_INTERNAL_W = 7.0            # internal powers of the calibrated model (CTR 5 W + BAT 2 W)
+BATTERY_DEFAULT_C = (0.0, 45.0)     # typical Li-ion charge range, when END-006 publishes no battery temperatures
+
+
+def _apply_design(payload: dict[str, Any], sat: dict[str, Any] | None, config: dict[str, Any], provenance: dict[str, str],
+                  approved: dict[str, Any], notes: list[str]) -> None:
+    """Satellite, powers and design cases of the run (phase D, 2026-10-21): envelope, mass and solar faces of the END-006
+    design; internal dissipation from END-004 power_design_cases.json (nominal for the window, hot = maximum, cold = idle);
+    beta range of the mission life for the hot case (the model searches it for the hottest battery, 2026-10-22: the
+    shortest eclipse is not always the hottest) and beta of the cold case (longest eclipse), from END-001
+    eclipse_summary.json for every satellite; battery limits from the END-006 battery."""
+    if sat:
+        src = f"END-006 initial design of the run (spacecraft_definition.json)"
+        if isinstance(sat.get("dims_m"), list) and len(sat["dims_m"]) == 3:
+            config["dims_m"] = [float(v) for v in sat["dims_m"]]
+            provenance["dims_m"] = src
+        if sat.get("mass_kg"):
+            config["mass_kg"] = float(sat["mass_kg"])
+            provenance["mass_kg"] = src
+        faces = (sat.get("solar_panels") or {}).get("body_faces") or []
+        if faces and "panels" not in approved:
+            config["solar_faces"] = list(faces)
+            config["panels"] = "body"
+            provenance["solar_faces"] = provenance["panels"] = f"{src}: body-mounted panels on {', '.join(faces)}"
+    # internal dissipation (END-004)
+    path = upstream_product(payload, "power_design_cases")
+    cases = None
+    if path and Path(path).is_file():
+        try:
+            cases = json.loads(Path(path).read_text(encoding="utf-8")).get("dissipation_W")
+        except (OSError, ValueError):
+            cases = None
+    if isinstance(cases, dict) and all(isinstance(cases.get(k), (int, float)) for k in ("nominal", "hot", "cold")):
+        p_nom, p_hot, p_cold = float(cases["nominal"]), float(cases["hot"]), float(cases["cold"])
+        config["P_internal_W"] = round(p_nom, 4)
+        provenance["P_internal_W"] = "END-004 power_design_cases.json (nominal: mean dissipation of the day)"
+        power_src = "END-004 power_design_cases.json"
+    else:
+        p_nom = p_hot = p_cold = MODEL_P_INTERNAL_W
+        provenance["P_internal_W"] = (f"model default {MODEL_P_INTERNAL_W:g} W (END-004 power_design_cases.json not available: "
+                                      "END-004 is not in the workflow)")
+        power_src = f"model default {MODEL_P_INTERNAL_W:g} W"
+    # beta of the cases (END-001)
+    idx, hot_lo, hot_hi, cold_b = [], [], [], []
+    ecl_path = upstream_product(payload, "eclipse_summary")
+    try:
+        sats = json.loads(Path(ecl_path).read_text(encoding="utf-8")).get("satellites") if ecl_path else None
+    except (OSError, ValueError):
+        sats = None
+    for s in sats if isinstance(sats, list) else []:
+        try:
+            idx.append(int(s["satellite_index"]))
+            hot_lo.append(float(s["life"]["beta_min_deg"]))
+            hot_hi.append(float(s["life"]["beta_max_deg"]))
+            cold_b.append(float(s["cold_case"]["beta_deg"]))
+        except (KeyError, TypeError, ValueError):
+            idx, hot_lo, hot_hi, cold_b = [], [], [], []
+            break
+    hot = {"name": "hot", "P_internal_W": round(p_hot, 4)}
+    cold = {"name": "cold", "P_internal_W": round(p_cold, 4)}
+    if idx:
+        hot.update({"satellite_index": idx, "beta_min_deg": hot_lo, "beta_max_deg": hot_hi})
+        cold.update({"satellite_index": idx, "beta_deg": cold_b})
+        provenance["cases"] = (f"END-001 eclipse_summary.json (hot: the beta of the mission life with the hottest battery, cold: longest eclipse); "
+                               f"dissipation hot {p_hot:.2f} W / cold {p_cold:.2f} W from {power_src}")
+    else:
+        provenance["cases"] = ("beta of the window (END-001 eclipse_summary.json not available); "
+                               f"dissipation hot {p_hot:.2f} W / cold {p_cold:.2f} W from {power_src}")
+    config["cases"] = [hot, cold]
+    # battery limits (END-006)
+    temp = ((sat or {}).get("battery") or {}).get("temp_op_c")
+    if isinstance(temp, list) and len(temp) == 2 and None not in temp:
+        config["bat_min_C"], config["bat_max_C"] = float(temp[0]), float(temp[1])
+        provenance["bat_min_C"] = provenance["bat_max_C"] = f"END-006 battery {(sat.get('battery') or {}).get('component')} (operating temperatures)"
+    else:
+        config["bat_min_C"], config["bat_max_C"] = BATTERY_DEFAULT_C
+        provenance["bat_min_C"] = provenance["bat_max_C"] = ("default 0..45 degC, typical Li-ion charge range "
+                                                             "(END-006 battery temperatures not published)")
+        notes.append("Battery limits: END-006 publishes no operating temperatures for the battery, 0..45 degC assumed")
+
+
 def _process_env() -> dict[str, str]:
     """Environment with the MATLAB Runtime R2026a first on PATH: its installer edits the system PATH, which a STAR
     started before the install does not see (STAR_END019_RUNTIME_DIR overrides the install folder)."""
@@ -207,11 +288,28 @@ def _constellation_evidence(path: Path) -> str:
         return ""
     cols = list(rows[0].keys())
     label_col = next((c for c in cols if re.search(r"label|name", c, re.I)), cols[0])
-    flag_cols = [c for c in cols if re.search(r"flag|limit|viol|exceed", c, re.I)]
+    flag_cols = [c for c in cols if re.search(r"flag|limit|viol|exceed", c, re.I) and not c.endswith("_C")]
     text = f"{len(rows)} satellite(s) analysed"
     for c in flag_cols:            # e.g. BAT_over_limit -> "BAT_over_limit on SAT-01, SAT-02"
         flagged = [r.get(label_col, "") for r in rows if str(r.get(c, "")).strip().lower() in ("1", "true", "yes", "si")]
         text += f"; {c} on " + (", ".join(flagged) if flagged else "none")
+
+    def num(c: str, fun: Any) -> float | None:
+        vals = []
+        for r in rows:
+            try:
+                v = float(r.get(c, ""))
+            except ValueError:
+                continue
+            if v == v:
+                vals.append(v)
+        return fun(vals) if vals else None
+    hot, cold = num("hot_BAT_max_C", max), num("cold_BAT_min_C", min)
+    lo, hi = num("BAT_min_limit_C", min), num("BAT_max_limit_C", max)
+    if hot is not None and cold is not None:
+        text += f"; battery design cases: hot max {hot:.1f} degC, cold min {cold:.1f} degC"
+        if lo is not None and hi is not None:
+            text += f" (limits {lo:g}..{hi:g} degC)"
     return text
 
 
@@ -280,6 +378,7 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
             if config.pop(k, None) is not None:
                 provenance.pop(k, None)
         notes.append("The third internal node of the model is a SAR payload: not modelled for this mission")
+    _apply_design(payload, sat, config, provenance, approved, notes)
     if "panels" not in config:
         notes.append("Solar panel layout not stated: the model's default is used")
 
@@ -289,9 +388,11 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     generated: list[str] = []
 
     def finish(status: str, message: str, **extra: Any) -> dict[str, Any]:
-        # the class of the CubeSat drives the model; a registry first guess for it is a fallback (other first guesses are tuning)
+        # the class, the internal dissipation, the design-case betas and the battery limits drive the result; a fallback for
+        # them is recorded (registry first guesses of the other settings are tuning)
         prov = Provenance(MODULE_ID)
-        prov.add_origins({k: v for k, v in info.get("provenance", {}).items() if k == "form_factor"})
+        prov.add_origins({k: v for k, v in info.get("provenance", {}).items()
+                          if k in ("form_factor", "P_internal_W", "cases", "bat_min_C")})
         status, severity = finalize(status, prov)
         if status == FALLBACK:
             message = star_evidence(MODULE_ID, status, prov, message)
@@ -359,4 +460,6 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     if not constellation.is_file():
         return finish("failed", "The END-019 model ended without thermal_constellation_output.csv.", products=products)
     evidence_text = _constellation_evidence(constellation) or f"{len(satellites)} satellite(s) analysed"
-    return finish("completed", f"{evidence_text} ({', '.join(f'{k}={v}' for k, v in config.items())}).", products=products)
+    # scalar settings only: the design cases are in thermal_run_info.json and in the evidence above
+    shown = ", ".join(f"{k}={v}" for k, v in config.items() if not isinstance(v, (list, dict)))
+    return finish("completed", f"{evidence_text} ({shown}).", products=products)

@@ -467,6 +467,12 @@ produces:
   required_keys: [constellation_mean]
   guaranteed: true
   description: acquisitions and ground-station contacts per orbit (duty cycles of END-004)
+- product: eclipse_summary
+  path: output_constellation_optimizer/eclipse_summary.json
+  format: json
+  required_keys: [satellites, life_envelope]
+  guaranteed: true
+  description: eclipse intervals and sun factor of every satellite over the window, and the eclipse and beta envelope over the mission life (hot and cold cases)
 - product: ground_stations
   path: output_constellation_optimizer/ground_stations.json
   format: json

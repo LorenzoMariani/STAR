@@ -118,6 +118,10 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
         battery = ((chosen.get("battery") or {}).get("specs") or {}).get("capacity_wh")
     if battery is None:
         battery = ((chosen.get("eps") or {}).get("specs") or {}).get("integrated_battery_wh")
+    # operating temperatures of the battery (END-019 limits, phase D): the battery pack, else the EPS with the integrated battery
+    cell = chosen.get("battery") or (chosen.get("eps") if ((chosen.get("eps") or {}).get("specs") or {}).get("integrated_battery_wh") else None) or {}
+    temp = cell.get("temp_op_c")
+    temp = [float(temp[0]), float(temp[1])] if isinstance(temp, (list, tuple)) and len(temp) == 2 and None not in temp else None
     return {
         "schema_version": 1, "module_id": MODULE_ID, "phase": phase, "run_id": run_id, "generated_at": datetime.now().isoformat(),
         "class_u": cs.get("class_u"), "form_factor": f"{cs.get('class_u')}U", "envelope_mm": env, "dims_m": [a, b, c],
@@ -131,6 +135,7 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
                          "peak_power_w_per_panel": peak, "n_panels": n_panels, "body_faces": body_faces,
                          "total_peak_w": (float(peak) * n_panels) if peak is not None and n_panels else None},
         "battery_wh": battery,
+        "battery": {"component": cell.get("id"), "capacity_wh": battery, "temp_op_c": temp},
         "consumers_declared_peak_w": (result.get("breakdown") or {}).get("power_w") or {},
         "radios": {k: {"component": v.get("id"), "band": (v.get("specs") or {}).get("band"),
                        "has_receiver": (v.get("specs") or {}).get("has_receiver"),

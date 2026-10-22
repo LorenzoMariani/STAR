@@ -563,6 +563,20 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
             note("PassSelection.LightCurve.Candidates", [c["name"] for c in lc["Candidates"]],
                  "automatic: no observatory named; END-001 keeps the Italian telescope with the most convenient first night pass "
                  "(darkest sky, then earliest, then highest)" + (f"; STAR input observatory not usable: {why}" if why else ""))
+
+    # ---- mission life of the eclipse envelope (phase D, 2026-10-21) --------------
+    # eclipse_summary.json: longest eclipse (END-004 battery) and hot / cold cases (END-019) over the mission life
+    life = _number((inp.get("mission_lifetime_years") or inp.get("lifetime_years") or (None,))[0])
+    if life and life > 0:
+        cfg["MissionLifetimeYears"] = life
+        src = inp.get("mission_lifetime_years") or inp.get("lifetime_years")
+        note("MissionLifetimeYears", life, f"STAR input ({src[1]})")
+    elif "lifetime_years" in found and _number(found["lifetime_years"][0]):
+        cfg["MissionLifetimeYears"] = float(found["lifetime_years"][0])
+        note("MissionLifetimeYears", cfg["MissionLifetimeYears"], f"requirement {found['lifetime_years'][1]}")
+    else:
+        cfg["MissionLifetimeYears"] = 1.0
+        note("MissionLifetimeYears", 1.0, "default: mission life not stated, 1 year (a whole seasonal cycle and node drift)")
     return cfg, report
 
 

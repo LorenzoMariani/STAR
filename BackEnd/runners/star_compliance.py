@@ -68,6 +68,13 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
                           "generation_per_orbit_Wh": sum(float(m.get("orbits_per_day") or 0) * float(m.get("power_generated_per_orbit_Wh") or 0)
                                                          for m in flown) / n_flown if flown else None,
                           "peak_power_W": max((m.get("peak_power_W") or 0) for m in flown) if flown else None}
+        # phase D: the depth of discharge checked is the battery worst case (longest eclipse over the mission life,
+        # generation reduced by the shorter sunlight); the nominal one stays as a KPI
+        cases = _load(p.parent / "power_design_cases.json") if (p.parent / "power_design_cases.json").exists() else None
+        out["END-004"]["nominal_max_dod_pct"] = out["END-004"]["max_dod_pct"]
+        if cases and isinstance(cases.get("worst_dod_pct"), (int, float)):
+            out["END-004"]["max_dod_pct"] = cases["worst_dod_pct"]
+            out["END-004"]["worst_case_eclipse_min"] = (cases.get("battery_worst_case") or {}).get("eclipse_min")
     p = _first(modules_root, "END-016/*/space_safety_summary.json")
     d = _load(p) if p else None
     if d:
@@ -89,6 +96,13 @@ def collect_kpis(modules_root: Path) -> dict[str, dict[str, Any]]:
                 bat_min.append(nodes["BAT"]["min_C"])
             if pk.get("CTR_max_C") is not None:
                 ctr_max.append(pk["CTR_max_C"])
+            # phase D: the hot and cold design cases over the mission life bound the battery and the central body
+            dc = t.get("design_cases") or {}
+            for case, key, acc in (("hot", "max_C", bat_max), ("cold", "min_C", bat_min), ("hot", "max_C", ctr_max)):
+                node = "CTR" if acc is ctr_max else "BAT"
+                v = (((dc.get(case) or {}).get("nodes") or {}).get(node) or {}).get(key)
+                if isinstance(v, (int, float)):
+                    acc.append(v)
             over += [k for k, v in (t.get("violations") or {}).items() if v]
         out["END-019"] = {"_source": str(files[0].parent), "battery_max_C": max(bat_max) if bat_max else None,
                           "battery_min_C": min(bat_min) if bat_min else None, "central_body_max_C": max(ctr_max) if ctr_max else None,
@@ -136,14 +150,16 @@ KPI_ROWS = [
     ("END-001", "gs_access_h", "Average ground-station access", "h"), ("END-001", "aoi_covered_pct", "Area of interest covered", "%"),
     ("END-001", "fitness_engine", "Fitness engine used", "-"),
     ("END-003", "eclipse_pct", "Eclipse fraction", "%"), ("END-003", "max_body_rate_deg_s", "Max body rate (imaging pass)", "deg/s"),
-    ("END-004", "daily_balance_Wh", "Daily energy balance", "Wh"), ("END-004", "max_dod_pct", "Max depth of discharge per orbit", "%"),
+    ("END-004", "daily_balance_Wh", "Daily energy balance", "Wh"), ("END-004", "max_dod_pct", "Max depth of discharge per orbit (worst case: longest eclipse over the mission life)", "%"),
+    ("END-004", "nominal_max_dod_pct", "Max depth of discharge per orbit (eclipse of the run)", "%"),
+    ("END-004", "worst_case_eclipse_min", "Longest eclipse over the mission life", "min"),
     ("END-004", "generation_per_orbit_Wh", "Generation per orbit (mean of the day)", "Wh"),
     ("END-010", "peak_magnitude", "Peak apparent magnitude", "mag"), ("END-010", "observatory", "Observatory", "-"),
     ("END-016", "min_separation_km", "Minimum separation between satellites", "km"),
     ("END-016", "n_events_below_screening", "Close approaches below screening", "-"),
     ("END-016", "passive_lifetime_years_mean_activity", "Passive orbital lifetime", "years"),
     ("END-016", "disposal_dv_m_s_5y_rule_mean_activity", "Disposal delta-v (5-year rule)", "m/s"),
-    ("END-019", "battery_max_C", "Battery max temperature", "C"), ("END-019", "battery_min_C", "Battery min temperature", "C"),
+    ("END-019", "battery_max_C", "Battery max temperature (window and hot case)", "C"), ("END-019", "battery_min_C", "Battery min temperature (window and cold case)", "C"),
     ("END-019", "central_body_max_C", "Central body max temperature", "C"),
     ("END-006", "class_u", "CubeSat class", "U"), ("END-006", "mass_kg", "Satellite mass", "kg"),
 ]
@@ -232,7 +248,7 @@ def check_requirement(req: dict[str, Any], kpis: dict[str, dict[str, Any]]) -> d
             c["reason"] = "END-006 chooses the smallest class whose components meet the performance requirements (stated class only reported)"
         checks.append(c)
     if "dod_max_pct" in p:
-        checks.append(_check("END-004", "max_dod_pct", "<=", p["dod_max_pct"], "%", kpis, "Depth of discharge per orbit"))
+        checks.append(_check("END-004", "max_dod_pct", "<=", p["dod_max_pct"], "%", kpis, "Depth of discharge per orbit (worst case, longest eclipse over the mission life)"))
     if p.get("energy_balance_positive"):
         checks.append(_check("END-004", "daily_balance_Wh", ">=", 0, "Wh", kpis, "Daily energy balance"))
     if "magnitude_min" in p:

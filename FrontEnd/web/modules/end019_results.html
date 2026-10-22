@@ -192,7 +192,7 @@ function nodeLabel(name){
 function nodeLimits(summary){
   const out = {};
   const lim = summary && summary.limits;
-  if (lim && typeof lim === 'object') for (const [k, v] of Object.entries(lim)) if (Number.isFinite(Number(v))) out[k.toUpperCase()] = Number(v);
+  if (lim && typeof lim === 'object') for (const [k, v] of Object.entries(lim)) if (v !== null && v !== '' && Number.isFinite(Number(v))) out[k.toUpperCase()] = Number(v);
   if (out.BAT === undefined) out.BAT = BATTERY_LIMIT_C;
   return out;
 }
@@ -257,7 +257,7 @@ function renderBanner(){
       }
       // flags the model sets without a time series loaded, or for a node the series does not carry
       for (const v of s.violations || []) {
-        const node = (v.path.match(/^violations\.([A-Za-z]+)_/) || [])[1];
+        const node = (v.path.match(/^violations\.([A-Za-z]+)_over$/) || [])[1];   // the series check covers only the window maximum
         if (v.active && !(node && s.series && s.series.nodes.some(n => n.key.replace(/^t_/i, '').toUpperCase() === node.toUpperCase())))
           parts.push(v.path.replace(/^violations\./, ''));
       }
@@ -276,8 +276,11 @@ function renderConfig(){
   const cfg = (info && info.config) || (state.current && state.sats[state.current] && state.sats[state.current].summary && (state.sats[state.current].summary.config || state.sats[state.current].summary.configuration)) || null;
   if (!cfg) { el.innerHTML = ''; return; }
   const prov = (info && info.provenance) || {};
-  const labels = { form_factor:'CubeSat class', panels:'Solar panels', n_internal_nodes:'Internal nodes', sar_power_W:'SAR power [W]', sar_source:'SAR switched on', sar_duty:'SAR duty' };
-  el.innerHTML = Object.entries(cfg).filter(([k]) => !/dir$/.test(k)).map(([k, v]) =>
+  const labels = { form_factor:'CubeSat class', panels:'Solar panels', n_internal_nodes:'Internal nodes', sar_power_W:'SAR power [W]', sar_source:'SAR switched on', sar_duty:'SAR duty',
+    dims_m:'Envelope [m]', mass_kg:'Mass [kg]', solar_faces:'Solar faces', P_internal_W:'Internal dissipation [W]', bat_min_C:'Battery min [°C]', bat_max_C:'Battery max [°C]', cases:'Design cases' };
+  const show = (k, v) => k === 'cases' && Array.isArray(v) ? v.map(c => `${c.name} ${fmt(c.P_internal_W, 2)} W`).join(' · ')
+    : Array.isArray(v) ? v.map(x => typeof x === 'number' ? fmt(x, 3) : x).join(', ') : typeof v === 'number' ? String(Math.round(v * 1000) / 1000) : v;
+  el.innerHTML = Object.entries(cfg).filter(([k]) => !/dir$/.test(k)).map(([k, v]) => [k, show(k, v)]).map(([k, v]) =>
     `<div class="chip"><div class="c-label">${esc(labels[k] || k)}</div><div class="c-value">${esc(v)}</div><div class="c-src">${esc(prov[k] || '')}</div></div>`).join('');
 }
 function renderSatBar(){
@@ -310,6 +313,20 @@ function renderKpis(){
   if (cells && Number.isFinite(Number(cells.max_C))) cards.push(kpi('Solar cells max', fmt(cells.max_C), '°C', `min ${fmt(cells.min_C)} · mean ${fmt(cells.mean_C)} °C (cell optics)`));
   if (ctr) cards.push(kpi('Central body max', fmt(ctr.max), '°C', `mean ${fmt(ctr.mean)} °C`, flag(ctr)));
   if (bat) cards.push(kpi('Battery max', fmt(bat.max), '°C', `min ${fmt(bat.min)} · mean ${fmt(bat.mean)} °C`, flag(bat)));
+  if (bat && Number.isFinite(limits.BAT_MIN)) cards.push(kpi('Battery min', fmt(bat.min), '°C', 'over the analysis span',
+    bat.min < limits.BAT_MIN ? { cls:'critical', icon:'✕', text:`below the ${fmt(limits.BAT_MIN, 0)} °C limit` } : { cls:'good', icon:'✓', text:`above the ${fmt(limits.BAT_MIN, 0)} °C limit` }));
+  // design cases over the mission life (phase D): hot = max |beta| + max dissipation, cold = longest eclipse + idle
+  const dc = sm.design_cases || {};
+  const caseCard = (name, key, lim, above) => {
+    const c = dc[name], v = c && c.nodes && c.nodes.BAT && c.nodes.BAT[key]; if (!Number.isFinite(Number(v))) return;
+    const bad = Number.isFinite(lim) && (above ? v > lim : v < lim);
+    cards.push(kpi(`${name === 'hot' ? 'Hot' : 'Cold'} case battery ${above ? 'max' : 'min'}`, fmt(v), '°C',
+      `β ${fmt(c.beta_deg)}°, eclipse ${fmt(c.eclipse_min)} min, ${fmt(c.P_internal_W, 2)} W inside`,
+      Number.isFinite(lim) ? (bad ? { cls:'critical', icon:'✕', text:`${above ? 'above' : 'below'} the ${fmt(lim, 0)} °C limit` }
+                                  : { cls:'good', icon:'✓', text:`within the ${fmt(lim, 0)} °C limit` }) : null));
+  };
+  caseCard('hot', 'max_C', limits.BAT, true);
+  caseCard('cold', 'min_C', limits.BAT_MIN, false);
   if (sar) cards.push(kpi('SAR payload max', fmt(sar.max), '°C', Number.isFinite(Number(sarPass)) ? `${fmt(sarPass)} °C in the imaging pass (real attitude)` : `mean ${fmt(sar.mean)} °C`, flag(sar)));
   if (s.eclipse) cards.push(kpi('Time in eclipse', fmt(frac(s.eclipse)), '%', 'of the analysis span'));
   if (s.sarOn && s.sarOn.some(Boolean)) cards.push(kpi('SAR on', fmt(frac(s.sarOn)), '%', 'of the analysis span'));

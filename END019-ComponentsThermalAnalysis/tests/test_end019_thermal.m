@@ -136,6 +136,51 @@ function test_orbit_radius_rate_and_phase(tc)
     verifyEqual(tc, angle(exp(1i*(phi1 - phi0))), deg2rad(40), 'AbsTol', 1e-9);
 end
 
+function test_design_cases_and_star_satellite(tc)
+    % phase D (2026-10-21): END-006 envelope / mass / solar faces, END-004 dissipation split in the calibrated ratio,
+    % hot case (high beta, max dissipation) warmer than the cold case (beta 0, idle) on every internal node
+    cfg = star_config(struct('form_factor', '12U', 'n_internal_nodes', 2, 'dims_m', [0.2263 0.2263 0.366], 'mass_kg', 7.8, ...
+        'solar_faces', {{'+X', '-X'}}, 'P_internal_W', 3.5, 'bat_min_C', -10, 'bat_max_C', 45));
+    verifyEqual(tc, cfg.sat.dims, [0.2263 0.2263 0.366]);
+    verifyEqual(tc, sum(cfg.nodes.mass), 0.6*7.8, 'AbsTol', 1e-12);
+    verifyEqual(tc, cfg.nodes.Pconst, [2.5 1.0], 'AbsTol', 1e-12);                 % 3.5 W in the 5:2 ratio
+    verifyEqual(tc, cfg.sat.solar_faces, [1 2]);
+    verifyEqual(tc, cfg.sat.alpha([1 3 5]), [cfg.sat.alpha_solar cfg.sat.alpha_z cfg.sat.alpha_z]);
+    verifyEqual(tc, [cfg.limits.BAT_min cfg.limits.BAT], [-10 45]);
+    orb = struct('alt', 600e3, 'incl', 53, 'raan', 30, 'omega', 0, 'nu', 0, 'start', datetime(2026, 5, 21, 'TimeZone', 'UTC'));
+    hot = star_design_case(cfg, orb, struct('name', 'hot', 'beta_deg', 70, 'P_internal_W', 8));
+    cold = star_design_case(cfg, orb, struct('name', 'cold', 'beta_deg', 0, 'P_internal_W', 1.5));
+    verifyEqual(tc, hot.eclipse_min, 0, 'beta 70 deg at 600 km: no eclipse');
+    r = cfg.env.Req + orb.alt; T = 2*pi*sqrt(r^3/cfg.env.mu)/60;
+    verifyEqual(tc, cold.eclipse_min, acosd(sqrt(r^2 - cfg.env.Re^2)/r)/180*T, 'RelTol', 0.02, 'cylindrical shadow at beta 0');
+    verifyLessThan(tc, hot.orbits, 200, 'periodic regime not reached');
+    for n = {'CTR', 'BAT'}
+        k = find(strcmp(hot.names, n{1}));
+        verifyGreaterThan(tc, hot.Tmax(k), cold.Tmax(k), n{1});
+        verifyGreaterThan(tc, hot.Tmin(k), cold.Tmin(k), n{1});
+    end
+end
+
+function test_hot_case_is_the_hottest_beta_of_the_life(tc)
+    % 2026-10-22: the hot case searches |beta| over the life range; it is at least as hot as both range ends and as
+    % every beta it scanned, and the sign of beta does not change the result
+    cfg = star_config(struct('form_factor', '12U', 'n_internal_nodes', 2, 'dims_m', [0.2263 0.2263 0.366], 'mass_kg', 7.8, ...
+        'solar_faces', {{'+X', '-X', '+Y', '-Y'}}, 'panels', 'body'));
+    orb = struct('alt', 627.6e3, 'incl', 53.3, 'raan', 30, 'omega', 0, 'nu', 0, 'start', datetime(2026, 5, 21, 'TimeZone', 'UTC'));
+    cs = struct('name', 'hot', 'P_internal_W', 2.6);
+    hot = star_hot_case(cfg, orb, cs, -76.7, 76.4);
+    k = find(strcmp(hot.names, 'BAT'));
+    verifyEqual(tc, hot.Tmax(k), max(hot.scan(:, 2)));
+    verifyGreaterThanOrEqual(tc, hot.beta_deg, 0); verifyLessThanOrEqual(tc, hot.beta_deg, 76.7);
+    for b = [0 76.7]
+        c = star_design_case(cfg, orb, struct('name', 'hot', 'beta_deg', b, 'P_internal_W', 2.6));
+        verifyGreaterThanOrEqual(tc, hot.Tmax(k), c.Tmax(k) - 1e-9, sprintf('hotter than beta %g', b));
+    end
+    m = star_design_case(cfg, orb, struct('name', 'hot', 'beta_deg', -hot.beta_deg, 'P_internal_W', 2.6));
+    verifyEqual(tc, m.Tmax(k), hot.Tmax(k), 'AbsTol', 1e-9, 'symmetric in the sign of beta');
+    verifyTrue(tc, contains(hot.rule, 'hottest BAT'));
+end
+
 function test_attitude_file_is_read_as_body_to_eci(tc)
     % END-003's file for Unreal holds the ECI->body quaternion: read with 'eci2body', +Z body points to nadir in the pass
     csv = fullfile(tc.TestData.examples, 'esempi_io_star', 'output_attitude_propagation', 'output_attitude_propagation.csv');
@@ -211,6 +256,30 @@ function test_internal_node_options_and_relative_paths(tc)
         verifyEqual(tc, isfield(S.violations, 'SAR_over'), nodes == 3, id);
         verifyEqual(tc, height(T), ceil(6*3600/60), id);                         % one row a minute
     end
+end
+
+function test_design_cases_through_the_json_input(tc)
+    % the cases as the STAR runner writes them (hot: life beta range, cold: fixed beta; different fields, so jsondecode
+    % gives a cell array): every satellite gets the hot / cold columns and the summary blocks; equal satellites share one run
+    base = fullfile(tc.TestData.work, 'cases');
+    mkdir(base);
+    f = fullfile(base, 'input.json');
+    fid = fopen(f, 'w');
+    fprintf(fid, ['{"star_input_dir": "%s", "output_dir": "./out", "form_factor": "12U", "n_internal_nodes": 2, ', ...
+        '"solar_faces": ["+X","-X","+Y","-Y"], "panels": "body", "P_internal_W": 2.0, "bat_min_C": -10, "bat_max_C": 45, ', ...
+        '"cases": [{"name": "hot", "P_internal_W": 2.6, "satellite_index": [1,2,3,4,5], "beta_min_deg": [-60,-60,-60,-60,-60], ', ...
+        '"beta_max_deg": [75,75,75,75,75]}, {"name": "cold", "P_internal_W": 1.6, "satellite_index": [1,2,3,4,5], ', ...
+        '"beta_deg": [0,0,0,0,0]}]}'], replace(fullfile(tc.TestData.examples, 'esempi_io_star'), '\', '/'));
+    fclose(fid);
+    evalc('rows = star_thermal_main(f);');
+    verifyEqual(tc, height(rows), 5);
+    verifyTrue(tc, all(rows.hot_BAT_max_C > rows.cold_BAT_min_C));
+    verifyTrue(tc, all(abs(rows.cold_beta_deg) < 1e-9));
+    verifyTrue(tc, all(rows.hot_beta_deg >= 0 & rows.hot_beta_deg <= 75));
+    S = jsondecode(fileread(fullfile(base, 'out', 'thermal_summary_SAT-01.json')));
+    verifyTrue(tc, contains(S.design_cases.hot.rule, 'hottest BAT'));
+    verifyNotEmpty(tc, S.design_cases.hot.beta_scan);
+    verifyEqual(tc, S.limits.BAT_min, -10);
 end
 
 function test_invalid_inputs(tc)

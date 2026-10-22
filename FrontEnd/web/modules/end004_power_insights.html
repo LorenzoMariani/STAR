@@ -194,7 +194,7 @@ function groupOf(name){
   return 'platform';
 }
 
-const state = { data:null, model:null, mode:'payload', order:'interleaved', labels:{} };
+const state = { data:null, model:null, mode:'payload', order:'interleaved', labels:{}, cases:null };
 
 /* ---------- helpers ---------- */
 function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -414,6 +414,17 @@ function renderKpis(model, batt){
       flag:batt.depleted ? { cls:'critical', text:'✕ battery depleted' } : null },
     { label:'Orbit', value:fmt(model.period, 1), unit:'min', note:`${fmt(model.sunMin, 1)} sunlight · ${fmt(model.eclMin, 1)} eclipse (${fmt(model.eclMin / model.period * 100, 0)}%)` }
   ];
+  // phase D: battery worst case (longest eclipse over the mission life, generation reduced) from power_design_cases.json
+  const dc = state.cases, wc = dc && dc.battery_worst_case;
+  if (wc) {
+    const lim = Number(dc.dod_limit_pct);
+    items.push({ label:'Battery worst case DoD', value:fmt(wc.max_dod_pct, 1), unit:'%',
+      note:`eclipse ${fmt(wc.eclipse_min, 1)} min · generation ×${fmt(wc.generation_scale, 3)} · daily ${sgn(wc.daily_balance_Wh)} Wh`,
+      flag:dc.dod_limit_pct === null || dc.dod_limit_pct === undefined ? null
+        : wc.max_dod_pct <= lim ? { cls:'good', text:`✓ within the ${fmt(lim, 0)}% limit` } : { cls:'critical', text:`✕ above the ${fmt(lim, 0)}% limit` } });
+    const d = dc.dissipation_W || {};
+    items.push({ label:'Internal dissipation', value:`${fmt(d.cold, 2)}–${fmt(d.hot, 2)}`, unit:'W', note:`cold (idle) – hot (payload + TX) · nominal ${fmt(d.nominal, 2)} W, to END-019` });
+  }
   $('kpis').innerHTML = items.map(i => `<div class="kpi"><div class="k-label">${esc(i.label)}</div><div class="k-value">${esc(i.value)}<span class="k-unit">${esc(i.unit)}</span></div><div class="k-note">${esc(i.note)}</div>${i.flag ? `<div class="k-flag ${i.flag.cls}">${esc(i.flag.text)}</div>` : ''}</div>`).join('');
 }
 
@@ -690,6 +701,9 @@ async function loadFiles(files, labels){
   const arr = Array.from(files || []);
   const sj = arr.find(f => f.name.toLowerCase() === 'power_budget_summary.json');
   const js = arr.find(f => f.name.toLowerCase() === 'power_budget_tables.js');
+  const dc = arr.find(f => f.name.toLowerCase() === 'power_design_cases.json');
+  state.cases = null;
+  try { if (dc) state.cases = JSON.parse(await dc.text()); } catch (e) { console.warn(e); }
   let data = null;
   try { if (sj) data = JSON.parse(await sj.text()); } catch (e) { console.warn(e); }
   try { if (!data && js) data = extractJs(await js.text()); } catch (e) { console.warn(e); }
