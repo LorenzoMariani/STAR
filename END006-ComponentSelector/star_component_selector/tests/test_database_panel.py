@@ -74,7 +74,7 @@ class TestLibraryStats(unittest.TestCase):
         self.assertEqual(sum(c["n"] for c in L["classes"]), L["total"])
         self.assertTrue(all(c["images"] <= c["n"] and c["datasheets"] <= c["n"] for c in L["classes"]))
         by = {c["id"]: c for c in L["classes"]}
-        self.assertEqual((by["magnetorquer"]["n"], by["magnetorquer"]["images"]), (9, 0))   # nessuna immagine per i magnetorquer aggiunti
+        self.assertEqual((by["magnetorquer"]["n"], by["magnetorquer"]["images"]), (9, 2))   # 2 immagini dai datasheet (import 2026-10-23)
 
     def test_every_class_has_a_unique_acronym(self):
         self.assertEqual(set(ACRONYMS), {sid for sid, _, _ in SUBSYSTEMS} | {"heater"})

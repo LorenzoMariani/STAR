@@ -1,0 +1,57 @@
+# ids whose auto-imported datasheet image is wrong (logo, banner, chart, drawing, not the product): image stays null
+# applied by tools/import_images.py --rejects; these ids are never re-imported
+aac-ant-100  # banner
+anywaves-s-band-compact-ttc  # gradient
+anywaves-x-band-high-gain  # gradient
+anywaves-x-band-payload-telemetry  # gradient
+iq-spacecom-s-band-single  # banner
+iq-spacecom-s-band-dual  # banner
+iq-spacecom-s-band-quad  # banner
+iq-spacecom-x-band-high-gain  # banner
+picosats-beamsat-x-band-4x4  # LinkedIn logo
+picosats-k-band-8x8  # LinkedIn logo
+ibeos-b28-135  # line drawing
+ibeos-b28-275  # logo
+ibeos-b28-550  # logo
+ibeos-b28-825  # logo
+ibeos-b28-1100  # logo
+aac-pulsar-xtx  # banner
+iq-spacecom-xlink-l  # banner
+iq-spacecom-xlink-s  # banner
+iq-spacecom-xlink-x  # banner
+spacemanic-murgas  # logo
+ibeos-150-w-cubesat-eps  # block diagram
+aac-ant-gps-a  # banner
+anywaves-gnss-all-bands  # gradient
+anywaves-gnss-l1-e1  # chart
+minco-hk6900  # building photo
+minco-hk6901  # building photo
+minco-hk6905  # building photo
+minco-hk6906  # building photo
+minco-hk6907  # building photo
+minco-hk6911  # building photo
+minco-hk6912  # building photo
+gomspace-nanotorque-gst-600-mk2  # black cover page
+spacemicro-csp-02  # transport case, not the product
+spacemicro-proton400k  # schematic
+spacemanic-deep-thought-obc  # logo
+oce-aerospace-miniature-camera  # mechanical drawing
+oxford-instruments-c-red-new-space  # chart
+sdl-disc  # blank page
+busek-bet-max  # abstract graphic
+pale-blue-pbr-10  # plume photo, not the product
+pale-blue-pbr-20  # plume photo, not the product
+pale-blue-pbi  # plume photo, not the product
+aac-rw210-15  # banner
+aac-rw210-30  # banner
+aac-rw210-60  # banner
+rocketlab-rw-0-003  # gradient
+rocketlab-rw-0-01  # chart
+rocket-lab-rw-0-03  # chart
+rocketlab-rw3-1-0  # chart
+vectronic-vrw-1  # logo
+spacemanic-ra-1u  # logo
+bradford-space-css  # Mars illustration
+bradford-space-mini-fss  # Mars illustration
+solar-mems-technologies-acss  # mechanical drawing
+adcole-digital-sun-sensor-32  # graphic

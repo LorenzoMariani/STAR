@@ -62,7 +62,7 @@ class TestCatalog(unittest.TestCase):
                 continue
             path = root / img["file"]
             self.assertTrue(path.is_file(), c.id)
-            self.assertRegex(path.name, r"^[A-Za-z0-9]+-[A-Za-z0-9.\-]+\.png$", c.id)
+            self.assertRegex(path.name, r"^[A-Za-z0-9]+-[A-Za-z0-9.\-]+\.(png|jpg)$", c.id)
             web = ("https://",) if not user_document(c) else (c.raw["datasheet"]["file"],)      # foto dal PDF fornito dall'utente
             self.assertTrue(img["image_url"].startswith(web), c.id)
             self.assertTrue(img["page_url"].startswith(web), c.id)

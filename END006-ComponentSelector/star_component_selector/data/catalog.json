@@ -13079,6 +13079,14 @@
     "bytes": 671638,
     "vendor_url": "https://spacemanic.com/wp-content/uploads/2026/03/SM-CEL-DS-0002_20.2_Data-Sheet.pdf",
     "origin": "NewSpaceMarket/SM-CEL-DS-0002_20.2_Data-Sheet.pdf"
+   },
+   "image": {
+    "file": "images/Spacemanic-Celeste.jpg",
+    "image_url": "https://spacemanic.com/wp-content/uploads/2026/03/SM-CEL-DS-0002_20.2_Data-Sheet.pdf#page=1",
+    "page_url": "https://spacemanic.com/wp-content/uploads/2026/03/SM-CEL-DS-0002_20.2_Data-Sheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Spacemanic__CELESTE-GNSS-Datasheet.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -13348,6 +13356,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/Isispace-1-Unitcubesatstructure.jpg",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-CubeSat-Structures-Brochure-v1.pdf#page=2",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/ISIS-CubeSat-Structures-Brochure-v1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 2 of the datasheet ISISpace__ISIS-CubeSat-Structures-Brochure-v1.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -13482,6 +13498,14 @@
     "axis": 0,
     "basis": "subsystem",
     "set": "2026-10-15"
+   },
+   "image": {
+    "file": "images/Isispace-Imtqmagnetorquerboard.jpg",
+    "image_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/iMTQ-Brochure-v1.pdf#page=1",
+    "page_url": "https://www.cubesatshop.com/wp-content/uploads/2016/06/iMTQ-Brochure-v1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet ISISpace__iMTQ-Brochure-v1.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -14269,6 +14293,14 @@
     "axis": 2,
     "basis": "subsystem",
     "set": "2026-10-16"
+   },
+   "image": {
+    "file": "images/Gomspace-Nanotorquegsw-600.jpg",
+    "image_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanotorque-gsw-600-25-1.pdf#page=1",
+    "page_url": "https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanotorque-gsw-600-25-1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet GomSpace__gs-ds-nanotorque-gsw-600-25-1.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -16172,6 +16204,14 @@
     "bytes": 185063,
     "vendor_url": "https://c3s.hu/wp-content/uploads/2026/01/EPS2000_Datasheet_v02_short-1.pdf",
     "origin": "NewSpaceMarket/EPS2000_Datasheet_v02_short-1.pdf"
+   },
+   "image": {
+    "file": "images/C3Selectronicsdevelopment-Eps2000.jpg",
+    "image_url": "https://c3s.hu/wp-content/uploads/2026/01/EPS2000_Datasheet_v02_short-1.pdf#page=1",
+    "page_url": "https://c3s.hu/wp-content/uploads/2026/01/EPS2000_Datasheet_v02_short-1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet C3s__EPS2000-Datasheet-v02-short-1.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -16886,6 +16926,14 @@
     "bytes": 353337,
     "vendor_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_xIgzZgoiK5Qo/files/txifv_1uR06I51UqmrGj1IV6kqFYqz/satbase-amun-power-supply-unit-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=1xDvuktP6sJYQ9WM8neZVHuq6I8%3D&Expires=1792621158",
     "origin": "SatBase/satbase-amun-power-supply-unit-datasheet.pdf"
+   },
+   "image": {
+    "file": "images/Spacemanic-Amun1U.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_xIgzZgoiK5Qo/files/txifv_1uR06I51UqmrGj1IV6kqFYqz/satbase-amun-power-supply-unit-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=1xDvuktP6sJYQ9WM8neZVHuq6I8%3D&Expires=1792621158#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_xIgzZgoiK5Qo/files/txifv_1uR06I51UqmrGj1IV6kqFYqz/satbase-amun-power-supply-unit-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=1xDvuktP6sJYQ9WM8neZVHuq6I8%3D&Expires=1792621158",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -17671,6 +17719,14 @@
     "bytes": 262022,
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf",
     "origin": "NewSpaceMarket/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf"
+   },
+   "image": {
+    "file": "images/Rocketlab-Rw4-02Reactionwheel.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet RocketLab__RW4-0.2-0.4.pdf, largest product image (automatic import, to be checked). Datasheet shared with: rocket-lab-rw4-0-4."
    }
   },
   {
@@ -17732,6 +17788,14 @@
     "bytes": 262022,
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf",
     "origin": "NewSpaceMarket/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf"
+   },
+   "image": {
+    "file": "images/Rocketlab-Rw4-04Reactionwheel.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/46337c162c5ae1ebfc5f60d6cfdb86de74c84b60.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet RocketLab__RW4-0.2-0.4.pdf, largest product image (automatic import, to be checked). Datasheet shared with: rocket-lab-rw4-0-2."
    }
   },
   {
@@ -17793,6 +17857,14 @@
     "bytes": 368000,
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/f13cd7d8ec40ab0ef6d5b5137d62a34d28271372.pdf",
     "origin": "NewSpaceMarket/f13cd7d8ec40ab0ef6d5b5137d62a34d28271372.pdf"
+   },
+   "image": {
+    "file": "images/Rocketlab-Rw4-10Reactionwheel.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/f13cd7d8ec40ab0ef6d5b5137d62a34d28271372.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/f13cd7d8ec40ab0ef6d5b5137d62a34d28271372.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet RocketLab__RW4-1.0.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -18345,6 +18417,14 @@
     "bytes": 1092143,
     "origin": "NewSpaceMarket/5bea737c6a8345bd17cf0842acd4fc7b479d273e.pdf",
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/5bea737c6a8345bd17cf0842acd4fc7b479d273e.pdf"
+   },
+   "image": {
+    "file": "images/Bradfordspace-Coss.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/5bea737c6a8345bd17cf0842acd4fc7b479d273e.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/5bea737c6a8345bd17cf0842acd4fc7b479d273e.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Bradford-Space__CoSS.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -18389,6 +18469,14 @@
     "bytes": 1519865,
     "origin": "NewSpaceMarket/dc17e03329f5e6a83309fea9001438953ad70d98.pdf",
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dc17e03329f5e6a83309fea9001438953ad70d98.pdf"
+   },
+   "image": {
+    "file": "images/Bradfordspace-Coss-R.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dc17e03329f5e6a83309fea9001438953ad70d98.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dc17e03329f5e6a83309fea9001438953ad70d98.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Bradford-Space__CoSS-R.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -18479,6 +18567,14 @@
     "bytes": 1302475,
     "origin": "NewSpaceMarket/b4a02489bc0b953f7bececc9fe5fc6a2797bb36d.pdf",
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/b4a02489bc0b953f7bececc9fe5fc6a2797bb36d.pdf"
+   },
+   "image": {
+    "file": "images/Bradfordspace-Fss.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/b4a02489bc0b953f7bececc9fe5fc6a2797bb36d.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/b4a02489bc0b953f7bececc9fe5fc6a2797bb36d.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Bradford-Space__FSS-Fine-Sun-Sensor.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -18877,6 +18973,14 @@
     "bytes": 4850162,
     "origin": "NewSpaceMarket/redwire-coarse-sun-sensor-cosine-type-flyheet.pdf",
     "vendor_url": "https://rdw.com/wp-content/uploads/2023/06/redwire-coarse-sun-sensor-cosine-type-flyheet.pdf"
+   },
+   "image": {
+    "file": "images/Redwirespace-Coarsesunsensor.jpg",
+    "image_url": "https://rdw.com/wp-content/uploads/2023/06/redwire-coarse-sun-sensor-cosine-type-flyheet.pdf#page=1",
+    "page_url": "https://rdw.com/wp-content/uploads/2023/06/redwire-coarse-sun-sensor-cosine-type-flyheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -18929,6 +19033,14 @@
     "bytes": 6563989,
     "origin": "NewSpaceMarket/e8766bc5489843da9788f8ddf0af82ab9208643b.pdf",
     "vendor_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/e8766bc5489843da9788f8ddf0af82ab9208643b.pdf"
+   },
+   "image": {
+    "file": "images/Redwirespace-Coarsesunsensorpyramid.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/e8766bc5489843da9788f8ddf0af82ab9208643b.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/e8766bc5489843da9788f8ddf0af82ab9208643b.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Redwire__Sun-Sensor-Datasheet.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -19185,6 +19297,14 @@
     "axis": 0,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/SsbvspaceGroundsystems-Cubesatmagnetorquerrod.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/e81e7117a6f9b90b249a24e9116448165fffad00.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/e81e7117a6f9b90b249a24e9116448165fffad00.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SSBV__CubeSat-Magnetorquer-Rod.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -19314,6 +19434,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Bluecubed-Cobaltopticalterminal.jpg",
+    "image_url": "https://cdn.prod.website-files.com/61ca672af16cb0773cab77c8/689a6f8f35805d95ea1458be_Cobalt%20slick%20V2.7%2020250809%20RENDER.pdf#page=1",
+    "page_url": "https://cdn.prod.website-files.com/61ca672af16cb0773cab77c8/689a6f8f35805d95ea1458be_Cobalt%20slick%20V2.7%2020250809%20RENDER.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Unknown__Cobalt-Optical-Terminal.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -19419,6 +19547,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Verse-011Ustructure.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2NDSpace__VERSE-CubeSat-Structures.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-verse-02, 2ndspace-verse-03, 2ndspace-verse-06."
    }
   },
   {
@@ -19463,6 +19599,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Verse-022Ustructure.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2NDSpace__VERSE-CubeSat-Structures.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-verse-01, 2ndspace-verse-03, 2ndspace-verse-06."
    }
   },
   {
@@ -19507,6 +19651,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Verse-033Ustructure.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2NDSpace__VERSE-CubeSat-Structures.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-verse-01, 2ndspace-verse-02, 2ndspace-verse-06."
    }
   },
   {
@@ -19551,6 +19703,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Verse-066Ustructure.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_6fgtWyPDMFY2/files/txifv_Ox7iO2mpbZ3bDniLZJt5IZPv/satbase-verse02-2u-cubesat-structure-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=NgXgKfvq4ZvaDzUmP2%2BLrzEmEs8%3D&Expires=1792621361",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2NDSpace__VERSE-CubeSat-Structures.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-verse-01, 2ndspace-verse-02, 2ndspace-verse-03."
    }
   },
   {
@@ -19802,6 +19962,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Taoglas-Ahp5354A070100Cactivegnssl1L5Patch.jpg",
+    "image_url": "https://www.taoglas.com/datasheets/AHP5354A.07.0100C.pdf#page=1",
+    "page_url": "https://www.taoglas.com/datasheets/AHP5354A.07.0100C.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Taoglas__AHP5354A.07.0100C.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -19863,6 +20031,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Taoglas-Ahp54510070100Cactivegnssl1L5L-Bandpatch.jpg",
+    "image_url": "https://www.taoglas.com/datasheets/AHP54510.07.0100C.pdf#page=1",
+    "page_url": "https://www.taoglas.com/datasheets/AHP54510.07.0100C.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Taoglas__AHP54510.07.0100C.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -19920,6 +20096,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Taoglas-Cgsp457Agnssandsatcompatch.jpg",
+    "image_url": "https://www.taoglas.com/datasheets/CGSP457.A.pdf#page=1",
+    "page_url": "https://www.taoglas.com/datasheets/CGSP457.A.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Taoglas__CGSP457.A-RevC.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -19956,6 +20140,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-01Zbody-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -19992,6 +20184,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-01Body-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -20028,6 +20228,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-02Body-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -20064,6 +20272,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-03Body-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -20100,6 +20316,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-04Body-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -20136,6 +20360,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-06Zbody-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-12, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -20172,6 +20404,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-12Body-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12z, 2ndspace-core-16."
    }
   },
   {
@@ -20208,6 +20448,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-12Zbody-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-16."
    }
   },
   {
@@ -20244,6 +20492,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Core-16Body-Mountedsolarpanel.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_6cbc43769e7a429cb2e5ff5f5e4c70c1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-core-01z, 2ndspace-core-01, 2ndspace-core-02, 2ndspace-core-03, 2ndspace-core-04, 2ndspace-core-06z, 2ndspace-core-12, 2ndspace-core-12z."
    }
   },
   {
@@ -20329,6 +20585,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Pumpkin-Deployableclamshellsolararray.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/5a1b790a0c1c4c7da4b070e8476f73f1850e81cc.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/5a1b790a0c1c4c7da4b070e8476f73f1850e81cc.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Pumpkin__Deployable-Clamshell-Solar-Array-DCSA.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -20383,6 +20647,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Ibeos-B14-M4514Vmodularsmallsatbattery.jpg",
+    "image_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_9ea1e6e10889409c8e1a11fb85d0df2b.pdf#page=1",
+    "page_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_9ea1e6e10889409c8e1a11fb85d0df2b.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Ibeos__B14-M45-M90-14V-Modular-SmallSat-Battery.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -20707,6 +20979,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Ibeos-B50-41250Vmodularbattery.jpg",
+    "image_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_8830b32e828c418cbe8808cda4b7d691.pdf#page=1",
+    "page_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_8830b32e828c418cbe8808cda4b7d691.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Ibeos__B50-412-1237-50V-Modular-Battery.pdf, largest product image (automatic import, to be checked). Datasheet shared with: ibeos-b50-825, ibeos-b50-1237."
    }
   },
   {
@@ -20761,6 +21041,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Ibeos-B50-82550Vmodularbattery.jpg",
+    "image_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_8830b32e828c418cbe8808cda4b7d691.pdf#page=1",
+    "page_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_8830b32e828c418cbe8808cda4b7d691.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Ibeos__B50-412-1237-50V-Modular-Battery.pdf, largest product image (automatic import, to be checked). Datasheet shared with: ibeos-b50-412, ibeos-b50-1237."
    }
   },
   {
@@ -20815,6 +21103,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Ibeos-B50-123750Vmodularbattery.jpg",
+    "image_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_8830b32e828c418cbe8808cda4b7d691.pdf#page=1",
+    "page_url": "https://219275cd-734f-47bd-895a-f7de56d5091e.usrfiles.com/ugd/f6a73e_8830b32e828c418cbe8808cda4b7d691.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Ibeos__B50-412-1237-50V-Modular-Battery.pdf, largest product image (automatic import, to be checked). Datasheet shared with: ibeos-b50-412, ibeos-b50-825."
    }
   },
   {
@@ -20876,6 +21172,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/SsbvspaceGroundsystems-Cubesatsunsensor.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/63a69ba68a96aeaf9400a2aeb990137c6808e0e7.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/63a69ba68a96aeaf9400a2aeb990137c6808e0e7.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SSBV__CubeSat-Sun-Sensor.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -20992,6 +21296,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Chorus-01-LpdeployableuhfVhfantenna.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-chorus-01-cp, 2ndspace-chorus-06-lp, 2ndspace-chorus-06-cp."
    }
   },
   {
@@ -21051,6 +21363,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Chorus-01-CpdeployableuhfVhfantenna.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-chorus-01-lp, 2ndspace-chorus-06-lp, 2ndspace-chorus-06-cp."
    }
   },
   {
@@ -21110,6 +21430,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Chorus-06-LpdeployableuhfVhfantenna.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-chorus-01-lp, 2ndspace-chorus-01-cp, 2ndspace-chorus-06-cp."
    }
   },
   {
@@ -21169,6 +21497,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/2Ndspace-Chorus-06-CpdeployableuhfVhfantenna.jpg",
+    "image_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf#page=1",
+    "page_url": "https://www.2ndspace.eu/_files/ugd/3b5b4f_f7bb7622fb8542ab80f6e81da4870fac.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet 2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf, largest product image (automatic import, to be checked). Datasheet shared with: 2ndspace-chorus-01-lp, 2ndspace-chorus-01-cp, 2ndspace-chorus-06-lp."
    }
   },
   {
@@ -21271,6 +21607,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Anywaves-Compactdual-Polarizedx-Bandantenna.jpg",
+    "image_url": "https://anywaves.com/wp-content/uploads/2026/05/Anywaves-Compact-Dual-Polorized-X-Band-Antenna-DTS-V1-ASA-052026.pdf#page=1",
+    "page_url": "https://anywaves.com/wp-content/uploads/2026/05/Anywaves-Compact-Dual-Polorized-X-Band-Antenna-DTS-V1-ASA-052026.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Anywaves__Compact-Dual-Polarized-X-Band-Antenna.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -21383,6 +21727,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Anywaves-S-BandttCantenna.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/af10b87404b1e82ca7241b5f03d0284714acae3d.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/af10b87404b1e82ca7241b5f03d0284714acae3d.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Anywaves__S-Band-TTC-Antenna-Hemispherical.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -21439,6 +21791,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Anywaves-S-BandttCantenna-Anywaves-S-Band-Ttc.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_nLlHL7hOtPNK/files/txifv_HjqWzL9Lj4hsEcDdH8XcvHaW/satbase-s-band-ttc-antenna-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=Zn%2BD1rlQijrfzqIE9ANpoA9f5kg%3D&Expires=1792621029#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_nLlHL7hOtPNK/files/txifv_HjqWzL9Lj4hsEcDdH8XcvHaW/satbase-s-band-ttc-antenna-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=Zn%2BD1rlQijrfzqIE9ANpoA9f5kg%3D&Expires=1792621029",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Anywaves__S-Band-TTC-Antenna.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -21551,6 +21911,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Anywaves-High-Gaindual-Polarizedx-Bandantenna.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_tSG8FP891dYB/files/txifv_sZho3jzN4Bg2r3UTLdbKVApy/satbase-x-band-dual-circularly-polarized-antenna-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=zEJSk9HRBV21knQHtfDQQYNtaIs%3D&Expires=1792621020#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_tSG8FP891dYB/files/txifv_sZho3jzN4Bg2r3UTLdbKVApy/satbase-x-band-dual-circularly-polarized-antenna-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=zEJSk9HRBV21knQHtfDQQYNtaIs%3D&Expires=1792621020",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Anywaves__X-Band-Dual-Circularly-Polarized-Antenna.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -21893,6 +22261,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Plan-SsatelliteSpacetechnologies-Iotcircularlypolarizedantenna.jpg",
+    "image_url": "https://plan.space/wp-content/uploads/2025/12/IoT_Anten_EN.pdf#page=1",
+    "page_url": "https://plan.space/wp-content/uploads/2025/12/IoT_Anten_EN.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet PLAN-S__IoT-Antenna.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22082,6 +22458,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Spacemanic-Samsmallantennamodule.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_WzbuRoHuVu3v/files/txifv_5Wltt9LCjykg2u7j38LoqNTI/satbase-sam-small-antenna-module-uhfvhf-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=bQQDEG4kH%2FQg4Evw6ta%2FY%2FZ5swk%3D&Expires=1792620990#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_WzbuRoHuVu3v/files/txifv_5Wltt9LCjykg2u7j38LoqNTI/satbase-sam-small-antenna-module-uhfvhf-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=bQQDEG4kH%2FQg4Evw6ta%2FY%2FZ5swk%3D&Expires=1792620990",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Spacemanic__sam-small-antenna-module-uhfvhf.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22199,6 +22583,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Aphelionorbitals-UhftransmitterVhfreceiverradio.jpg",
+    "image_url": "datasheets/comms/Aphelion-Orbitals__UHF-VHF-Radio.pdf#page=1",
+    "page_url": "datasheets/comms/Aphelion-Orbitals__UHF-VHF-Radio.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Aphelion-Orbitals__UHF-VHF-Radio.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22549,6 +22941,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Pyxisspace-VhfUhftransceiver.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_QjBBjcKdLqHp/files/txifv_R3ZChEEDBdVtIojwwanQntF4/satbase-vhfuhf-transceiver-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=y5YRTAX8GlIDWnwslO05RwfVvt4%3D&Expires=1792620987#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_QjBBjcKdLqHp/files/txifv_R3ZChEEDBdVtIojwwanQntF4/satbase-vhfuhf-transceiver-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=y5YRTAX8GlIDWnwslO05RwfVvt4%3D&Expires=1792620987",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Pyxis-Space__VHF-UHF-Transceiver.pdf, largest product image (automatic import, to be checked). Datasheet shared with: pyxis-space-vhf-uhf-transceiver-vhf."
    }
   },
   {
@@ -22607,6 +23007,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Pyxisspace-VhfUhftransceiver-Pyxis-Space-Vhf-Uhf-Transceiver-Vhf.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_QjBBjcKdLqHp/files/txifv_R3ZChEEDBdVtIojwwanQntF4/satbase-vhfuhf-transceiver-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=y5YRTAX8GlIDWnwslO05RwfVvt4%3D&Expires=1792620987#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_QjBBjcKdLqHp/files/txifv_R3ZChEEDBdVtIojwwanQntF4/satbase-vhfuhf-transceiver-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=y5YRTAX8GlIDWnwslO05RwfVvt4%3D&Expires=1792620987",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Pyxis-Space__VHF-UHF-Transceiver.pdf, largest product image (automatic import, to be checked). Datasheet shared with: pyxis-space-vhf-uhf-transceiver-uhf."
    }
   },
   {
@@ -22659,6 +23067,14 @@
     ],
     "basis": "derived",
     "note": "Derived from the declared volume '< 0.1U' (nominal 100 x 100 x 113.5 mm per U): an upper bound, the vendor gives no dimensions."
+   },
+   "image": {
+    "file": "images/Iqtechnologiesforearthandspace-Hispicos-Bandtransmitter.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_tgBf3zV2wQ31/files/txifv_vt1B7WlxNNaKTb11G7H3oxkd/satbase-hispico-transmitter-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=8LBkm8PRsC2JKJUuNnsB1UF%2BKRk%3D&Expires=1792621070#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_tgBf3zV2wQ31/files/txifv_vt1B7WlxNNaKTb11G7H3oxkd/satbase-hispico-transmitter-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=8LBkm8PRsC2JKJUuNnsB1UF%2BKRk%3D&Expires=1792621070",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Unknown__HiSPiCO-S-Band-Transmitter.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22705,6 +23121,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Iqtechnologiesforearthandspace-SlinkSlink-Phys-Bandtransceiver.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_dXJFaLP1Zxjx/files/txifv_dQ2TVCSFrxPngsG5nKSNCMK9/satbase-slink-phy-transceiver-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=SuFqCAV2jZ91%2BI3hJIqwaSgq2GU%3D&Expires=1792621069#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_dXJFaLP1Zxjx/files/txifv_dQ2TVCSFrxPngsG5nKSNCMK9/satbase-slink-phy-transceiver-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=SuFqCAV2jZ91%2BI3hJIqwaSgq2GU%3D&Expires=1792621069",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Unknown__Slink-Phy-S-Band-Transceiver.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22760,6 +23184,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Berlinspacetechnologies-Cdh-110Commandanddatahandling.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/c9b91dc2b624b4ae822fbc6d78211dbc8b43ef7c.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/c9b91dc2b624b4ae822fbc6d78211dbc8b43ef7c.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet BST__CDH-Command-and-Data-Handling.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22818,6 +23250,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Cavuaerospace-Obc-1Satelliteonboardcomputer.jpg",
+    "image_url": "https://cavuaerospace.uk/wp-content/uploads/2024/01/CAVU-OBC1-Br-v2024.1.pdf#page=1",
+    "page_url": "https://cavuaerospace.uk/wp-content/uploads/2024/01/CAVU-OBC1-Br-v2024.1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet CAVU-Aerospace__OBC-1-Brochure.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22871,6 +23311,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Kplabs-Antelopedpu.jpg",
+    "image_url": "https://cdn.prod.website-files.com/667174a549d8e1e151191810/698c95312f39c7caa5df1a85_Antelope_DPU_Data_Sheet.pdf#page=1",
+    "page_url": "https://cdn.prod.website-files.com/667174a549d8e1e151191810/698c95312f39c7caa5df1a85_Antelope_DPU_Data_Sheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet KP-Labs__Antelope-DPU.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22909,6 +23357,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Naraspacetechnology-Nstobc-A9Onboardcomputer.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_Bk5XM8Kr0ke3/files/txifv_gz7WqT1LANqAmps1mnimkMJc/satbase-nst-obc-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=4ojtaTg%2F558BBdF%2BcYpBtt%2BxJl0%3D&Expires=1792620957#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_Bk5XM8Kr0ke3/files/txifv_gz7WqT1LANqAmps1mnimkMJc/satbase-nst-obc-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=4ojtaTg%2F558BBdF%2BcYpBtt%2BxJl0%3D&Expires=1792620957",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Nara-Space__NSTOBC-Datasheet.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -22984,6 +23440,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Spacemicro-Proton200Kliteprocessorboard.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_ejNrR5Kwe4bI/files/txifv_IJMQiE0u9FFQ0XadaTHBAtoC/satbase-proton200k-l-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=%2B2chyk67ywZr3ts1a8Xl5E7YY7U%3D&Expires=1792620946#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_ejNrR5Kwe4bI/files/txifv_IJMQiE0u9FFQ0XadaTHBAtoC/satbase-proton200k-l-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=%2B2chyk67ywZr3ts1a8Xl5E7YY7U%3D&Expires=1792620946",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SpaceMicro__Proton200k-Lite.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23022,6 +23486,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Spacemicro-Proton200Kdspprocessorboard.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_xdG5Aehp8ATm/files/txifv_IaSKT39YqkRPQvKLCtxyXnkR/satbase-proton200k-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=2DYIorMPe2%2FcBo89XAB9%2BNVTqKE%3D&Expires=1792620947#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_xdG5Aehp8ATm/files/txifv_IaSKT39YqkRPQvKLCtxyXnkR/satbase-proton200k-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=2DYIorMPe2%2FcBo89XAB9%2BNVTqKE%3D&Expires=1792620947",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SpaceMicro__Proton200k.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23181,6 +23653,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Spacemanic-Eddieobc.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_Hsf4fCtvPwpO/files/txifv_6nkwnLS1vWhRYoaj1IBA8FfK/satbase-eddie-onboard-computer-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=n5HvKRx7lygQNol0a6%2BOO9eCGHE%3D&Expires=1792620928#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_Hsf4fCtvPwpO/files/txifv_6nkwnLS1vWhRYoaj1IBA8FfK/satbase-eddie-onboard-computer-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=n5HvKRx7lygQNol0a6%2BOO9eCGHE%3D&Expires=1792620928",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Spacemanic__Eddie-OBC-Sheet.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23226,6 +23706,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Veng-Antartixv20Obc.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/d3066b1138458744504daabd3dbd3382188ef18c.pdf#page=2",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/d3066b1138458744504daabd3dbd3382188ef18c.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 2 of the datasheet Unknown__Antartix-OBC.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23338,6 +23826,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Steamjet-Steamthrusterone.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_J4tycAnBxjEN/files/txifv_ZZoxDN7zgZ4I0siCwxUPow2i/satbase-steamjet-thruster-one-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=%2BYV0PhapmC6JQeb1RGDrohBAhVQ%3D&Expires=1792621200#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_J4tycAnBxjEN/files/txifv_ZZoxDN7zgZ4I0siCwxUPow2i/satbase-steamjet-thruster-one-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=%2BYV0PhapmC6JQeb1RGDrohBAhVQ%3D&Expires=1792621200",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SteamJet__Steam-Thruster-One.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23381,6 +23877,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Steamjet-Steamtunacanthruster.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_7fmCPGqD0QIy/files/txifv_59cpux6AFQPbFH5yg4Gx3P9F/satbase-steamjet-tunacan-thruster-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=ryXavW37cWeVwohO8lihEXlX0E8%3D&Expires=1792621209#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_7fmCPGqD0QIy/files/txifv_59cpux6AFQPbFH5yg4Gx3P9F/satbase-steamjet-tunacan-thruster-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=ryXavW37cWeVwohO8lihEXlX0E8%3D&Expires=1792621209",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SteamJet__Steam-TunaCan-Thruster.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23424,6 +23928,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Steamjet-Tunatankthruster.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_b5YS2fZH28Dy/files/txifv_k03KHfAtLSh2n0b1lHVz1tHy/satbase-steamjet-tunatank-thruster-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=m7UTI4z%2BdyuCrKd8RnWUSzhGkWE%3D&Expires=1792621206#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_b5YS2fZH28Dy/files/txifv_k03KHfAtLSh2n0b1lHVz1tHy/satbase-steamjet-tunatank-thruster-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=m7UTI4z%2BdyuCrKd8RnWUSzhGkWE%3D&Expires=1792621206",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SteamJet__TunaTank-Thruster.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23662,6 +24174,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Dragonflyaerospace-Chameleonimager.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/652a612b2006c88acdf7bf076df87222e1c300b1.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/652a612b2006c88acdf7bf076df87222e1c300b1.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet DragonflyAerospace__Chameleon-SWIR.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23732,6 +24252,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Dragonflyaerospace-Komodoimager.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_crIpjum2x4hg/files/txifv_xXYDnMlLxh6MkiNQ5sgwvEIv/satbase-komodo-imager-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=GGCLYNHYhIDhnkD4YmDfGEfopkk%3D&Expires=1792621422#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_crIpjum2x4hg/files/txifv_xXYDnMlLxh6MkiNQ5sgwvEIv/satbase-komodo-imager-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=GGCLYNHYhIDhnkD4YmDfGEfopkk%3D&Expires=1792621422",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet DragonflyAerospace__Komodo-Imager.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -23875,6 +24403,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Kisscam-Kisscamminiaturecamera.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/a262152adfd1ff56afb86d67e41cd3f0dc426ce8.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/a262152adfd1ff56afb86d67e41cd3f0dc426ce8.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Unknown__KissCAM-Datasheet-and-User-Manual.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -24141,6 +24677,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Spacemicro-5Mpspacecamera.jpg",
+    "image_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_LRmWfstwECxP/files/txifv_c0o5650LC2U7BqBBWM82CaWG/satbase-spacecam-5mp-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=eg62SX0PvxGwV%2BVDWqHpwhHjZBY%3D&Expires=1792621444#page=1",
+    "page_url": "https://satbase.s3.amazonaws.com/public/taxonomy/items/txi_LRmWfstwECxP/files/txifv_c0o5650LC2U7BqBBWM82CaWG/satbase-spacecam-5mp-datasheet.pdf?AWSAccessKeyId=AKIA2J3P2LNLVVVTU6MY&Signature=eg62SX0PvxGwV%2BVDWqHpwhHjZBY%3D&Expires=1792621444",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet SpaceMicro__SpaceCam-5MP.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -24212,6 +24756,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Thothtechnology-Aurora1000Line-Scancamera.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dc93b685c9870adb8892083422ea4b13eee1c187.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dc93b685c9870adb8892083422ea4b13eee1c187.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Thoth__Aurora-1000-Line-Scan-Camera-Owners-Manual.pdf, largest product image (automatic import, to be checked)."
    }
   },
   {
@@ -24273,6 +24825,14 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "image": {
+    "file": "images/Auricam-Auricammulti-Purposerad-Tolerantcamera.jpg",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/6bf3d169bffa707dd2547725e92d42d95d5ad093.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/6bf3d169bffa707dd2547725e92d42d95d5ad093.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23",
+    "note": "Page 1 of the datasheet Unknown__AuriCAM-Rad-Tolerant-Camera.pdf, largest product image (automatic import, to be checked)."
    }
   }
  ]
