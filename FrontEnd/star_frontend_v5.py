@@ -322,40 +322,6 @@ class StarApi:
         hours, minutes = divmod(minutes, 60.0)
         return f"{int(hours)} h {int(minutes)} min {remaining:.1f} s"
 
-    def get_initial_state(self) -> dict[str, Any]:
-        return {
-            "app_name": "STAR-Local Desktop App",
-            "subtitle": "Space mission Twin for Architecture Representation",
-            "modules": self.modules,
-            "logs": self.logs,
-            "run": self.get_run_state(),
-            "requirements": self.requirements,
-            "requirements_review_status": self.requirements_review_status,
-            "missing_information": self.missing_information,
-            "missing_information_review_status": self.missing_information_review_status,
-            "assumptions_approved": self.assumptions_approved,
-            "workflow": self.workflow_steps,
-            "workflow_review_status": self.workflow_review_status,
-            "workflow_approved": self.workflow_approved,
-            "execution_results": self.execution_results,
-            "execution_review_status": self.execution_review_status,
-            "execution_approved": self.execution_approved,
-            "execution_running": self.execution_running,
-            "execution_error": self.execution_error,
-            "execution_stop_requested": self.execution_stop_requested,
-            "active_module_name": self.active_module_name,
-            "active_module_id": self.active_module_id,
-            "report_manifest": self.report_manifest,
-            "report_status": self.report_status,
-            "allowed_requirement_categories": ALLOWED_REQUIREMENT_CATEGORIES,
-            "allowed_requirement_statuses": ALLOWED_REQUIREMENT_STATUSES,
-            "allowed_missing_information_statuses": ALLOWED_MISSING_INFORMATION_STATUSES,
-            "allowed_missing_information_sources": ALLOWED_MISSING_INFORMATION_SOURCES,
-            "allowed_workflow_statuses": ALLOWED_WORKFLOW_STATUSES,
-            "allowed_execution_statuses": ALLOWED_EXECUTION_STATUSES,
-            "module_names": self.get_module_names(),
-        }
-
     def get_run_state(self) -> dict[str, Any]:
         return {
             "current_run_id": self.current_run_id,
@@ -648,9 +614,6 @@ class StarApi:
     # ------------------------------------------------------------------
     # Module status API
     # ------------------------------------------------------------------
-    def get_modules(self) -> list[dict[str, Any]]:
-        return self.modules
-
     def set_module_status(self, module_id: str, status: str) -> dict[str, Any]:
         allowed_statuses = {"Idle", "Ready", "Running", "Completed", "Fallback", "Skipped", "Error", "Stopped"}
 
@@ -695,73 +658,9 @@ class StarApi:
     # ------------------------------------------------------------------
     # Run management and upload
     # ------------------------------------------------------------------
-    def create_run_folder(self) -> None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.current_run_id = f"RUN_{timestamp}"
-        self.current_run_path = self.outputs_dir / self.current_run_id
-
-        for subfolder in ["input", "intermediate", "planning", "module_inputs", "modules_output", "reports", "logs"]:
-            (self.current_run_path / subfolder).mkdir(parents=True, exist_ok=True)
-
-    def reset_downstream_from_requirements(self) -> None:
-        self.missing_information = []
-        self.missing_information_review_status = "not_available"
-        self.assumptions_approved = False
-        self.workflow_steps = []
-        self.workflow_review_status = "not_available"
-        self.workflow_approved = False
-
-    def reset_downstream_from_assumptions(self) -> None:
-        self.workflow_steps = []
-        self.workflow_review_status = "not_available"
-        self.workflow_approved = False
-        self.reset_downstream_from_workflow()
-
-    def reset_downstream_from_workflow(self) -> None:
-        self.execution_results = []
-        self.execution_review_status = "not_available"
-        self.execution_approved = False
-        self.reset_downstream_from_execution()
-
     def reset_downstream_from_execution(self) -> None:
         self.report_manifest = []
         self.report_status = "not_available"
-
-    def reset_run_state_after_new_upload(self) -> None:
-        self.uploaded_text = None
-        self.input_document_filename = None
-        self.input_document_original_path = None
-        self.input_document_saved_relative_path = None
-        self.input_document_saved_absolute_path = None
-        self.input_document_uploaded_at = None
-
-        self.requirements = []
-        self.requirements_extraction_mode = None
-        self.requirements_review_status = "not_available"
-
-        self.missing_information = []
-        self.missing_information_review_status = "not_available"
-        self.assumptions_approved = False
-
-        self.workflow_steps = []
-        self.workflow_review_status = "not_available"
-        self.workflow_approved = False
-
-        self.execution_results = []
-        self.execution_review_status = "not_available"
-        self.execution_approved = False
-        self.execution_error = None
-        self.execution_stop_requested = False
-        self.active_module_name = None
-        self.active_module_id = None
-        if hasattr(self, "execution_stop_event"):
-            self.execution_stop_event.clear()
-
-        self.report_manifest = []
-        self.report_status = "not_available"
-
-        for module in self.modules:
-            module["status"] = "Idle"
 
     def read_document_text(self, source_path: Path) -> str:
         """Extract the plain text of a mission request document.
@@ -854,31 +753,6 @@ class StarApi:
             "ok": True,
             **self.state_payload(),
             "message": "Mission request received. Requirements can now be extracted.",
-        }
-
-    def state_payload(self) -> dict[str, Any]:
-        return {
-            "run": self.get_run_state(),
-            "modules": self.modules,
-            "requirements": self.requirements,
-            "requirements_review_status": self.requirements_review_status,
-            "missing_information": self.missing_information,
-            "missing_information_review_status": self.missing_information_review_status,
-            "assumptions_approved": self.assumptions_approved,
-            "workflow": self.workflow_steps,
-            "workflow_review_status": self.workflow_review_status,
-            "workflow_approved": self.workflow_approved,
-            "execution_results": self.execution_results,
-            "execution_review_status": self.execution_review_status,
-            "execution_approved": self.execution_approved,
-            "execution_running": self.execution_running,
-            "execution_error": self.execution_error,
-            "execution_stop_requested": self.execution_stop_requested,
-            "active_module_name": self.active_module_name,
-            "active_module_id": self.active_module_id,
-            "report_manifest": self.report_manifest,
-            "report_status": self.report_status,
-            "logs": self.logs,
         }
 
     # ------------------------------------------------------------------
@@ -1137,35 +1011,6 @@ class StarApi:
         normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
         return normalized.lower().strip()
 
-    def end016_safety_requested(self, normalized_text: str) -> bool:
-        """END-016 (inside STAR: space-safety checks of the END-001 constellation): the request
-        talks about collisions between satellites, space debris, disposal or end of life."""
-        return any(token in normalized_text for token in [
-            "collision", "conjunction", "close approach", "space debris", "debris mitigation", "space safety",
-            "space sustainability", "deorbit", "de-orbit", "disposal", "end of life", "end-of-life", "post-mission",
-            "re-enter", "reenter", "re-entry", "reentry", "orbital lifetime", "safe separation",
-        ])
-
-    def end019_thermal_requested(self, normalized_text: str) -> bool:
-        """END-019 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose thermal
-        behaviour is asked for. Outside it (larger satellites) the module would only
-        report that the mission is out of scope, so it is not planned."""
-        cubesat = "cubesat" in normalized_text or re.search(r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)", normalized_text) is not None
-        thermal = any(token in normalized_text for token in [
-            "thermal", "temperature", "overheat", "heat dissipation", "heat load", "termic", "temperatur",
-        ])
-        return cubesat and thermal
-
-    def end006_design_requested(self, normalized_text: str) -> bool:
-        """END-006 domain: a CubeSat (named, or a 1U/3U/6U/12U class) whose platform
-        components or subsystems are to be chosen; used by the consistency check of
-        LLM plans (the rule-based planner has its own, broader keyword list)."""
-        cubesat = "cubesat" in normalized_text or re.search(r"\b(1|3|6|12)\s*-?\s*u\b(?!\w)", normalized_text) is not None
-        design = any(token in normalized_text for token in [
-            "component", "subsystem", "bill of materials", "satellite design", "platform design", "off-the-shelf", "datasheet",
-        ])
-        return cubesat and design
-
     def rule_based_requirement_extraction(self, text: str) -> list[dict[str, Any]]:
         """Rule-based extraction (2026-10-17): every sentence with a modal verb (shall, must, should, dovra', deve...) or a
         requirement identifier (REQ-04...) becomes a requirement, verbatim with its numbers (runners/star_text_rules.py);
@@ -1196,212 +1041,6 @@ class StarApi:
     # ------------------------------------------------------------------
     # Missing information analysis and review
     # ------------------------------------------------------------------
-    def analyze_missing_information(self, mode: str = "Registry-driven MVP") -> dict[str, Any]:
-        if not self.requirements:
-            return {"ok": False, "error": "No active requirements are available. Extract and review requirements first.", "logs": self.logs}
-
-        mode = mode or "Registry-driven MVP"
-        self.add_log("AI", f"Analyzing missing information using mode: {mode}.")
-
-        try:
-            if mode == "Local LLM via Ollama":
-                missing_information = self.llm_assisted_missing_information_analysis(self.requirements)
-                source = "llm_assisted_missing_information_analysis"
-                raw_source = "llm_assisted_missing_information_raw_output"
-            else:
-                missing_information = self.registry_driven_missing_information_analysis(self.requirements)
-                source = "registry_driven_missing_information_analysis"
-                raw_source = "registry_driven_missing_information_raw_output"
-        except Exception as exc:
-            self.add_log("ERROR", f"Missing-information analysis failed in {mode}: {exc}")
-            self.add_log("AI", "Falling back to registry-driven missing-information analysis.")
-            missing_information = self.registry_driven_missing_information_analysis(self.requirements)
-            source = "registry_driven_missing_information_analysis_after_llm_fallback"
-            raw_source = "registry_driven_missing_information_raw_output_after_llm_fallback"
-
-        self.missing_information = missing_information
-        self.missing_information_review_status = "not_reviewed"
-        self.assumptions_approved = False
-        self.reset_downstream_from_assumptions()
-
-        active_path = self.save_missing_information_json(
-            missing_information=missing_information,
-            review_status="not_reviewed",
-            output_filename="missing_information.json",
-            source=source,
-        )
-
-        extracted_path = self.save_missing_information_json(
-            missing_information=missing_information,
-            review_status="not_reviewed",
-            output_filename="missing_information_extracted.json",
-            source=raw_source,
-        )
-
-        self.add_log("AI", f"{len(missing_information)} missing/required information items identified.")
-        self.add_log("SYSTEM", f"Active missing information saved: {active_path}")
-        self.add_log("SYSTEM", f"Raw missing information saved: {extracted_path}")
-
-        return {
-            "ok": True,
-            **self.state_payload(),
-            "missing_information_path": str(active_path),
-            "missing_information_extracted_path": str(extracted_path),
-            "message": f"{len(missing_information)} missing/required information items identified using {mode}.",
-        }
-
-    def registry_driven_missing_information_analysis(self, requirements: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        categories = {req.get("category", "functional") for req in requirements}
-        req_text = " ".join(req.get("text", "") for req in requirements).lower()
-        source_text = (self.uploaded_text or "").lower()
-        combined_text = f"{req_text} {source_text}"
-
-        selected_modules = self.select_modules_for_missing_information(categories, combined_text)
-
-        items: list[dict[str, Any]] = []
-        seen_keys = set()
-
-        for module in selected_modules:
-            module_name = module.get("module_name", module.get("module_id", "unknown module"))
-            module_id = module.get("module_id", "unknown_module")
-
-            for input_item in module.get("required_inputs", []) or []:
-                if not self.should_include_input_item(input_item, categories, combined_text):
-                    continue
-
-                parameter = str(input_item.get("name", "unknown_parameter")).strip()
-                key = (module_id, parameter)
-                if key in seen_keys:
-                    continue
-                seen_keys.add(key)
-
-                proposed_value, status, source = self.infer_missing_information_value(
-                    input_item=input_item,
-                    module=module,
-                    combined_text=combined_text,
-                    selected_modules=selected_modules,
-                )
-
-                item = {
-                    "parameter": parameter,
-                    "needed_by": module_name,
-                    "needed_by_module_id": module_id,
-                    "reason": str(input_item.get("missing_information_reason") or input_item.get("description") or "Required by the selected module interface.").strip(),
-                    "proposed_value": proposed_value,
-                    "unit": str(input_item.get("unit", "-")),
-                    "status": status,
-                    "source": source,
-                    "required": bool(input_item.get("required", False)),
-                    "assumption_allowed": bool(input_item.get("assumption_allowed", False)),
-                    "data_type": str(input_item.get("data_type", "unknown")),
-                    "reviewed_by_user": False,
-                }
-
-                items.append(item)
-
-        return items
-
-    def select_modules_for_missing_information(self, categories: set[str], combined_text: str) -> list[dict[str, Any]]:
-        if not self.modules:
-            return []
-
-        selected: list[dict[str, Any]] = []
-
-        sorted_modules = sorted(self.modules, key=self.get_module_order_score)
-
-        for module in sorted_modules:
-            name = str(module.get("module_name", "")).lower()
-            module_id = str(module.get("module_id", "")).lower()
-
-            is_constellation = "constellation" in name or "constellation" in module_id
-            is_observation = "observation" in name or "observation" in module_id
-            is_eps = "power" in name or "budget" in name or "battery" in name or "eps" in name or "power" in module_id or "battery" in module_id
-
-            if is_constellation and categories & {"mission", "functional", "functional", "design", "mission", "functional"}:
-                selected.append(module)
-            elif is_observation and categories & {"mission", "functional", "functional", "design", "functional"}:
-                selected.append(module)
-            elif is_eps and ("functional" in categories or any(word in combined_text for word in ["battery", "functional", "power", "energy", "soh", "rul"])):
-                selected.append(module)
-
-        if not selected:
-            selected = sorted_modules[: min(2, len(sorted_modules))]
-
-        return selected
-
-    def should_include_input_item(self, input_item: dict[str, Any], categories: set[str], combined_text: str) -> bool:
-        required = bool(input_item.get("required", False))
-        name = str(input_item.get("name", "")).lower()
-
-        if required:
-            return True
-        if "design" in categories and any(token in name for token in ["sensor", "fov", "field", "sar", "optical"]):
-            return True
-        if "functional" in categories and any(token in name for token in ["environment", "acquisition", "terrain", "model"]):
-            return True
-        if "functional" in categories and any(token in name for token in ["battery", "telemetry", "mission", "acquisition"]):
-            return True
-        if "synthetic" in combined_text and any(token in name for token in ["terrain", "3d", "model", "object"]):
-            return True
-        return False
-
-    def infer_missing_information_value(
-        self,
-        input_item: dict[str, Any],
-        module: dict[str, Any],
-        combined_text: str,
-        selected_modules: list[dict[str, Any]],
-    ) -> tuple[str, str, str]:
-        name = str(input_item.get("name", "")).lower()
-        produced_by = str(input_item.get("produced_by", "")).strip()
-        default_value = input_item.get("default_value", None)
-        assumption_allowed = bool(input_item.get("assumption_allowed", False))
-        required = bool(input_item.get("required", False))
-
-        selected_module_ids = {m.get("module_id") for m in selected_modules}
-        selected_module_names = {m.get("module_name") for m in selected_modules}
-
-        if produced_by:
-            if produced_by in selected_module_ids or produced_by in selected_module_names:
-                return f"generated by {produced_by}", "expected_from_upstream", "upstream_module_output"
-
-        if any(token in name for token in ["area_of_interest", "points_or_areas_of_interest", "target_area"]):
-            if "etna" in combined_text:
-                return "Mount Etna", "provided", "mission_document"
-            if "southern italy" in combined_text:
-                return "Southern Italy", "provided", "mission_document"
-            if "target area" in combined_text:
-                return "target area not geometrically specified", "requires_user_input", "module_registry_required_input"
-
-        if "scenario_definition" in name:
-            return "mission_request_document", "provided", "mission_document"
-
-        if "sensor_specifications" in name:
-            sensor_bits = []
-            if "multispectral" in combined_text:
-                sensor_bits.append("sensor_type=multispectral")
-            elif "optical" in combined_text:
-                sensor_bits.append("sensor_type=optical")
-            elif "sar" in combined_text or "radar" in combined_text:
-                sensor_bits.append("sensor_type=radar/SAR")
-            if sensor_bits:
-                return "; ".join(sensor_bits), "provided", "mission_document"
-
-        if "mission_specific_information" in name:
-            return "preliminary mission profile derived from active requirements", "proposed", "module_registry_default"
-
-        if default_value not in [None, "null", "None"]:
-            value = json.dumps(default_value) if isinstance(default_value, (dict, list)) else str(default_value)
-            return value, "proposed", "module_registry_default"
-
-        if assumption_allowed:
-            return "TBD - user assumption required", "requires_user_input", "module_registry_required_input"
-
-        if required:
-            return "TBD - required input", "requires_user_input", "module_registry_required_input"
-
-        return "-", "not_applicable", "not_applicable"
-
     def save_reviewed_missing_information(self, reviewed_items: list[dict[str, Any]]) -> dict[str, Any]:
         if not self.current_run_path:
             return {"ok": False, "error": "No active run is available.", "logs": self.logs}
@@ -1497,48 +1136,6 @@ class StarApi:
             )
 
         return normalized
-
-    def approve_missing_information(self) -> dict[str, Any]:
-        if not self.current_run_path:
-            return {"ok": False, "error": "No active run is available.", "logs": self.logs}
-
-        if not self.missing_information:
-            return {"ok": False, "error": "No missing information is available to approve.", "logs": self.logs}
-
-        approved_items = []
-        for index, item in enumerate(self.missing_information, start=1):
-            approved_item = dict(item)
-            approved_item["assumption_id"] = f"ASS-{index:03d}"
-            approved_item["status"] = "approved"
-            approved_item["approved_by_user"] = True
-            approved_items.append(approved_item)
-
-        self.missing_information = approved_items
-        self.missing_information_review_status = "approved_by_user"
-        self.assumptions_approved = True
-        self.reset_downstream_from_assumptions()
-
-        approved_path = self.save_approved_assumptions_json(approved_items)
-
-        active_path = self.save_missing_information_json(
-            missing_information=approved_items,
-            review_status="approved_by_user",
-            output_filename="missing_information.json",
-            source="approved_missing_information",
-        )
-
-        self.add_log("USER", "Missing information approved as preliminary assumptions.")
-        self.add_log("SYSTEM", f"approved_assumptions.json saved: {approved_path}")
-        self.add_log("SYSTEM", f"Active missing information updated: {active_path}")
-        self.add_log("SYSTEM", "Workflow proposal is now enabled.")
-
-        return {
-            "ok": True,
-            **self.state_payload(),
-            "approved_assumptions_path": str(approved_path),
-            "missing_information_path": str(active_path),
-            "message": "Missing parameters approved as preliminary assumptions.",
-        }
 
     def save_missing_information_json(
         self,
@@ -1742,102 +1339,6 @@ class StarApi:
 
         return "proposed"
 
-    def llm_assisted_missing_information_analysis(self, requirements: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Use the local LLM to map requirements onto registry-declared module inputs."""
-        registry = self.llm_parameters_view()
-        module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
-
-        system_prompt = (
-            "You are STAR's missing-information analysis assistant. "
-            "You must return only valid JSON. Do not use markdown fences. "
-            "You must not invent modules or parameters outside the provided registry."
-        )
-
-        user_prompt = f"""
-TASK
-Identify the missing, provided, proposed, or upstream-generated parameters required to run the STAR modules.
-
-INPUTS
-1. Active reviewed requirements:
-{json.dumps(requirements, indent=2)}
-
-2. Module registry:
-{json.dumps(registry, indent=2)}
-
-3. Mission request document excerpt:
-\"\"\"
-{(self.uploaded_text or "")[:6000]}
-\"\"\"
-
-STRICT RULES
-- Use only these module names: {json.dumps(module_names)}
-- For each module, use only parameter names that appear in that module's required_inputs list.
-- Do not invent module names.
-- Do not invent parameter names.
-- If a numerical value is missing, do not invent it.
-- If a required input is already implied by the mission request, set status = "provided" and source = "mission_document".
-- If a required input has a registry default value, set status = "proposed" and source = "module_registry_default".
-- If a required input is produced by an upstream module selected in the workflow, set status = "expected_from_upstream" and source = "upstream_module_output".
-- If a required input is needed but not available, set status = "requires_user_input" and source = "module_registry_required_input".
-- Use "not_applicable" only for optional inputs that are clearly irrelevant.
-- Use the mission request to decide whether each registry input is provided, proposed, expected from upstream, or missing.
-- Process only modules that are relevant to the active requirements.
-- Do not include optional inputs unless they are explicitly mentioned in the mission request or clearly required by a selected module.
-- For each selected module, include required inputs first.
-- Do not extract budget, launch, ground segment, downlink details unless a selected module has a matching required_input for them.
-- If all required_inputs of the selected modules have been classified, stop immediately and return JSON.
-- Do not add explanations, reasoning, comments, markdown, or summaries.
-- Return the JSON object immediately.
-- Apply ECSS-E-ST-10-06C-inspired requirement writing principles.
-- Extract requirements as needs to be fulfilled, not as implementation explanations.
-- Prefer requirements that are clear, atomic, unambiguous, unique, traceable, and verifiable.
-- Each requirement shall express one single need.
-- Each requirement shall have a clear subject and a clear required action.
-- Use "shall" wording when rewriting requirement text.
-- Do not include long explanatory clauses inside the requirement text.
-- Do not mix objective, design solution, verification method, budget, and operational narrative in the same requirement.
-- If a requirement contains vague terms such as high, frequent, rapid, optimized, efficient, or preliminary without quantitative criteria, set status = "under_specified".
-- If a numerical value and unit are explicitly present in the mission request, preserve them.
-- If a requirement cannot be verified from the available information, set status = "requires_review" or "under_specified".
-- Do not extract descriptive mission background as a requirement unless it constrains the system or defines a required capability.
-
-ALLOWED STATUSES
-{json.dumps(ALLOWED_MISSING_INFORMATION_STATUSES)}
-
-ALLOWED SOURCES
-{json.dumps(ALLOWED_MISSING_INFORMATION_SOURCES)}
-
-OUTPUT FORMAT
-Return only valid JSON:
-{{
-  "missing_information": [
-    {{
-      "parameter": "registry input name",
-      "needed_by": "exact module_name from registry",
-      "reason": "why this information is needed",
-      "proposed_value": "value, default, upstream reference, or TBD",
-      "unit": "-",
-      "status": "provided | proposed | requires_user_input | expected_from_upstream | not_applicable",
-      "source": "mission_document | module_registry_default | module_registry_required_input | upstream_module_output | not_applicable"
-    }}
-  ]
-}}
-"""
-
-        data = self.call_local_llm_json(system_prompt, user_prompt)
-        raw_items = data.get("missing_information", data.get("missing_parameters", []))
-
-        if not isinstance(raw_items, list):
-            raise ValueError("LLM response does not contain a missing_information list.")
-
-        normalized = self.normalize_llm_missing_information(raw_items)
-
-        if not normalized:
-            self.add_log("AI", "LLM missing-information output was empty after registry validation.")
-            return self.registry_driven_missing_information_analysis(requirements)
-
-        return normalized
-
     def normalize_llm_missing_information(self, raw_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         module_names = set(self.get_module_names())
         parameter_map = self.allowed_parameter_names_by_module()
@@ -1903,268 +1404,10 @@ Return only valid JSON:
 
         return normalized
 
-    def llm_assisted_workflow_proposal(self) -> list[dict[str, Any]]:
-        """Use the local LLM to propose a workflow using only registry modules."""
-        registry = self.llm_planning_view()
-        module_names = [module.get("module_name") for module in self.executable_modules()]   # only modules STAR can run
-
-        approved_assumptions = [
-            item for item in self.missing_information
-            if item.get("status") == "approved" or item.get("approved_by_user")
-        ]
-
-        system_prompt = (
-            "You are STAR's workflow-planning assistant. "
-            "You must return only valid JSON. Do not use markdown fences. "
-            "You must not invent modules outside the provided registry."
-        )
-
-        user_prompt = f"""
-TASK
-Propose an executable STAR workflow from the approved assumptions and module registry.
-
-INPUTS
-1. Active reviewed requirements:
-{json.dumps(self.requirements, indent=2)}
-
-2. Approved assumptions:
-{json.dumps(approved_assumptions, indent=2)}
-
-3. Module registry:
-{registry}
-
-STRICT RULES
-- Use only these module names: {json.dumps(module_names)}
-- Do not invent modules.
-- Select only modules needed to satisfy the active requirements and approved assumptions.
-- STAR adds the required upstream modules (the "needs" of each module) and orders the workflow by itself.
-- A constellation/orbit-level module should usually precede an observation module.
-- A battery/EPS module should usually follow mission/observation timeline definition when selected.
-- Every selected module must appear at most once.
-- The output_artifacts field must be based on that module's declared outputs.
-- The input_data_artifacts field must be based on approved assumptions and/or upstream module outputs.
-- Keep rationale concise but specific.
-
-ALLOWED STATUSES
-{json.dumps(ALLOWED_WORKFLOW_STATUSES)}
-
-OUTPUT FORMAT
-Return only valid JSON:
-{{
-  "workflow": [
-    {{
-      "step": 1,
-      "module": "exact module_name from registry",
-      "input_data_artifacts": "short semicolon-separated input summary",
-      "output_artifacts": "short semicolon-separated output summary",
-      "rationale": "why this module is needed",
-      "status": "proposed"
-    }}
-  ]
-}}
-"""
-
-        data = self.call_local_llm_json(system_prompt, user_prompt)
-        raw_steps = data.get("workflow", data.get("workflow_steps", data.get("steps", [])))
-
-        if not isinstance(raw_steps, list):
-            raise ValueError("LLM response does not contain a workflow list.")
-
-        normalized = self.normalize_llm_workflow(raw_steps)
-
-        if not normalized:
-            self.add_log("AI", "LLM workflow output was empty after registry validation.")
-            return self.registry_driven_workflow_proposal()
-
-        return normalized
-
-    def normalize_llm_workflow(self, raw_steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        module_names = set(self.get_module_names())
-
-        normalized = []
-        seen_modules = set()
-        skipped_count = 0
-
-        for index, step in enumerate(raw_steps, start=1):
-            if not isinstance(step, dict):
-                skipped_count += 1
-                continue
-
-            module_name = str(step.get("module", step.get("module_name", ""))).strip()
-
-            if module_name not in module_names:
-                skipped_count += 1
-                continue
-
-            if module_name in seen_modules:
-                continue
-            seen_modules.add(module_name)
-
-            module = self.get_module_by_name(module_name)
-
-            output_artifacts = str(step.get("output_artifacts", "")).strip()
-            if not output_artifacts:
-                output_artifacts = self.build_workflow_output_summary(module)
-
-            input_data = str(step.get("input_data_artifacts", step.get("inputs", ""))).strip()
-            if not input_data:
-                related_items = [
-                    item for item in self.missing_information
-                    if item.get("needed_by") == module_name
-                ]
-                input_data = self.build_workflow_input_summary(module, related_items)
-
-            normalized.append(
-                {
-                    "step": len(normalized) + 1,
-                    "module": module_name,
-                    "module_id": module.get("module_id", "unknown") if module else "unknown",
-                    "input_data_artifacts": input_data,
-                    "output_artifacts": output_artifacts,
-                    "rationale": str(step.get("rationale", step.get("reason", "Selected by LLM-assisted workflow proposal."))).strip(),
-                    "status": self.normalize_workflow_status(step.get("status", "proposed")),
-                    "reviewed_by_user": False,
-                }
-            )
-
-        if skipped_count:
-            self.add_log("AI", f"Discarded {skipped_count} LLM workflow step(s) not compliant with the registry.")
-
-        # The LLM only selects modules: the workflow graph adds the required upstream modules and orders them.
-        return self.complete_workflow(normalized, "Added by STAR")
-
 
     # ------------------------------------------------------------------
     # Workflow proposal and review
     # ------------------------------------------------------------------
-    def propose_workflow(self, mode: str = "Registry-driven MVP") -> dict[str, Any]:
-        if not self.assumptions_approved:
-            return {
-                "ok": False,
-                "error": "Approve assumptions before proposing a workflow.",
-                "logs": self.logs,
-            }
-
-        if not self.current_run_path:
-            return {"ok": False, "error": "No active run is available.", "logs": self.logs}
-
-        mode = mode or "Registry-driven MVP"
-        self.add_log("AI", f"Generating workflow proposal using mode: {mode}.")
-
-        try:
-            if mode == "Local LLM via Ollama":
-                workflow = self.llm_assisted_workflow_proposal()
-                source = "llm_assisted_workflow_proposal"
-                raw_source = "llm_assisted_workflow_raw_output"
-            else:
-                workflow = self.registry_driven_workflow_proposal()
-                source = "registry_driven_workflow_proposal"
-                raw_source = "registry_driven_workflow_raw_output"
-        except Exception as exc:
-            self.add_log("ERROR", f"Workflow proposal failed in {mode}: {exc}")
-            self.add_log("AI", "Falling back to registry-driven workflow proposal.")
-            workflow = self.registry_driven_workflow_proposal()
-            source = "registry_driven_workflow_proposal_after_llm_fallback"
-            raw_source = "registry_driven_workflow_raw_output_after_llm_fallback"
-
-        if not workflow:
-            return {
-                "ok": False,
-                "error": "No workflow steps could be generated from the approved assumptions and module registry.",
-                "logs": self.logs,
-            }
-
-        self.workflow_steps = workflow
-        self.workflow_review_status = "not_reviewed"
-        self.workflow_approved = False
-        self.reset_downstream_from_workflow()
-
-        for module in self.modules:
-            if module.get("module_name") in {step["module"] for step in workflow}:
-                module["status"] = "Ready"
-            else:
-                module["status"] = "Idle"
-
-        active_path = self.save_workflow_json(
-            workflow=workflow,
-            review_status="not_reviewed",
-            output_filename="workflow_proposal.json",
-            source=source,
-        )
-
-        extracted_path = self.save_workflow_json(
-            workflow=workflow,
-            review_status="not_reviewed",
-            output_filename="workflow_proposal_extracted.json",
-            source=raw_source,
-        )
-
-        self.add_log("AI", f"{len(workflow)} workflow steps proposed.")
-        self.add_log("SYSTEM", f"Active workflow proposal saved: {active_path}")
-        self.add_log("SYSTEM", f"Raw workflow proposal saved: {extracted_path}")
-
-        return {
-            "ok": True,
-            **self.state_payload(),
-            "workflow_proposal_path": str(active_path),
-            "workflow_proposal_extracted_path": str(extracted_path),
-            "message": f"{len(workflow)} workflow steps proposed using {mode}.",
-        }
-
-    def registry_driven_workflow_proposal(self) -> list[dict[str, Any]]:
-        approved_modules = {
-            item.get("needed_by")
-            for item in self.missing_information
-            if item.get("needed_by") and item.get("status") == "approved"
-        }
-
-        if not approved_modules:
-            approved_modules = {
-                item.get("needed_by")
-                for item in self.missing_information
-                if item.get("needed_by")
-            }
-
-        candidate_modules = [
-            module for module in self.modules
-            if module.get("module_name") in approved_modules
-        ]
-
-        if not candidate_modules:
-            return []
-
-        ordered_modules = self.order_by_dependencies(candidate_modules)
-
-        workflow: list[dict[str, Any]] = []
-
-        for index, module in enumerate(ordered_modules, start=1):
-            module_name = module.get("module_name", module.get("module_id", "unknown module"))
-            module_id = module.get("module_id", "unknown")
-
-            related_items = [
-                item for item in self.missing_information
-                if item.get("needed_by") == module_name
-            ]
-
-            input_data = self.build_workflow_input_summary(module, related_items)
-            output_artifacts = self.build_workflow_output_summary(module)
-            rationale = self.build_workflow_rationale(module, related_items)
-
-            workflow.append(
-                {
-                    "step": index,
-                    "module": module_name,
-                    "module_id": module_id,
-                    "input_data_artifacts": input_data,
-                    "output_artifacts": output_artifacts,
-                    "rationale": rationale,
-                    "status": "proposed",
-                    "reviewed_by_user": False,
-                }
-            )
-
-        return self.complete_workflow(workflow, "Added by STAR")
-
     def build_workflow_input_summary(self, module: dict[str, Any], related_items: list[dict[str, Any]]) -> str:
         if related_items:
             parts = []
@@ -2196,13 +1439,6 @@ Return only valid JSON:
 
         return "; ".join(names)
 
-    def build_workflow_rationale(self, module: dict[str, Any], related_items: list[dict[str, Any]]) -> str:
-        capability_text = ", ".join(module.get("capabilities", [])[:4]) if module.get("capabilities") else "declared module capabilities"
-        if related_items:
-            parameters = ", ".join(item.get("parameter", "unknown") for item in related_items[:4])
-            return f"Selected because approved assumptions provide or define: {parameters}. Module capabilities: {capability_text}."
-        return f"Selected based on approved workflow dependencies and module capabilities: {capability_text}."
-
     def build_workflow_step_for_module(self, module: dict[str, Any], status: str = "proposed") -> dict[str, Any]:
         module_name = module.get("module_name", module.get("module_id", "unknown module"))
         return {
@@ -2215,87 +1451,6 @@ Return only valid JSON:
             "status": status,
             "reviewed_by_user": False,
         }
-
-    def add_module_to_workflow(self, module_name_or_id: str) -> dict[str, Any]:
-        self.ensure_pipeline_state()
-        if self.workflow_approved:
-            return {"ok": False, "error": "The approved workflow cannot be edited. Generate a new planning proposal or reset downstream state first.", **self.state_payload()}
-
-        module = self.get_module_by_id(module_name_or_id) or self.get_module_by_name(module_name_or_id)
-        if not module:
-            return {"ok": False, "error": f"Module not found: {module_name_or_id}", **self.state_payload()}
-        executable, why = self.module_executable(module)
-        if not executable:
-            return {"ok": False, "error": f"{module.get('module_name')} cannot run in STAR: {why}.", **self.state_payload()}
-
-        module_id = module.get("module_id")
-        if any(str(step.get("module_id")) == str(module_id) for step in self.workflow_steps):
-            return {"ok": False, "error": f"Module already present in workflow: {module.get('module_name')}", **self.state_payload()}
-
-        self.workflow_steps.append(self.build_workflow_step_for_module(module))
-        self.workflow_steps = self.complete_workflow(self.workflow_steps, "Added with the module the user chose")
-        self.workflow_review_status = "edited_not_saved"
-        self.workflow_approved = False
-        self.missing_information = []
-        self.missing_information_review_status = "not_available"
-        self.assumptions_approved = False
-        self.reset_downstream_from_workflow()
-
-        selected_module_names = {step.get("module") for step in self.workflow_steps}
-        for candidate in self.modules:
-            candidate["status"] = "Ready" if candidate.get("module_name") in selected_module_names else "Idle"
-
-        self.add_log("USER", f"Module added to workflow: {module.get('module_name')} ({module_id}).")
-        self.add_log("SYSTEM", "Workflow marked as edited; save and approve it again before resolving inputs or executing.")
-        return {"ok": True, "message": f"Module added to workflow: {module.get('module_name')}", **self.state_payload()}
-
-    def remove_module_from_workflow(self, module_name_or_id: str) -> dict[str, Any]:
-        self.ensure_pipeline_state()
-        if self.workflow_approved:
-            return {"ok": False, "error": "The approved workflow cannot be edited. Generate a new planning proposal or reset downstream state first.", **self.state_payload()}
-
-        original_count = len(self.workflow_steps)
-        target = self.normalize_text(module_name_or_id)
-        registry = self.workflow_registry()
-        core = [m for m in registry.always_in_workflow() if target in (self.normalize_text(m), self.normalize_text((self.get_module_by_id(m) or {}).get("module_name", "")))]
-        if core:
-            return {"ok": False, "error": f"{core[0]} is always in the STAR chain (the orbits and the CubeSat every module uses) and cannot be removed.",
-                    **self.state_payload()}
-        remaining = [
-            step for step in self.workflow_steps
-            if self.normalize_text(str(step.get("module", ""))) != target
-            and self.normalize_text(str(step.get("module_id", ""))) != target
-        ]
-
-        if len(remaining) == original_count:
-            return {"ok": False, "error": f"Module not found in current workflow: {module_name_or_id}", **self.state_payload()}
-
-        removed_ids = {str(s.get("module_id", "")).upper() for s in self.workflow_steps} - {str(s.get("module_id", "")).upper() for s in remaining}
-        for removed in sorted(removed_ids):
-            users = [str(s.get("module_id", "")).upper() for s in remaining
-                     if removed in registry.required_producer_modules(str(s.get("module_id", "")))]
-            if users:
-                return {"ok": False, "error": f"{removed} cannot be removed: {', '.join(users)} need its products (remove them first).",
-                        **self.state_payload()}
-        self.workflow_steps = self.sort_and_renumber_workflow(remaining)
-        self.workflow_review_status = "edited_not_saved" if self.workflow_steps else "not_available"
-        self.workflow_approved = False
-        self.missing_information = []
-        self.missing_information_review_status = "not_available"
-        self.assumptions_approved = False
-        self.reset_downstream_from_workflow()
-
-        selected_module_names = {step.get("module") for step in self.workflow_steps}
-        for candidate in self.modules:
-            candidate["status"] = "Ready" if candidate.get("module_name") in selected_module_names else "Idle"
-
-        self.add_log("USER", f"Module removed from workflow: {module_name_or_id}.")
-        self.add_log("SYSTEM", "Workflow marked as edited; save and approve it again before resolving inputs or executing.")
-        return {"ok": True, "message": f"Module removed from workflow: {module_name_or_id}", **self.state_payload()}
-
-    def update_workflow_from_frontend(self, reviewed_workflow: list[dict[str, Any]]) -> dict[str, Any]:
-        """Store an edited workflow without approving it. Kept for frontend compatibility."""
-        return self.save_reviewed_workflow(reviewed_workflow)
 
     def save_reviewed_workflow(self, reviewed_workflow: list[dict[str, Any]]) -> dict[str, Any]:
         if not self.current_run_path:
@@ -3691,11 +2846,6 @@ Reply with ONLY the JSON object described in OUTPUT FORMAT, starting with {{ and
             if str(module.get("module_id", "")).upper() == str(module_id).upper():
                 return module
         return None
-
-    def build_rule_based_planning_rationale(self, module: dict[str, Any], requested_outputs: list[dict[str, Any]]) -> str:
-        module_name = str(module.get("module_name", ""))
-        joined_outputs = "; ".join(output.get("description", "") for output in requested_outputs[:3])
-        return f"Selected during mission planning because it can support requested outputs: {joined_outputs}. Module considered: {module_name}."
 
     def normalize_requested_outputs(self, raw_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not isinstance(raw_outputs, list):
@@ -5376,14 +4526,6 @@ Return only valid JSON:
         self.add_log("SYSTEM", f"Component selector loaded from {root} ({len(self._comp_selector_service.catalog)} components).")
         return self._comp_selector_service
 
-    def component_selector_catalog(self) -> dict[str, Any]:
-        """Catalogue overview for the END-006 GUI (CubeSat classes, subsystems, vendors)."""
-        try:
-            return self._component_selector_service().overview()
-        except Exception as exc:
-            self.add_log("ERROR", f"Component selector catalogue unavailable: {exc}")
-            return {"error": str(exc), "classes": [], "subsystems": [], "vendors": []}
-
     def component_selector_select(self, params: dict[str, Any]) -> dict[str, Any]:
         """Run the selection (live, no RUN folder needed). params as in star_selector.api.SelectorService.select."""
         try:
@@ -5433,15 +4575,6 @@ Return only valid JSON:
             return requirements_to_params(texts)
         except Exception as exc:
             return {"params": {}, "evidence": {}, "notes": [str(exc)], "out_of_scope": [], "applicable": False}
-
-    def component_selector_save(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Save the design chosen in the GUI under the current RUN (modules_output/END-006/output_component_selector)."""
-        if not self.current_run_path:
-            return {"ok": False, "error": "No active run folder: the design was not saved."}
-        out = self.get_module_output_layout("END-006")["module_product_output_dir"] / "component_selector_user_design.json"
-        out.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-        self.add_log("EXECUTION", f"Component selector design saved to {out}.")
-        return {"ok": True, "path": self.make_run_relative_or_absolute(out)}
 
     def send_chat_message(self, text: str) -> dict[str, Any]:
         normalized = text.strip().lower()
