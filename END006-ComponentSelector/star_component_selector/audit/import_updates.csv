@@ -1,0 +1,178 @@
+﻿id,field,old,new,action,file
+gomspace-nanotorque-gst-600-mk2,tid_krad,,20,filled,magnetorquer/GomSpace__NanoTorque-GST600-MK2.pdf
+gomspace-nanotorque-gst-600-mk2,trl,,8,filled,magnetorquer/GomSpace__NanoTorque-GST600-MK2.pdf
+ssbv-cubesat-magnetorquer-rod,-,,CubeSat Magnetorquer Rod,added,magnetorquer/SSBV__CubeSat-Magnetorquer-Rod.pdf
+astrofein-argo-l1,-,,ARGO-L1 GPS receiver unit,added,gps/ASTROFEIN__53-Datenblatt-ARGO-GPS.pdf
+spacemanic-celeste,flight_heritage,,10,filled,gps/Spacemanic__CELESTE-GNSS-Datasheet.pdf
+spacemanic-celeste,specs.data_interfaces,,"['I2C', 'RS485', 'CAN', 'UART']",filled,gps/Spacemanic__CELESTE-GNSS-Datasheet.pdf
+spacemanic-celeste,datasheet,,datasheets/gps/Spacemanic__CELESTE-GNSS-Datasheet.pdf,linked,gps/Spacemanic__CELESTE-GNSS-Datasheet.pdf
+c3s-electronics-development-eps2000,specs.pv_voltage_v,,"[6, 70]",filled,eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+c3s-electronics-development-eps2000,specs.pv_power_w_max,,2000,filled,eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+c3s-electronics-development-eps2000,specs.pv_channels,,20,filled,eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+c3s-electronics-development-eps2000,specs.output_voltage_ranges_v,,"[[28, 28], [5, 5], [12, 12]]",filled,eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+c3s-electronics-development-eps2000,specs.data_interfaces,,['CAN'],filled,eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+c3s-electronics-development-eps2000,specs.efficiency,0.97,0.98,conflict (not applied),eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+c3s-electronics-development-eps2000,datasheet,,datasheets/eps/C3s__EPS2000-Datasheet-v02-short-1.pdf,linked,eps/C3s__EPS2000-Datasheet-v02-short-1.pdf
+ibeos-150-w-cubesat-eps,power_w,,1.8,filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,tid_krad,,30,filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,temp_op_c,,"[-40, 105]",filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,specs.pv_voltage_v,,"[18, 42]",filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,specs.pv_power_w_max,,150,filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,specs.efficiency,0.95,0.96,conflict (not applied),eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,specs.data_interfaces,,"['I2C', 'SPI']",filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,dimensions,,"[96, 90, 14.5]",filled,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+ibeos-150-w-cubesat-eps,datasheet,,datasheets/eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf,linked,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf
+spacemanic-amun-1u,tid_krad,,20,filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,temp_op_c,,"[-40, 85]",filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,specs.compatible_form_factors_u,,"[1, 2, 3]",filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,specs.pv_channels,,3,filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,specs.pv_power_w_max,,30,filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,specs.integrated_battery_wh,,20,filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,specs.integrated_battery_voltage_v,,8,filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,specs.data_interfaces,,"['I2C', 'RS485', 'UART', 'CAN']",filled,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+spacemanic-amun-1u,datasheet,,datasheets/eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf,linked,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf
+bluecubed-cobalt,-,,Cobalt Optical Terminal,added,payload/Unknown__Cobalt-Optical-Terminal.pdf
+rocket-lab-rw-0-03,temp_op_c,,"[-40, 70]",filled,reaction_wheel/RocketLab__RW-0.03.pdf
+rocket-lab-rw-0-03,specs.momentum_mnms,,30,filled,reaction_wheel/RocketLab__RW-0.03.pdf
+rocket-lab-rw-0-03,specs.supply_voltage_ranges_v,,"[[3.4, 6]]",filled,reaction_wheel/RocketLab__RW-0.03.pdf
+rocket-lab-rw-0-03,specs.data_interfaces,,"['UART', 'I2C']",filled,reaction_wheel/RocketLab__RW-0.03.pdf
+rocket-lab-rw-0-03,dimensions,,"[50, 50, 40]",filled,reaction_wheel/RocketLab__RW-0.03.pdf
+rocket-lab-rw-0-03,datasheet,,datasheets/reaction_wheel/RocketLab__RW-0.03.pdf,linked,reaction_wheel/RocketLab__RW-0.03.pdf
+rocketlab-rw3-1-0,-,,RW3-1.0 reaction wheel,added,reaction_wheel/RocketLab__RW3-1.0.pdf
+rocket-lab-rw4-0-2,temp_op_c,,"[-40, 70]",filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-2,specs.momentum_mnms,,200,filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-2,specs.supply_voltage_ranges_v,,"[[24, 34]]",filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-2,specs.data_interfaces,,['RS-485'],filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-2,dimensions,,"[110, 110, 48]",filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-2,datasheet,,datasheets/reaction_wheel/RocketLab__RW4-0.2-0.4.pdf,linked,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-4,temp_op_c,,"[-40, 70]",filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-4,specs.momentum_mnms,,400,filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-4,specs.supply_voltage_ranges_v,,"[[24, 34]]",filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-4,specs.data_interfaces,,['RS-485'],filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-4,dimensions,,"[110, 110, 48]",filled,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-0-4,datasheet,,datasheets/reaction_wheel/RocketLab__RW4-0.2-0.4.pdf,linked,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf
+rocket-lab-rw4-1-0,temp_op_c,,"[-40, 70]",filled,reaction_wheel/RocketLab__RW4-1.0.pdf
+rocket-lab-rw4-1-0,specs.momentum_mnms,,1000,filled,reaction_wheel/RocketLab__RW4-1.0.pdf
+rocket-lab-rw4-1-0,specs.power_w_nominal,,5.3,filled,reaction_wheel/RocketLab__RW4-1.0.pdf
+rocket-lab-rw4-1-0,specs.supply_voltage_ranges_v,,"[[24, 34]]",filled,reaction_wheel/RocketLab__RW4-1.0.pdf
+rocket-lab-rw4-1-0,specs.data_interfaces,,['RS-485'],filled,reaction_wheel/RocketLab__RW4-1.0.pdf
+rocket-lab-rw4-1-0,dimensions,,"[154, 146, 45]",filled,reaction_wheel/RocketLab__RW4-1.0.pdf
+rocket-lab-rw4-1-0,datasheet,,datasheets/reaction_wheel/RocketLab__RW4-1.0.pdf,linked,reaction_wheel/RocketLab__RW4-1.0.pdf
+2ndspace-verse-01,-,,VERSE-01 1U structure,added,structure/2NDSpace__VERSE-CubeSat-Structures.pdf
+2ndspace-verse-02,-,,VERSE-02 2U structure,added,structure/2NDSpace__VERSE-CubeSat-Structures.pdf
+2ndspace-verse-03,-,,VERSE-03 3U structure,added,structure/2NDSpace__VERSE-CubeSat-Structures.pdf
+2ndspace-verse-06,-,,VERSE-06 6U structure,added,structure/2NDSpace__VERSE-CubeSat-Structures.pdf
+aac-ant-gps-a,-,,ANT-GPS-A active GPS antenna,added,gnss_antenna/Aac-clyde__ANT-GPS.pdf
+anywaves-gnss-all-bands,-,,GNSS All-Bands Antenna,added,gnss_antenna/Anywaves__GNSS-All-Bands-Antenna.pdf
+anywaves-gnss-l1-e1,-,,GNSS L1/E1 Band Antenna,added,gnss_antenna/Anywaves__GNSS-L1-E1-Band-Antenna.pdf
+taoglas-ahp5354a,-,,AHP5354A.07.0100C active GNSS L1/L5 patch,added,gnss_antenna/Taoglas__AHP5354A.07.0100C.pdf
+taoglas-ahp54510,-,,AHP54510.07.0100C active GNSS L1/L5/L-band patch,added,gnss_antenna/Taoglas__AHP54510.07.0100C.pdf
+taoglas-cgsp457a,-,,CGSP457.A GNSS and SatCom patch,added,gnss_antenna/Taoglas__CGSP457.A-RevC.pdf
+2ndspace-core-01z,-,,CORE-01Z body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-01,-,,CORE-01 body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-02,-,,CORE-02 body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-03,-,,CORE-03 body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-04,-,,CORE-04 body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-06z,-,,CORE-06Z body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-12,-,,CORE-12 body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-12z,-,,CORE-12Z body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+2ndspace-core-16,-,,CORE-16 body-mounted solar panel,added,solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf
+spacemanic-ra-1u,-,,RA solar panel (1U side),added,solar_panel/Spacemanic__ra-solar-panels.pdf
+pumpkin-dcsa-220w,-,,Deployable Clamshell Solar Array (DCSA) 220 W,added,solar_panel/Pumpkin__Deployable-Clamshell-Solar-Array-DCSA.pdf
+ibeos-b14-m45,-,,B14-M45 14 V modular SmallSat battery (45 Wh),added,battery/Ibeos__B14-M45-M90-14V-Modular-SmallSat-Battery.pdf
+ibeos-b28-135,-,,B28-135 28 V SmallSat battery (135 Wh),added,battery/Ibeos__B28-135-SmallSat-Battery.pdf
+ibeos-b28-275,-,,"B28-275 28 V modular battery (8S2P, 275 Wh)",added,battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf
+ibeos-b28-550,-,,"B28-550 28 V modular battery (8S4P, 550 Wh)",added,battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf
+ibeos-b28-825,-,,"B28-825 28 V modular battery (8S6P, 825 Wh)",added,battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf
+ibeos-b28-1100,-,,"B28-1100 28 V modular battery (8S8P, 1100 Wh)",added,battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf
+ibeos-b50-412,-,,"B50-412 50 V modular battery (12S2P, 412 Wh)",added,battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf
+ibeos-b50-825,-,,"B50-825 50 V modular battery (12S4P, 825 Wh)",added,battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf
+ibeos-b50-1237,-,,"B50-1237 50 V modular battery (12S6P, 1237 Wh)",added,battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf
+solar-mems-technologies-acss,mass_kg,0.035,0.04,conflict (not applied),sun_sensor/Solar-MEMS__ACSS.pdf
+solar-mems-technologies-acss,tid_krad,,200,filled,sun_sensor/Solar-MEMS__ACSS.pdf
+solar-mems-technologies-acss,temp_op_c,,"[-45, 85]",filled,sun_sensor/Solar-MEMS__ACSS.pdf
+solar-mems-technologies-acss,specs.accuracy_deg,0.5,3,conflict (not applied),sun_sensor/Solar-MEMS__ACSS.pdf
+solar-mems-technologies-acss,specs.supply_voltage_ranges_v,,"[[15, 30]]",filled,sun_sensor/Solar-MEMS__ACSS.pdf
+solar-mems-technologies-acss,dimensions,,"[65, 47, 13]",filled,sun_sensor/Solar-MEMS__ACSS.pdf
+solar-mems-technologies-acss,datasheet,,datasheets/sun_sensor/Solar-MEMS__ACSS.pdf,linked,sun_sensor/Solar-MEMS__ACSS.pdf
+ssbv-cubesat-sun-sensor,-,,CubeSat Sun Sensor,added,sun_sensor/SSBV__CubeSat-Sun-Sensor.pdf
+adcole-digital-sun-sensor-32,-,,Digital Sun Sensor (+-32 deg),added,sun_sensor/Adcole__Digital-Sun-Sensor-Legacy.pdf
+redwire-space-coarse-sun-sensor-cosine-type,tid_krad,,100,filled,sun_sensor/Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf
+redwire-space-coarse-sun-sensor-cosine-type,dimensions,,"[28, 19, 12]",filled,sun_sensor/Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf
+redwire-space-coarse-sun-sensor-cosine-type,datasheet,,datasheets/sun_sensor/Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf,linked,sun_sensor/Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf
+redwire-space-coarse-sun-sensor-pyramid,tid_krad,,100,filled,sun_sensor/Redwire__Sun-Sensor-Datasheet.pdf
+redwire-space-coarse-sun-sensor-pyramid,dimensions,,"[89, 89, 43]",filled,sun_sensor/Redwire__Sun-Sensor-Datasheet.pdf
+redwire-space-coarse-sun-sensor-pyramid,datasheet,,datasheets/sun_sensor/Redwire__Sun-Sensor-Datasheet.pdf,linked,sun_sensor/Redwire__Sun-Sensor-Datasheet.pdf
+bradford-space-css,datasheet,,datasheets/sun_sensor/Bradford-Space__CSS-Coarse-Sun-Sensor.pdf,linked,sun_sensor/Bradford-Space__CSS-Coarse-Sun-Sensor.pdf
+bradford-space-coss,datasheet,,datasheets/sun_sensor/Bradford-Space__CoSS.pdf,linked,sun_sensor/Bradford-Space__CoSS.pdf
+bradford-space-coss-r,datasheet,,datasheets/sun_sensor/Bradford-Space__CoSS-R.pdf,linked,sun_sensor/Bradford-Space__CoSS-R.pdf
+bradford-space-fss,datasheet,,datasheets/sun_sensor/Bradford-Space__FSS-Fine-Sun-Sensor.pdf,linked,sun_sensor/Bradford-Space__FSS-Fine-Sun-Sensor.pdf
+bradford-space-mini-fss,datasheet,,datasheets/sun_sensor/Bradford-Space__Mini-FSS.pdf,linked,sun_sensor/Bradford-Space__Mini-FSS.pdf
+2ndspace-chorus-01-lp,-,,CHORUS-01-LP deployable UHF/VHF antenna,added,antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf
+2ndspace-chorus-01-cp,-,,CHORUS-01-CP deployable UHF/VHF antenna,added,antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf
+2ndspace-chorus-06-lp,-,,CHORUS-06-LP deployable UHF/VHF antenna,added,antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf
+2ndspace-chorus-06-cp,-,,CHORUS-06-CP deployable UHF/VHF antenna,added,antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf
+aac-ant-100,-,,ANT-100 static whip antenna,added,antenna/Aac-clyde__ANT-100.pdf
+anywaves-x-band-dual-pol-compact,-,,Compact Dual-Polarized X-Band Antenna,added,antenna/Anywaves__Compact-Dual-Polarized-X-Band-Antenna.pdf
+anywaves-s-band-compact-ttc,-,,Compact S-Band TT&C Antenna,added,antenna/Anywaves__Compact-S-Band-TTC-Antenna.pdf
+anywaves-s-band-hemispherical-ttc,-,,"S-Band TT&C Antenna (hemispherical, single or dual polarization)",added,antenna/Anywaves__S-Band-TTC-Antenna-Hemispherical.pdf
+anywaves-s-band-ttc,-,,S-Band TT&C Antenna,added,antenna/Anywaves__S-Band-TTC-Antenna.pdf
+anywaves-x-band-high-gain,-,,High-Gain X-Band Antenna,added,antenna/Anywaves__High-Gain-X-Band-Payload-Telemetry-Antenna.pdf
+anywaves-x-band-dual-circular,-,,High-Gain Dual-Polarized X-Band Antenna,added,antenna/Anywaves__X-Band-Dual-Circularly-Polarized-Antenna.pdf
+anywaves-x-band-payload-telemetry,-,,X-Band Payload Telemetry Antenna,added,antenna/Anywaves__X-Band-Payload-Telemetry-Antenna.pdf
+iq-spacecom-s-band-single,-,,S-Band single patch antenna,added,antenna/IQ-Technologies__S-Band-Antennas.pdf
+iq-spacecom-s-band-dual,-,,S-Band dual patch antenna,added,antenna/IQ-Technologies__S-Band-Antennas.pdf
+iq-spacecom-s-band-quad,-,,S-Band quad patch antenna,added,antenna/IQ-Technologies__S-Band-Antennas.pdf
+iq-spacecom-x-band-high-gain,-,,X-Band 4x4 high-gain patch antenna,added,antenna/IQ-Technologies__X-Band-Antennas.pdf
+plan-s-iot-antenna,-,,IoT circularly polarized antenna (EU868 / US915),added,antenna/PLAN-S__IoT-Antenna.pdf
+picosats-beamsat-x-band-4x4,-,,BEAMSAT X-band 4x4 patch antenna,added,antenna/Picosats__BEAMSAT-X-BAND-PATCH-ANTENNA.pdf
+picosats-k-band-8x8,-,,K-band 8x8 patch antenna,added,antenna/Picosats__K-Band-Patch-Antenna.pdf
+spacemanic-sam-small-antenna-module,-,,SAM Small Antenna Module (VHF/UHF),added,antenna/Spacemanic__sam-small-antenna-module-uhfvhf.pdf
+aac-pulsar-xtx,-,,"PULSAR-XTX (X-band, TX only)",added,comms/Aac-clyde__PULSAR-XTX.pdf
+aphelion-uhf-vhf-radio,-,,UHF transmitter / VHF receiver radio,added,comms/Aphelion-Orbitals__UHF-VHF-Radio.pdf
+iq-spacecom-xlink-l,-,,XLink-L L-band transceiver (SDR),added,comms/IQ-Technologies__XLINK-L.pdf
+iq-spacecom-xlink-s,-,,XLink-S S-band transceiver (SDR),added,comms/IQ-Technologies__XLINK-S-TMTC.pdf
+iq-spacecom-xlink-x,-,,XLink-X X-band transmitter with S/X receiver (SDR),added,comms/IQ-Technologies__XLINK-X.pdf
+spacemicro-nanocom-ka,-,,Nanocom Ka-band software defined transceiver,added,comms/SpaceMicro__Nanocom-Ka-Band-SDR.pdf
+spacemanic-murgas,-,,Murgas UHF/VHF transceiver,added,comms/Spacemanic__Murgas-UHF-VHF-Transceiver.pdf
+pyxis-space-vhf-uhf-transceiver-uhf,-,,VHF/UHF transceiver (UHF version),added,comms/Pyxis-Space__VHF-UHF-Transceiver.pdf
+pyxis-space-vhf-uhf-transceiver-vhf,-,,VHF/UHF transceiver (VHF version),added,comms/Pyxis-Space__VHF-UHF-Transceiver.pdf
+iq-spacecom-hispico,-,,HiSPiCO S-band transmitter,added,comms/Unknown__HiSPiCO-S-Band-Transmitter.pdf
+iq-spacecom-slink,-,,Slink / Slink-Phy S-band transceiver,added,comms/Unknown__Slink-Phy-S-Band-Transceiver.pdf
+nanoavionics-satcom-uhf,temp_op_c,,"[-40, 85]",filled,comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf
+nanoavionics-satcom-uhf,specs.power_w_tx,,3.2,filled,comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf
+nanoavionics-satcom-uhf,specs.supply_voltage_ranges_v,"[[3.3, 3.3]]","[[3.3, 3.6]]",conflict (not applied),comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf
+nanoavionics-satcom-uhf,datasheet,,datasheets/comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf,linked,comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf
+bst-cdh-110,-,,CDH-110 command and data handling (OBC-110 + ACC-110),added,obc/BST__CDH-Command-and-Data-Handling.pdf
+cavu-obc-1,-,,OBC-1 satellite onboard computer,added,obc/CAVU-Aerospace__OBC-1-Brochure.pdf
+kplabs-antelope-dpu,-,,Antelope DPU (Zynq UltraScale+),added,obc/KP-Labs__Antelope-DPU.pdf
+nara-nstobc-a9,-,,NSTOBC-A9 onboard computer,added,obc/Nara-Space__NSTOBC-Datasheet.pdf
+spacemicro-csp-02,-,,CSP-02 CubeSat Space Processor (Zynq-7020),added,obc/SpaceMicro__CubeSat-Space-Processor.pdf
+spacemicro-proton200k-lite,-,,Proton200k Lite processor board,added,obc/SpaceMicro__Proton200k-Lite.pdf
+spacemicro-proton200k,-,,Proton200k DSP processor board,added,obc/SpaceMicro__Proton200k.pdf
+spacemicro-proton400k,-,,Proton400k single board computer,added,obc/SpaceMicro__Proton400k.pdf
+spacemanic-deep-thought-obc,-,,Deep Thought OBC (OBC-SM-DT-SAMV71),added,obc/Spacemanic__Deep-Thought-OBC-Sheet.pdf
+spacemanic-eddie-obc,-,,Eddie OBC,added,obc/Spacemanic__Eddie-OBC-Sheet.pdf
+veng-antartix-obc,-,,Antartix v2.0 OBC,added,obc/Unknown__Antartix-OBC.pdf
+busek-bet-max,-,,BET-MAX electrospray thruster system,added,propulsion/Busek__11-Tech-Circle-Natick-Ma-01760-4.pdf
+steamjet-steam-thruster-one-2u,-,,Steam Thruster One (2U unit),added,propulsion/SteamJet__Steam-Thruster-One.pdf
+steamjet-tunacan,-,,Steam TunaCan Thruster,added,propulsion/SteamJet__Steam-TunaCan-Thruster.pdf
+steamjet-tunatank,-,,TunaTank Thruster,added,propulsion/SteamJet__TunaTank-Thruster.pdf
+pale-blue-pbr-10,-,,PBR-10 resistojet,added,propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf
+pale-blue-pbr-20,-,,PBR-20 resistojet,added,propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf
+pale-blue-pbi,-,,PBI ion thruster,added,propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf
+dragonfly-caiman-rgb,datasheet,,datasheets/imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf,linked,imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf
+dragonfly-caiman-ms,datasheet,,datasheets/imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf,linked,imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf
+dragonfly-gecko,datasheet,,datasheets/imaging_cameras/DragonflyAerospace__Gecko-Imager.pdf,linked,imaging_cameras/DragonflyAerospace__Gecko-Imager.pdf
+dragonfly-chameleon-rgb,datasheet,,datasheets/imaging_cameras/DragonflyAerospace__Chameleon-Imager.pdf,linked,imaging_cameras/DragonflyAerospace__Chameleon-Imager.pdf
+dragonfly-mantis-rgb,datasheet,,datasheets/imaging_cameras/DragonflyAerospace__Mantis-Imager.pdf,linked,imaging_cameras/DragonflyAerospace__Mantis-Imager.pdf
+dragonfly-chameleon-swir,-,,Chameleon imager (SWIR),added,imaging_cameras/DragonflyAerospace__Chameleon-SWIR.pdf
+dragonfly-komodo-rgb-ms,-,,"Komodo imager (RGB / multispectral, estimated)",added,imaging_cameras/DragonflyAerospace__Komodo-Imager.pdf
+oce-aerospace-miniature-camera,-,,CMV aerospace miniature camera (inspection),added,imaging_cameras/OCE-Technologies__Aerospace-Miniature-Camera.pdf
+kisscam,-,,KissCAM miniature camera,added,imaging_cameras/Unknown__KissCAM-Datasheet-and-User-Manual.pdf
+oxford-instruments-c-red-new-space,-,,C-RED New Space SWIR camera core,added,imaging_cameras/Oxford-Instruments__C-RED-New-Space.pdf
+sdl-disc,-,,DISC Digital Imaging Space Camera,added,imaging_cameras/SDL__DISC-Digital-Imaging-Space-Camera.pdf
+spacemicro-4k-space-camera,-,,4K Space Camera,added,imaging_cameras/SpaceMicro__4K-Space-Camera.pdf
+spacemicro-spacecam-5mp,-,,5MP Space Camera,added,imaging_cameras/SpaceMicro__SpaceCam-5MP.pdf
+thoth-aurora-1000,-,,Aurora 1000 line-scan camera (SWIR),added,imaging_cameras/Thoth__Aurora-1000-Line-Scan-Camera-Owners-Manual.pdf
+auricam,-,,AuriCAM multi-purpose rad-tolerant camera,added,imaging_cameras/Unknown__AuriCAM-Rad-Tolerant-Camera.pdf

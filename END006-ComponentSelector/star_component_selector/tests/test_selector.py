@@ -38,14 +38,14 @@ class TestCatalog(unittest.TestCase):
     def setUpClass(cls):
         cls.cat = load_catalog(CATALOG)
 
-    def test_catalog_is_valid_and_has_243_components_in_all_categories(self):
-        self.assertEqual(len(self.cat), 243)
+    def test_catalog_is_valid_and_has_427_components_in_all_categories(self):
+        self.assertEqual(len(self.cat), 427)
         by_cat = {}
         for c in self.cat:
             by_cat[c.category] = by_cat.get(c.category, 0) + 1
         self.assertEqual(set(by_cat), set(CATEGORIES))
         self.assertEqual({k: by_cat[k] for k in ("structure", "magnetorquer", "reaction_wheel", "propulsion", "antenna", "gps")},
-                         {"structure": 16, "magnetorquer": 8, "reaction_wheel": 30, "propulsion": 27, "antenna": 12, "gps": 6})
+                         {"structure": 20, "magnetorquer": 9, "reaction_wheel": 66, "propulsion": 34, "antenna": 32, "gps": 7})
 
     def test_every_component_has_a_source_and_none_is_marked_verified_without_a_person(self):
         for c in self.cat:
@@ -189,9 +189,9 @@ class TestSelection(unittest.TestCase):
 
     def test_counts_in_the_database_and_fitting(self):
         by = {s["id"]: s for s in SERVICE.select({"form_factor_u": 6})["subsystems"]}
-        self.assertEqual(by["eps"]["n_database"], 15)
-        self.assertEqual(by["propulsion"]["n_database"], 27)
-        self.assertEqual(by["payload_imager"]["n_database"] + by["payload_optical"]["n_database"], 36)
+        self.assertEqual(by["eps"]["n_database"], 47)
+        self.assertEqual(by["propulsion"]["n_database"], 34)
+        self.assertEqual(by["payload_imager"]["n_database"] + by["payload_optical"]["n_database"], 47)
         for s in by.values():
             self.assertLessEqual(s["n_fit"], s["n_database"], s["id"])
             self.assertEqual(s["n_fit"], (1 if s["selected"] else 0) + len(s["alternatives"]), s["id"])
@@ -209,7 +209,7 @@ class TestSelection(unittest.TestCase):
         by = {s["id"]: s for s in SERVICE.select({"form_factor_u": 1})["subsystems"]}
         sp = by["solar_panel"]
         self.assertEqual(sp["selected"]["id"], "isis-solar-1u")            # l'unico 1U con massa pubblicata; gli altri tre (EnduroSat 1U, DHV-1U-XY e -Z) ne sono privi
-        self.assertEqual((sp["n_fit"], sp["n_fit_without_mass"]), (1, 3))
+        self.assertEqual((sp["n_fit"], sp["n_fit_without_mass"]), (4, 3))       # + 2NDSpace CORE-01 and CORE-01Z, Spacemanic RA (import 2026-10-23)
         self.assertNotIn("isis-solar-3u", [sp["selected"]["id"]] + [a["id"] for a in sp["alternatives"]])
         self.assertIsNotNone({s["id"]: s for s in SERVICE.select({"form_factor_u": 3})["subsystems"]}["solar_panel"]["selected"])
 

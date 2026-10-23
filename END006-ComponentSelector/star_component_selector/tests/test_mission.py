@@ -12,6 +12,8 @@ from star_selector.selector import CLASSES, Slot, select, total_impulse_ns
 
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = load_catalog(ROOT / "data" / "catalog.json")
+# the catalogue before the NASA SoA / datasheet imports of 2026-10-23: tests of one specific design logic keep the components it was written for
+CATALOG_BEFORE_IMPORT = [c for c in CATALOG if c.raw["source"].get("retrieved") != "2026-10-23"]
 BY_ID = {c.id: c for c in CATALOG}
 
 V6 = [  # requisiti della proposta STAR v6 (PATRIMONIO-CUBE) rilevanti per END-006
@@ -166,7 +168,7 @@ class NeedsTest(unittest.TestCase):
         self.assertTrue(any(u.startswith("Does not satisfy R2 (data rate >= 5 Mbps): no UHF radio in the database meets it") for u in m["unmet"]), m["unmet"])
 
     def test_antenna_included_in_the_radio_is_not_duplicated(self):
-        sel, m = design(CATALOG, [{"id": "R1", "text": "The satellite shall take images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}])
+        sel, m = design(CATALOG_BEFORE_IMPORT, [{"id": "R1", "text": "The satellite shall take images with a GSD of 40 m at 500 km of altitude and downlink them in S-band."}])
         s = slots_of(sel)
         self.assertIn("+ ANT", s["comms_s"].selected.comp.raw["name"])
         self.assertNotIn("antenna_s", s)
@@ -570,9 +572,9 @@ class WheelSizingTest(unittest.TestCase):
         self.assertTrue(any("END-003" in u for u in m["unmet"]))
 
     def test_need_drives_the_class(self):
-        # the 1U iADCS200 (1.5 mN m s, 0.1 mN m) cannot give 2 x 0.1 mN m: a larger class
+        # the 1U XACT-15 (5 mN m) cannot give 2 x 3 mN m: a larger class
         self.assertEqual(design(CATALOG, self.REQS, {})[0].cubesat.units, 1)
-        sel, m = design(CATALOG, self.REQS, {"end003": {"peak_momentum_nms": 1e-3, "peak_torque_nm": 1e-4}})
+        sel, m = design(CATALOG, self.REQS, {"end003": {"peak_momentum_nms": 1e-3, "peak_torque_nm": 3e-3}})
         self.assertGreater(sel.cubesat.units, 1)
         self.assertGreaterEqual(m["wheel_sizing"]["torque_ratio"], 2.0)
 

@@ -1,0 +1,10 @@
+table,subsystem,page,Manufacturer,Product,Color,Cost,Difficulty to Apply*,Notes
+7-3,thermal_passive,232,Socomore,Z306 Polyurethane,Black,$,1,
+7-3,thermal_passive,232,Socomore,Z307 Polyurethane,Black,$$,1,
+7-3,thermal_passive,232,Socomore,A276 Polyurethane,White,$,1,Not UV stable
+7-3,thermal_passive,232,Huntington Ingalls Industries (formerly Alion and IITRI),Z93P Silicate,White,$$,3,**
+7-3,thermal_passive,232,Huntington Ingalls Industries (formerly Alion and IITRI),Z93-C55 Silicate,White,$$$,4,Thickness control paramount **
+7-3,thermal_passive,232,Huntington Ingalls Industries (formerly Alion and IITRI),S13GP:6N/LO-1 Silicone,White,$$$,1,Dedicated equipment/cross contamination
+7-3,thermal_passive,232,AZ Technology,AZ-93 Silicate,White,$$,3,**
+7-3,thermal_passive,232,AZ Technology,AZ2000 Silicate,Off-white,$$$,4,"May require specialty, epoxy primer **"
+7-3,thermal_passive,232,AZ Technology,AZW/LA-II Silicate,White,$$$$,5,Thickness control paramount **

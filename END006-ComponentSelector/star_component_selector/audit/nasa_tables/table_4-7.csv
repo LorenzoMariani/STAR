@@ -1,0 +1,29 @@
+table,subsystem,page,,,,,Specific,Total,,,,,PMI,,
+4-7,propulsion,131,Manufacturer,Product,Propellant,Thrust*,,,Mass,Envelope,Power,ACS,,Missions,References
+4-7,propulsion,131,---,---,---,[mN],[s],[N-s],[kg],[cm3 or U],[W],Y/N,"C,D,E,F",---,---
+4-7,propulsion,131,Integrated Propulsion Systems,,,,,,,,,,,,
+4-7,propulsion,131,AIS USA,AIS-SWAG1-PQ,Adamantane,0.12,20,3,0.224†,4.2 x 4.2 x 5.4,5,N,D,-,(317)
+4-7,propulsion,131,AIS USA,AIS-SWAG1-DUO,Adamantane,0.24,20,6,0.449†,8.6 x 4.2 x 5.4,10,N,D,-,(317)
+4-7,propulsion,131,AIS USA,AIS-SWAG1-QUAD,Adamantane,0.48,20,12,0.898†,8.6 x 8.6 x 5.4,20,N,D,-,(317)
+4-7,propulsion,131,Aurora Finland,ARM-A,Water,0.5,100,70,0.280†,0.3U,10£,Y,E,"AuroraSat-1 (2022), ORB-12 STRIDER",(156) (158) (159) (280)
+4-7,propulsion,131,Aurora Finland,ARM-C,Water,1,-,-,0.050†,45,12 (max),N,D,-,(162)
+4-7,propulsion,131,Benchmark Space Systems USA,Starling Ardent,Nitrogen,10 - 1000,70 – 140,-,1.15,1U,10 – 100,Y,D,-,(104)
+4-7,propulsion,131,Bradford Space Netherlands,Comet-1000,H2O,17,175,"1,150",1.55†,"2,300",50 (max),N,F,"HawkEye 360, Capella Space, Transporter 7",(134) (135) (136) (137)
+4-7,propulsion,131,Bradford Space Netherlands,Comet-8000,H2O,17,175,"8,348",6.68†,"23,760",55 (max),N,F,BlackSky,(134) (137) (138)
+4-7,propulsion,131,CU Aerospace USA,CHIPS-180,R134a,15,67,176,1.03†,540,20,Y,D,-,(319) (320) (321) (322)
+4-7,propulsion,131,CU Aerospace USA,CHIPS-500,R134a,25,69,505,1.84†,1300,25,Y,D,-,(319) (320) (321) (322)
+4-7,propulsion,131,CU Aerospace USA,CHIPS-1000,R134a,31,70,"1,030",3.13†,2500,30,Y,D,-,(319) (320) (321) (322)
+4-7,propulsion,131,CU Aerospace and VACCO USA,PUC,SO2,4.5,70,184,0.72†,0.35U,15,N,E,8 flight units delivered to AFRL,(139) (140) (141)
+4-7,propulsion,131,CU Aerospace USA,MVP,Delrin Fiber,4.5,66,280,1.06†,0.93U,45,N,E,DUPLEX (2025),(142) (143) (144) (145) (154) (155)
+4-7,propulsion,131,EPL USA,APS 100,Ammonia,28,280,"2,200",2.63†,2.5U,100,N,D,-,(323)
+4-7,propulsion,131,EPL USA,APS 500,Ammonia,150,350,"25,200",13.4†,"27,300",450,N,E,Atomos Space (2024**),(323) (324)
+4-7,propulsion,131,Pale Blue Japan,PBR-10,Water,1.0,-,55,0.6†,0.5U,6,N,E,ArkEdge AE1c,(325) (326)
+4-7,propulsion,131,Pale Blue Japan,PBR-20,Water,1.0,-,220,1.5†,1U,20,N,E,ArkEdge OPTIMAL-1; SPHERE-1 EYE,(160) (161) (325)
+4-7,propulsion,131,Pale Blue Japan,PBR-30,Water,12,-,400,2.1†,2U,35,N,D,-,(325)
+4-7,propulsion,131,SteamJet Space Systems UK,Steam TunaCan Thruster,Water,6,172,219,0.54†,402,< 19.9,N,D,-,(146)
+4-7,propulsion,131,SteamJet Space Systems UK,Steam Thruster One,Water,6,172,-,-,-,19.9,N,D,-,(147)
+4-7,propulsion,131,Thruster Heads,,,,,,,,,,,,
+4-7,propulsion,131,SITAEL Italy,XR-50,"Ar, Xe, N2",100,55-85,"≤ 72,000",0.22‡,45.8,≤ 50,-,D,-,(327) (328)
+4-7,propulsion,131,SITAEL Italy,XR-100,"Ar, Xe, N2",125,63-105,"≤ 90,000",0.22‡,45.8,≤ 80,-,D,-,(327) (328)
+4-7,propulsion,131,SITAEL Italy,XR-150,"Ar, Xe, N2",250 (Ar) 100 (Xe),58-110,"≤ 180,000",0.22‡,45.8,≤ 95,-,D,-,(327) (328)
+4-7,propulsion,131,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, † denotes a wet mass, ‡ denotes a dry mass, £ per active thruster, “-“ = denotes data not available or applicable",,,,,,,,,,,,

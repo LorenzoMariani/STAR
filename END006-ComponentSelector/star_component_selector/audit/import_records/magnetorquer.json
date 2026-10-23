@@ -1,0 +1,10 @@
+[
+ {"file": "magnetorquer/GomSpace__NanoTorque-GST600-MK2.pdf", "action": "update", "id": "gomspace-nanotorque-gst-600-mk2",
+  "document": "GomSpace NanoTorque GST600 MK2 Qualification Certificate 1075287 rev 1.0 (2025-11-07)", "tid_krad": 20, "trl": 8,
+  "notes": "Qualification certificate (2025-11-07): TID assessment 20 krad (only active part is the TMP100 temperature sensor), MK2 assessed at TRL 8; the predecessor GST600 has flight heritage since 2016 (TRL 9)."},
+ {"file": "magnetorquer/SSBV__CubeSat-Magnetorquer-Rod.pdf", "action": "add", "category": "magnetorquer", "id": "ssbv-cubesat-magnetorquer-rod",
+  "vendor": "SSBV Space & Ground Systems", "name": "CubeSat Magnetorquer Rod", "document": "SSBV CubeSat Magnetorquer Rod datasheet version 1c",
+  "mass_kg": 0.03, "power_w": 0.2, "temp_op_c": [-35, 75], "dimensions_mm": [70, 9, 9],
+  "notes": "Mass is the declared upper bound ('<30 g'); power is the typical value from a 5 V supply ('typically 200 mW'). Magnetic moment '>0.2 A m2' (lower bound), linearity better than +-5%, residual moment <0.001 A m2, lifetime >10 years, random vibration 15 g rms. Must be driven through an H-bridge; coil wires solder directly to PCB pads (no interface electronics). Dimensions: length 7 cm, diameter 9 mm.",
+  "specs": {"magnetorquer_type": "rod", "axes": 1, "magnetic_moment_am2": 0.2, "supply_voltage_ranges_v": [[5, 5]]}}
+]

@@ -1,0 +1,17 @@
+[
+ {"file": "eps/C3s__EPS2000-Datasheet-v02-short-1.pdf", "action": "update", "id": "c3s-electronics-development-eps2000",
+  "document": "C3S EPS2000 datasheet v02 (short)",
+  "notes": "Datasheet: up to 2 kW incoming solar power, up to 20 independent MPPT channels (MPPT_HP 35-70 V, 98% GaN, 460 W per 4-channel module; MPPT_LP 6-25 V, 92%, 100 W per 5-channel module), built-in battery pack configurable up to 2 kWh (115 Wh per module), 28 V unregulated main lines and 5/12 V auxiliary lines, redundant CAN. TRL 4 at datasheet time.",
+  "specs": {"pv_voltage_v": [6, 70], "pv_power_w_max": 2000, "pv_channels": 20, "output_voltage_ranges_v": [[28, 28], [5, 5], [12, 12]], "data_interfaces": ["CAN"], "efficiency": 0.98}},
+ {"file": "eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf", "action": "update", "id": "ibeos-150-w-cubesat-eps", "document": "Ibeos E14-150 14V SmallSat EPS datasheet (March 2024)",
+  "power_w": 1.8, "tid_krad": 30, "temp_op_c": [-40, 105], "dimensions_mm": [96, 90, 14.5],
+  "notes": "Datasheet E14-150 (March 2024): 3.3 V (3 A), 5 V (6 A), 12 V (4 A) regulated and unregulated 14 V battery bus (10 A), 10 switched outputs, 16.8 V maximum charge voltage, 7 A charge current, input 18-42 V, SPI 1 Mbps and I2C 400 kbps, SEE LET > 37 operate-through, quiescent power 1.8 W typical (power_w), efficiency 96% solar array / 95% 12 V / 93% 5 V / 92% 3.3 V. Designed for 60 C interface temperature at full power.",
+  "specs": {"pv_voltage_v": [18, 42], "pv_power_w_max": 150, "efficiency": 0.96, "data_interfaces": ["I2C", "SPI"]}},
+ {"file": "eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf", "action": "update", "id": "spacemanic-amun-1u", "document": "Spacemanic AMUN Power Supply Unit SM-PSU-AMUN summary sheet",
+  "tid_krad": 20, "temp_op_c": [-40, 85],
+  "notes": "Summary sheet: PC/104, suitable for 1-3U, 200 g, 3 MPPT channels with 6 solar panel connectors, solar input capacity 30 W, onboard 20 Wh battery (typ. 8 V) with heating and thermal control, 5 V and 3.3 V regulated buses, 6 outputs (4 selectable 5 V / 3.3 V), TID 20 krad and SEE 60 MeV tested.",
+  "specs": {"compatible_form_factors_u": [1, 2, 3], "pv_channels": 3, "pv_power_w_max": 30, "integrated_battery_wh": 20, "integrated_battery_voltage_v": 8,
+            "data_interfaces": ["I2C", "RS485", "UART", "CAN"]}},
+ {"file": "eps/Spacemanic__AMUN-1U-Power-Supply-Unit.pdf", "action": "skip", "name": "AMUN 1U PSU datasheet (14 pages)",
+  "reason": "same product as the AMUN summary sheet used above; the 14-page issue 5.2 datasheet was not read in detail (listed for a later check of the values)"}
+]

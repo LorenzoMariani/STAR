@@ -1,0 +1,460 @@
+[
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf",
+  "action": "update",
+  "id": "dragonfly-caiman-rgb",
+  "document": "Dragonfly Aerospace Caiman imager sheet",
+  "notes": "Sheet: 3U (100 x 100 x 250 mm with rear-mounted nCCM), GSD 3.25 m (PAN) / 6.5 m (MS, 11 bands) at 500 km, swath 13 km, 1.4 kg, imaging < 10 W, readout < 4 W, 5 V DC, 128 GB storage, LVDS and SpaceWire, SPI/I2C/CAN/RS422/RS485 TMTC, operating +10 to +30 C, survival -20 to +55 C, TRL 9.",
+  "temp_op_c": [
+   10,
+   30
+  ]
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf",
+  "action": "update",
+  "id": "dragonfly-caiman-ms",
+  "document": "Dragonfly Aerospace Caiman imager sheet",
+  "notes": "Sheet: 3U (100 x 100 x 250 mm with rear-mounted nCCM), GSD 3.25 m (PAN) / 6.5 m (MS, 11 bands) at 500 km, swath 13 km, 1.4 kg, imaging < 10 W, readout < 4 W, 5 V DC, 128 GB storage, LVDS and SpaceWire, SPI/I2C/CAN/RS422/RS485 TMTC, operating +10 to +30 C, survival -20 to +55 C, TRL 9.",
+  "temp_op_c": [
+   10,
+   30
+  ]
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Caiman-Imager-2.pdf",
+  "action": "skip",
+  "name": "Dragonfly Caiman (duplicate)",
+  "reason": "same sheet as DragonflyAerospace__Caiman-Imager.pdf (pptx export)"
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Gecko-Imager.pdf",
+  "action": "update",
+  "id": "dragonfly-gecko",
+  "document": "Dragonfly Aerospace Gecko imager sheet",
+  "notes": "Sheet: 1U (65 x 90 x 105 mm), RGB 39 m GSD and 80 km swath (wide-swath version 160 km) at 500 km, < 0.5 kg, imaging < 6 W (wide swath < 7 W), readout < 4 W, 5 V DC, 128 GB storage, TRL 9, operating +10 to +30 C.",
+  "temp_op_c": [
+   10,
+   30
+  ]
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Chameleon-Imager.pdf",
+  "action": "update",
+  "id": "dragonfly-chameleon-rgb",
+  "document": "Dragonfly Aerospace Chameleon imager sheet",
+  "notes": "Sheet: 2.5U (100 x 100 x 215 mm), RGB 10 m GSD 39 km swath; multispectral PAN 10 m / MS 20 m 20 km swath; hyperspectral 96 bands; 1.6 kg, imaging < 10 W, readout < 5 W, 5 V DC, 128 GB storage, TRL 9, operating +10 to +30 C.",
+  "temp_op_c": [
+   10,
+   30
+  ]
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Mantis-Imager.pdf",
+  "action": "update",
+  "id": "dragonfly-mantis-rgb",
+  "document": "Dragonfly Aerospace Mantis imager sheet",
+  "notes": "Sheet: 1U (65 x 90 x 107 mm), RGB 16 m GSD 32 km swath, MS 6 bands 32 m, hyperspectral 96 bands, < 0.5 kg, imaging < 6 W, readout < 4 W, 5 V DC, 128 GB storage, TRL 9, operating +10 to +30 C.",
+  "temp_op_c": [
+   10,
+   30
+  ]
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Chameleon-SWIR.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "dragonfly-chameleon-swir",
+  "vendor": "Dragonfly Aerospace",
+  "name": "Chameleon imager (SWIR)",
+  "document": "Dragonfly Aerospace Chameleon SWIR imager sheet",
+  "notes": "SWIR version of the Chameleon: 4 SWIR bands (1000-1750 nm; the sheet writes 'mm'), GSD 8.7 m and swath 11.2 km at 500 km, 1.6 kg, 2.5U (100 x 100 x 215 mm with rear-mounted nCCM), compatible with a 6U bus, imaging < 7 W (estimate), readout < 5 W, 5 V DC, 8 or 10 bit, 128 GB storage, LVDS and SpaceWire, SPI/I2C/CAN/RS422/RS485 TMTC, operating +10 to +30 C, survival -20 to +55 C, TRL 8. power_w = imaging estimate.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "SWIR"
+   ],
+   "reference_altitude_km": 500,
+   "gsd_m_at_ref": 8.7,
+   "swath_km_at_ref": 11.2,
+   "storage_gb": 128,
+   "data_interfaces": [
+    "LVDS",
+    "SpaceWire",
+    "SPI",
+    "I2C",
+    "CAN",
+    "RS-422",
+    "RS-485"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 1.6,
+  "power_w": 7,
+  "temp_op_c": [
+   10,
+   30
+  ],
+  "dimensions_mm": [
+   100,
+   100,
+   215
+  ],
+  "family": "dragonfly-chameleon"
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Komodo-Imager.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "dragonfly-komodo-rgb-ms",
+  "vendor": "Dragonfly Aerospace",
+  "name": "Komodo imager (RGB / multispectral, estimated)",
+  "document": "Dragonfly Aerospace Komodo imager sheet",
+  "notes": "Push-broom RGB or multispectral imager: PAN 1.5 m / MS 3 m (binned 2x2) at 500 km, about 12 kg and 200 x 200 x 340 mm (both marked as estimates), imaging < 10 W in the main table (< 45 W estimate in the second column), readout < 25 W estimate, 28 V DC or 5 V DC, 128 GB (512 GB option), RS422, TRL 5. The swath is given as 6.1 km and 15 km in two columns that cannot be assigned, so swath_km_at_ref is null.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "PAN",
+    "MS"
+   ],
+   "reference_altitude_km": 500,
+   "gsd_m_at_ref": 1.5,
+   "data_interfaces": [
+    "LVDS",
+    "SpaceWire",
+    "RS-422"
+   ]
+  },
+  "mass_kg": 12,
+  "temp_op_c": [
+   10,
+   30
+  ],
+  "dimensions_mm": [
+   200,
+   200,
+   340
+  ],
+  "family": "dragonfly-komodo"
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__DragonEye-Imager.pdf",
+  "action": "skip",
+  "name": "Dragonfly DragonEye",
+  "reason": "18 kg, 320 mm diameter x 930 mm: too large for the CubeSat classes (satellite bus 50-100 kg)"
+ },
+ {
+  "file": "imaging_cameras/DragonflyAerospace__Raptor-Imager.pdf",
+  "action": "skip",
+  "name": "Dragonfly Raptor",
+  "reason": "about 60 kg, 635 x 1633 mm (satellite bus 100-150 kg): not CubeSat class"
+ },
+ {
+  "file": "imaging_cameras/BST__HRVI-2HD.pdf",
+  "action": "skip",
+  "name": "BST HRVI-2HD",
+  "reason": "19 kg, 520 x 780 x 335 mm: too large for the CubeSat classes"
+ },
+ {
+  "file": "imaging_cameras/BST__HRVI-6.pdf",
+  "action": "skip",
+  "name": "BST HRVI-6HD",
+  "reason": "5.45 kg, 245 x 343 x 158 mm: wider than every CubeSat class envelope (226 mm), not CubeSat class"
+ },
+ {
+  "file": "imaging_cameras/BST__HRVI-6HD-2nd-Generation.pdf",
+  "action": "skip",
+  "name": "BST HRVI-6HD 2nd generation",
+  "reason": "10.45 kg total, 540 mm long camera heads: not CubeSat class"
+ },
+ {
+  "file": "imaging_cameras/OCE-Technologies__Aerospace-Miniature-Camera.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "oce-aerospace-miniature-camera",
+  "vendor": "O.C.E. Technology",
+  "name": "CMV aerospace miniature camera (inspection)",
+  "document": "O.C.E. Technology aerospace miniature camera sheet",
+  "notes": "Inspection camera mounted on the spacecraft platform to image the satellite itself (imaging distance 1-5 m, 90 deg FOV): 640 x 480 static or 320 x 240 dynamic, colour, JPEG, RS422, < 3 fps, 0.8 kg, 90.25 x 68 x 61 mm, 1.0 W, operating -5 to +55 C (storage -10 to +60 C), life > 5 years, LEO/MEO, multiple missions. Not an Earth-observation camera: no GSD.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "RGB"
+   ],
+   "across_track_pixels": 640,
+   "data_interfaces": [
+    "RS-422"
+   ]
+  },
+  "mass_kg": 0.8,
+  "power_w": 1.0,
+  "temp_op_c": [
+   -5,
+   55
+  ],
+  "dimensions_mm": [
+   90.25,
+   68,
+   61
+  ]
+ },
+ {
+  "file": "imaging_cameras/Unknown__KissCAM-Datasheet-and-User-Manual.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "kisscam",
+  "vendor": "KissCAM",
+  "name": "KissCAM miniature camera",
+  "document": "KissCAM datasheet and user manual",
+  "notes": "Miniature engineering camera: 1280 x 960 (1.2 MP, colour Bayer; revision A hardware limited to 480 x 360), stock wide-angle optics with S-mount holder, 38 x 20 x 18 mm, 10 g, 3.3 or 5 V at 78 mA, RS422 command/telemetry at 115200 baud, tested -20 to +60 C. Power is not entered (only the current is declared).",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "RGB"
+   ],
+   "across_track_pixels": 1280,
+   "data_interfaces": [
+    "RS-422"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.01,
+  "temp_op_c": [
+   -20,
+   60
+  ],
+  "dimensions_mm": [
+   38,
+   20,
+   18
+  ]
+ },
+ {
+  "file": "imaging_cameras/Oxford-Instruments__C-RED-New-Space.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "oxford-instruments-c-red-new-space",
+  "vendor": "Oxford Instruments (Andor)",
+  "name": "C-RED New Space SWIR camera core",
+  "document": "Oxford Instruments C-RED New Space SWIR camera core sheet",
+  "notes": "Board-level SWIR camera core for satellite optical payloads: 640 x 512 InGaAs, 15 um pixel pitch, 0.9-1.7 um (QE > 70% from 1000 to 1650 nm), 600 fps full frame (up to 32066 fps in 32 x 4 windowing), read noise < 30 e-, 93 dB dynamic range, true 16 bit, off-the-shelf with customisable hardware and firmware. Mass, power and size are not in the text read.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "SWIR"
+   ],
+   "pixel_pitch_um": 15,
+   "across_track_pixels": 640
+  }
+ },
+ {
+  "file": "imaging_cameras/SDL__DISC-Digital-Imaging-Space-Camera.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "sdl-disc",
+  "vendor": "Space Dynamics Laboratory",
+  "name": "DISC Digital Imaging Space Camera",
+  "document": "SDL Digital Imaging Space Camera (DISC) sheet SDL/10-121D",
+  "notes": "Low-power radiation-tolerant visible camera family for small satellites, 1024 x 1024 or 2560 x 2160 pixels, rolling or global shutter, RGB Bayer or hyperspectral filters optional, power as low as 1 W (frame-rate dependent, not entered), -40 to +85 C, 100 krad (Si) with a 100 mil housing, 21:3 SERDES, SpaceWire, UART. Mass '< 0.7 kg'; two configurations are shown, 2.75 x 3.36 x 8.35 in (69.9 x 85.3 x 212.1 mm, used here) and 2.05 x 3.55 x 3.89 in. The MODAS avionics unit (1.2 kg) is separate.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "RGB"
+   ],
+   "across_track_pixels": 2560,
+   "data_interfaces": [
+    "SerDes",
+    "SpaceWire",
+    "UART"
+   ]
+  },
+  "mass_kg": 0.7,
+  "tid_krad": 100,
+  "temp_op_c": [
+   -40,
+   85
+  ],
+  "dimensions_mm": [
+   69.9,
+   85.3,
+   212.1
+  ]
+ },
+ {
+  "file": "imaging_cameras/SpaceMicro__4K-Space-Camera.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "spacemicro-4k-space-camera",
+  "vendor": "Space Micro",
+  "name": "4K Space Camera",
+  "document": "Space Micro 4K Space Camera sheet Rev 3 (9/5/2019, draft specifications)",
+  "notes": "12 MP (4096 x 3072, 12-bit Bayer), up to 130 fps, FOV 80 deg, rad-hard glass lens, 6.5 x 7.0 x 6.0 in (165.1 x 177.8 x 152.4 mm), 1.75 kg, 60 W maximum (power_w), 28 V +-6, CAUI (up to 100 Gb/s) and CAN, 30 krad (Si), operating -10 to +50 C, up to 5 years LEO. Draft specifications.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "RGB"
+   ],
+   "across_track_pixels": 4096,
+   "data_interfaces": [
+    "CAUI",
+    "CAN"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     22,
+     34
+    ]
+   ]
+  },
+  "mass_kg": 1.75,
+  "power_w": 60,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -10,
+   50
+  ],
+  "dimensions_mm": [
+   165.1,
+   177.8,
+   152.4
+  ]
+ },
+ {
+  "file": "imaging_cameras/SpaceMicro__SpaceCam-5MP.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "spacemicro-spacecam-5mp",
+  "vendor": "Space Micro",
+  "name": "5MP Space Camera",
+  "document": "Space Micro 5MP Space Camera sheet Rev 3 (2/7/2018)",
+  "notes": "Scientific CMOS, 2560 x 2160, 6.5 um pixels, colour or monochrome, rolling shutter 100 fps or global shutter 50 fps, read noise < 2 e- RMS (rolling), FOV 29/39/80 deg standard lenses, 5 V, SpaceWire 80 Mbps, up to 10.7 x 8.4 x 23.8 cm with baffle, mass '< 1 kg' (upper bound), 4 W maximum, 30 krad (100 krad optional), SEL > 37 MeV cm2/mg, operating -20 to +55 C, up to 10 years LEO/GEO.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "RGB"
+   ],
+   "pixel_pitch_um": 6.5,
+   "across_track_pixels": 2560,
+   "data_interfaces": [
+    "SpaceWire"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 1.0,
+  "power_w": 4,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -20,
+   55
+  ],
+  "dimensions_mm": [
+   107,
+   84,
+   238
+  ]
+ },
+ {
+  "file": "imaging_cameras/Thoth__Aurora-1000-Line-Scan-Camera-Owners-Manual.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "thoth-aurora-1000",
+  "vendor": "Thoth Technology",
+  "name": "Aurora 1000 line-scan camera (SWIR)",
+  "document": "Thoth Technology Aurora 1000 Line-Scan Camera owner's manual OG287002 issue 1.02",
+  "notes": "256-pixel infrared line camera (1000-1650 nm, extended versions to 2400 nm) built on the Argus 1000 spectrometer electronics, seven format options, mass 281 g (1000XY-G; > 280 g for A-F), 45 x 50 x 110 mm (80 mm long for A-E), operating -20 to +40 C (survival -35 to +65 C), 3.6-4.2 V (250-1500 mA, 375 mA typical), prime and redundant RS232. Ground sample distance depends on the format and the altitude (0.67 m at 1 km for 1000XY-G): not entered.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "SWIR"
+   ],
+   "across_track_pixels": 256,
+   "data_interfaces": [
+    "RS-232"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.6,
+     4.2
+    ]
+   ]
+  },
+  "mass_kg": 0.281,
+  "temp_op_c": [
+   -20,
+   40
+  ],
+  "dimensions_mm": [
+   45,
+   50,
+   110
+  ]
+ },
+ {
+  "file": "imaging_cameras/Unknown__AuriCAM-Rad-Tolerant-Camera.pdf",
+  "action": "add",
+  "category": "payload",
+  "id": "auricam",
+  "vendor": "AuriCAM",
+  "name": "AuriCAM multi-purpose rad-tolerant camera",
+  "document": "AuriCAM multi-purpose rad-tolerant camera brochure",
+  "notes": "4 MP (2048 x 2048, 5.5 um pitch) camera with ECSS class 1 EEE parts, auto-exposure, 10 years LEO / 15 years GEO design, SpaceWire up to 160 Mbps, 4.6-6 V, pixel depth 8/10/12 bit, operating -35 to +55 C (baseplate), processing unit 91 x 117 x 25 mm 315 g (2.4 W + 2 W per optical head, BOL). Three optical-head variants (80 x 80 x 140, 90 x 90 x 135 and 71 x 65 x 155 mm; 420, 450 and < 550 g) cannot be matched to their lenses from the text, so mass and size are not entered.",
+  "specs": {
+   "payload_type": "imager",
+   "spectral_bands": [
+    "RGB"
+   ],
+   "pixel_pitch_um": 5.5,
+   "across_track_pixels": 2048,
+   "data_interfaces": [
+    "SpaceWire"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     4.6,
+     6
+    ]
+   ]
+  },
+  "temp_op_c": [
+   -35,
+   55
+  ]
+ },
+ {
+  "file": "imaging_cameras/Unknown__CCAM-CubeSat-Camera-Paper-2018.pdf",
+  "action": "skip",
+  "name": "CCAM CubeSat camera (UKATC / RAL Space)",
+  "reason": "conference presentation of a prototype (1.5U, 5 m GSD at 400 km, about 6 W): not a product"
+ },
+ {
+  "file": "imaging_cameras/XCAM__C3D-CubeSat-Camera-2018.pdf",
+  "action": "skip",
+  "name": "XCAM C3D (2018 copy)",
+  "reason": "older copy of the sheet whose product is in the catalogue as xcam-c3d (2022 copy linked)"
+ },
+ {
+  "file": "imaging_cameras/XCAM__NUSCIS.pdf",
+  "action": "skip",
+  "name": "XCAM Nuscis",
+  "reason": "imager controller board without optics (flight models from Q1 2025): left out as in the first import (catalogue decision 2026-10-17)"
+ }
+]

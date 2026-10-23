@@ -1,0 +1,215 @@
+[
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-01z",
+  "vendor": "2NDSpace",
+  "name": "CORE-01Z body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.038,
+  "notes": "Grid 1x1 cells, top/bottom panel, suggested for 1U / 2U / 3U; peak power 2.45 W; open-circuit voltage options 5.2 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 1U Z is the panel size by cell grid (top/bottom), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "1U Z",
+   "peak_power_w": 2.45,
+   "open_circuit_voltage_v": 5.2
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-01",
+  "vendor": "2NDSpace",
+  "name": "CORE-01 body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.035,
+  "notes": "Grid 1x1 cells, lateral panel, suggested for 1U / 2U / 3U; peak power 2.45 W; open-circuit voltage options 5.2 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 1U is the panel size by cell grid (lateral), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "1U",
+   "peak_power_w": 2.45,
+   "open_circuit_voltage_v": 5.2
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-02",
+  "vendor": "2NDSpace",
+  "name": "CORE-02 body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.075,
+  "notes": "Grid 1x2 cells, lateral panel, suggested for 2U / 3U; peak power 4.88 W; open-circuit voltage options 5.2 / 10.4 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 2U is the panel size by cell grid (lateral), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "2U",
+   "peak_power_w": 4.88
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-03",
+  "vendor": "2NDSpace",
+  "name": "CORE-03 body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.118,
+  "notes": "Grid 1x3 cells, lateral panel, suggested for 3U / 6U; peak power 8.54 W; open-circuit voltage options 5.2 / 7.8 / 16.4 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 3U is the panel size by cell grid (lateral), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "3U",
+   "peak_power_w": 8.54
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-04",
+  "vendor": "2NDSpace",
+  "name": "CORE-04 body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.148,
+  "notes": "Grid 1x4 cells, lateral panel, suggested for 4U / 8U; peak power 11.0 W; open-circuit voltage options 5.2 / 7.8 / 10.4 / 23.4 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 4U is the panel size by cell grid (lateral), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "4U",
+   "peak_power_w": 11.0
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-06z",
+  "vendor": "2NDSpace",
+  "name": "CORE-06Z body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.091,
+  "notes": "Grid 2x1 cells, top/bottom panel, suggested for 6U / 8U; peak power 4.88 W; open-circuit voltage options 5.2 / 10.4 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 2U Z is the panel size by cell grid (top/bottom), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "2U Z",
+   "peak_power_w": 4.88
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-12",
+  "vendor": "2NDSpace",
+  "name": "CORE-12 body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.289,
+  "notes": "Grid 2x3 cells, lateral panel, suggested for 6U / 12U; peak power 19.52 W; open-circuit voltage options 10.4 / 20.8 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 6U is the panel size by cell grid (lateral), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "6U",
+   "peak_power_w": 19.52
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-12z",
+  "vendor": "2NDSpace",
+  "name": "CORE-12Z body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.195,
+  "notes": "Grid 2x2 cells, top/bottom panel, suggested for 12U / 16U; peak power 9.76 W; open-circuit voltage options 5.2 / 10.4 / 20.8 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 4U Z is the panel size by cell grid (top/bottom), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "4U Z",
+   "peak_power_w": 9.76
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__CORE-Solar-Panels-BODY-MOUNTED-CUBES.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "2ndspace-core-16",
+  "vendor": "2NDSpace",
+  "name": "CORE-16 body-mounted solar panel",
+  "family": "2ndspace-core",
+  "document": "2NDSpace CORE body mounted solar panels product portfolio (2024)",
+  "mass_kg": 0.387,
+  "notes": "Grid 2x4 cells, lateral panel, suggested for 16U / 8U; peak power 24.4 W; open-circuit voltage options 10.4 / 13.0 / 26.0 V (customisable, the standard values are in bold in the sheet, not recoverable from the text). face = 8U is the panel size by cell grid (lateral), as in the other catalogue panels. UTJ > 30% cells, dual redundant protection, zero-residual dipole design, TRL 9, qualified for LEO and GEO.",
+  "specs": {
+   "face": "8U",
+   "peak_power_w": 24.4
+  }
+ },
+ {
+  "file": "solar_panel/Spacemanic__ra-solar-panels.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "spacemanic-ra-1u",
+  "vendor": "Spacemanic",
+  "name": "RA solar panel (1U side)",
+  "document": "Spacemanic RA solar panel SM-SP-RA-1U sheet",
+  "mass_kg": 0.05,
+  "temp_op_c": [
+   -40,
+   125
+  ],
+  "notes": "Two 30% triple-junction GaAs cells in series, LEO rated 2.3 W (1U side panel), Voc 5.4 V, Isc 0.52 A, Vmp 4.82 V, Imp 0.5 A, thickness 1.6 mm +-10%, integrated TMP112 temperature sensor and SLCD-61N8 photodiode (5 deg heading accuracy). Sizes 1U-12U available (side, top), only the 1U side values are declared.",
+  "specs": {
+   "face": "1U",
+   "peak_power_w": 2.3,
+   "voltage_options_v": [
+    4.82
+   ],
+   "open_circuit_voltage_v": 5.4
+  }
+ },
+ {
+  "file": "solar_panel/Pumpkin__Deployable-Clamshell-Solar-Array-DCSA.pdf",
+  "action": "add",
+  "category": "solar_panel",
+  "id": "pumpkin-dcsa-220w",
+  "vendor": "Pumpkin",
+  "name": "Deployable Clamshell Solar Array (DCSA) 220 W",
+  "document": "Pumpkin Deployable Clamshell Solar Array 710-02902 Rev B (July 2023)",
+  "mass_kg": 5.1,
+  "dimensions_mm": [
+   439,
+   116,
+   136
+  ],
+  "notes": "Two independent 110 W halves (8S12P + 8S12P), stowed 439 x 116 x 136 mm (6.97 l), deployed 878 x 116 x 1390 mm, 5th-generation PMDSAS panels, customer-supplied release mechanism, mounting plate to the spacecraft structure. Intended for SUPERNOVA 6U/12U nanosatellites and small satellites; face = 6U is an assumption from that statement (the sheet gives no mounting face).",
+  "specs": {
+   "face": "6U",
+   "peak_power_w": 220
+  }
+ },
+ {
+  "file": "solar_panel/2ndspace__DROP-Deployable-Solar-Panels-DEPLOYA.pdf",
+  "action": "skip",
+  "name": "2NDSpace DROP deployable panels",
+  "reason": "10 models with front/back-string options; the mounting face of each model is not declared (peak power and Voc are)"
+ },
+ {
+  "file": "solar_panel/Aphelion-Orbitals__Solar-Panels.pdf",
+  "action": "skip",
+  "name": "Aphelion CubeSat solar panels",
+  "reason": "one sheet for 1U to 6U sizes ('up to 150 W') without a per-size power table"
+ },
+ {
+  "file": "solar_panel/NPC-Spacemind__Deployable-Solar-Panels-2025.pdf",
+  "action": "skip",
+  "name": "NPC Spacemind deployable panels",
+  "reason": "model families D-SP3X/6X/8X with variants V, L-1W, L-2W whose electrical columns are not separable from the text; power given as ranges"
+ },
+ {
+  "file": "solar_panel/Pumpkin__2020-Pumpkin-PMDSAS-Design-Guidelines.pdf",
+  "action": "skip",
+  "name": "Pumpkin PMDSAS design guidelines",
+  "reason": "design guide for custom panels, no fixed product"
+ }
+]

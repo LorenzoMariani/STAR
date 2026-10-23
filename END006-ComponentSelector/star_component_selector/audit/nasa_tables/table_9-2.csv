@@ -1,0 +1,102 @@
+table,subsystem,page,Manufacturer,Product,Type,Min Frequency,Frequency Band,Gain,Polarizatio n,Mass,Dimensions,Flight Heritage
+9-2,antenna,286,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,286,MMA Design,LAMBDA,Deployable Sinuous Antenna,100,UHF,>-1,Dual CP,4000,20x15x10 (stowed) 100x100 (deployed),N
+9-2,antenna,286,Oxford Space Systems,Helical antenna (high RF power handling),Deployable,118- 127/127- 137,VHF,>2.5 (isoflu x),LHCP,<1400,40x35x34.5,Y
+9-2,antenna,286,2NDSpace,CHORUS-01 LP,Dual Dipole,140 - 930,20,0,2x Linear,90,10x10x0.8,Y
+9-2,antenna,286,2NDSpace,CHORUS-01 LP,Turnstile,140 - 930,20,0,Circular,90,10x10x0.8,Y
+9-2,antenna,286,Oxford Space Systems,Yagi antenna,Deployable,156.5- 162.5,VHF,>6.5,Dual Linear,<1000,92.5 x 50 (deployed),Y
+9-2,antenna,286,Spacemanic,Small Antenna Module,Dipole Cross Dipole,145 400 435,"VHF, UHF",2.1,Linear/ RHCP,55,9.8X9.8X0.56,Y
+9-2,antenna,286,"Haigh-Farr, Inc.",Part Number: 17100,Crossed Dipole,307,"VHF, UHF",--,RHCP,267,32x8x1,Y
+9-2,antenna,286,Anteral,2211-301-01,Monopole antenna,400,UHF,--,Single linear polarized,--,--,Y
+9-2,antenna,286,GomSpace,NanoCom ANT430,Omni Canted Turnstile,400-435,"VHF, UHF",1.5,Circular,30,10x10,Y
+9-2,antenna,286,Helical Communications Technologies,Helios Deployable Antenna,Helical,400-3000,"VHF, S",3,Circular,180,10x10x3.5,Y
+9-2,antenna,286,NanoAvionics,CubeSat UHF Antenna System 1x1U,Turnstile,400-500,UHF,1.37,--,33,10x10x0.7,Y
+9-2,antenna,286,NanoAvionics,CubeSat UHF Antenna System 1x2U,Turnstile,400-500,UHF,2.31,--,50,20x10x0.7,Y
+9-2,antenna,287,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,287,NanoAvionics,CubeSat UHF Antenna System 2x2U,Turnstile,400-500,UHF,3.4,--,65,20x20x0.7,Y
+9-2,antenna,287,EnduroSat,UHF Antenna IU,Whip/Burn-wire,"435-438, 400-403","UHF, VHF",> 0,RHCP,85,10x10,Y
+9-2,antenna,287,EnduroSat,UHF Antenna 2U,Whip/Burn-wire,"435-438, 400-403","UHF, VHF",> 0,Linear,210,22.5x9.9x 1.4,Y
+9-2,antenna,287,SENyT,UHF antenna,Deployable turnstile,430-440,UHF,0,Circular,< 150,10x10x3 folded,N
+9-2,antenna,287,ISISPACE,CubeSat Antenna System for 1U/3U,Tape,--,"VHF, UHF",0,"Circular, Linear",89,10x10x0.7,Y
+9-2,antenna,287,Flexitech Aerospace,600MHz - 10GHz Spiral Antenna,Spiral,600-10000,"UHF, L, S, C, X",3,Circular,1283,17x17x8.5,N
+9-2,antenna,287,Oxford Space Systems,Helical antenna,Deployable,862–928,UHF,> 6.5- 7.5,RHCP,<235,30 (deployed helical length),Y
+9-2,antenna,287,CesiumAstro,Vireo L-Band Phased Array,APA,960,L,22,Circular,49100,114x100x13. 5,N
+9-2,antenna,287,Anteral,2211-119-03 L2- Band DCP,2-port dual- circular- polarized (DCP) patch antenna,1200-1300,L,5.8,RHCP & LHCP,150,9.6x9.6x0.7 (excluding connector),N
+9-2,antenna,287,SENyT,Dual-band GNSS antenna,Patch,1215-1240 1560-1590,L,4.5,RHCP,< 100,10x10x0.35,N
+9-2,antenna,287,EnduroSat,GNSS Patch Antenna L1+L2,Patch,1227.60 1575.42,L,3.3+,RHCP,114,8.3x9.8x0.8,N
+9-2,antenna,287,Anteral,2211-119-02 L1- Band DCP,2-port DCP patch antenna,1550-1600,L,6,RHCP & LHCP,150,9.6x9.6x0.7 (excluding connector),N
+9-2,antenna,287,EnduroSat,GNSS Patch Antenna L1/E1,Patch,1559–1591,L,3.6+,RHCP,17,8.3 x 9.8 x 0.8,Y
+9-2,antenna,288,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,288,SkyFox Labs,piPATCH-L1E1,Patch,1575.42,GPS-L1 GALILEO E1,--,--,50,9.8x9.8x1.3,Y
+9-2,antenna,288,NAL Research Corporation,Antenna SYN7391-A/B/C (Iridium),Flat Mount,1610- 1626.5,L,4.9,RHCP,31,4.6x.4.3x1.0,Y
+9-2,antenna,288,Oxford Space Systems,Helical antenna (high RF power handling),Deployable,1980-2200,S,>4.0- 4.5,RHCP,<1200,60 (deployed helical length),Y
+9-2,antenna,288,IQ spacecom,S-Band Single Patch Antenna,Patch,1980-2500,S,6,Circular,49,7x7x0.34,Y
+9-2,antenna,288,IQ spacecom,S-Band Dual Patch Antenna,Patch,1980-2500,S,6,Circular,62,8x10x0.34,Y
+9-2,antenna,288,IQ spacecom,S-Band High Gain Patch Antenna,Patch,1980-2500,S,11.5,Circular,179,16x16x0.34,Y
+9-2,antenna,288,Flexitech Aerospace,2-2.5GHz Turnstile Antenna,Turnstile,2000-2500,S,5,Circular,173,--,N
+9-2,antenna,288,SkyLabs,S-band Patch Antenna,Patch,2025-2110,S,6,LHPC/RHP C,70,8.2x8.2x1.1,Y
+9-2,antenna,288,Vulcan Wireless,ANT-S/S Unified S-Band Antenna,Patch,2025-2300,S,6.5,Circular,76,8x8x1,Y
+9-2,antenna,288,EnduroSat,S-band Antenna Commercial,Patch,2025-2110,S,7,Selectable Circular,81,9.8x9.8x0.6,Y
+9-2,antenna,288,Anteral,2211-114-02 Telecommand DCP,Patch,2000-2150,S,6,RHCP & LHCP,150,9.6x9.6x0.7 (excluding connector),N
+9-2,antenna,288,EnduroSat,S-band Antenna Wideband,Patch,2025-2110 2200-2290,S,5,RHCP,115,9.8x9.8x0.7,Y
+9-2,antenna,288,SENyT,Dual-band S- band antenna,Patch,2050-2115 2215-2275,S,6.5,LHCP,< 100,10x10x0.35,N
+9-2,antenna,289,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,289,ANYWAVES,S-Band TT&C Antenna,Patch,2025-2290,S,6.5,RHCP/LHC P,132,8x8x1.2,Y
+9-2,antenna,289,"Haigh-Farr, Inc.",P/N 21060,Waveguide,2020-2120,S,25,LHCP,667,10x10x4.1,N
+9-2,antenna,289,ISISPACE,S-Band Patch Antenna,Patch,2200-2290,S,6.5,RHCP,50,8x8x1,N
+9-2,antenna,289,CesiumAstro,Nightingale AAA- 2SF1,Patch,2025 2200,S,5,RHCP LHCP,480,12x9.5x5,Y
+9-2,antenna,289,AeroSpace Lab,SBA-TX,Patch,2200–2290,S,6.1 dBic,RHCP,118,9.5x9.5x2.4,Y
+9-2,antenna,289,AeroSpace Lab,SBA - RX,Patch,2025–2110,S,6.1 dBic,CP,117,9.5x9.5x2.4,Y
+9-2,antenna,289,Satlab,SAS-2,Patch,2025-2110 2200-2290,S,6.1,RHCP,107,10x8.0x0.68,Y
+9-2,antenna,289,Anteral,2211-113-2 SCP,Patch,2042-2092 2220-2270,S,5.5,RHCP,129g,9.9x9.9x0.65 (excluding connector),Y
+9-2,antenna,289,Anteral,2211-114-01 TTC DCP,Patch,2025-2290,S,6,RHCP & LHCP,150,9.6x9.6x0.67 (excluding connector),N
+9-2,antenna,289,Anteral,2211-113-01 SCP,Patch,2000-2300,S,7,RHCP,196,9.7x9.7x3.6,Y
+9-2,antenna,289,Anteral,2211-114-03 Telemetry DCP,Patch,2170-2320,S,6,RHCP & LHCP,150,9.6x9.6x0.7 (excluding connector),N
+9-2,antenna,289,"Haigh-Farr, Inc.",Patch S-band Antenna,Patch,2245-2245,S,--,RHCP,48,4.8x6.5x6.5,Y
+9-2,antenna,289,EnduroSat,S-band Antenna ISM,Patch,2400-2450,S,8.3,LHCP,64,9.8x9.8x0.6,Y
+9-2,antenna,289,SENyT,S-band antenna,Patch,2400-2450,S,3.5,LHCP,<80,5x5x0.5,N
+9-2,antenna,289,Anteral,2211-114-05 ISM DCP,Patch,2400-2450,S,6.5,RHCP & LHCP,150,9.6x9.6x0.7 (excluding connector),N
+9-2,antenna,290,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,290,Oxford Space Systems,Offset Reflector Antenna (muti feed),Deployable,5030-5500,C,>41,Linear,<2720 0,"350 (deployed reflector diameter, scalable to 600)",N
+9-2,antenna,290,IQ spacecom,X-Band Single Patch Antenna,Patch,7145-7250 8025-8400,X,6,Circular,10,3.5x3.5x0.18,Y
+9-2,antenna,290,IQ spacecom,X-Band High Gain Antenna,Patch,7145-7250 8025-8400,X,10,Circular,12,4x6x0.18,Y
+9-2,antenna,290,Oxford Space Systems,"""Hinged Rib"" Cassegrain Antenna",Deployable,17500- 20200 27500- 30000,K/Ka,> 38/41,Dual Circular (2 channels for Tx & Rx),< 2500,"60 (deployed reflector diameter, scalable to 150)",N
+9-2,antenna,290,Anteral,2211-128-22 X- Band SCP,Patch,7900-8500,X,12,RHCP/LHC P,100,5.5x5.5x0.65 (excluding connector),N
+9-2,antenna,290,Anteral,2211-128-44 X- Band SCP,Patch,7900-8500,X,>18,RHCP,127,9.9x9.9x0.65 (excluding connector),Y
+9-2,antenna,290,Anteral,2211-128-UPL-R- 8x8-01 X-Band 8x8 Array,Patch,7900-8500,X,22,RHCP/LHC P,500,22x22x0.52 (excluding fixings and connector),N
+9-2,antenna,290,Anteral,2211-205-03 X band,Waveguide antenna,8000- 10500,X,15-17,RHCP & LHCP,450,9.74x9.9x17. 6,Y
+9-2,antenna,290,PICOSATS,BEAMSAT X band 4 x 4 patch antenna,Patch,8000 - 8500,X,>16,RHCP,125,98x98x10.8,N
+9-2,antenna,290,EnduroSat,X-band Patch Antenna,Patch,8025-8400,X,6,RHCP,2.2,2.4x2.4x0.2,Y
+9-2,antenna,291,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,291,EnduroSat,X-band 2x2 Patch Antenna,Patch,8025-8400,X,12,RHCP,23.2,6.0x6.0x0.3,Y
+9-2,antenna,291,EnduroSat,X-band 4x4 Patch Antenna,Patch,8025-8400,X,16,RHCP,53,9.8x8.3x0.3,Y
+9-2,antenna,291,EnduroSat,X-Band 8x12 Patch Antenna,Patch,8025 - 8400,X,26,RHCP,490,25.4 x 17.2 x 0.7,N
+9-2,antenna,291,ANYWAVES,X-band Payload Telemetry Antenna,Patch,8025-8400,X,11.5,Circular,65,7.3x7.3x11,Y
+9-2,antenna,291,MMA Design,T-DaHGR,Deployable Reflectarray,8400 - 10000,X,29 – 42.5,Configurabl e,1300 to 11000,10x10x10 - 20x20x20 (stowed) Ø70-Ø200 (deployed),N
+9-2,antenna,291,MMA Design,NeuSAR,Deployable Reflectarray,10000,X,>45.5,V+H Linear,16550,52x52x25 (stowed) Ø300 deployed,Y
+9-2,antenna,291,Anteral,2211-133-DWL- L-44-02 Ku- Downlink 4x4 Array,single-port right-handed- circular- polarized patch antenna,10700 - 11700,Ku,17,RHCP & LHCP,120,9.9 x 9.9 x 0.61 mm (excluding connector),N
+9-2,antenna,291,PICOSATS,BEAMSAT Ku band horn antenna,Horn antenna,"10700- 12750, 12750- 14800",Ku,>15 >16,Linear,633,109.1x109.1x 205.3,N
+9-2,antenna,291,Anteral,2211-212 Ku band,4-port DCP dual-band waveguide antenna,10700- 12700 13750- 14800,Ku,17,RHCP & LHCP,700,8.9 x 10.2 x 22.1,N
+9-2,antenna,292,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,292,Anteral,2211-133-UPL-R- 44-01 Ku-Uplink 4x4 Array,single-port right-handed- circular- polarized patch antenna,14000- 14500,Ku,26,RHCP & LHCP,120,0.99x0.99x0. 061 (excluding connector),N
+9-2,antenna,292,EnduroSat,K-band Patch Antenna,Patch,17700- 20200,K,18,RHCP,76,6.5x6.5x1,N
+9-2,antenna,292,PICOSATS,BEAMSAT K band 8 x 8 patch antenna,Patch antenna,17300 - 21200,K,>20,LHCP,135,94.5x94.5x14,N
+9-2,antenna,292,Anteral,2211-138-8x8 - K-Band 8x8 Array,single-port right-handed- circular- polarized patch antenna,17800- 20200,K,22.5,RHCP/LHC P,120,10x10x0.61 (excluding connector),N
+9-2,antenna,292,PICOSATS,BEAMSAT K/Ka band horn antenna,Horn antenna,"17300 – 21200, 27000 - 31000",K/Ka,">19.6, >23.7 5",LHCP RHCP,570,88x88.8x218,Y
+9-2,antenna,292,Anteral,2211-218,Waveguide antenna,"17300 – 21200, 27000 - 31000",K/Ka,>21,LHCP & RHCP,620,10.2x10.2x19 .7,Y
+9-2,antenna,292,PICOSATS,BEAMSAT Ka band 8 x 8 patch antenna,Patch antenna,27000 - 31000,Ka,>20,RHCP,76,78x78x13.5,N
+9-2,antenna,292,CesiumAstro,APA-1AT1,APA,24500,Ka,26.5,RHCP or LHCP,500,18x18x2,Y
+9-2,antenna,292,CesiumAstro,Vireo Ka 288 Tx DRA,APA,20200,Ka,28,"Circular, switchable on orbit",14500,27x23x16,N
+9-2,antenna,292,CesiumAstro,Vireo Ka 576 Tx DRA,APA,17000,Ka,31,"RHCP or LHCP,",26000 - 34000,40x 40x26.5,N
+9-2,antenna,293,---,---,---,[MHz],--,[dBi],--,[g],[cm],---
+9-2,antenna,293,---,,,,,,switchable on orbit,,,
+9-2,antenna,293,CesiumAstro,Vireo Ka 288 Rx DRA,APA,30000,Ka,28,"Circular, switchable on orbit",7000,18x15.5x15.5,N
+9-2,antenna,293,CesiumAstro,Vireo Ka 576 Rx DRA,APA,27000,Ka,31,"RHCP or LHCP, switchable on orbit",23000 to 29500,40x40x26.5,N
+9-2,antenna,293,Anteral,2211-250 EO,2-port DCP waveguide antenna,25500- 27000,Ka,30,RHCP & LHCP,1000,20x20x20,N
+9-2,antenna,293,Anteral,DCPCRS-500- 40-EO,2-port dual- DCP cassegrain reflector antenna,31500- 32500,Ka,40,RHCP & LHCP,2500,52.4 x52.4 x 25.5,N
+9-2,antenna,293,PICOSATS,BEAMSAT horn antenna,Horn antenna,37500 - 43500,Q,>20,RHCP & LHCP,150,49x49x110,N
+9-2,antenna,293,PICOSATS,BEAMSAT horn antenna,Horn antenna,"37500 – 43500, 47500 - 52500",QV,>30,RHCP & LHCP,250,119x119x65,N
+9-2,antenna,293,Anteral,2211-229,Waveguide antenna,37500- 52400,QV,30.5,RHCP & LHCP,280,10x10x15.77,N
+9-2,antenna,293,PICOSATS,BEAMSAT ADE antenna,ADE antenna,59000 - 71000,V,>30,RHCP & LHCP,83,79.5x79.5x43 .4,N
+9-2,antenna,293,EnduroSat,W-band Patch Antenna,Patch,71000- 75000,W,23-29,RHCP,37,8.7x8.1x2.0,N
+9-2,antenna,293,Anteral,2211-236,Waveguide antenna,71000- 86000,E,31.5,RHCP & LHCP,152,7.5x7.5x9,N

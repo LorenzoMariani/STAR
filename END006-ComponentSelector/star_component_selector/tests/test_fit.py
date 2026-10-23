@@ -127,7 +127,7 @@ class TestPreview(unittest.TestCase):
         from pathlib import Path
         from star_selector.mission import design
         from star_selector.models import Component
-        from tests.test_mission import CATALOG
+        from tests.test_mission import CATALOG_BEFORE_IMPORT as CATALOG
         v6 = json.loads((Path(__file__).resolve().parents[3] / "Input/input_base_knowledge/sample_inputs/Mission_Proposal_v6_requirements.json").read_text(encoding="utf-8"))["requirements"]
         no_size = [Component({k: v for k, v in copy.deepcopy(c.raw).items() if k != "dimensions"}) if c.id == "satlantis-isim-90" else c for c in CATALOG]
         f = check_fit(design(no_size, v6, {"altitude_km": [641.6, 641.6]})[0])     # the camera as it was before its datasheet (no size)

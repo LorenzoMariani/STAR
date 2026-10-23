@@ -1,0 +1,22 @@
+[
+ {"file": "structure/2NDSpace__VERSE-CubeSat-Structures.pdf", "action": "add", "category": "structure", "id": "2ndspace-verse-01", "vendor": "2NDSpace", "name": "VERSE-01 1U structure", "family": "2ndspace-verse",
+  "document": "2NDSpace VERSE structures product portfolio (2024)", "mass_kg": 0.094, "dimensions_mm": [100, 100, 113.5],
+  "notes": "max_total_mass_kg from the CubeSat Design Specification (1U 2.0 kg), not from the vendor. 6 deployment switches, standard end-frames; stack number 1. The sheet also lists VERSE 8U, 12U and 16U whose dimension and mass rows cannot be matched to the models from the text (not added).",
+  "specs": {"form_factor_u": 1, "max_total_mass_kg": 2.0}},
+ {"file": "structure/2NDSpace__VERSE-CubeSat-Structures.pdf", "action": "add", "category": "structure", "id": "2ndspace-verse-02", "vendor": "2NDSpace", "name": "VERSE-02 2U structure", "family": "2ndspace-verse",
+  "document": "2NDSpace VERSE structures product portfolio (2024)", "mass_kg": 0.198, "dimensions_mm": [100, 100, 227],
+  "notes": "max_total_mass_kg from the CubeSat Design Specification (2U 4.0 kg), not from the vendor. 6 deployment switches, standard end-frames; stack number 1 or 2.",
+  "specs": {"form_factor_u": 2, "max_total_mass_kg": 4.0}},
+ {"file": "structure/2NDSpace__VERSE-CubeSat-Structures.pdf", "action": "add", "category": "structure", "id": "2ndspace-verse-03", "vendor": "2NDSpace", "name": "VERSE-03 3U structure", "family": "2ndspace-verse",
+  "document": "2NDSpace VERSE structures product portfolio (2024)", "mass_kg": 0.288, "dimensions_mm": [100, 100, 340.5],
+  "notes": "max_total_mass_kg from the CubeSat Design Specification (3U 4.0 kg), not from the vendor. 6 deployment switches, standard end-frames; stack number 1, 2 or 3.",
+  "specs": {"form_factor_u": 3, "max_total_mass_kg": 4.0}},
+ {"file": "structure/2NDSpace__VERSE-CubeSat-Structures.pdf", "action": "add", "category": "structure", "id": "2ndspace-verse-06", "vendor": "2NDSpace", "name": "VERSE-06 6U structure", "family": "2ndspace-verse",
+  "document": "2NDSpace VERSE structures product portfolio (2024)", "mass_kg": 0.686, "dimensions_mm": [100, 226.3, 366],
+  "notes": "max_total_mass_kg from the CubeSat Design Specification (6U 12.0 kg), not from the vendor. Mass 686 g carries an asterisk in the sheet (footnote not in the text). Custom stack number and end-frames, 6 deployment switches.",
+  "specs": {"form_factor_u": 6, "max_total_mass_kg": 12.0}},
+ {"file": "structure/ASTROFEIN__Neu-ASTROFEIN-PSL-Ueberblick-202208.pdf", "action": "skip", "name": "ASTROFEIN PSL launcher family", "reason": "launcher (deployer) family, not a satellite structure: belongs with the dispensers"},
+ {"file": "structure/Pumpkin__CSK-Chassis-Datasheet.pdf", "action": "skip", "name": "Pumpkin CubeSat Kit chassis", "reason": "drawing with mass tables whose rows cannot be matched to the models from the text"},
+ {"file": "structure/Pumpkin__Quad-Switch-Cover-Plates.pdf", "action": "skip", "name": "Pumpkin quad switch cover plates", "reason": "accessory drawing, no structure data"},
+ {"file": "structure/Unknown__300g-CubeSat-Structure-and-Avionics.pdf", "action": "skip", "name": "Pumpkin CubeSat Kit 300 g", "reason": "the 300 g include the avionics (C&DH, RTC, storage), so it is not a bare structure mass"}
+]

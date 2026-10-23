@@ -1,0 +1,6 @@
+[
+ {"file": "adcs/Blue-Canyon-Technologies__ACS-2019.pdf", "action": "skip", "name": "XACT / FleXcore 2019",
+  "reason": "2019 version of the Blue Canyon ADCS sheet; the catalogue uses ADCS-2026 (REV 1/2026). 2019 XACT-50 total 0.433 kg + 1.38 kg wheels already discussed in the XACT notes"},
+ {"file": "adcs/CubeSpace__gen2-cubeadcs.pdf", "action": "skip", "name": "CubeADCS Gen2",
+  "reason": "text gives only wheel momenta and qualification levels, no ADCS unit mass or accuracy; the catalogue keeps the Gen1 sheet"}
+]

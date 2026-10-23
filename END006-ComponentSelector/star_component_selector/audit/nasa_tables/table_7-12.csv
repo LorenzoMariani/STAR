@@ -1,0 +1,8 @@
+table,subsystem,page,Manufacturer,Product,Form factor,Life (yrs),Mass (kg),Power (W),TR L,Notes:
+7-12,thermal_active,243,Lockheed Martin Space,MICRO 1-1,~1U,10,0.350,15,7 - 9,1 W cooling @150K cold tip. Integrated on LunIR CubeSat (launcher: Artemis I).
+7-12,thermal_active,243,Lockheed Martin Space,MICRO 1-2,~1U,10,0.475,25,6,2 W cooling @105K cold tip. Tested for MISE. Tentatively slated for integration into Europa Clipper.
+7-12,thermal_active,243,Lockheed Martin Space,MICRO 1-3,~1U,10,,40,5,Original design point: 1.4 W cooling @105K (40 W). Max Cooling: 2.9 W @200K (30 W).
+7-12,thermal_active,243,AIM Infrarot- Module GmbH,SF070,~1U,>3.5 (MTT F),0.85,24,6 - 9,0.6 W @80K cold tip. Slated from HyTi: Hyperspectral Thermal Imager (6U CubeSat).
+7-12,thermal_active,243,SunPower - Ametek,CryoTel DS Mini,<2U,>14,1.20,45,6,1.8 W @77K (23°C reject). Op to 40K.
+7-12,thermal_active,243,SunPower - Ametek,CryoTel MT,<3U,>23,2.10,80,6,5 W @77K (23°C reject). Op to 40K.
+7-12,thermal_active,243,Ricor,K508N,1U+,15,0.475,5.5,4 - 6,0.2 W @80K (23°C reject). Demo for 'Active CryoCubeSat (ACCS)' project.

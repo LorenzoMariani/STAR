@@ -1,0 +1,91 @@
+﻿file,name,action,reason
+star_tracker/Leonardo__A-STR-Autonomous-Star-Tracker.pdf,A-STR / AA-STR,skip,"GEO-class star tracker (3.55 kg, 9-14 W); the accuracy table lists several variants whose columns cannot be matched from the text"
+star_tracker/Unknown__ARGO-1.0-Multicamera-Star-Tracker.pdf,ARGO 1.0 (HIPPARCOS),skip,"no accuracy, mass or power in the text (specification table is an image): required accuracy fields missing; needs OCR of the table"
+adcs/Blue-Canyon-Technologies__ACS-2019.pdf,XACT / FleXcore 2019,skip,2019 version of the Blue Canyon ADCS sheet; the catalogue uses ADCS-2026 (REV 1/2026). 2019 XACT-50 total 0.433 kg + 1.38 kg wheels already discussed in the XACT notes
+adcs/CubeSpace__gen2-cubeadcs.pdf,CubeADCS Gen2,skip,"text gives only wheel momenta and qualification levels, no ADCS unit mass or accuracy; the catalogue keeps the Gen1 sheet"
+heater/Minco__Thermal-Solutions-Design-Guide.pdf,Minco thermal design guide,skip,"72-page generic design guide (industrial heaters, sensors, controllers), no CubeSat product with a resistance"
+heater/Unknown__Whitepaper-Thin-Film-Sensors-in-Polyimide-Heaters.pdf,Whitepaper,skip,"white paper, no product data"
+heater/Unknown__flexible-heater-for-space.pdf,ZIHET flexible heaters,skip,brochure without resistance or power values (required heater field resistance_ohm not declared)
+eps/Spacemanic__AMUN-1U-Power-Supply-Unit.pdf,AMUN 1U PSU datasheet (14 pages),skip,same product as the AMUN summary sheet used above; the 14-page issue 5.2 datasheet was not read in detail (listed for a later check of the values)
+payload/Aac-clyde__CUBECAT-2.pdf,CubeCAT,skip,same document as the CubeCAT datasheet already linked to aac-cubecat
+payload/Aac-clyde__STS-300-2.pdf,STS-300 AIS receiver,skip,"AIS receiver: the payload category only has imagers and optical terminals (payload_type), an AIS receiver would be mistaken for an imager"
+payload/Thoth__Argus-2000-IR-Spectrometer-Owners-Manual.pdf,Argus 2000 IR spectrometer,skip,"single-pixel-scan IR spectrometer, not an imager or optical terminal (see STS-300)"
+structure/ASTROFEIN__Neu-ASTROFEIN-PSL-Ueberblick-202208.pdf,ASTROFEIN PSL launcher family,skip,"launcher (deployer) family, not a satellite structure: belongs with the dispensers"
+structure/Pumpkin__CSK-Chassis-Datasheet.pdf,Pumpkin CubeSat Kit chassis,skip,drawing with mass tables whose rows cannot be matched to the models from the text
+structure/Pumpkin__Quad-Switch-Cover-Plates.pdf,Pumpkin quad switch cover plates,skip,"accessory drawing, no structure data"
+structure/Unknown__300g-CubeSat-Structure-and-Avionics.pdf,Pumpkin CubeSat Kit 300 g,skip,"the 300 g include the avionics (C&DH, RTC, storage), so it is not a bare structure mass"
+gnss_antenna/Taoglas__CGSP457.A-RevB.pdf,CGSP457.A rev B,skip,older revision of the CGSP457.A sheet used above (rev C)
+solar_panel/2ndspace__DROP-Deployable-Solar-Panels-DEPLOYA.pdf,2NDSpace DROP deployable panels,skip,10 models with front/back-string options; the mounting face of each model is not declared (peak power and Voc are)
+solar_panel/Aphelion-Orbitals__Solar-Panels.pdf,Aphelion CubeSat solar panels,skip,one sheet for 1U to 6U sizes ('up to 150 W') without a per-size power table
+solar_panel/NPC-Spacemind__Deployable-Solar-Panels-2025.pdf,NPC Spacemind deployable panels,skip,"model families D-SP3X/6X/8X with variants V, L-1W, L-2W whose electrical columns are not separable from the text; power given as ranges"
+solar_panel/Pumpkin__2020-Pumpkin-PMDSAS-Design-Guidelines.pdf,Pumpkin PMDSAS design guidelines,skip,"design guide for custom panels, no fixed product"
+battery/BST__BAT-110.pdf,BST BAT-110,skip,"voltage range not declared (only nominal 23.1 V; scalable for 12-28 V): required battery field voltage_range_v missing. Data: 3 kg, 240 x 119 x 87 mm, 172 Wh, -20 to +40 C, Li-Fe, 5 years LEO, 30 krad"
+battery/Airbus__ASTRO-BATT.pdf,Airbus ASTRO-BATT,skip,"radar/optical satellite class (21-30 kg, 3.6-5.4 kWh), not CubeSat"
+battery/Airbus__STELLAR-BATT.pdf,Airbus STELLAR-BATT,skip,"constellation satellite class (0.9-3.6 kWh modules), not CubeSat"
+battery/Airbus__Space-Batteries-Overview.pdf,Airbus space batteries overview,skip,"company overview, no product data"
+sun_sensor/Adcole__Coarse-Sun-Sensor.pdf,Adcole Coarse Sun Sensor detector,skip,"bare detector (no electronics, 0.13 kg with baffles, FOV 2 pi sr, accuracy +-1 deg at null); not a complete sensor unit: left out, could be added on request"
+antenna/Anywaves__X-Band-Antenna-Ultra-Low-Profile.pdf,Anywaves X-band ultra low profile,skip,"same antenna as the High-Gain X-Band Antenna sheet (same band, gain, HPBW and mass)"
+antenna/Anywaves__Ka-Band-TTC-Antenna-Hemispherical.pdf,Anywaves Ka-band TT&C antenna,skip,"choke-ring metal antenna: the antenna_type values (wire, patch, patch_array) cannot represent it"
+antenna/Picosats__BEAMSAT-K-KA-BAND-HORN-ANTENNA.pdf,Picosats K/Ka horn antenna,skip,"horn antenna (569 g, < 2U): not representable by the antenna_type values (wire, patch, patch_array)"
+antenna/Picosats__BEAMSAT-KU.pdf,Picosats Ku horn antenna,skip,"horn antenna (633 g, < 2U): not representable by the antenna_type values (wire, patch, patch_array)"
+comms/ANT61__Beacon-M-RevA.pdf,ANT61 Beacon M,skip,"rescue beacon on Iridium L-band (2 kbps), a satellite-health backup, not a TT&C or payload radio"
+comms/ANT61__Beacon-S-Rev-G.pdf,ANT61 Beacon S rev G,skip,"rescue beacon on Iridium L-band (2 kbps), a satellite-health backup, not a TT&C or payload radio"
+comms/ANT61__Beacon-S-Rev-I.pdf,ANT61 Beacon S rev I,skip,"rescue beacon on Iridium L-band (2 kbps), a satellite-health backup, not a TT&C or payload radio"
+comms/Aac-clyde__RX-2000-1.pdf,AAC SpaceQuest RX-2000,skip,"receive-only FM S-band receiver (200 g), not a radio that can downlink"
+comms/L3Harris__C-TT-505-UHF-Transceiver.pdf,"C/TT-505 UHF transceiver (2 kg, 60 W)",skip,"spacecraft-class radio, not CubeSat class"
+comms/L3Harris__c-tt-510-electra-lite-transceiver.pdf,"C/TT-510 Electra-Lite (3 kg, 65 W)",skip,"spacecraft-class radio, not CubeSat class"
+comms/L3Harris__MSX-765-Transceiver.pdf,"MSX-765 L/S-band transceiver (68-72 V, 35 W)",skip,"spacecraft-class radio, not CubeSat class"
+comms/Unknown__CXS-1000-Transponder.pdf,"CXS-1000 transponder (GEO small satellites, 17-36 W)",skip,"spacecraft-class radio, not CubeSat class"
+comms/SDL__IRIS-Radio.pdf,Iris deep-space radio,skip,"no data rate in the text (required comms field data_rate_kbps_max); 1.1 kg, 35 W, X-band 7.2 GHz up / 8.4 GHz down"
+comms/SpaceMicro__uSDR-C.pdf,uSDR-C software defined radio,skip,band is tunable from 150 MHz to 6 GHz (no single band) and the output power depends on the chosen board set
+comms/SpaceMicro__uSGLS-100-Transponder.pdf,uSGLS-100 transponder,skip,"military S-band transponder, 2.1 kg, not CubeSat class"
+comms/PLAN-S__IoT-Module.pdf,PLAN-S Connecta IoT module,skip,"LoRa/GNSS chip module for IoT terminals, not a satellite radio"
+comms/Unknown__DI-EDM-S2-1602.pdf,ETL DIGITAL 1000 indoor unit,skip,ground-segment RF over IP unit
+obc/BST__CDH-110.pdf,BST CDH-110 v1.0.0,skip,"older issue (v1.0.0, no power figure) of the CDH-110 sheet used above (v1.0.1)"
+obc/Beyondgravity__cOBC-Constellation-On-Board-Computer.pdf,Beyond Gravity cOBC,skip,"constellation-class dual-redundant computer with integrated GNSS: no mass, power or interface values in the text"
+obc/Beyondgravity__cOBC-PDIO.pdf,Beyond Gravity cOBC PDIO board,skip,"I/O board of the cOBC, not a standalone computer"
+obc/CAVU-Aerospace__CDH-FS-Brochure.pdf,CAVU CDH-FS,skip,"fully redundant OpenVPX-class subsystem (4.3 kg per the ICD), not CubeSat class"
+obc/CAVU-Aerospace__CDH-FS-ICD.pdf,CAVU CDH-FS ICD,skip,"interface control document of the CDH-FS (4.3 kg, 28 V), not CubeSat class"
+obc/CAVU-Aerospace__CDH-FS-Option-Sheet.pdf,CAVU CDH-FS option sheet,skip,"option sheet of the CDH-FS (OpenVPX 3U/6U), not CubeSat class"
+obc/SpaceMicro__Proton300k.pdf,Space Micro Proton300k,skip,"FPGA reconfigurable computer with video LVDS channels: no mass, power or interface values in the text"
+obc/SpaceMicro__ProtonX-Box.pdf,Space Micro ProtonX-Box,skip,"modular avionics box of slices (150 g and 1.1-12.7 W per slice), not a single computer"
+obc/SpaceMicro__Proton2X-Box.pdf,Space Micro Proton2X-Box,skip,"modular avionics box (22.5 x 17.2 x 5.7 cm, 2205 cc), not a single computer"
+obc/Pumpkin__CubeSat-Kit-Breakout-Board.pdf,Pumpkin CubeSat Kit breakout board,skip,"debug interface board, not a computer"
+obc/Pumpkin__CubeSat-Kit-Motherboard-Module-2-MBM2.pdf,Pumpkin MBM2,skip,"BeagleBone Black host motherboard: no mass, power or supply values in the text"
+obc/Pumpkin__CubeSat-Kit-PSPM-B.pdf,Pumpkin PSPM B,skip,socketed processor module for the development board (the flight PPM B1 is already in the catalogue)
+obc/SkyLabs__NANOhpc-DPU.pdf,SkyLabs NANOhpc-DPU / AI / obc,skip,"one table for three products (DPU, AI accelerator, OBC) whose columns cannot be separated from the text"
+obc/Spacemanic__DEEP-THOUGHT-OBC.pdf,Spacemanic Deep Thought OBC datasheet (24 pages),skip,same product as the Deep Thought sheet used above; the long datasheet issue 3.1 was not read in detail
+obc/Spacemanic__EDDIE-OBC.pdf,Spacemanic Eddie OBC datasheet (18 pages),skip,same product as the Eddie sheet used above; the long datasheet issue 3.1 was not read in detail
+obc/Unknown__RAVEN-AI-Edge-Computer.pdf,RAVEN AI edge computer,skip,no numeric values in the text
+obc/Unknown__OBC-ABACUS-3-Flyer.pdf,OBC ABACUS 3 flyer,skip,no extractable text (bullets only): would need OCR
+propulsion/Applied-Ion-Systems__AIS-TR-006-gPPT3-1C-Ignition-Test.pdf,Applied Ion Systems gPPT3-1C TR-006 ignition test,skip,"laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+propulsion/Applied-Ion-Systems__AIS-TR-007-gPPT3-1C-Impulse-Bit-Test.pdf,Applied Ion Systems gPPT3-1C TR-007 impulse bit test,skip,"laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+propulsion/Applied-Ion-Systems__AIS-TR-008-gPPT3-1C-Lifetime-Test.pdf,Applied Ion Systems gPPT3-1C TR-008 lifetime test,skip,"laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+propulsion/Applied-Ion-Systems__AIS-TR-009-gPPT3-1C-Lifetime-Test-V4.pdf,Applied Ion Systems gPPT3-1C TR-009 lifetime test V4,skip,"laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+propulsion/Applied-Ion-Systems__AIS-TR-021-gPPT3-1C-Lifetime-Test-2.pdf,Applied Ion Systems gPPT3-1C TR-021 lifetime test 2,skip,"laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+propulsion/Applied-Ion-Systems__AIS-VAT0-DEMO-Vacuum-Arc-Thruster-Kit.pdf,Applied Ion Systems VAT0 demo kit,skip,"educational learning kit user manual, not a flight thruster"
+propulsion/Armor-Arsenal__Cold-Gas-Thruster.pdf,Armor Arsenal 5CGT0003 cold gas thruster,skip,"thruster valve only (70 g, 2-4 N, Isp > 60 s, 24-34 V, TRL 7): no tank or total impulse, so not a propulsion system"
+propulsion/Blue-Orbit-Space-Systems__Datasheet.pdf,Blue Orbit water resistojets,skip,values are marked as estimates and no total impulse is given
+propulsion/Busek__11-Tech-Circle-Natick-Ma-01760.pdf,Busek BHT-200,skip,"Hall thruster head (0.98 kg, 200 W, 13 mN) without PPU, tank or propellant: system mass and delta-v not representable"
+propulsion/Busek__11-Tech-Circle-Natick-Ma-01760-2.pdf,Busek BHT-1500,skip,"Hall thruster head (6.3 kg, 1.5 kW), not CubeSat class"
+propulsion/Busek__BHT-100-v1.0.pdf,Busek BHT-100,skip,"Hall thruster head (1.16 kg, 100 W, 7 mN) without PPU, tank or propellant: system mass and delta-v not representable"
+propulsion/Busek__BHT-350-v1.0.1.pdf,Busek BHT-350,skip,"Hall thruster head (1.7 kg, 300 W), without PPU, tank or propellant"
+propulsion/Busek__BHT-600-v1.1.pdf,Busek BHT-600,skip,"Hall thruster head (2.6 kg, 600 W), ESPA class"
+propulsion/Busek__BGT-X5-v1.0.pdf,Busek BGT-X5,skip,"same product as busek-bgt-x5, already in the catalogue from its datasheet"
+propulsion/CU-Aerospace__CHIPS-Aug-2026.pdf,CU Aerospace CHIPS (Aug 2026 issue),skip,newer issue of the CHIPS sheet whose products (CHIPS-180/500/1000) are in the catalogue from the 2023 sheet; the values were not re-compared
+propulsion/CU-Aerospace__CHIPS-Jul-2025.pdf,CU Aerospace CHIPS (Jul 2025 issue),skip,newer issue of the CHIPS sheet whose products (CHIPS-180/500/1000) are in the catalogue from the 2023 sheet; the values were not re-compared
+propulsion/DawnAerospace__B1-Thruster.pdf,Dawn Aerospace B1 thruster,skip,"thruster without tank (260 g, 0.49-1.35 N, Isp >= 248 s): no total impulse"
+propulsion/DawnAerospace__B20-Gen2-Thruster.pdf,Dawn Aerospace B20 Gen 2 thruster,skip,"thruster without tank (695 g, 6.5-18 N, Isp >= 271 s): no total impulse"
+propulsion/Enpulsion__IFM-Nano-Thruster.pdf,Enpulsion IFM Nano (old sheet),skip,older sheet (Doc ENP2018-001 rev F.1) of the IFM Nano already in the catalogue as NANO R3 from the 2026 datasheet
+propulsion/Nammo__Additive-Manufactured-100ml-CubeSat-Tank.pdf,Nammo 100 ml CubeSat tank,skip,"propellant tank, not a propulsion system"
+propulsion/OHB-Sweden__EPsylon-Electric-Propulsion.pdf,OHB Sweden EPsylon,skip,"Hall propulsion system of 15-35 kg dry mass, not CubeSat class"
+propulsion/Unknown__ASTRA-Spacecraft-Engine-Krypton-Xenon.pdf,Astra Spacecraft Engine (Hall),skip,"Hall thruster system of 1.0 kg thruster + 1.5 kg PPU + tank (7.6 kg example), 400 W; no total impulse given"
+imaging_cameras/DragonflyAerospace__Caiman-Imager-2.pdf,Dragonfly Caiman (duplicate),skip,same sheet as DragonflyAerospace__Caiman-Imager.pdf (pptx export)
+imaging_cameras/DragonflyAerospace__DragonEye-Imager.pdf,Dragonfly DragonEye,skip,"18 kg, 320 mm diameter x 930 mm: too large for the CubeSat classes (satellite bus 50-100 kg)"
+imaging_cameras/DragonflyAerospace__Raptor-Imager.pdf,Dragonfly Raptor,skip,"about 60 kg, 635 x 1633 mm (satellite bus 100-150 kg): not CubeSat class"
+imaging_cameras/BST__HRVI-2HD.pdf,BST HRVI-2HD,skip,"19 kg, 520 x 780 x 335 mm: too large for the CubeSat classes"
+imaging_cameras/Unknown__CCAM-CubeSat-Camera-Paper-2018.pdf,CCAM CubeSat camera (UKATC / RAL Space),skip,"conference presentation of a prototype (1.5U, 5 m GSD at 400 km, about 6 W): not a product"
+imaging_cameras/XCAM__C3D-CubeSat-Camera-2018.pdf,XCAM C3D (2018 copy),skip,older copy of the sheet whose product is in the catalogue as xcam-c3d (2022 copy linked)
+imaging_cameras/XCAM__NUSCIS.pdf,XCAM Nuscis,skip,imager controller board without optics (flight models from Q1 2025): left out as in the first import (catalogue decision 2026-10-17)
+imaging_cameras/BST__HRVI-6.pdf,BST HRVI-6HD,skip,"5.45 kg, 245 x 343 x 158 mm: wider than every CubeSat class envelope (226 mm), not CubeSat class"
+imaging_cameras/BST__HRVI-6HD-2nd-Generation.pdf,BST HRVI-6HD 2nd generation,skip,"10.45 kg total, 540 mm long camera heads: not CubeSat class"

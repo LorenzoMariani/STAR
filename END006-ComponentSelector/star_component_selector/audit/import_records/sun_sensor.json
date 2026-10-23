@@ -1,0 +1,176 @@
+[
+ {
+  "file": "sun_sensor/Solar-MEMS__ACSS.pdf",
+  "action": "update",
+  "id": "solar-mems-technologies-acss",
+  "document": "Solar MEMS Technologies ACSS Advanced Coarse Sun Sensor datasheet",
+  "mass_kg": 0.04,
+  "tid_krad": 200,
+  "temp_op_c": [
+   -45,
+   85
+  ],
+  "dimensions_mm": [
+   65,
+   47,
+   13
+  ],
+  "notes": "Datasheet: 2 orthogonal axes, FOV +-60 deg, accuracy < 3 deg (3-sigma, not calibrated), 15-30 V, 3 mA, analogue 15-pin micro connector, double redundancy, 2500+ units in orbit since 2019, 200 krad gamma, operating temperature -45 to 85 C (the qualification range is -55 to 105 C).",
+  "specs": {
+   "fov_deg": [
+    120
+   ],
+   "accuracy_deg": 3,
+   "accuracy_basis": "3-sigma",
+   "supply_voltage_ranges_v": [
+    [
+     15,
+     30
+    ]
+   ],
+   "data_interfaces": [
+    "analogue"
+   ]
+  }
+ },
+ {
+  "file": "sun_sensor/SSBV__CubeSat-Sun-Sensor.pdf",
+  "action": "add",
+  "category": "sun_sensor",
+  "id": "ssbv-cubesat-sun-sensor",
+  "vendor": "SSBV Space & Ground Systems",
+  "name": "CubeSat Sun Sensor",
+  "document": "SSBV CubeSat Sun Sensor datasheet version 1h",
+  "mass_kg": 0.005,
+  "power_w": 0.05,
+  "tid_krad": 10,
+  "temp_op_c": [
+   -25,
+   50
+  ],
+  "dimensions_mm": [
+   33,
+   11,
+   6
+  ],
+  "notes": "CMOS PSD detector behind a pin-hole, FOV 114 deg, accuracy < 0.5 deg with the supplied calibration algorithm (statistical basis not stated), update rate > 10 Hz (limited by the customer ADC), 5 analogue channels (four position voltages plus reference), 9-way Nano-D, 5 V. Mass is the declared '< 5 g' (upper bound); power 0.05 W = 10 mA at 5 V (derived from '< 10 mA'). 10 krad is the component-level total dose; qualification 20 g rms and 1000 g shock. Flew on TDS-1 (2012).",
+  "specs": {
+   "sensor_type": "fine",
+   "fov_deg": [
+    114
+   ],
+   "accuracy_deg": 0.5,
+   "update_rate_hz": 10,
+   "data_interfaces": [
+    "analogue"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  }
+ },
+ {
+  "file": "sun_sensor/Adcole__Digital-Sun-Sensor-Legacy.pdf",
+  "action": "add",
+  "category": "sun_sensor",
+  "id": "adcole-digital-sun-sensor-32",
+  "vendor": "Adcole Maryland Aerospace",
+  "name": "Digital Sun Sensor (+-32 deg)",
+  "document": "Adcole Digital Sun Sensor (legacy) one-sheet",
+  "mass_kg": 1.298,
+  "power_w": 1,
+  "dimensions_mm": [
+   96,
+   94,
+   53
+  ],
+  "notes": "Two sensor heads (one per redundant side), 2 measurement axes each, FOV +-32 deg x +-32 deg, accuracy +-0.1 deg (statistical basis not stated), LSB 0.125 deg, 28 +-7 V input (other ranges available), typical dissipation 1 W, serial output of two 10-bit words plus a sun-presence bit. Mass derived as the sum of the declared nominal masses: sensor 0.3 kg + electronics 2.2 lb (0.998 kg). Size is the sensor head (96 x 94 x 53 mm); electronics 190 x 127 x 53 mm. The +-64 deg version is mentioned (five heads give 4 pi sr) without separate values.",
+  "specs": {
+   "fov_deg": [
+    64,
+    64
+   ],
+   "accuracy_deg": 0.1,
+   "data_interfaces": [
+    "serial"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     21,
+     35
+    ]
+   ]
+  }
+ },
+ {
+  "file": "sun_sensor/Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf",
+  "action": "update",
+  "id": "redwire-space-coarse-sun-sensor-cosine-type",
+  "document": "Redwire Coarse Sun Sensor (Cosine Type) datasheet (02/2021)",
+  "tid_krad": 100,
+  "dimensions_mm": [
+   28,
+   19,
+   12
+  ],
+  "notes": "Datasheet (02/2021): rad hard > 100 krad (Si), 2.8 x 1.9 x 1.2 cm; baffles can be provided to restrict the FOV (nearly any FOV by a custom baffle)."
+ },
+ {
+  "file": "sun_sensor/Redwire__Sun-Sensor-Datasheet.pdf",
+  "action": "update",
+  "id": "redwire-space-coarse-sun-sensor-pyramid",
+  "document": "Redwire Coarse Sun Sensor Pyramid datasheet (02/2021)",
+  "mass_kg": 0.13,
+  "tid_krad": 100,
+  "dimensions_mm": [
+   89,
+   89,
+   43
+  ],
+  "notes": "Datasheet (02/2021): with baffles 3.5 x 3.5 x 1.7 in (89 x 89 x 43 mm), 0.29 lb (0.13 kg) nominal, rad hard to more than 100 krad (Si)."
+ },
+ {
+  "file": "sun_sensor/Bradford-Space__CSS-Coarse-Sun-Sensor.pdf",
+  "action": "update",
+  "id": "bradford-space-css",
+  "document": "Bradford Space Coarse Sun Sensor datasheet (Jan 2017)",
+  "notes": "Datasheet (Jan 2017): self-redundant pentagon sensor in production since 1975, near-hemispherical FOV, individual detector outputs to the AOCS (current or voltage), variants with a 5th detector on the pyramid top and strap-on baffles. No numeric values in the text."
+ },
+ {
+  "file": "sun_sensor/Bradford-Space__CoSS.pdf",
+  "action": "update",
+  "id": "bradford-space-coss",
+  "document": "Bradford Space Cosine Sun Sensor datasheet",
+  "notes": "Datasheet: FOV 160 deg full cone, qualified for LEO in the Van Allen belts; typically eight to twelve sensors per platform, the sun vector follows from three illuminated units. No other numeric values in the text."
+ },
+ {
+  "file": "sun_sensor/Bradford-Space__CoSS-R.pdf",
+  "action": "update",
+  "id": "bradford-space-coss-r",
+  "document": "Bradford Space Cosine Sun Sensor Redundant datasheet",
+  "notes": "Datasheet: FOV 180 deg full cone, internally redundant, qualified for long GEO, MEO and LEO missions. No other numeric values in the text."
+ },
+ {
+  "file": "sun_sensor/Bradford-Space__FSS-Fine-Sun-Sensor.pdf",
+  "action": "update",
+  "id": "bradford-space-fss",
+  "document": "Bradford Space Fine Sun Sensor datasheet",
+  "notes": "Datasheet: analogue quadrant detector, two axes, four quadrant output voltages plus a sun-presence voltage, internal thermistor on the electronics; variants without readout electronics (Mini-FSS) and a filtered variant. No numeric values in the text."
+ },
+ {
+  "file": "sun_sensor/Bradford-Space__Mini-FSS.pdf",
+  "action": "update",
+  "id": "bradford-space-mini-fss",
+  "document": "Bradford Space Mini Fine Sun Sensor datasheet",
+  "notes": "Datasheet: analogue quadrant detector, two axes, variant without readout electronics suited to small satellites, qualified for LEO in the Van Allen belts. No numeric values in the text."
+ },
+ {
+  "file": "sun_sensor/Adcole__Coarse-Sun-Sensor.pdf",
+  "action": "skip",
+  "name": "Adcole Coarse Sun Sensor detector",
+  "reason": "bare detector (no electronics, 0.13 kg with baffles, FOV 2 pi sr, accuracy +-1 deg at null); not a complete sensor unit: left out, could be added on request"
+ }
+]

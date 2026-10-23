@@ -490,6 +490,490 @@
     "type": "immagine dal sito del produttore",
     "retrieved": "2026-10-13"
    }
+  },
+  {
+   "id": "c3s-3u",
+   "name": "3U / 3U PLUS platform",
+   "form_factor_u": 3,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": 4.7,
+   "solar_array_power_w_max": null,
+   "power_buses": "3.3 V, 5.0 V, 9.9-12.6 V",
+   "modules": [
+    "On-board computer (ARM Cortex-M7, cold-redundant pair)",
+    "Communication subsystem (UHF)",
+    "Power system with battery pack",
+    "Rigid backplane (nano-D / micro-D connectors)",
+    "Structure with card guides"
+   ],
+   "notes": "Platform mass 3.3 kg, 100 x 100 x 340.5 mm, battery 58 / 65 Wh, average consumption 4.5 W, peak 20 W; payload allowance up to 4.7 kg, 1.25-1.4 U, 146.5 x 94 x 94 mm. Knowledge accuracy 0.2 deg, pointing 2 deg (pointing_arcsec = [knowledge, pointing]). 5-year design lifetime in LEO. Flight heritage RadCube (2021).",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": "subsystem-level cold redundancy",
+   "comms": {
+    "UHF": "399-401 MHz, 30 dBm, uplink 1.25-150 kbps, downlink 5-150 kbps (OOK/FSK/GFSK); higher band on request"
+   },
+   "propulsion": null,
+   "pointing_arcsec": [
+    720,
+    7200
+   ],
+   "dimensions": null,
+   "vendor": "C3S Electronics Development",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "Earth observation, IoT, IOD, space weather monitoring",
+   "configuration": "3U",
+   "source": {
+    "url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_3U_3UPLUS_Platform_Datasheet_2.pdf",
+    "document": "C3S platform data sheet v03, 3U/3U PLUS (02/02/2022)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/C3S-3U.png",
+    "image_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_3U_3UPLUS_Platform_Datasheet_2.pdf#page=1",
+    "page_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_3U_3UPLUS_Platform_Datasheet_2.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "c3s-6u",
+   "name": "6U platform",
+   "form_factor_u": 6,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": null,
+   "power_buses": "3.3 V, 5.0 V, 9.9-12.6 V",
+   "modules": [
+    "On-board computer (ARM Cortex-M7, cold-redundant pair)",
+    "Communication subsystem (UHF)",
+    "Power system with battery pack",
+    "Rigid backplane (nano-D / micro-D connectors)",
+    "Structure with card guides"
+   ],
+   "notes": "Platform mass 5 kg, 226.3 x 100 x 366 mm, battery 115 / 155 / 190 Wh, average consumption 7.9 W, peak 25 W; payload allowance: average up to 40 W, peak up to 165 W, 4.9-5.3 U, 94 x 216.2 x 244.4 mm. Knowledge accuracy 0.2 deg, pointing 2 deg (pointing_arcsec = [knowledge, pointing]).",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": "subsystem-level cold redundancy",
+   "comms": {
+    "UHF": "399-401 MHz, 30 dBm, uplink 1.25-150 kbps, downlink 5-150 kbps (OOK/FSK/GFSK); higher band on request"
+   },
+   "propulsion": null,
+   "pointing_arcsec": [
+    720,
+    7200
+   ],
+   "dimensions": null,
+   "vendor": "C3S Electronics Development",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "Earth observation, IoT, IOD, space weather monitoring",
+   "configuration": "6U",
+   "source": {
+    "url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_6U_platform_datasheet.pdf",
+    "document": "C3S platform data sheet v03, 6U (02/02/2022)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/C3S-6U.png",
+    "image_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_6U_platform_datasheet.pdf#page=1",
+    "page_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_6U_platform_datasheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "c3s-12u",
+   "name": "12U platform",
+   "form_factor_u": 12,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": null,
+   "power_buses": "13.2-16.8 V",
+   "modules": [
+    "On-board computer (ARM Cortex-M7, cold-redundant pair)",
+    "Communication subsystem (UHF)",
+    "Power system with battery pack",
+    "Rigid backplane (nano-D / micro-D connectors)",
+    "Structure with card guides"
+   ],
+   "notes": "226.3 x 226.3 x 366 mm, battery 115 / 155 / 190 Wh, average consumption 7.9 W, peak 25 W; payload allowance: average up to 40 W, peak up to 165 W, 12.3-13.1 U. Knowledge accuracy 0.2 deg, pointing 2 deg (pointing_arcsec = [knowledge, pointing]). Platform mass not declared.",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": "subsystem-level cold redundancy",
+   "comms": {
+    "UHF": "399-401 MHz, 30 dBm, uplink 1.25-150 kbps, downlink 5-150 kbps (OOK/FSK/GFSK); higher band on request"
+   },
+   "propulsion": null,
+   "pointing_arcsec": [
+    720,
+    7200
+   ],
+   "dimensions": null,
+   "vendor": "C3S Electronics Development",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "Earth observation, IoT, IOD, space weather monitoring",
+   "configuration": "12U",
+   "source": {
+    "url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_12U_platform_datasheet_2.pdf",
+    "document": "C3S platform data sheet v03, 12U (02/02/2022)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/C3S-12U.png",
+    "image_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_12U_platform_datasheet_2.pdf#page=1",
+    "page_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_12U_platform_datasheet_2.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "c3s-16u",
+   "name": "16U platform",
+   "form_factor_u": 16,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": null,
+   "power_buses": "13.2-16.8 V",
+   "modules": [
+    "On-board computer (ARM Cortex-M7, cold-redundant pair)",
+    "Communication subsystem (UHF)",
+    "Power system with battery pack",
+    "Rigid backplane (nano-D / micro-D connectors)",
+    "Structure with card guides"
+   ],
+   "notes": "226.3 x 226.3 x 454 mm, battery 115 / 155 / 190 Wh, average consumption 7.9 W, peak 25 W; payload allowance: average up to 50 W, peak up to 155 W, 15.5-16.5 U. Knowledge accuracy 0.2 deg, pointing 2 deg (pointing_arcsec = [knowledge, pointing]). Platform mass not declared (the PDF shows a '19 kg' figure without a label).",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": "subsystem-level cold redundancy",
+   "comms": {
+    "UHF": "399-401 MHz, 30 dBm, uplink 1.25-150 kbps, downlink 5-150 kbps (OOK/FSK/GFSK); higher band on request"
+   },
+   "propulsion": null,
+   "pointing_arcsec": [
+    720,
+    7200
+   ],
+   "dimensions": null,
+   "vendor": "C3S Electronics Development",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "Earth observation, IoT, IOD, space weather monitoring",
+   "configuration": "16U",
+   "source": {
+    "url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_16U_platform_datasheet.pdf",
+    "document": "C3S platform data sheet v04, 16U (25/02/2022)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/C3S-16U.png",
+    "image_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_16U_platform_datasheet.pdf#page=1",
+    "page_url": "https://c3s.hu/wp-content/uploads/2023/02/C3S_16U_platform_datasheet.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "bct-xb3",
+   "name": "XB3 (3U)",
+   "form_factor_u": 3,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": 27.0,
+   "power_buses": "3.3 V, 5.0 V, 12 V (28 V in 6U, 12U and 16U)",
+   "comms": {
+    "S-band": "2 Mbps standard",
+    "X-band": "up to 10 Mbps"
+   },
+   "pointing_arcsec": [
+    10.8,
+    25.2
+   ],
+   "modules": [
+    "Attitude control (star trackers)",
+    "Power system with battery and solar array",
+    "On-board data storage (4 GB)",
+    "S-band radio (2 Mbps standard)"
+   ],
+   "notes": "Payload volume 1.5 U typical, energy storage 6.8 Ah, agility > 10 deg/s, 4 GB data storage, position knowledge 10 m / 0.15 m/s (1-sigma). Pointing +-0.003 deg (1-sigma) on 2 axes with 1 tracker, +-0.007 deg on the third (pointing_arcsec = [first, third]). Data for information only.",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": null,
+   "propulsion": "electric and chemical systems available",
+   "dimensions": null,
+   "vendor": "Blue Canyon Technologies",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "LEO > 5 years; GEO/Lunar/Deep Space > 2 years",
+   "configuration": "3U",
+   "source": {
+    "url": "https://www.bluecanyontech.com/wp-content/uploads/3U-2026.pdf",
+    "document": "Blue Canyon Technologies CubeSat summary XB3 (REV 1/2026)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/BCT-XB3.png",
+    "image_url": "https://www.bluecanyontech.com/wp-content/uploads/3U-2026.pdf#page=1",
+    "page_url": "https://www.bluecanyontech.com/wp-content/uploads/3U-2026.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "bct-xb6",
+   "name": "XB6 (6U)",
+   "form_factor_u": 6,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": 108.0,
+   "power_buses": "3.3 V, 5.0 V, 12 V, 28 V",
+   "comms": {
+    "S-band": "2 Mbps standard",
+    "X-band": "up to 10 Mbps"
+   },
+   "pointing_arcsec": [
+    7.2,
+    7.2
+   ],
+   "modules": [
+    "Attitude control (star trackers)",
+    "Power system with battery and solar array",
+    "On-board data storage (4 GB)",
+    "S-band radio (2 Mbps standard)"
+   ],
+   "notes": "Payload volume 4 U typical, energy storage 6.8-20.4 Ah, solar array 92-108 W, agility > 6 deg/s, 4 GB data storage (expandable), pointing +-0.002 deg (1-sigma) on 3 axes with 2 trackers. Data for information only.",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": null,
+   "propulsion": "electric and chemical systems available",
+   "dimensions": null,
+   "vendor": "Blue Canyon Technologies",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "LEO > 5 years; GEO/Lunar/Deep Space > 2 years",
+   "configuration": "6U",
+   "source": {
+    "url": "https://www.bluecanyontech.com/wp-content/uploads/6U-2026.pdf",
+    "document": "Blue Canyon Technologies CubeSat summary XB6 (REV 1/2026)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/BCT-XB6.png",
+    "image_url": "https://www.bluecanyontech.com/wp-content/uploads/6U-2026.pdf#page=1",
+    "page_url": "https://www.bluecanyontech.com/wp-content/uploads/6U-2026.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "bct-xb12",
+   "name": "XB12 (12U)",
+   "form_factor_u": 12,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": 108.0,
+   "power_buses": "3.3 V, 5.0 V, 12 V, 28 V",
+   "comms": {
+    "S-band": "2 Mbps standard",
+    "X-band": "up to 10 Mbps"
+   },
+   "pointing_arcsec": [
+    7.2,
+    7.2
+   ],
+   "modules": [
+    "Attitude control (star trackers)",
+    "Power system with battery and solar array",
+    "On-board data storage (4 GB)",
+    "S-band radio (2 Mbps standard)"
+   ],
+   "notes": "Payload volume 8 U typical, energy storage 6.8-20.4 Ah, solar array 92-108 W, agility > 5 deg/s, 4 GB data storage (expandable), pointing +-0.002 deg (1-sigma) on 3 axes with 2 trackers. Data for information only.",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": null,
+   "propulsion": "electric and chemical systems available",
+   "dimensions": null,
+   "vendor": "Blue Canyon Technologies",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "LEO > 5 years; GEO/Lunar/Deep Space > 2 years",
+   "configuration": "12U",
+   "source": {
+    "url": "https://www.bluecanyontech.com/wp-content/uploads/12U-2026.pdf",
+    "document": "Blue Canyon Technologies CubeSat summary XB12 (REV 1/2026)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/BCT-XB12.png",
+    "image_url": "https://www.bluecanyontech.com/wp-content/uploads/12U-2026.pdf#page=1",
+    "page_url": "https://www.bluecanyontech.com/wp-content/uploads/12U-2026.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "bct-xb16",
+   "name": "XB16 (16U)",
+   "form_factor_u": 16,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": 108.0,
+   "power_buses": "3.3 V, 5.0 V, 12 V, 28 V",
+   "comms": {
+    "S-band": "2 Mbps standard"
+   },
+   "pointing_arcsec": [
+    7.2,
+    7.2
+   ],
+   "modules": [
+    "Attitude control (star trackers)",
+    "Power system with battery and solar array",
+    "On-board data storage (4 GB)",
+    "S-band radio (2 Mbps standard)"
+   ],
+   "notes": "Payload volume 12 U typical, energy storage 6.8-20.4 Ah, solar array 92-108 W, agility > 3 deg/s, 4 GB data storage (expandable), pointing +-0.002 deg (1-sigma) on 3 axes with 2 trackers. Data for information only.",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": null,
+   "propulsion": "electric and chemical systems available",
+   "dimensions": null,
+   "vendor": "Blue Canyon Technologies",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "LEO > 5 years; GEO/Lunar/Deep Space > 2 years",
+   "configuration": "16U",
+   "source": {
+    "url": "https://www.bluecanyontech.com/wp-content/uploads/16U-2026.pdf",
+    "document": "Blue Canyon Technologies CubeSat summary XB16 (REV 1/2026)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/BCT-XB16.png",
+    "image_url": "https://www.bluecanyontech.com/wp-content/uploads/16U-2026.pdf#page=1",
+    "page_url": "https://www.bluecanyontech.com/wp-content/uploads/16U-2026.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "spacemanic-corvus",
+   "name": "CORVUS platform family (1U-16U)",
+   "form_factor_u": null,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": null,
+   "power_buses": "regulated 3.3 / 5 / 12 V channels (up to 9.8 W @ 5 V, 48 W @ 12 V per channel), unregulated VBat 6.8-8.4 V (1U-3U) or 13.6-16.8 V (6U-16U)",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": null,
+   "comms": {
+    "UHF": "400-402 MHz commercial or 430-440 MHz amateur, 9600/19200 bps",
+    "VHF": "144-146 MHz amateur",
+    "S-band": "optional, downlink 250-512 kbps, uplink 9.6-128 kbps"
+   },
+   "propulsion": null,
+   "pointing_arcsec": [
+    1800,
+    3600
+   ],
+   "dimensions": null,
+   "modules": [
+    "Deep Thought CDHS",
+    "Power supply unit (battery 23 / 46 / 92 Wh)",
+    "UHF/VHF communication",
+    "AOCS option: magnetorquers, reaction wheels, fine sun sensors, magnetometer, gyroscopes, optional star tracker",
+    "Celeste GNSS receiver"
+   ],
+   "vendor": "Spacemanic",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "LEO, up to 5 years design lifetime",
+   "notes": "One datasheet for all classes (columns 1U, 2U|3U, 6U|8U, 12U|16U). Available payload mass without AOCS: 1U up to 1 kg, 2U|3U 2.5 | 4 kg, 6U|8U 7.5 | 11.5 kg; with AOCS: 0.5 kg, 2 | 3.5 kg, 6.5 | 10.5 kg, 12U|16U 16 | 22 kg. Battery baseline 23 Wh (1U), 46 Wh, 92 Wh. Baseline 6U with star tracker: knowledge 0.5 deg, pointing 1.0 deg (1-sigma) (pointing_arcsec = [knowledge, pointing]); slew about 1.5 deg/s. GNSS 2.0 m CEP, 0.1 m/s.",
+   "configuration": "1U-16U",
+   "source": {
+    "url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dafe0509fd24021fd96bba5e4e238378e0e542c3.pdf",
+    "document": "Spacemanic CORVUS platform datasheet SM-COR-DS-0118 issue 3.0 (16/12/2025)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/Spacemanic-CORVUS.png",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dafe0509fd24021fd96bba5e4e238378e0e542c3.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/dafe0509fd24021fd96bba5e4e238378e0e542c3.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
+  },
+  {
+   "id": "exa-kratos-1u",
+   "name": "KRATOS 1U spacecraft bus",
+   "form_factor_u": 1,
+   "launch_mass_kg_max": null,
+   "payload_mass_kg_max": null,
+   "solar_array_power_w_max": 16.0,
+   "power_buses": "5 V @ 25 W, 3.3 V @ 10 W, 12 V @ 50 W, 1 unregulated rail",
+   "orbit": "LEO",
+   "native_orbits_km": null,
+   "redundancy": null,
+   "comms": {
+    "SDR (70 MHz-6 GHz)": "full duplex, 1 transceiver and 2 receive-only ports; monopole/dipole antennas VHF to L-band",
+    "Laser (optional)": "10 Mbps downlink"
+   },
+   "propulsion": null,
+   "pointing_arcsec": null,
+   "dimensions": null,
+   "modules": [
+    "ICEPS all-in-one (OBC, EPS, SDR radio, ADCS)",
+    "OBC Xilinx ARM9 dual core 733 MHz, 512 MB DDR3L, 32-512 GB SSD",
+    "EPS with 4 power rails and 4-channel UMPPT",
+    "Battery 25-100 Wh with passive heater (active optional)",
+    "Deployable solar panels (1-3)",
+    "Magnetorquers (4 + 1 on Z)",
+    "Sun sensors (6) and temperature sensors",
+    "IMU",
+    "Embedded antennas",
+    "Release/deploy actuators"
+   ],
+   "vendor": "EXA (Ecuadorian Civil Space Agency)",
+   "kind": "platform",
+   "brand_note": null,
+   "applications": "LEO, 4 years minimum radiation tolerance",
+   "notes": "Payload power available 20-95 W; the summary says up to 32 W of solar power and 100 W of battery power, the EPS specification says solar array 3.75-16 W and 100 W maximum delivered power (array tables: 3-16.8 W at BOL). solar_array_power_w_max = 16 W from the EPS specification. Panel mass 460-540 g depending on 1-3 panels (platform mass not declared). Room for 6 standard payload boards and 3 cameras; operating temperature -80 to +140 C. Magnetic moment 0.14 A m2 (x4) and 0.19 A m2 (Z). Pointing accuracy not declared.",
+   "configuration": "1U",
+   "source": {
+    "url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/6f36e2aa2a4d8e1e82412d56f3b2df4b785431c5.pdf",
+    "document": "EXA KRATOS 1U spacecraft bus datasheet (newspacemarket.com copy)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "trascritto dalla scheda tecnica pubblica del fornitore; da controllare manualmente"
+   },
+   "image": {
+    "file": "images/EXA-KRATOS-1U.png",
+    "image_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/6f36e2aa2a4d8e1e82412d56f3b2df4b785431c5.pdf#page=1",
+    "page_url": "https://newspacemarket.com/wp-content/uploads/kls-datasheets/6f36e2aa2a4d8e1e82412d56f3b2df4b785431c5.pdf",
+    "type": "estratta dal datasheet PDF",
+    "retrieved": "2026-10-23"
+   }
   }
  ]
 }

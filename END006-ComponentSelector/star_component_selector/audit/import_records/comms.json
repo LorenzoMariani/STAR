@@ -1,0 +1,464 @@
+[
+ {
+  "file": "comms/ANT61__Beacon-M-RevA.pdf",
+  "action": "skip",
+  "name": "ANT61 Beacon M",
+  "reason": "rescue beacon on Iridium L-band (2 kbps), a satellite-health backup, not a TT&C or payload radio"
+ },
+ {
+  "file": "comms/ANT61__Beacon-S-Rev-G.pdf",
+  "action": "skip",
+  "name": "ANT61 Beacon S rev G",
+  "reason": "rescue beacon on Iridium L-band (2 kbps), a satellite-health backup, not a TT&C or payload radio"
+ },
+ {
+  "file": "comms/ANT61__Beacon-S-Rev-I.pdf",
+  "action": "skip",
+  "name": "ANT61 Beacon S rev I",
+  "reason": "rescue beacon on Iridium L-band (2 kbps), a satellite-health backup, not a TT&C or payload radio"
+ },
+ {
+  "file": "comms/Aac-clyde__PULSAR-XTX.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "aac-pulsar-xtx",
+  "vendor": "AAC Clyde Space",
+  "name": "PULSAR-XTX (X-band, TX only)",
+  "document": "AAC Clyde Space PULSAR-XTX datasheet (6 August 2021)",
+  "notes": "OQPSK/QPSK transmitter, 8.025-8.375 GHz in 1 MHz steps, data rate 10-50 Mbps (in-flight configurable in 100 kbps steps), RF power 2 W (33 dBm) with included HPA, CCSDS, SFCG 21-2R4 mask, PC/104 form factor 96 x 90 x 11.7 mm, input 6.2-17 V, design life 2 years in LEO. Consumption '< 15 W' in the technical table ('< 10 W' in the text): power_w_tx = 15 W, mass '< 130 g' is an upper bound.",
+  "specs": {
+   "band": "X",
+   "has_receiver": false,
+   "data_rate_kbps_max": 50000,
+   "power_w_tx": 15,
+   "supply_voltage_ranges_v": [
+    [
+     6.2,
+     17
+    ]
+   ]
+  },
+  "mass_kg": 0.13,
+  "dimensions_mm": [
+   96,
+   90,
+   11.7
+  ],
+  "temp_op_c": [
+   -25,
+   61
+  ],
+  "family": "aac-pulsar"
+ },
+ {
+  "file": "comms/Aac-clyde__RX-2000-1.pdf",
+  "action": "skip",
+  "name": "AAC SpaceQuest RX-2000",
+  "reason": "receive-only FM S-band receiver (200 g), not a radio that can downlink"
+ },
+ {
+  "file": "comms/Aphelion-Orbitals__UHF-VHF-Radio.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "aphelion-uhf-vhf-radio",
+  "vendor": "Aphelion Orbitals",
+  "name": "UHF transmitter / VHF receiver radio",
+  "document": "Aphelion Orbitals UHF/VHF radio (Cassiopeia CubeSat modules) sheet",
+  "notes": "Full duplex: UHF downlink 430-438 MHz, VHF uplink 143-146 MHz, OOK/FSK/GFSK, AX.25/HDLC, selectable 1200-9600 bps, maximum RF output 33 dBm, sensitivity -118 dBm, receive-only power 0.18 W, transmitting 3.1 W, PC/104, single 3.3 V input, UART, MMCX, dedicated Cortex-M4 processor, -40 to 85 C, mass 72 g, 95.9 x 90.1 x 15 mm.",
+  "specs": {
+   "band": "VHF/UHF",
+   "has_receiver": true,
+   "data_rate_kbps_max": 9.6,
+   "power_w_idle": 0.18,
+   "power_w_tx": 3.1,
+   "data_interfaces": [
+    "UART"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ]
+   ]
+  },
+  "mass_kg": 0.072,
+  "dimensions_mm": [
+   95.9,
+   90.1,
+   15
+  ],
+  "temp_op_c": [
+   -40,
+   85
+  ]
+ },
+ {
+  "file": "comms/IQ-Technologies__XLINK-L.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "iq-spacecom-xlink-l",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "XLink-L L-band transceiver (SDR)",
+  "document": "IQ Technologies XLINK-L datasheet (07-2025)",
+  "notes": "L-band Tx 1.6265-1.675 GHz, Rx 1.518-1.559 GHz (Go.BIC service via Viasat L-band GEO, CCSDS), data rate 2-128 kbps both ways, 2 x up to +30 dBm, Doppler compensation +-50 kHz. Supply 6-18 V or 28 V, mass 200 g, volume < 0.2 U, TRL 9, full or half duplex (FDD). Power: maximum 15 W (Tx + Rx), 3 W with one Rx channel (power_w_idle).",
+  "specs": {
+   "band": "L",
+   "has_receiver": true,
+   "data_rate_kbps_max": 128,
+   "power_w_idle": 3,
+   "power_w_tx": 15,
+   "supply_voltage_ranges_v": [
+    [
+     6,
+     18
+    ],
+    [
+     28,
+     28
+    ]
+   ]
+  },
+  "mass_kg": 0.2,
+  "family": "iq-spacecom-xlink"
+ },
+ {
+  "file": "comms/IQ-Technologies__XLINK-S-TMTC.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "iq-spacecom-xlink-s",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "XLink-S S-band transceiver (SDR)",
+  "document": "IQ Technologies XLINK-S-TMTC datasheet (07-2025)",
+  "notes": "S-band Tx 2.200-2.290 GHz up to 200 Mbps (XLink-S TM/TC variant 2 Mbps), Rx 2.025-2.110 GHz 56 kbps+ (3.5-896 kbps payload uplink), 2 Tx channels up to +30 dBm (+33 dBm combined), BPSK to 16APSK, Doppler compensation +-200 kHz. Supply 6-18 V or 28 V, mass 200 g, volume < 0.2 U, TRL 9, full or half duplex (FDD). Power: maximum 15 W (Tx + Rx), 4 W with one Rx channel (power_w_idle).",
+  "specs": {
+   "band": "S",
+   "has_receiver": true,
+   "data_rate_kbps_max": 200000,
+   "power_w_idle": 4,
+   "power_w_tx": 15,
+   "supply_voltage_ranges_v": [
+    [
+     6,
+     18
+    ],
+    [
+     28,
+     28
+    ]
+   ],
+   "data_interfaces": [
+    "Ethernet",
+    "SPI",
+    "UART"
+   ]
+  },
+  "mass_kg": 0.2,
+  "family": "iq-spacecom-xlink"
+ },
+ {
+  "file": "comms/IQ-Technologies__XLINK-X.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "iq-spacecom-xlink-x",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "XLink-X X-band transmitter with S/X receiver (SDR)",
+  "document": "IQ Technologies XLINK-X datasheet (07-2025)",
+  "notes": "X-band Tx 8.025-8.400 GHz up to 200 Mbps, Rx S-band 2.025-2.110 GHz or X-band 7.145-7.250 GHz 56 kbps+, linear RF output up to +30 dBm (2 x +27 dBm). Supply 6-18 V or 28 V, mass 200 g, volume < 0.2 U, TRL 9, full or half duplex (FDD). Power: maximum 16 W (Tx + Rx), 4 W with one Rx channel (power_w_idle).",
+  "specs": {
+   "band": "X",
+   "has_receiver": true,
+   "data_rate_kbps_max": 200000,
+   "power_w_idle": 4,
+   "power_w_tx": 16,
+   "supply_voltage_ranges_v": [
+    [
+     6,
+     18
+    ],
+    [
+     28,
+     28
+    ]
+   ]
+  },
+  "mass_kg": 0.2,
+  "family": "iq-spacecom-xlink"
+ },
+ {
+  "file": "comms/L3Harris__C-TT-505-UHF-Transceiver.pdf",
+  "action": "skip",
+  "name": "C/TT-505 UHF transceiver (2 kg, 60 W)",
+  "reason": "spacecraft-class radio, not CubeSat class"
+ },
+ {
+  "file": "comms/L3Harris__c-tt-510-electra-lite-transceiver.pdf",
+  "action": "skip",
+  "name": "C/TT-510 Electra-Lite (3 kg, 65 W)",
+  "reason": "spacecraft-class radio, not CubeSat class"
+ },
+ {
+  "file": "comms/L3Harris__MSX-765-Transceiver.pdf",
+  "action": "skip",
+  "name": "MSX-765 L/S-band transceiver (68-72 V, 35 W)",
+  "reason": "spacecraft-class radio, not CubeSat class"
+ },
+ {
+  "file": "comms/Unknown__CXS-1000-Transponder.pdf",
+  "action": "skip",
+  "name": "CXS-1000 transponder (GEO small satellites, 17-36 W)",
+  "reason": "spacecraft-class radio, not CubeSat class"
+ },
+ {
+  "file": "comms/SDL__IRIS-Radio.pdf",
+  "action": "skip",
+  "name": "Iris deep-space radio",
+  "reason": "no data rate in the text (required comms field data_rate_kbps_max); 1.1 kg, 35 W, X-band 7.2 GHz up / 8.4 GHz down"
+ },
+ {
+  "file": "comms/SpaceMicro__uSDR-C.pdf",
+  "action": "skip",
+  "name": "uSDR-C software defined radio",
+  "reason": "band is tunable from 150 MHz to 6 GHz (no single band) and the output power depends on the chosen board set"
+ },
+ {
+  "file": "comms/SpaceMicro__uSGLS-100-Transponder.pdf",
+  "action": "skip",
+  "name": "uSGLS-100 transponder",
+  "reason": "military S-band transponder, 2.1 kg, not CubeSat class"
+ },
+ {
+  "file": "comms/SpaceMicro__Nanocom-Ka-Band-SDR.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "spacemicro-nanocom-ka",
+  "vendor": "Space Micro",
+  "name": "Nanocom Ka-band software defined transceiver",
+  "document": "Space Micro Nanocom Ka-band SDR datasheet Rev 4 (1/28/19)",
+  "notes": "Tx 19-21 GHz, Rx 29-31 GHz, output power 0.5-2 W, mid-rate 0.5-50 Mbps (25 W max) or high-rate 100 Mbps minimum / 1000 Mbps nominal (30 W max), QPSK/OQPSK (8PSK, 16/32APSK options), receiver 5 W max, GiGe/SGMII/LVDS, 4-64 GB flash, CCSDS, 1U form factor 10 x 10 x 8 cm, 1.0 kg, 20 krad (Si), -30 to +60 C, input 7.2-10.8 V, 35 W maximum.",
+  "specs": {
+   "band": "Ka",
+   "has_receiver": true,
+   "data_rate_kbps_max": 1000000,
+   "power_w_tx": 35,
+   "supply_voltage_ranges_v": [
+    [
+     7.2,
+     10.8
+    ]
+   ]
+  },
+  "mass_kg": 1.0,
+  "dimensions_mm": [
+   100,
+   100,
+   80
+  ],
+  "temp_op_c": [
+   -30,
+   60
+  ],
+  "tid_krad": 20
+ },
+ {
+  "file": "comms/Spacemanic__Murgas-UHF-VHF-Transceiver.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "spacemanic-murgas",
+  "vendor": "Spacemanic",
+  "name": "Murgas UHF/VHF transceiver",
+  "document": "Spacemanic Murgas SM-TRX-VHF-UHF-MURGAS sheet",
+  "notes": "Half-duplex GFSK/GMSK narrow-band transceiver, UHF 400-402 and 420-450 MHz or VHF 144-148 MHz (programmable in orbit), 0.1-38.4 kbps, output up to 1 W (+30 dBm), 3.3 V or 5 V (CAN), receive < 40 mA and transmit < 1 A (currents only, power not entered), CSP/KISS/AX.25, I2C, RS485, UART and CAN, MMCX, 67 x 42 x 7 mm, 25 g, -40 to +85 C, HAM services (beacon, CW, digipeater); two modules for full duplex.",
+  "specs": {
+   "band": "VHF/UHF",
+   "has_receiver": true,
+   "data_rate_kbps_max": 38.4,
+   "data_interfaces": [
+    "I2C",
+    "RS485",
+    "UART",
+    "CAN"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.025,
+  "dimensions_mm": [
+   67,
+   42,
+   7
+  ],
+  "temp_op_c": [
+   -40,
+   85
+  ]
+ },
+ {
+  "file": "comms/Pyxis-Space__VHF-UHF-Transceiver.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "pyxis-space-vhf-uhf-transceiver-uhf",
+  "vendor": "Pyxis Space",
+  "name": "VHF/UHF transceiver (UHF version)",
+  "document": "Pyxis Space VHF/UHF transceiver sheet",
+  "notes": "Half-duplex amateur-band TM/TC transceiver module, 430-440 MHz (the other version of the same sheet covers the other band), 1200 bps AFSK or 9600 bps G3RUH GFSK/GMSK, AX.25/HDLC, transmit power adjustable up to 31.5 dBm, at 5 V receive < 100 mW and transmit < 5 W at maximum power, CAN 2.0B and UART, single MCX connector, -20 to +85 C, 30 x 62 x 6 mm, mass '< 50 g' (upper bound), TRL 9, 10 krad; extra modes SSTV-FM, APRS digipeater, CW beacon.",
+  "specs": {
+   "band": "UHF",
+   "has_receiver": true,
+   "data_rate_kbps_max": 9.6,
+   "power_w_idle": 0.1,
+   "power_w_tx": 5,
+   "data_interfaces": [
+    "CAN",
+    "UART"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.05,
+  "dimensions_mm": [
+   30,
+   62,
+   6
+  ],
+  "temp_op_c": [
+   -20,
+   85
+  ],
+  "tid_krad": 10
+ },
+ {
+  "file": "comms/Pyxis-Space__VHF-UHF-Transceiver.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "pyxis-space-vhf-uhf-transceiver-vhf",
+  "vendor": "Pyxis Space",
+  "name": "VHF/UHF transceiver (VHF version)",
+  "document": "Pyxis Space VHF/UHF transceiver sheet",
+  "notes": "Half-duplex amateur-band TM/TC transceiver module, 144-146 MHz (the other version of the same sheet covers the other band), 1200 bps AFSK or 9600 bps G3RUH GFSK/GMSK, AX.25/HDLC, transmit power adjustable up to 31.5 dBm, at 5 V receive < 100 mW and transmit < 5 W at maximum power, CAN 2.0B and UART, single MCX connector, -20 to +85 C, 30 x 62 x 6 mm, mass '< 50 g' (upper bound), TRL 9, 10 krad; extra modes SSTV-FM, APRS digipeater, CW beacon.",
+  "specs": {
+   "band": "VHF",
+   "has_receiver": true,
+   "data_rate_kbps_max": 9.6,
+   "power_w_idle": 0.1,
+   "power_w_tx": 5,
+   "data_interfaces": [
+    "CAN",
+    "UART"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.05,
+  "dimensions_mm": [
+   30,
+   62,
+   6
+  ],
+  "temp_op_c": [
+   -20,
+   85
+  ],
+  "tid_krad": 10
+ },
+ {
+  "file": "comms/PLAN-S__IoT-Module.pdf",
+  "action": "skip",
+  "name": "PLAN-S Connecta IoT module",
+  "reason": "LoRa/GNSS chip module for IoT terminals, not a satellite radio"
+ },
+ {
+  "file": "comms/Unknown__DI-EDM-S2-1602.pdf",
+  "action": "skip",
+  "name": "ETL DIGITAL 1000 indoor unit",
+  "reason": "ground-segment RF over IP unit"
+ },
+ {
+  "file": "comms/Unknown__HiSPiCO-S-Band-Transmitter.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "iq-spacecom-hispico",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "HiSPiCO S-band transmitter",
+  "document": "IQ wireless HiSPiCO S-band transmitter sheet (08-19)",
+  "notes": "Transmitter only, S-band 2.100-2.500 GHz, DQPSK, payload data rate up to 1.6 Mbps in 1.3 MHz bandwidth, linear RF power +27 dBm (+30 dBm optional), up to 5 W at +27 dBm, 3.3-5.0 V, fits in 1U (< 0.1 U), 100 g, TRL 9, prototypically qualified for 2 years in LEO, turbo-code FEC.",
+  "specs": {
+   "band": "S",
+   "has_receiver": false,
+   "data_rate_kbps_max": 1600,
+   "power_w_tx": 5,
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.1,
+  "family": "iq-spacecom-hispico"
+ },
+ {
+  "file": "comms/Unknown__Slink-Phy-S-Band-Transceiver.pdf",
+  "action": "add",
+  "category": "comms",
+  "id": "iq-spacecom-slink",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "Slink / Slink-Phy S-band transceiver",
+  "document": "IQ wireless Slink / Slink-Phy S-band transceiver sheet (06-19)",
+  "notes": "FDD full duplex: Tx 2.200-2.290 GHz up to 20 Mbps, Rx 2.025-2.110 GHz BPSK 64 kbps+, ISL mode up to 64 kbps, linear RF output up to +30 dBm, Doppler compensation up to 65 kHz, 13 W max (Rx + Tx), 3-4.5 W receive only (power_w_idle = upper value), 7-18 V, SPI/RS422 data and control, UDP over Ethernet 100/10BaseT, TRL 9. The sheet gives two masses (420 / 190 g) without saying which model each belongs to, so mass_kg is null.",
+  "specs": {
+   "band": "S",
+   "has_receiver": true,
+   "data_rate_kbps_max": 20000,
+   "power_w_idle": 4.5,
+   "power_w_tx": 13,
+   "data_interfaces": [
+    "SPI",
+    "RS422",
+    "Ethernet"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     7,
+     18
+    ]
+   ]
+  },
+  "family": "iq-spacecom-slink"
+ },
+ {
+  "file": "comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf",
+  "action": "update",
+  "id": "nanoavionics-satcom-uhf",
+  "document": "NanoAvionics UHF Radio SAT2RF1-1D data sheet NA-UHF-G1-R3",
+  "temp_op_c": [
+   -40,
+   85
+  ],
+  "notes": "Data sheet NA-UHF-G1-R3: 395-440 MHz, G3RUH 9600 bps or native packet mode 2400-38400 bps (the catalogue keeps 2.4 kbps from the product page), RF output up to 2 W, power amplifier and logic on separate 3.3 V lines (3.3-3.6 V), 3.2 W transmitting peak, 7.5 g, ARM Cortex-M4.",
+  "specs": {
+   "power_w_tx": 3.2,
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.6
+    ]
+   ]
+  }
+ }
+]

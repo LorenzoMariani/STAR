@@ -1,0 +1,26 @@
+table,subsystem,page,,,,,Specific,Total,,,Thruster,Cathode,PMI,,
+4-10,propulsion,134,Manufacturer,Product,Propellant,Thrust*,,,Mass,Envelope,,,,Missions,References
+4-10,propulsion,134,---,---,---,[mN],[s],[kN-s],[kg],[cm3 or U],[W],Notes,"C,D,E,F",---,---
+4-10,propulsion,134,Aliena Pte Ltd Singapore,MUSIC-SI,Xenon,< 0.25,< 200,1,2†,1.5U,20,None,E,NuX-1,(275) (276) (277) (278) (279)
+4-10,propulsion,134,Aliena Pte Ltd Singapore,MUSIC-HM,Xenon,3,"1,000",15,5†,4U,100,EM-HL,E,ORB-12 STRIDER,(275) (279) (280)
+4-10,propulsion,134,Astra USA,ASE,Xenon,25,"1,400",300,1.0,-,400‡,CM-HL,F,Sherpa-LTE,(218) (220) (219) (220) (221) (223) (224)
+4-10,propulsion,134,Astra USA,ASE,Krypton,18,"1,300",300,1.0,-,400‡,CM-HL,D,-,(218)
+4-10,propulsion,134,Busek USA,BHT-100,Xenon,6.3,"1,086",150,1.2,275 wo cath.,105,EM-SH,D,-,(203) (368)
+4-10,propulsion,134,Busek USA,BHT-200,Xenon,13,"1,390",84§,1.2,675 wo cath.,250‡,EM-SH,F,"TacSat-2, FalconSat-5, -6",(203) (204) (205) (206)
+4-10,propulsion,134,Busek USA,BHT-200-I,Iodine,14,1390,-,1.2,675 wo cath.,250,EM-SH,E,NASA iSat (Cancelled),(204) (206) (207)
+4-10,propulsion,134,Busek USA,BHT-350,Xenon,17,"1,244",212§,1.9,-,350,EM-SH,F,OneWeb Satellites,(260) (261) (262) (263)
+4-10,propulsion,134,Busek USA,BHT-600,Xenon,39,"1,500",1000§,2.8,"1,470 wo cath.",680‡,EM-SH,E,US Government,(203) (264) (265) (369) (370)
+4-10,propulsion,134,Busek USA,BHT-600-I,Iodine,39,-,-,2.8,"1,470 wo cath.",600,EM-SH,D,-,(206) (369) (370) (371)
+4-10,propulsion,134,EDB Fakel Russia,SPT-50,Xenon,14,860,126§,1.2,"1,092",220,EM-SH,F,Canopus-V,(198) (199) (200) (201) (372)
+4-10,propulsion,134,EDB Fakel Russia,SPT-50M,Xenon,14.8,930,266,1.3,---,220,EM-SH,D,-,(372)
+4-10,propulsion,134,EDB Fakel Russia,SPT-70BR,Xenon,39,"1,470",435§,2.0,"1,453",660,EM-SH,F,"KazSat-1, KazSat-2",(201) (202)
+4-10,propulsion,134,EDB Fakel Russia,SPT-70M,Xenon,41.3,"1,580",-,-,-,660,EM-SH,D,-,(202)
+4-10,propulsion,134,EDB Fakel Russia,SPT-70M,Krypton,31.3,"1,460",-,-,-,660,EM-SH,D,-,(202)
+4-10,propulsion,134,ExoTerra USA,Halo,Xenon,19.6,"1,294",>375,0.83,375,400‡,CM-HL,F,Blackjack,(243) (244) (245) (246) (247) (248) (249) (250) (251)
+4-10,propulsion,134,ExoTerra USA,Halo,Krypton,12,900,>175,0.83,375,300‡,CM-HL,D,-,(373)
+4-10,propulsion,134,ExoTerra USA,Halo12,Xenon,50,"1,900","> 2,000",3.4,"1,700","1,000‡",CM-HL,E1,Undisclosed mission,(252) (253) (254) (374)
+4-10,propulsion,134,ExoTerra USA,Halo12,Krypton,55,"1,575","> 2,000",3.4,"1,700","1,000‡",CM-HL,D1,-,(375)
+4-10,propulsion,134,Exotrail France,spaceware nano,Xenon,2.5,800,6,-,2.5U,60,EM-SH,F,"M6P Demo, Arthur, ELO3 and ELO4, Otter Pup, INCUS (2027)",(226) (227) (228) (229) (230) (231) (232) (233) (234)
+4-10,propulsion,134,Exotrail France,spaceware micro,Xenon,7,"1,000",60,-,960,150,EM-SH,F,"York Space (2023**), SpaceVan, Astro Digital (2024**), Satrec Initiative (2025**), Muon Space (2026**)",(226) (229) (235) (236) (237) (238) (239) (240) (241)
+4-10,propulsion,134,Exotrail France,spaceware mini,Xenon,23,"1,300",300,-,-,400,EM-SH,E,Airbus’ Earth Observation satellite platform portfolio,(226) (242)
+4-10,propulsion,134,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, ‡ PPU input power, § demonstrated, CM = Center Mounted, EM = Externally Mounted, SH = Swaged Heater, HL = Heater-less, JPL = Jet Propulsion Laboratory, SETS = Space Electric Thruster Systems, EDB = Experimental Design Bureau, 1ExoTerra is commercializing the JPL developed MaSMi thruster, “-“ = denotes data not available or applicable",,,,,,,,,,,,

@@ -1,0 +1,17 @@
+table,subsystem,page,Manufacturer,Model,Mass (kg),Power (W),Accuracy (m),Radiation Tolerance (krad)
+5-10,gnss,181,AAC Clyde Space Sweden,GNSS-701,0.16,--,< 5,10
+5-10,gnss,181,APL USA,Frontier Radio Lite,0.4,1.4,15,20
+5-10,gnss,181,Aerospacelab Belgium,GNSS-VSP,0.394,2.4,1.5 (RMS),-
+5-10,gnss,181,General Dynamics USA,Explorer,1.2,8,15,-
+5-10,gnss,181,General Dynamics USA,Viceroy-4,1.1,8,15,-
+5-10,gnss,181,GomSpace Denmark,0.285,3,< 10,< 20,0.285
+5-10,gnss,181,NovaTel Canada,OEM 719,0.031,0.9,-,-
+5-10,gnss,181,SENyT Argentina,Q Series,0.14,2,< 3,-
+5-10,gnss,181,Septentrio Belgium,AsteRx-m3 ProBase,0.0027,1,0.0013,-
+5-10,gnss,181,SkyFox Labs Czech Republic,piNAV-NG,0.024,0.124,10,30
+5-10,gnss,181,Space Inventor Denmark,GNSS-3,0.1,0.2,2 (CEP)*,-
+5-10,gnss,181,Space Inventor Denmark,Mosaic-T,0.0068,0.6,"1.2, 1.9",-
+5-10,gnss,181,Space Inventor Denmark,AsteRx SBi3 Pro+,0.49,1.5,"1.2, 1.9",-
+5-10,gnss,181,Spacemanic Czech Republic,Celeste GNSS,0.025,0.25,2 (CEP)*,-
+5-10,gnss,181,Surrey Satellite Technology UK,SGR-Ligo,0.09,0.5,5,5
+5-10,gnss,181,U‑blox Switzerland,ZED‑F9P-05B,0.0018,0.01,"1.5, 2.25",-

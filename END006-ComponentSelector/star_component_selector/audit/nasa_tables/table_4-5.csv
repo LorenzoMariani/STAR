@@ -1,0 +1,26 @@
+table,subsystem,page,,,,Thrust,Specific,Total,,,,,PMI,,
+4-5,propulsion,129,Manufacturer,Product,Propellant,,,,Mass,Envelope,Power,ACS,,Missions,References
+4-5,propulsion,129,---,---,---,[mN],[s],[N-s],[kg],[cm3 or U],[W],Y/N,"C,D,E,F",---,---
+4-5,propulsion,129,Integrated Propulsion Systems,,,,,,,,,,,,
+4-5,propulsion,129,Aerospace Corp. USA,MEPSI,R236fa,20,-,-,0.188†,-,-,Y,E,STS-113 and STS-116,(63)
+4-5,propulsion,129,Benchmark Space Systems USA,Starling,Nitrogen,10 - 1000,70,-,0.75†,0.5U,< 4,Y,D,-,(104)
+4-5,propulsion,129,GomSpace Sweden,NanoProp CGP3,Butane,0.01 – 1 (4),60 - 110,40,0.35†,5 x 10 x 10,< 2,Y,E,TW-1,(71) (73) (74) (124)
+4-5,propulsion,129,GomSpace Sweden,NanoProp 6U,Butane,0.1 – 10 (4),60 - 110,80,0.900†,2 x 10 x 20,< 2,Y,F,GOMX-4B,(71) (72) (125)
+4-5,propulsion,129,Lightsey Space Research USA,BioSentinel Propulsion System,R236fa,20,47,79.8,1.28†,4 x 10 x 20,"< 1 idle, < 4 operating",Y,E,BioSentinel,(75) (76) (77) (78)
+4-5,propulsion,129,Microspace Rapid Pte Ltd Singapore,POPSAT-HIP1,Argon,0.083 – 1.1 (8),43,-,-,-,-,-,E,POPSAT-HIP1,(70)
+4-5,propulsion,129,T4i Italy,IANUS,R134a,6.8/10.6/26.2 (x/y/z),40,38,0.5‡,0.5,<40,Y,E,Hera Milani,(126)
+4-5,propulsion,129,T4i Italy,PERSEUS,R134a,27/9/9 (x/y/z),40,450,2.5‡,2.5,<20,Y,F,Iperdrone.0,(126)
+4-5,propulsion,129,ThrustMe France,I2T5,Iodine,0.35,-,75,0.9†,0.5U,5,N,F,"Xiaoxiang 1-08, NAPA-2, Spire L3C Demo, Robusta-3A (2024**)",(79) (80) (81) (82)
+4-5,propulsion,129,UTIAS/SFL Canada,CNAPS,Sulfur Hexafluoride,12.5 - 50,40,100,-,-,-,N,F,CanX-4/CanX-5,(66) (67) (68) (69)
+4-5,propulsion,129,VACCO USA,NEA Scout,R236fa,25 (6),-,500,2.54†,2U,< 55 warmup < 9 operating,Y,E,NEA Scout,(90) (91) (92)
+4-5,propulsion,129,VACCO USA,MiPS Standard,R236fa,25 (4),-,82 - 515,0.85 – 2.46†,0.4 – 1.5U,< 12,Y,D,-,(127)
+4-5,propulsion,129,VACCO USA,MarCO-A and -B MiPS,R236fa,25 (8),-,755,3.49†,8 x 15 x 20,-,Y,E,MarCO-A & -B,(86) (87) (88) (89)
+4-5,propulsion,129,VACCO USA,C-POD,R236fa,10 (8),40,186,1.25†,1U,5,Y,E,CPOD,(83) (84) (85)
+4-5,propulsion,129,Thruster Heads,,,,,,,,,,,,
+4-5,propulsion,129,Marotta USA,CGMT,Nitrogen,105 - 2360,-,-,< 0.06,-,< 7,-,F,NMP ST5,(64) (65)
+4-5,propulsion,129,Moog USA,058E143-146,Nitrogen,10 - 40,60,-,0.04,1.4 x 5.7,< 10,-,F,"CHAMP, GRACE",(128)
+4-5,propulsion,129,Moog USA,058E142A,Nitrogen,120,57,-,0.016,1.4 x 2.0,< 35,-,F,Spitzer Space Telescope,(128)
+4-5,propulsion,129,Moog USA,058E151,Nitrogen,120,65,-,0.07,1.9 x 4.1,< 10.5,-,F,Spitzer Space Telescope,(128)
+4-5,propulsion,129,Moog USA,058-118,Nitrogen,3600,57,-,0.023,0.7 x 2.5,< 30,-,F,"SAFER, Pluto Fast Flyby",(128)
+4-5,propulsion,129,Moog USA,58E163A,"Nitrogen, Xenon, Argon",1300,"70 N2, 21 Xe, 54 Ar",-,0.115,2.4 x 5.3,< 10.5,-,F,GEO applications,(128)
+4-5,propulsion,129,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable, ** anticipated launch date",,,,,,,,,,,,

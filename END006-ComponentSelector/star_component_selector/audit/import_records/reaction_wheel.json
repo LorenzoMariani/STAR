@@ -1,0 +1,22 @@
+[
+ {"file": "reaction_wheel/RocketLab__RW-0.03.pdf", "action": "update", "id": "rocket-lab-rw-0-03", "document": "Rocket Lab (Sinclair Interplanetary) RW-0.03 datasheet Rev 2019a",
+  "tid_krad": 20, "temp_op_c": [-40, 70], "dimensions_mm": [50, 50, 40],
+  "notes": "Datasheet: momentum 0.03 Nms nominal (0.04 peak), torque +-2 mNm at 0.02 Nms, 3.4-6 V (8 V max), 1.8 W at 0.02 Nms +2 mNm, 0.3 W steady at 0.04 Nms, UART or I2C/SMBus, 55 units on-orbit on 20 satellites since 2008.",
+  "specs": {"momentum_mnms": 30, "max_torque_mnm": 2, "power_w_peak": 1.8, "supply_voltage_ranges_v": [[3.4, 6]], "data_interfaces": ["UART", "I2C"]}},
+ {"file": "reaction_wheel/RocketLab__RW3-1.0.pdf", "action": "add", "category": "reaction_wheel", "id": "rocketlab-rw3-1-0", "vendor": "Rocket Lab (Sinclair Interplanetary)", "name": "RW3-1.0 reaction wheel",
+  "family": "rocketlab-rw3", "document": "Rocket Lab (Sinclair Interplanetary) RW3-1.0 datasheet Rev 2019a", "mass_kg": 0.97, "tid_krad": 20, "temp_op_c": [-40, 70], "dimensions_mm": [150, 140, 42],
+  "notes": "Datasheet: momentum 1.0 Nms, torque +-50 mNm at 1 Nms (28 V), 24-34 V (50 V max), power 15.1 W steady at 1.0 Nms (power_w_nominal), 46.7 W at 1.0 Nms +40 mNm (power_w_peak), regenerative braking, two RS-485 plus one CAN. 52 units on-orbit since 2016. Radiation lot-screened parts on all flight models, > 20 krad.",
+  "specs": {"momentum_mnms": 1000, "max_torque_mnm": 50, "power_w_nominal": 15.1, "power_w_peak": 46.7, "supply_voltage_ranges_v": [[24, 34]], "data_interfaces": ["RS-485", "CAN"]}},
+ {"file": "reaction_wheel/RocketLab__RW4-0.2-0.4.pdf", "action": "update", "id": "rocket-lab-rw4-0-2", "document": "Rocket Lab (Sinclair Interplanetary) RW4-0.2 / RW4-0.4 datasheet Rev 2019a",
+  "tid_krad": 60, "temp_op_c": [-40, 70], "dimensions_mm": [110, 110, 48],
+  "notes": "Datasheet: 0.2 Nms (light rotor, 600 g), torque +-100 mNm, 24-34 V, redundant RS-485, > 60 krad with LDRS testing, heavy ion tested to 50 MeV cm2/mg; power TBD.",
+  "specs": {"momentum_mnms": 200, "max_torque_mnm": 100, "supply_voltage_ranges_v": [[24, 34]], "data_interfaces": ["RS-485"]}},
+ {"file": "reaction_wheel/RocketLab__RW4-0.2-0.4.pdf", "action": "update", "id": "rocket-lab-rw4-0-4", "document": "Rocket Lab (Sinclair Interplanetary) RW4-0.2 / RW4-0.4 datasheet Rev 2019a",
+  "tid_krad": 60, "temp_op_c": [-40, 70], "dimensions_mm": [110, 110, 48],
+  "notes": "Datasheet: 0.4 Nms (heavy rotor, 770 g), torque +-100 mNm, 24-34 V, redundant RS-485, > 60 krad with LDRS testing; power TBD.",
+  "specs": {"momentum_mnms": 400, "max_torque_mnm": 100, "supply_voltage_ranges_v": [[24, 34]], "data_interfaces": ["RS-485"]}},
+ {"file": "reaction_wheel/RocketLab__RW4-1.0.pdf", "action": "update", "id": "rocket-lab-rw4-1-0", "document": "Rocket Lab RW4-1.0 GEO reaction wheel datasheet Rev 2019a",
+  "tid_krad": 60, "temp_op_c": [-40, 70], "dimensions_mm": [154, 146, 45],
+  "notes": "Datasheet: momentum 1.0 Nms, torque +-100 mNm at 0.8 Nms (28 V), 24-34 V (50 V max), 5.3 W steady at 1.0 Nms (power_w_nominal), 43 W at 1.0 Nms +60 mNm (power_w_peak), redundant RS-485 with galvanic isolation, > 60 krad, heavy ion tested to 50 MeV cm2/mg.",
+  "specs": {"momentum_mnms": 1000, "max_torque_mnm": 100, "power_w_nominal": 5.3, "power_w_peak": 43, "supply_voltage_ranges_v": [[24, 34]], "data_interfaces": ["RS-485"]}}
+]

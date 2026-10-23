@@ -1,0 +1,29 @@
+table,subsystem,page,,,,Thrust per,,,,,,,,,
+4-2,propulsion,125,Manufacturer,Product,Propellant,Thruster,,,Mass,Envelope,Power,ACS,,Missions,References
+4-2,propulsion,125,---,---,---,[N],[s],[kN-s],[kg],[cm3 or U],[W],Y/N,"C,D,E,F",---,---
+4-2,propulsion,125,Integrated Propulsion Systems,,,,,,,,,,,,
+4-2,propulsion,125,Aerojet Rocketdyne USA,MPS-120,Hydrazine,0.25 – 1.0 (4),-,2 (2U) 0.8 (1U),2.5† (2U) 1.6† (1U),2U 1U,-,Y,D,-,(99)
+4-2,propulsion,125,Aerojet Rocketdyne USA,MPS-125,Hydrazine,0.25 – 1.0 (4),-,14 (8U) 9.9 (6U) 5.2 (4U),12.1† (8U) 9.3† (6U) 6.2† (4U),8U 6U 4U,-,Y,D,-,(99)
+4-2,propulsion,125,Stellar Exploration USA,Monopropellant CubeSat System,Hydrazine,-,200s,-,-,-,-,Y,F,"Echostar Global 3, NASA Capstone",(17) (18) (19) (20) (100)
+4-2,propulsion,125,Stellar Exploration USA,Bipropellant CubeSat system,Hydrazine/ NTO,-,285,-,-,-,-,Y,D,-,(100)
+4-2,propulsion,125,Thruster,,,,,,,,,,,,
+4-2,propulsion,125,Aerojet Rocketdyne USA,MR-103,Hydrazine,1,202 - 224,183,0.33 - 0.37,-,< 16,-,F,numerous,(8)
+4-2,propulsion,125,Aerojet Rocketdyne USA,MR-106,Hydrazine,22,228 - 235,561,0.59,-,< 36,-,F,numerous,(8)
+4-2,propulsion,125,Aerojet Rocketdyne USA,MR-111,Hydrazine,4,219 - 229,262,0.37,-,< 16,-,F,numerous,(8)
+4-2,propulsion,125,Aerojet Rocketdyne USA,MR-401,Hydrazine,0.08,182,200,0.60,-,-,-,F,Numerous,(8)
+4-2,propulsion,125,ArianeGroup France,1 N,Hydrazine,1,200 - 223,135,0.29,-,-,-,F,"ALSAT-2, numerous",(6) (7)
+4-2,propulsion,125,ArianeGroup France,20 N,Hydrazine,20,222 - 230,517,0.65,-,-,-,F,Numerous,(7)
+4-2,propulsion,125,IHI Aerospace Japan,MT-9,Hydrazine,1,208 - 215,(100 kg)*,-,-,-,-,F,Numerous,(16)
+4-2,propulsion,125,IHI Aerospace Japan,MT-8A,Hydrazine,5,212 - 225,(190 kg)*,-,-,-,-,F,Numerous,(16)
+4-2,propulsion,125,IHI Aerospace Japan,MT-2,Hydrazine,20,210 - 226,(115 kg)*,-,-,-,-,F,Numerous,(16)
+4-2,propulsion,125,Moog USA,MONARC-1,Hydrazine,1,227,111,0.38,113x50 mm,18 (valve),-,F,numerous,(12)
+4-2,propulsion,125,Moog USA,MONARC-5,Hydrazine,4.5,226,613,0.49,203x380 mm,18 (valve),-,F,"NASA SMAP, numerous",(12) (13)
+4-2,propulsion,125,Moog USA,MONARC-22-6,Hydrazine,22,228,533,0.72,203x380 mm,30 (valve),-,F,numerous,(12)
+4-2,propulsion,125,Moog USA,MONARC-22-12,Hydrazine,22,228,"1,173",0.69,229x530 mm,30 (valve),-,F,numerous,(12)
+4-2,propulsion,125,Northrop Grumman USA,MRE-0.1,Hydrazine,1,216,(34 kg)*,0.5,114x175 mm,15,-,F,numerous,(14)
+4-2,propulsion,125,Northrop Grumman USA,MRE-1.0,Hydrazine,5,218,(544 kg)*,0.5,114x188 mm,15,-,F,numerous,(14)
+4-2,propulsion,125,Northrop Grumman USA,MRE-4.0,Hydrazine,18,217,(249 kg)*,0.5,61x206 mm,30,-,F,numerous,(14)
+4-2,propulsion,125,Rafael Israel,1N,Hydrazine,1,205 - 214,100,0.31,-,9 (valve),,F,numerous,(15)
+4-2,propulsion,125,Rafael Israel,5N,Hydrazine,6,210 - 220,74,0.31,-,9 (valve),,F,numerous,(15)
+4-2,propulsion,125,Rafael Israel,25N,Hydrazine,28,205 - 220,100,0.53,-,15 (valve),,F,numerous,(15)
+4-2,propulsion,125,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable, * denotes mass of propellant throughput, rather than total impulse",,,,,,,,,,,,

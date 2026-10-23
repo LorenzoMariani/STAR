@@ -1,0 +1,8 @@
+table,subsystem,page,Manufacturer Headquarters,Product,Volume Configurations,Type
+10-2,dispenser,324,Cal Poly USA,Dispenser,"1U, 3U",Tab
+10-2,dispenser,324,COMAT France,Dispenser,"3U, 6U, 12U",Rail
+10-2,dispenser,324,Dhruva Space India,DSOD,"1U, 3U, 6U, 12U, 16U",Rail
+10-2,dispenser,324,Exolaunch,"EXOtube, EXOpod Nova Cubesat Deployer","0.25U, 1U, 2U, 3U, 6U, 6U XL, 8U, 12U, 16U",Rail
+10-2,dispenser,324,Gran Systems Taiwan,MyPOD and Test PODs,"3U, 6U, 12U, 16U",Rail
+10-2,dispenser,324,ISISPACE The Netherlands,"DuoPack, QuadPack","1U, 2U, 3U, 4U, 6U, 8U, 12U, 6UXL, 12UXL, 16U",Rail
+10-2,dispenser,324,Maverick Space Systems USA,Mercury series,"3U, 6U, 6T, 12U, 12T, 16U","Rail, Tab"

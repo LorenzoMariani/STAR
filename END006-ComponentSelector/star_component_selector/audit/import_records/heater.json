@@ -1,0 +1,5 @@
+[
+ {"file": "heater/Minco__Thermal-Solutions-Design-Guide.pdf", "action": "skip", "name": "Minco thermal design guide", "reason": "72-page generic design guide (industrial heaters, sensors, controllers), no CubeSat product with a resistance"},
+ {"file": "heater/Unknown__Whitepaper-Thin-Film-Sensors-in-Polyimide-Heaters.pdf", "action": "skip", "name": "Whitepaper", "reason": "white paper, no product data"},
+ {"file": "heater/Unknown__flexible-heater-for-space.pdf", "action": "skip", "name": "ZIHET flexible heaters", "reason": "brochure without resistance or power values (required heater field resistance_ohm not declared)"}
+]

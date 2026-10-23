@@ -1,0 +1,334 @@
+﻿from,to,reason
+adcs/CubeSpace__gen2-cubeadcs.pdf,adcs/CubeSpace__Gen2-CubeADCS.pdf,name
+adcs/Plan__PS-HORIZON-V0.1.pdf,horizon_sensor/PLAN-S__PS-Horizon-V0.1.pdf,horizon sensor
+adcs/Unknown__689529f6f27ec0831778ede8-ANT61-Beacon.pdf,comms/ANT61__Beacon-S-Rev-G.pdf,"beacon, not ADCS"
+adcs/Unknown__6981ef31a138f8484b962dd8-ANT61-Beacon.pdf,comms/ANT61__Beacon-S-Rev-I.pdf,"beacon, not ADCS"
+antenna/Airbusus__ARROW150-25.pdf,satellite_platform/Airbus__ARROW150.pdf,ESPA-class platform
+antenna/Anywaves__Compact-Dual-Polorized-X-Band-Antenn.pdf,antenna/Anywaves__Compact-Dual-Polarized-X-Band-Antenna.pdf,name
+antenna/Calian__4m-SATCOM-Antenna-Dec-22-USB.pdf,_fuori_ambito/Calian__4m-SATCOM-Antenna-Dec-22-USB.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Calian__7m-Satcom-Antenna-DS260319DS.pdf,_fuori_ambito/Calian__7m-Satcom-Antenna-DS260319DS.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Calian__9-2m-Satcom-Antenna-A240411DS-1.pdf,_fuori_ambito/Calian__9-2m-Satcom-Antenna-A240411DS-1.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__C-CLNA-0408-4mW.pdf,_fuori_ambito/Celestia-tti__C-CLNA-0408-4mW.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__C-CLNA-0506.pdf,_fuori_ambito/Celestia-tti__C-CLNA-0506.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__CLNA-0408.pdf,_fuori_ambito/Celestia-tti__CLNA-0408.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__CLNA-0412.pdf,_fuori_ambito/Celestia-tti__CLNA-0412.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__DRHA-Dual-Ridged-Horn-Antenna.pdf,_fuori_ambito/Celestia-tti__DRHA-Dual-Ridged-Horn-Antenna.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__GaN-C-SSPA-1.5-2.7-4.8kW-high-po.pdf,_fuori_ambito/Celestia-tti__GaN-C-SSPA-1.5-2.7-4.8kW-high-po.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__SGH-Standard-Gain-Horn.pdf,_fuori_ambito/Celestia-tti__SGH-Standard-Gain-Horn.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__TTI-product-guide-SSPA-BUC.pdf,_fuori_ambito/Celestia-tti__TTI-product-guide-SSPA-BUC.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__X-CLNA-0808.pdf,_fuori_ambito/Celestia-tti__X-CLNA-0808.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Celestia-tti__X-CLNA-0809.pdf,_fuori_ambito/Celestia-tti__X-CLNA-0809.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__CELESTIA-TTI-DCPHA-Dual-Circular-Pola.pdf,_fuori_ambito/Unknown__CELESTIA-TTI-DCPHA-Dual-Circular-Pola.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__CELESTIA-TTI-DLPHA-Dual-Linear-Horn-A.pdf,_fuori_ambito/Unknown__CELESTIA-TTI-DLPHA-Dual-Linear-Horn-A.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__CELESTIA-TTI-LPHA-Linear-Polrized-Hor.pdf,_fuori_ambito/Unknown__CELESTIA-TTI-LPHA-Linear-Polrized-Hor.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__CELESTIA-TTI-OE-RWP-Open-Ended-Rectan.pdf,_fuori_ambito/Unknown__CELESTIA-TTI-OE-RWP-Open-Ended-Rectan.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Noffz__20449-Broschure-UTP-506X-Radar-Einzelse.pdf,_fuori_ambito/Noffz__20449-Broschure-UTP-506X-Radar-Einzelse.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/RocketLab__C-Users-mbaba-AppData-Local-Temp.pdf,_fuori_ambito/RocketLab__C-Users-mbaba-AppData-Local-Temp.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Ticra__ARRAY-Solution-sheet-2026.pdf,_fuori_ambito/Ticra__ARRAY-Solution-sheet-2026.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Ticra__ARRAY-Solution-sheet-PURPOSE-BUILT-SOFT.pdf,_fuori_ambito/Ticra__ARRAY-Solution-sheet-PURPOSE-BUILT-SOFT.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__69d6e75bd17e43cc8547e3d3-ThinKom-Thin.pdf,_fuori_ambito/Unknown__69d6e75bd17e43cc8547e3d3-ThinKom-Thin.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__ANECHOIC-CHAMBER-The-anechoic-chamber.pdf,_fuori_ambito/Unknown__ANECHOIC-CHAMBER-The-anechoic-chamber.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__AS-Certificate.pdf,_fuori_ambito/Unknown__AS-Certificate.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__AV-s-Broad-Area-Deployable-Ground.pdf,_fuori_ambito/Unknown__AV-s-Broad-Area-Deployable-Ground.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__PowerPoint-Presentation-2.pdf,_fuori_ambito/Unknown__PowerPoint-Presentation-2.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__PowerPoint.pdf,_fuori_ambito/Unknown__PowerPoint.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/Unknown__SPACEFLIGHT-HARDWARE-CATALOG-C14-BI-A.pdf,_fuori_ambito/Unknown__SPACEFLIGHT-HARDWARE-CATALOG-C14-BI-A.pdf,"ground segment, test equipment, software, gimbals or non-antenna product"
+antenna/IQTechnologiesforEarthandSpace__s-band-quad-pa.pdf,antenna/IQ-Technologies__S-Band-Antennas.pdf,name
+antenna/IQTechnologiesforEarthandSpace__x-band-high-ga.pdf,antenna/IQ-Technologies__X-Band-Antennas.pdf,name
+antenna/Plan__IoT-Anten-EN.pdf,antenna/PLAN-S__IoT-Antenna.pdf,name
+antenna/Unknown__K-patch-antenna.pdf,antenna/Picosats__K-Band-Patch-Antenna.pdf,vendor
+antenna/Taoglas__AHP54510.07.0100C.pdf,gnss_antenna/Taoglas__AHP54510.07.0100C.pdf,GNSS antenna
+antenna/Taoglas__CGSP457.A.pdf,gnss_antenna/Taoglas__CGSP457.A-RevC.pdf,GNSS/SatCom patch
+antenna/Unknown__SPE-25-8-319-B-Part-No-CGSP457.A-Desc.pdf,gnss_antenna/Taoglas__CGSP457.A-RevB.pdf,GNSS/SatCom patch
+antenna/Unknown__Rx-or-T-x-Hemispherical-Coverage.pdf,antenna/Anywaves__Ka-Band-TTC-Antenna-Hemispherical.pdf,vendor
+antenna/Unknown__Single-or-Dual-Polarization-Hemispher.pdf,antenna/Anywaves__S-Band-TTC-Antenna-Hemispherical.pdf,vendor
+antenna/Unknown__Tx-RHCP-or-LHCP-Ultra-Low.pdf,antenna/Anywaves__X-Band-Antenna-Ultra-Low-Profile.pdf,vendor
+antenna/Unknown__compact-s-band-ttc-antenna.pdf,antenna/Anywaves__Compact-S-Band-TTC-Antenna.pdf,vendor
+antenna/Unknown__high-gain-x-band-payload-telemetry-an.pdf,antenna/Anywaves__High-Gain-X-Band-Payload-Telemetry-Antenna.pdf,vendor
+antenna/Unknown__s-band-ttc-antenna.pdf,antenna/Anywaves__S-Band-TTC-Antenna.pdf,vendor
+antenna/Unknown__x-band-dual-circularly-polarized-ante.pdf,antenna/Anywaves__X-Band-Dual-Circularly-Polarized-Antenna.pdf,vendor
+antenna/Unknown__x-band-payload-telemetry-antenna.pdf,antenna/Anywaves__X-Band-Payload-Telemetry-Antenna.pdf,vendor
+battery/Airbus__pm-38-687-687753-x1s3hnb16m.pdf,battery/Airbus__Space-Batteries-Overview.pdf,name
+battery/Airbus__pm-38-687-687756-v579c36uso.pdf,battery/Airbus__ASTRO-BATT.pdf,name
+battery/Airbus__pm-38-687-687765-uolog5yvtn.pdf,battery/Airbus__STELLAR-BATT.pdf,name
+battery/Airbus__pm-38-687-687759-sqa73gu0lh.pdf,satellite_components/Airbus__COSMO-BATT.pdf,telecom/navigation satellites
+battery/Airbus__pm-38-687-687762-mtq1ue72hg.pdf,satellite_components/Airbus__Launcher-Batteries.pdf,launcher batteries
+battery/EXA__CSF25-LW-Covers.pdf,_fuori_ambito/EXA__CSF25-LW-Covers.pdf,"gearheads, lab equipment or test chambers"
+battery/EXA__CSG-LW.pdf,_fuori_ambito/EXA__CSG-LW.pdf,"gearheads, lab equipment or test chambers"
+battery/Surfaceoptics__410-DHR.pdf,_fuori_ambito/Surfaceoptics__410-DHR.pdf,"gearheads, lab equipment or test chambers"
+battery/Unknown__4-m3-environmental-chamber-specially.pdf,_fuori_ambito/Unknown__4-m3-environmental-chamber-specially.pdf,"gearheads, lab equipment or test chambers"
+battery/Unknown__This-environmental-chamber-is-designe.pdf,_fuori_ambito/Unknown__This-environmental-chamber-is-designe.pdf,"gearheads, lab equipment or test chambers"
+battery/GomSpace__gs-osf-nanosat-6U-Kit-OSF-1063735-1.pdf,cubesat_platform/GomSpace__NanoSat-6U-Kit-Option-Sheet.pdf,CubeSat kit
+battery/Kosmolab__blok-upravleniya-bu-12.pdf,dispenser/Kosmolab__Deployment-Sequencer-BU-12.pdf,deployment sequencer
+battery/Kosmolab__blok-upravleniya-bu-24.pdf,dispenser/Kosmolab__Deployment-Sequencer-BU-24.pdf,deployment sequencer
+battery/Kosmolab__blok-upravleniya-bu-36.pdf,dispenser/Kosmolab__Deployment-Sequencer-BU-36.pdf,deployment sequencer
+battery/Unknown__Product-2.pdf,dispenser/Kosmolab__Deployment-Sequencer-BU-12-2.pdf,deployment sequencer
+battery/Unknown__Product-11.pdf,dispenser/Kosmolab__Deployment-Sequencer-BU-24-2.pdf,deployment sequencer
+battery/Unknown__Product-13.pdf,dispenser/Kosmolab__Deployment-Sequencer-BU-36-2.pdf,deployment sequencer
+battery/Spacemanic__amun-power-supply-unit.pdf,eps/Spacemanic__AMUN-Power-Supply-Unit-Sheet.pdf,power supply unit
+battery/Unknown__28-300-Battery-Module-pptx.pdf,satellite_components/DragonflyAerospace__28-300-Battery-Module.pdf,SAR-class battery
+battery/Unknown__28-300-battery-module.pdf,satellite_components/DragonflyAerospace__28-300-Battery-Module-2.pdf,SAR-class battery (duplicate)
+battery/Unknown__FURTHER-INFORMATION-Max-Planck-Str-3.pdf,battery/BST__BAT-110.pdf,name
+battery/Usrfiles__B14-M45-M90-14V-Modular-SmallSat-Bat.pdf,battery/Ibeos__B14-M45-M90-14V-Modular-SmallSat-Battery.pdf,name
+battery/Usrfiles__B28-135-SmallSat-Battery-OVERVIEW-Ib.pdf,battery/Ibeos__B28-135-SmallSat-Battery.pdf,name
+battery/Usrfiles__B28-275-550-825-1100-28-Volt-Modular.pdf,battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf,name
+battery/Usrfiles__B50-412-825-1237-50-Volt-Modular-Bat.pdf,battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf,name
+comms/Aac-clyde__ANT-100.pdf,antenna/Aac-clyde__ANT-100.pdf,whip antenna
+comms/AlnSpace__AL-GSKS-DTS-001-ALEN-1.0-GSKit-S-Ban.pdf,_fuori_ambito/AlnSpace__AL-GSKS-DTS-001-ALEN-1.0-GSKit-S-Ban.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/AlnSpace__GS-Kit-2021-AF-Digital.pdf,_fuori_ambito/AlnSpace__GS-Kit-2021-AF-Digital.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Emxys__OGS.pdf,_fuori_ambito/Emxys__OGS.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/IQTechnologiesforEarthandSpace__end-to-end-sol.pdf,_fuori_ambito/IQTechnologiesforEarthandSpace__end-to-end-sol.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Minco__1-HVAC-Sensors-Design-Guide-Specificati.pdf,_fuori_ambito/Minco__1-HVAC-Sensors-Design-Guide-Specificati.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Minco__Sensors-Instruments-Product-Guide-RTDs.pdf,_fuori_ambito/Minco__Sensors-Instruments-Product-Guide-RTDs.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Minco__Temperature-Sensors-and-Instruments-Pro.pdf,_fuori_ambito/Minco__Temperature-Sensors-and-Instruments-Pro.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Northropgrumman__AstroMesh.pdf,_fuori_ambito/Northropgrumman__AstroMesh.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Orbit-cs__Orion-3D-Audio-Management-System.pdf,_fuori_ambito/Orbit-cs__Orion-3D-Audio-Management-System.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Orbit-cs__Radio-Gateway-for-UAS-New-Brand.pdf,_fuori_ambito/Orbit-cs__Radio-Gateway-for-UAS-New-Brand.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Peraton__0622-AcusilThermalProtectionSystem-ov.pdf,_fuori_ambito/Peraton__0622-AcusilThermalProtectionSystem-ov.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Spacebridge__SBAF-Type-98cm-and-1.2m-Ku-Ka.pdf,_fuori_ambito/Spacebridge__SBAF-Type-98cm-and-1.2m-Ku-Ka.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__ADAMS-NexGen-Airborne-Digital-Audio-M.pdf,_fuori_ambito/Unknown__ADAMS-NexGen-Airborne-Digital-Audio-M.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__Beyond-Gravity-Satellites-beyondgravi.pdf,_fuori_ambito/Unknown__Beyond-Gravity-Satellites-beyondgravi.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__DATASHEETwww.mrcy.com-mission-success.pdf,_fuori_ambito/Unknown__DATASHEETwww.mrcy.com-mission-success.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__FN-B-S6S6-24429AA.pdf,_fuori_ambito/Unknown__FN-B-S6S6-24429AA.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__Overview-Azalea-Radio-Frequency-Mappi.pdf,_fuori_ambito/Unknown__Overview-Azalea-Radio-Frequency-Mappi.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__Product-12.pdf,_fuori_ambito/Unknown__Product-12.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__RF-Couplers-Overview-Sheet.pdf,_fuori_ambito/Unknown__RF-Couplers-Overview-Sheet.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__w-w-w-a-t-3.pdf,_fuori_ambito/Unknown__w-w-w-a-t-3.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Unknown__w-w-w-a-t.pdf,_fuori_ambito/Unknown__w-w-w-a-t.pdf,"ground segment, lab equipment, non-space or GEO payload electronics"
+comms/Aphelionorbitals__UHF-VHF+Radio+.pdf,comms/Aphelion-Orbitals__UHF-VHF-Radio.pdf,name
+comms/Exolaunch__15-10-25-EXObox-Brochure.pdf,dispenser/Exolaunch__EXObox-Brochure.pdf,deployment sequencer
+comms/IQTechnologiesforEarthandSpace__xlink-l.pdf,comms/IQ-Technologies__XLINK-L.pdf,name
+comms/IQTechnologiesforEarthandSpace__xlink-s-tmtc.pdf,comms/IQ-Technologies__XLINK-S-TMTC.pdf,name
+comms/IQTechnologiesforEarthandSpace__xlink-x.pdf,comms/IQ-Technologies__XLINK-X.pdf,name
+comms/Kairo__3-U-C-U-B-E.pdf,cubesat_platform/Kairo__3U-CUBE-Platform.pdf,CubeSat platform
+comms/L3Harris__c-tt-510-electra-lite-transceiver.pdf,comms/L3Harris__C-TT-510-Electra-Lite-Transceiver.pdf,name
+comms/NanoAvionics__satbus-3c2.pdf,cubesat_platform/NanoAvionics__SatBus-3C2.pdf,CubeSat platform
+comms/NanoAvionics__uhf-radio-sat2rf1-1d-transceiver.pdf,comms/NanoAvionics__UHF-Radio-SAT2RF1-1D.pdf,name
+comms/Spacemanic__murgas-uhfvhf-transceiver.pdf,comms/Spacemanic__Murgas-UHF-VHF-Transceiver.pdf,name
+comms/Spacemanic__schoolsat.pdf,cubesat_platform/Spacemanic__SchoolSat.pdf,educational CubeSat kit
+comms/Unknown__67db631cb3481245b4022aea-ANT61-Beacon.pdf,comms/ANT61__Beacon-M-RevA.pdf,vendor
+comms/Unknown__A-n-a-d-v-a.pdf,cubesat_platform/Unknown__Anadva-CubeSat-Platform.pdf,CubeSat platform
+comms/Unknown__Spacecraft-Solutions-As-a-trusted-mis.pdf,satellite_platform/Unknown__Spacecraft-Solutions-Elevation.pdf,satellite platform
+comms/Unknown__Tableau-DATA-Produits.pdf,cubesat_platform/Unknown__16U-Freeform-Platform-Table.pdf,CubeSat platform
+comms/Unknown__c-tt-505-uhf-command-telemetry-transc.pdf,comms/L3Harris__C-TT-505-UHF-Transceiver.pdf,vendor
+comms/Unknown__cxs-1000-transceiver.pdf,comms/Unknown__CXS-1000-Transponder.pdf,name
+comms/Unknown__hispico-transmitter.pdf,comms/Unknown__HiSPiCO-S-Band-Transmitter.pdf,name
+comms/Unknown__iris.pdf,comms/SDL__IRIS-Radio.pdf,vendor
+comms/Unknown__msx-765-transceiver.pdf,comms/L3Harris__MSX-765-Transceiver.pdf,vendor
+comms/Unknown__nanocom-ka-band-sdr.pdf,comms/SpaceMicro__Nanocom-Ka-Band-SDR.pdf,vendor
+comms/Unknown__sdr-c.pdf,comms/SpaceMicro__uSDR-C.pdf,vendor
+comms/Unknown__sgls-100-s-band-transponder.pdf,comms/SpaceMicro__uSGLS-100-Transponder.pdf,vendor
+comms/Unknown__slink-phy-transceiver.pdf,comms/Unknown__Slink-Phy-S-Band-Transceiver.pdf,name
+comms/Unknown__vhfuhf-transceiver.pdf,comms/Pyxis-Space__VHF-UHF-Transceiver.pdf,vendor
+eps/Unknown__Dragonfly.pptx.pdf,satellite_platform/DragonflyAerospace__Bus-150kg.pdf,satellite bus 150 kg
+eps/Unknown__dragonfly-bus-datasheet-2.pdf,satellite_platform/DragonflyAerospace__Bus-100kg.pdf,satellite bus 100 kg
+eps/Unknown__EPS-LP-1k5-pptx.pdf,satellite_components/DragonflyAerospace__EPS-LP-1k5.pdf,1.5 kW PCDU
+eps/Unknown__eps-lp-1k5.pdf,satellite_components/DragonflyAerospace__EPS-LP-1k5-2.pdf,1.5 kW PCDU (duplicate)
+eps/Unknown__ESAT-is-an-educational-satellite-desi.pdf,cubesat_platform/Theia-Space__ESAT-Brochure.pdf,educational CubeSat
+eps/Unknown__ESAT.pdf,cubesat_platform/Theia-Space__ESAT-Datasheet.pdf,educational CubeSat
+eps/Unknown__TIGER-INNOVATIONS-CORPORATE-CAPABILIT.pdf,_fuori_ambito/Unknown__TIGER-INNOVATIONS-CORPORATE-CAPABILIT.pdf,company profile
+eps/Usrfiles__E14-150-14V-SmallSat-Electric-Power.pdf,eps/Ibeos__E14-150-14V-SmallSat-EPS.pdf,name
+gps/Aac-clyde__ANT-GPS-2.pdf,gnss_antenna/Aac-clyde__ANT-GPS.pdf,GNSS antenna
+gps/Beyondgravity__constellation-On-Board-Computer.pdf,obc/Beyondgravity__cOBC-Constellation-On-Board-Computer.pdf,OBC
+gps/Spacemanic__SM-CEL-DS-0002-20.2-Data-Sheet.pdf,gps/Spacemanic__CELESTE-GNSS-Datasheet.pdf,name
+gps/Unknown__IoT-Modul-EN.pdf,comms/PLAN-S__IoT-Module.pdf,IoT radio module
+gps/Unknown__gnss-all-bands-antenna.pdf,gnss_antenna/Anywaves__GNSS-All-Bands-Antenna.pdf,GNSS antenna
+gps/Unknown__protonx-box.pdf,obc/SpaceMicro__ProtonX-Box.pdf,computer
+gps/Unknown__raven-ai-edge-computer.pdf,obc/Unknown__RAVEN-AI-Edge-Computer.pdf,computer
+heater/Minco__Thermal-Solutions-Design-Guide-Since-Mi.pdf,heater/Minco__Thermal-Solutions-Design-Guide.pdf,name
+heater/Unknown__Whitepaper-The-Pros-and-Cons-of.pdf,heater/Unknown__Whitepaper-Thin-Film-Sensors-in-Polyimide-Heaters.pdf,name
+heater/Unknown__beyondgravity.com-Beyond-Gravity-Core.pdf,satellite_components/Beyondgravity__CODE-Core-Drive-Electronics.pdf,drive electronics
+heater/Unknown__flexible-heater-for-space.pdf,heater/Unknown__Flexible-Heater-for-Space.pdf,name
+magnetorquer/Beyondgravity__cOBC-PDIO.pdf,obc/Beyondgravity__cOBC-PDIO.pdf,OBC board
+magnetorquer/Unknown__SSBV-CubeSat-Magentorquer-Rod-Datashe.pdf,magnetorquer/SSBV__CubeSat-Magnetorquer-Rod.pdf,name
+obc/CAVUAerospace__CDH-FS-Option-Sheet.pdf,obc/CAVU-Aerospace__CDH-FS-Option-Sheet.pdf,name
+obc/Cavuaerospace__CAVU-OBC1-Br.pdf,obc/CAVU-Aerospace__OBC-1-Brochure.pdf,name
+obc/Unknown__CAVU-CDH-FS-Br.pdf,obc/CAVU-Aerospace__CDH-FS-Brochure.pdf,vendor
+obc/Unknown__Interface-Control-Document-ICD-CDH-FS.pdf,obc/CAVU-Aerospace__CDH-FS-ICD.pdf,vendor
+obc/Clvaw-cdnwnd__Flyer-OBC-ABACUS-3.pdf,obc/Unknown__OBC-ABACUS-3-Flyer.pdf,name
+obc/Unknown__698c95312f39c7caa5df1a85-Antelope-DPU.pdf,obc/KP-Labs__Antelope-DPU.pdf,vendor
+obc/Unknown__CYM-PG-04307-VENG-Antartix.pdf,obc/Unknown__Antartix-OBC.pdf,name
+obc/Unknown__FURTHER-INFORMATION-Max-Planck-Str-3-2.pdf,obc/BST__CDH-Command-and-Data-Handling.pdf,vendor
+obc/Unknown__cdh-110.pdf,obc/BST__CDH-110.pdf,vendor
+obc/Unknown__nanohpc-dpu-high-performance-data-pro.pdf,obc/SkyLabs__NANOhpc-DPU.pdf,vendor
+obc/Unknown__nst-obc.pdf,obc/Nara-Space__NSTOBC-Datasheet.pdf,vendor
+obc/Unknown__proton200k-l.pdf,obc/SpaceMicro__Proton200k-Lite.pdf,vendor
+obc/Unknown__proton200k.pdf,obc/SpaceMicro__Proton200k.pdf,vendor
+obc/Unknown__proton400k.pdf,obc/SpaceMicro__Proton400k.pdf,vendor
+obc/Spacemanic__deep-thought-on-board-computer.pdf,obc/Spacemanic__Deep-Thought-OBC-Sheet.pdf,name
+obc/Spacemanic__eddie-onboard-computer.pdf,obc/Spacemanic__Eddie-OBC-Sheet.pdf,name
+payload/DragonflyAerospace__Caiman-imager.pptx.pdf,imaging_cameras/DragonflyAerospace__Caiman-Imager.pdf,optical imaging camera
+payload/DragonflyAerospace__caiman-imager.pdf,imaging_cameras/DragonflyAerospace__Caiman-Imager-2.pdf,optical imaging camera
+payload/DragonflyAerospace__gecko-imager.pdf,imaging_cameras/DragonflyAerospace__Gecko-Imager.pdf,optical imaging camera
+payload/Unknown__Chameleon-SWIR.pptx.pdf,imaging_cameras/DragonflyAerospace__Chameleon-SWIR.pdf,optical imaging camera
+payload/Unknown__Chameleon-imager.pptx.pdf,imaging_cameras/DragonflyAerospace__Chameleon-Imager.pdf,optical imaging camera
+payload/Unknown__DragonEye-Imager.pptx.pdf,imaging_cameras/DragonflyAerospace__DragonEye-Imager.pdf,optical imaging camera
+payload/Unknown__komodo-imager.pdf,imaging_cameras/DragonflyAerospace__Komodo-Imager.pdf,optical imaging camera
+payload/Unknown__mantis-imager.pdf,imaging_cameras/DragonflyAerospace__Mantis-Imager.pdf,optical imaging camera
+payload/Unknown__raptor-imager.pdf,imaging_cameras/DragonflyAerospace__Raptor-Imager.pdf,optical imaging camera
+payload/Unknown__hrvi-2hd.pdf,imaging_cameras/BST__HRVI-2HD.pdf,optical imaging camera
+payload/Unknown__hrvi-6.pdf,imaging_cameras/BST__HRVI-6.pdf,optical imaging camera
+payload/Unknown__hrvi-6hd-2nd-generation.pdf,imaging_cameras/BST__HRVI-6HD-2nd-Generation.pdf,optical imaging camera
+payload/Unknown__disc.pdf,imaging_cameras/SDL__DISC-Digital-Imaging-Space-Camera.pdf,optical imaging camera
+payload/Unknown__4k-space-camera.pdf,imaging_cameras/SpaceMicro__4K-Space-Camera.pdf,optical imaging camera
+payload/Unknown__spacecam-5mp.pdf,imaging_cameras/SpaceMicro__SpaceCam-5MP.pdf,optical imaging camera
+payload/Unknown__1-MULTI-PURPOSE-RAD-TOLERANT-CAMERA-O.pdf,imaging_cameras/Unknown__AuriCAM-Rad-Tolerant-Camera.pdf,optical imaging camera
+payload/Unknown__KissCAM-and-User-Manual.pdf,imaging_cameras/Unknown__KissCAM-Datasheet-and-User-Manual.pdf,optical imaging camera
+payload/SatCatalog_-_XCAM_-_Nuscis_-_Datasheet.pdf,imaging_cameras/XCAM__NUSCIS.pdf,optical imaging camera
+payload/satsearch_datasheet_x7lkd0_xcam_c3d.pdf,imaging_cameras/XCAM__C3D-CubeSat-Camera-2018.pdf,optical imaging camera
+payload/b-3-5-201805251613-allthorpe-mullis.pdf,imaging_cameras/Unknown__CCAM-CubeSat-Camera-Paper-2018.pdf,optical imaging camera
+payload/OCETehnologies_aerospace-miniature-camera.pdf,imaging_cameras/OCE-Technologies__Aerospace-Miniature-Camera.pdf,optical imaging camera
+payload/Unknown__Aurora-1000-Line-Scan-Camera-Owner-s.pdf,imaging_cameras/Thoth__Aurora-1000-Line-Scan-Camera-Owners-Manual.pdf,optical imaging camera
+payload/Oxinst__c-red-new-space-specifications.pdf,imaging_cameras/Oxford-Instruments__C-RED-New-Space.pdf,optical imaging camera
+payload/CUBECAT.pdf,payload/Aac-clyde__CUBECAT.pdf,name
+payload/Unknown__689a6f8f35805d95ea1458be-Cobalt-slick.pdf,payload/Unknown__Cobalt-Optical-Terminal.pdf,name
+payload/Unknown__Argus-2000-IR-Spectrometer-Owner-s.pdf,payload/Thoth__Argus-2000-IR-Spectrometer-Owners-Manual.pdf,vendor
+payload/DragonflyAerospace__raptorsat.pdf,satellite_platform/DragonflyAerospace__raptorsat.pdf,whole imaging satellite
+payload/Unknown__CARBONITE-Carbonite-1-launched-in-Jul.pdf,satellite_platform/Unknown__CARBONITE-Carbonite-1-launched-in-Jul.pdf,whole imaging satellite
+payload/Unknown__DARKCARB-DarkCarb-is-a-high-resolutio.pdf,satellite_platform/Unknown__DARKCARB-DarkCarb-is-a-high-resolutio.pdf,whole imaging satellite
+payload/Unknown__komodosat.pdf,satellite_platform/Unknown__komodosat.pdf,whole imaging satellite
+payload/Hubspotusercontent-eu1__2026-DIY-satellite-fol.pdf,cubesat_platform/OroraTech__DIY-Satellite-Folder.pdf,DIY satellite kit
+payload/Unknown__csp-cubesat-space-processor.pdf,obc/SpaceMicro__CubeSat-Space-Processor.pdf,processor board
+payload/Unknown__Applied-Ion-Systems-AIS-TR-006-AIS-gP.pdf,propulsion/Applied-Ion-Systems__AIS-TR-006-gPPT3-1C-Ignition-Test.pdf,thruster
+payload/Unknown__Applied-Ion-Systems-AIS-TR-007-AIS-gP.pdf,propulsion/Applied-Ion-Systems__AIS-TR-007-gPPT3-1C-Impulse-Bit-Test.pdf,thruster
+payload/Unknown__Applied-Ion-Systems-AIS-TR-008-AIS-gP.pdf,propulsion/Applied-Ion-Systems__AIS-TR-008-gPPT3-1C-Lifetime-Test.pdf,thruster
+payload/Unknown__Applied-Ion-Systems-AIS-TR-009-AIS-gP.pdf,propulsion/Applied-Ion-Systems__AIS-TR-009-gPPT3-1C-Lifetime-Test-V4.pdf,thruster
+payload/Unknown__Applied-Ion-Systems-AIS-TR-021-AIS-gP.pdf,propulsion/Applied-Ion-Systems__AIS-TR-021-gPPT3-1C-Lifetime-Test-2.pdf,thruster
+payload/Unknown__1-Applied-Ion-Systems-AIS-VAT0-DEMO-E.pdf,propulsion/Applied-Ion-Systems__AIS-VAT0-DEMO-Vacuum-Arc-Thruster-Kit.pdf,thruster
+payload/Abb__Ace-Scisat-Q4size.pdf,_fuori_ambito/Abb__Ace-Scisat-Q4size.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Arcfield__Orion-Space-Solutions-LARGE-HEADLINE.pdf,_fuori_ambito/Arcfield__Orion-Space-Solutions-LARGE-HEADLINE.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/EXA__2024-Orion-Space-Solutions-DRAGSTER-DRAGS.pdf,_fuori_ambito/EXA__2024-Orion-Space-Solutions-DRAGSTER-DRAGS.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Oxinst__Extended-Range-SWIR-Imaging-with-C-RED.pdf,_fuori_ambito/Oxinst__Extended-Range-SWIR-Imaging-with-C-RED.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Oxinst__c-red-one-specifications.pdf,_fuori_ambito/Oxinst__c-red-one-specifications.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__Ultra-Low-Noise-Ultra-High-Speed-SWIR.pdf,_fuori_ambito/Unknown__Ultra-Low-Noise-Ultra-High-Speed-SWIR.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__Very-High-Speed-Ultra-Low-Noise.pdf,_fuori_ambito/Unknown__Very-High-Speed-Ultra-Low-Noise.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__Very-High-Speed-and-Compact-SWIR.pdf,_fuori_ambito/Unknown__Very-High-Speed-and-Compact-SWIR.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__Very-High-Speed-and-Stabilised-SWIR.pdf,_fuori_ambito/Unknown__Very-High-Speed-and-Stabilised-SWIR.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__1-THE-CLIMATIC-REFERENCE-THE-CLIMATIC.pdf,_fuori_ambito/Unknown__1-THE-CLIMATIC-REFERENCE-THE-CLIMATIC.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__LARGE-HEADLINE-40PT-TWO-LINES-As.pdf,_fuori_ambito/Unknown__LARGE-HEADLINE-40PT-TWO-LINES-As.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__SAR-Drone.pdf,_fuori_ambito/Unknown__SAR-Drone.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__SPACEFLIGHT-HARDWARE-CATALOG-FAST-ACT.pdf,_fuori_ambito/Unknown__SPACEFLIGHT-HARDWARE-CATALOG-FAST-ACT.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+payload/Unknown__The-710-OmniCore-hyperspectral-imagin.pdf,_fuori_ambito/Unknown__The-710-OmniCore-hyperspectral-imagin.pdf,"not a CubeSat payload (science instrument, laboratory camera, drone SAR, test equipment, non-space)"
+propulsion/Unknown__1n-monopropellant-hydrazine-thruster.pdf,satellite_components/Unknown__1n-monopropellant-hydrazine-thruster.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__5n-monopropellant-hydrazine-thruster.pdf,satellite_components/Unknown__5n-monopropellant-hydrazine-thruster.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__25n-monopropellant-hydrazine-thruster.pdf,satellite_components/Unknown__25n-monopropellant-hydrazine-thruster.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__r-800-electric-propulsion-system-eps.pdf,satellite_components/Unknown__r-800-electric-propulsion-system-eps.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Busek__11-Tech-Circle-Natick-Ma-01760-3.pdf,satellite_components/Busek__11-Tech-Circle-Natick-Ma-01760-3.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Busek__BHT-20K-v1.0.pdf,satellite_components/Busek__BHT-20K-v1.0.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Mt-aerospace__Datenblatt-PTD-222.pdf,satellite_components/Mt-aerospace__Datenblatt-PTD-222.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-200-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-200-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-230-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-230-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-260-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-260-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-330-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-330-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-420n-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-420n-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-590-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-590-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__pept-590gb-diaphragm-propellant-tank.pdf,satellite_components/Unknown__pept-590gb-diaphragm-propellant-tank.pdf,"spacecraft-class thruster or tank, not CubeSat"
+propulsion/Unknown__THORIUM-folder-A4-WEB.pdf,satellite_platform/Unknown__THORIUM-Small-GEO-Satellite.pdf,satellite platform
+propulsion/Spacex__falcon-users-guide-2025-05-09.pdf,launchers/Spacex__falcon-users-guide-2025-05-09.pdf,launch vehicle
+propulsion/Nammo__2021-Nammo-Raufoss-30kN-Hybrid-Engine.pdf,_fuori_ambito/Nammo__2021-Nammo-Raufoss-30kN-Hybrid-Engine.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Nammo__aircraft-cadpad-booklet-2025.pdf,_fuori_ambito/Nammo__aircraft-cadpad-booklet-2025.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__200n-monopropellant-hydrazine-thruste.pdf,_fuori_ambito/Unknown__200n-monopropellant-hydrazine-thruste.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__200n-roll-attitude-control-system-rac.pdf,_fuori_ambito/Unknown__200n-roll-attitude-control-system-rac.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__25n-roll-attitude-control-system-racs.pdf,_fuori_ambito/Unknown__25n-roll-attitude-control-system-racs.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__MATERIAL-SAFETY.pdf,_fuori_ambito/Unknown__MATERIAL-SAFETY.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__SDS-Green-Electrical-Monopropellant-S.pdf,_fuori_ambito/Unknown__SDS-Green-Electrical-Monopropellant-S.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__Basic-Analysis-of-an-Air-Breathing.pdf,_fuori_ambito/Unknown__Basic-Analysis-of-an-Air-Breathing.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__Beyond-Gravity-The-Beyond-Gravity-APP.pdf,_fuori_ambito/Unknown__Beyond-Gravity-The-Beyond-Gravity-APP.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__Bradford-s-Miniaturized-Standard-Accu.pdf,_fuori_ambito/Unknown__Bradford-s-Miniaturized-Standard-Accu.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__Standard-Accuracy-Pressure-Transducer.pdf,_fuori_ambito/Unknown__Standard-Accuracy-Pressure-Transducer.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__fill-and-drainvent-valve-fdvfvv.pdf,_fuori_ambito/Unknown__fill-and-drainvent-valve-fdvfvv.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__latch-valve.pdf,_fuori_ambito/Unknown__latch-valve.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__shape-memory-alloy-valve-smav.pdf,_fuori_ambito/Unknown__shape-memory-alloy-valve-smav.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__www.nammo.com-SPACE-PROPULSION-Thrust.pdf,_fuori_ambito/Unknown__www.nammo.com-SPACE-PROPULSION-Thrust.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/VACCO__402000-cryo-fd-4-inch.fm.pdf,_fuori_ambito/VACCO__402000-cryo-fd-4-inch.fm.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/VACCO__73325000-cryo-pv-12-inch.fm.pdf,_fuori_ambito/VACCO__73325000-cryo-pv-12-inch.fm.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/VACCO__V0E11000-01-cryo-butterfly-pv-10-inch.f.pdf,_fuori_ambito/VACCO__V0E11000-01-cryo-butterfly-pv-10-inch.f.pdf,"launcher thruster, valve, sensor, safety data sheet, paper or non-propulsion product"
+propulsion/Unknown__CUBESAT-HIGH-IMPULSE-PROPULSION-SYSTE-2.pdf,propulsion/CU-Aerospace__CHIPS-Aug-2026.pdf,name
+propulsion/Unknown__CUBESAT-HIGH-IMPULSE-PROPULSION-SYSTE.pdf,propulsion/CU-Aerospace__CHIPS-Jul-2025.pdf,name
+propulsion/Unknown__steamjet-tunacan-thruster.pdf,propulsion/SteamJet__Steam-TunaCan-Thruster.pdf,name
+propulsion/Unknown__steamjet-thruster-one.pdf,propulsion/SteamJet__Steam-Thruster-One.pdf,name
+propulsion/Unknown__steamjet-tunatank-thruster.pdf,propulsion/SteamJet__TunaTank-Thruster.pdf,name
+propulsion/Unknown__cold-gas-thruster.pdf,propulsion/Armor-Arsenal__Cold-Gas-Thruster.pdf,name
+propulsion/Unknown__pbr-20-water-resistojet-thruster.pdf,propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf,name
+propulsion/Unknown__673a500d55337a9ba48a35e0-Datasheet-4.pdf,propulsion/Blue-Orbit-Space-Systems__Datasheet.pdf,name
+propulsion/Unknown__694c1020658f1921d1772f20-ASE-DATA-SHE.pdf,propulsion/Unknown__ASTRA-Spacecraft-Engine-Krypton-Xenon.pdf,name
+propulsion/Unknown__2025-July-DA05.05-Gen-2-B20.pdf,propulsion/DawnAerospace__B20-Gen2-Thruster.pdf,name
+propulsion/DawnAerospace__2025-July-DA05.01-B1-Thruster.pdf,propulsion/DawnAerospace__B1-Thruster.pdf,name
+propulsion/Enpulsion__Doc.No-ENP2018-001-Iss-Rev-F.1-1.pdf,propulsion/Enpulsion__IFM-Nano-Thruster.pdf,name
+propulsion/Ohb-sweden__BD-OSE-HO-0243-OHB-Sweden-data-she.pdf,propulsion/OHB-Sweden__EPsylon-Electric-Propulsion.pdf,name
+propulsion/Nammo__2021-Nammo-Ireland-Additive-Manufacture.pdf,propulsion/Nammo__Additive-Manufactured-100ml-CubeSat-Tank.pdf,name
+reaction_wheel/Airbus__Datasheet-SpE-CMG15-45-2022.pdf,satellite_components/Airbus__Datasheet-SpE-CMG15-45-2022.pdf,"control moment gyro, drive electronics or large wheel"
+reaction_wheel/Airbus__Datasheet-SpE-CMG40-60S-2022.pdf,satellite_components/Airbus__Datasheet-SpE-CMG40-60S-2022.pdf,"control moment gyro, drive electronics or large wheel"
+reaction_wheel/BlueCanyonTechnologies__CMG-2026.pdf,satellite_components/BlueCanyonTechnologies__CMG-2026.pdf,"control moment gyro, drive electronics or large wheel"
+reaction_wheel/BlueCanyonTechnologies__DCE-2026.pdf,satellite_components/BlueCanyonTechnologies__DCE-2026.pdf,"control moment gyro, drive electronics or large wheel"
+reaction_wheel/Unknown__A-cost-effective-solution-for-new-gen.pdf,satellite_components/Unknown__A-cost-effective-solution-for-new-gen.pdf,"control moment gyro, drive electronics or large wheel"
+reaction_wheel/Unknown__rwa-15.pdf,satellite_components/Unknown__rwa-15.pdf,"control moment gyro, drive electronics or large wheel"
+reaction_wheel/Unknown__Contact-+-1-714-465-5737.pdf,reaction_wheel/RocketLab__RW4-1.0.pdf,vendor
+reaction_wheel/Unknown__Microsatellite-Reaction-Wheels-RW3-1.pdf,reaction_wheel/RocketLab__RW3-1.0.pdf,vendor
+reaction_wheel/Unknown__Nanosatellite-Reaction-Wheels-RW-0.03.pdf,reaction_wheel/RocketLab__RW-0.03.pdf,vendor
+reaction_wheel/Unknown__Rad-Hard-Reaction-Wheels-RW4-0.2-RW4.pdf,reaction_wheel/RocketLab__RW4-0.2-0.4.pdf,vendor
+solar_panel/Spectrolab__XTE+-GEO.pdf,satellite_components/Spectrolab__XTE+-GEO.pdf,GEO solar cell
+solar_panel/Unknown__sadm-hp-high-power.pdf,satellite_components/Unknown__SADM-HP-Solar-Array-Drive.pdf,solar array drive mechanism
+solar_panel/Cavuaerospace__CAVU-32-CIC-Cell-Option-Sheet.pdf,satellite_components/CAVU-Aerospace__CIC-Solar-Cell-Option-Sheet.pdf,"solar cell, not a panel"
+solar_panel/Aphelionorbitals__Solar+Panels.pdf,solar_panel/Aphelion-Orbitals__Solar-Panels.pdf,name
+solar_panel/Npcspacemind__DEPLOYABLE-SOLAR-PANELS-2025.pdf,solar_panel/NPC-Spacemind__Deployable-Solar-Panels-2025.pdf,name
+solar_panel/Pumpkin__Inc-2003-2023-1-of-3.pdf,solar_panel/Pumpkin__Deployable-Clamshell-Solar-Array-DCSA.pdf,name
+structure/Pumpkin__Inc-2003-2024-1-of-22.pdf,obc/Pumpkin__CubeSat-Kit-Motherboard-Module-2-MBM2.pdf,OBC board
+structure/Pumpkin__CubeSat-Kit-Breakout-Board.pdf,obc/Pumpkin__CubeSat-Kit-Breakout-Board.pdf,OBC accessory board
+structure/Unknown__CubeSat-Kit-PSPM-B.pdf,obc/Pumpkin__CubeSat-Kit-PSPM-B.pdf,processor module
+structure/Unknown__proton2x-box.pdf,obc/SpaceMicro__Proton2X-Box.pdf,computer
+structure/Unknown__proton300k.pdf,obc/SpaceMicro__Proton300k.pdf,computer
+structure/Unknown__Nova-TestPod-User-Manual-2.5-June.pdf,dispenser/Exolaunch__Nova-TestPod-User-Manual.pdf,test pod
+structure/Squarespace__Pocketqube+P1+Structure+.pdf,satellite_components/Alba-Orbital__PocketQube-1P-Structure.pdf,"PocketQube, not CubeSat"
+structure/Unknown__Pocketqube-2P-Structure.pdf,satellite_components/Alba-Orbital__PocketQube-2P-Structure.pdf,"PocketQube, not CubeSat"
+structure/Unknown__Pocketqube-3P-Structure.pdf,satellite_components/Alba-Orbital__PocketQube-3P-Structure.pdf,"PocketQube, not CubeSat"
+structure/Unknown__verse02-2u-cubesat-structure.pdf,structure/2NDSpace__VERSE-CubeSat-Structures.pdf,vendor
+structure/Pumpkin__20181013-memo-CSK-for-post-Win7-world.pdf,_fuori_ambito/Pumpkin__20181013-memo-CSK-for-post-Win7-world.pdf,software memo
+structure/1-act__SPC-BRO-Space-Brochure-V2-2026-02-13-We.pdf,_fuori_ambito/1-act__SPC-BRO-Space-Brochure-V2-2026-02-13-We.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Aerospacefab__DataSheet-AstraWrap-092723.pdf,_fuori_ambito/Aerospacefab__DataSheet-AstraWrap-092723.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Aerospacefab__DataSheet-AstraWrapHT-092723.pdf,_fuori_ambito/Aerospacefab__DataSheet-AstraWrapHT-092723.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Aerospacefab__DataSheet-AstraWrapHT-PRINT-1221.pdf,_fuori_ambito/Aerospacefab__DataSheet-AstraWrapHT-PRINT-1221.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Alpha-data__as-sp-074-environmental-spec-rev3p.pdf,_fuori_ambito/Alpha-data__as-sp-074-environmental-spec-rev3p.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Etlsystems__FN-D-C1L1-24426AC.pdf,_fuori_ambito/Etlsystems__FN-D-C1L1-24426AC.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Etlsystems__PRN-G1S-BS2-003.pdf,_fuori_ambito/Etlsystems__PRN-G1S-BS2-003.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Etlsystems__PRN-G1S-LS2-101.pdf,_fuori_ambito/Etlsystems__PRN-G1S-LS2-101.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Etlsystems__PRN-G1S-LS2-102.pdf,_fuori_ambito/Etlsystems__PRN-G1S-LS2-102.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Etlsystems__SCP-1U-11.pdf,_fuori_ambito/Etlsystems__SCP-1U-11.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Etlsystems__SCP-4306.pdf,_fuori_ambito/Etlsystems__SCP-4306.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Gmv__biolock-en.pdf,_fuori_ambito/Gmv__biolock-en.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Laserlightcomms__LL-Data-Sheet-DTAAS-4-6-22-1.pdf,_fuori_ambito/Laserlightcomms__LL-Data-Sheet-DTAAS-4-6-22-1.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Psemc__Explosive-Bolts.pdf,_fuori_ambito/Psemc__Explosive-Bolts.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Spacebridge__DS-ESTELLA-20260417.pdf,_fuori_ambito/Spacebridge__DS-ESTELLA-20260417.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Spartan-space__2022-09-05-SPARTAN-SPACE-Press.pdf,_fuori_ambito/Spartan-space__2022-09-05-SPARTAN-SPACE-Press.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Spartan-space__2025-11-17-EUROSUIT-Press-Relea.pdf,_fuori_ambito/Spartan-space__2025-11-17-EUROSUIT-Press-Relea.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__CB3P-6231-3U-OpenVPX-Network-Switch-B.pdf,_fuori_ambito/Unknown__CB3P-6231-3U-OpenVPX-Network-Switch-B.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Company-Profile-Aerospace-Fabrication.pdf,_fuori_ambito/Unknown__Company-Profile-Aerospace-Fabrication.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Copy-of-NOCTRL-Capability-Statement-A.pdf,_fuori_ambito/Unknown__Copy-of-NOCTRL-Capability-Statement-A.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__DTRSA-Series.pdf,_fuori_ambito/Unknown__DTRSA-Series.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Ensemble-3000-Series-CCM3012-3U-OpenV.pdf,_fuori_ambito/Unknown__Ensemble-3000-Series-CCM3012-3U-OpenV.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Ensemble-3000-Series-OpenVPX-CCM3011.pdf,_fuori_ambito/Unknown__Ensemble-3000-Series-OpenVPX-CCM3011.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Environmental-test-pilot-Environmenta.pdf,_fuori_ambito/Unknown__Environmental-test-pilot-Environmenta.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__FABRICATION-Sewing-Edge-Taping-Sealin.pdf,_fuori_ambito/Unknown__FABRICATION-Sewing-Edge-Taping-Sealin.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__PRN-G1S-BS2-003.pdf,_fuori_ambito/Unknown__PRN-G1S-BS2-003.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__PRN-G1S-LS2-101.pdf,_fuori_ambito/Unknown__PRN-G1S-LS2-101.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__PRN-G1S-LS2-102.pdf,_fuori_ambito/Unknown__PRN-G1S-LS2-102.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Prefabricated-Multilayer-Insulation-P.pdf,_fuori_ambito/Unknown__Prefabricated-Multilayer-Insulation-P.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Whilst-Teledyne-e2v-has-taken-care-2.pdf,_fuori_ambito/Unknown__Whilst-Teledyne-e2v-has-taken-care-2.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__Whilst-Teledyne-e2v-has-taken-care.pdf,_fuori_ambito/Unknown__Whilst-Teledyne-e2v-has-taken-care.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__www.mrcy.com-Ensemble-6000-Series-Ope.pdf,_fuori_ambito/Unknown__www.mrcy.com-Ensemble-6000-Series-Ope.pdf,"MLI, RF/ground equipment, VPX boards, image sensors, test chambers, press or company profile"
+structure/Unknown__300g-total-mass1-maximizes-available.pdf,structure/Unknown__300g-CubeSat-Structure-and-Avionics.pdf,name
+sun_sensor/EXA__The-Fine-Sun-Sensor-FSS-is.pdf,sun_sensor/Bradford-Space__FSS-Fine-Sun-Sensor.pdf,vendor
+sun_sensor/EXA__The-Mini-Fine-Sun-Sensor-Mini.pdf,sun_sensor/Bradford-Space__Mini-FSS.pdf,vendor
+sun_sensor/Unknown__The-Coarse-Sun-Sensor-CSS-delivers.pdf,sun_sensor/Bradford-Space__CSS-Coarse-Sun-Sensor.pdf,vendor
+sun_sensor/Unknown__The-Cosine-Sun-Sensor-CoSS-delivers.pdf,sun_sensor/Bradford-Space__CoSS.pdf,vendor
+sun_sensor/Unknown__The-Cosine-Sun-Sensor-Redundant-CoSS.pdf,sun_sensor/Bradford-Space__CoSS-R.pdf,vendor
+sun_sensor/Rdw__redwire-coarse-sun-sensor-cosine-type-fly.pdf,sun_sensor/Redwire__Coarse-Sun-Sensor-Cosine-Type.pdf,vendor
+sun_sensor/Unknown__FIND-OUT-MORE-ABOUT-REDWIRE-SOLUTIONS.pdf,sun_sensor/Redwire__Sun-Sensor-Datasheet.pdf,vendor
+sun_sensor/Unknown__Digital-Sun-Sensor-Legacy-One-Sheet.c.pdf,sun_sensor/Adcole__Digital-Sun-Sensor-Legacy.pdf,vendor
+sun_sensor/Amazonaws__SatCatalog-Adcole-Maryland-Aerospac.pdf,sun_sensor/Adcole__Coarse-Sun-Sensor.pdf,vendor
+sun_sensor/Unknown__SSBV-CubeSat-Sun-Sensor-Datasheet-1h.pdf,sun_sensor/SSBV__CubeSat-Sun-Sensor.pdf,vendor
+sun_sensor/Solar-mems__ACSS.pdf,sun_sensor/Solar-MEMS__ACSS.pdf,vendor
+sun_sensor/Airbus__Datasheet-SpE-BASS-2022.pdf,satellite_components/Airbus__Datasheet-SpE-BASS-2022.pdf,large-satellite sun sensor
+star_tracker/Leonardo__Copia-di-A-STR-Autonomous-Star-Track.pdf,star_tracker/Leonardo__A-STR-Autonomous-Star-Tracker.pdf,name
+star_tracker/Unknown__ARGO-1.0-MULTICAMERA-STAR-TRACKER-ARG.pdf,star_tracker/Unknown__ARGO-1.0-Multicamera-Star-Tracker.pdf,name
+gnss_antenna/Unknown__gnss-l1-e1-band-antenna.pdf,gnss_antenna/Anywaves__GNSS-L1-E1-Band-Antenna.pdf,vendor

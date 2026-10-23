@@ -17,7 +17,7 @@ G0 = 9.80665
 class TestStructures1U(unittest.TestCase):
     def test_three_1u_structures_with_cds_limits(self):
         s1 = [c for c in BY["structure"] if c.spec("form_factor_u") == 1]
-        self.assertEqual({c.id for c in s1}, {"isis-structure-1u", "endurosat-structure-1u", "spacemanic-structure-1u"})
+        self.assertEqual({c.id for c in s1}, {"isis-structure-1u", "endurosat-structure-1u", "spacemanic-structure-1u", "2ndspace-verse-01"})
         for c in s1:
             self.assertEqual(c.spec("max_total_mass_kg"), 2.0)
             self.assertEqual(c.dimensions_mm, [100.0, 100.0, 113.5])
@@ -28,17 +28,17 @@ class TestStructures1U(unittest.TestCase):
 
 class TestAttitudeActuators(unittest.TestCase):
     def test_magnetorquers(self):
-        self.assertEqual(len(BY["magnetorquer"]), 8)
+        self.assertEqual(len(BY["magnetorquer"]), 9)
         imtq = CAT["isis-imtq"]
         self.assertEqual((imtq.mass_kg, imtq.dimensions_mm, imtq.spec("magnetic_moment_am2"), imtq.spec("power_w_max"), imtq.spec("axes")), (0.196, [95.9, 90.1, 17.0], 0.2, 1.2, 3))
         rods = sorted((c for c in BY["magnetorquer"] if c.spec("magnetorquer_type") == "rod"), key=lambda c: c.spec("magnetic_moment_am2"))
-        self.assertEqual([c.spec("magnetic_moment_am2") for c in rods], [0.2, 0.3, 0.4, 1.0, 1.2, 2.0])
-        self.assertEqual([c.mass_kg for c in rods], [0.0165, 0.023, 0.023, 0.037, 0.045, 0.054])
+        self.assertEqual([c.spec("magnetic_moment_am2") for c in rods], [0.2, 0.2, 0.3, 0.4, 1.0, 1.2, 2.0])      # incl. the SSBV rod (import 2026-10-23)
+        self.assertEqual([c.mass_kg for c in rods], [0.0165, 0.03, 0.023, 0.023, 0.037, 0.045, 0.054])
         self.assertTrue(all(c.spec("power_w_max") is None for c in rods))            # la potenza delle barre non e' pubblicata
         self.assertEqual(CAT["gomspace-nanotorque-gst-600-mk2"].mass_kg, 0.18)
 
     def test_reaction_wheels(self):
-        self.assertEqual(len(BY["reaction_wheel"]), 30)
+        self.assertEqual(len(BY["reaction_wheel"]), 66)
         rw = CAT["aac-rw210-15"]
         self.assertEqual((rw.mass_kg, rw.dimensions_mm, rw.spec("momentum_mnms"), rw.spec("max_torque_mnm")), (0.021, [25.0, 25.0, 15.0], 1.5, 0.1))
         self.assertEqual([CAT[f"aac-rw210-{s}"].spec("momentum_mnms") for s in ("15", "30", "60")], [1.5, 3.0, 6.0])
@@ -47,7 +47,7 @@ class TestAttitudeActuators(unittest.TestCase):
         self.assertEqual((r.mass_kg, r.dimensions_mm, r.spec("momentum_mnms"), r.spec("power_w_peak"), r.price[0]), (0.12, [50.0, 50.0, 30.0], 10.0, 1.05, 20000))
         self.assertEqual(CAT["cubespace-cubewheel-cw0057"].spec("momentum_mnms"), 5.7)
         self.assertEqual(CAT["bct-rwp015"].spec("momentum_mnms"), 15.0)
-        self.assertIsNone(CAT["bct-rwp015"].spec("power_w_peak"))                       # Blue Canyon non pubblica la potenza nella pagina
+        self.assertEqual(CAT["bct-rwp015"].spec("power_w_peak"), 5.5)                    # not on the vendor page; filled from NASA SoA 2025 table 5-3
         self.assertEqual(CAT["nanoavionics-rw0"].mass_kg, 0.137)
 
     def test_derived_values_are_flagged_in_the_notes(self):
@@ -59,7 +59,7 @@ class TestWheelsAndTrackers(unittest.TestCase):
     """Ruote e star tracker aggiunti il 2026-10-15 da datasheet dei fornitori."""
 
     def test_counts(self):
-        self.assertEqual((len(BY["reaction_wheel"]), len(BY["star_tracker"])), (30, 9))
+        self.assertEqual((len(BY["reaction_wheel"]), len(BY["star_tracker"])), (66, 9))
 
     def test_aac_wheels(self):
         for mom, mass in ((15, 0.197), (30, 0.21), (50, 0.375)):
@@ -103,7 +103,10 @@ class TestSunSensors(unittest.TestCase):
     """Sensori solari (categoria aggiunta il 2026-10-15): valori letti dai documenti dei fornitori; i valori derivati sono dichiarati nelle note."""
 
     def test_the_five_sun_sensors(self):
-        self.assertEqual(sorted(c.id for c in BY["sun_sensor"]), ["cubespace-cubesense-sun", "newspace-ncss-sa05", "newspace-nfss-411", "solarmems-nanossoc-d60", "solarmems-ssoc-a60"])
+        # the five from vendor documents, plus those transcribed from the NASA SoA 2025 table 5-7 (tools/add_nasa_components.py)
+        ids = {c.id for c in BY["sun_sensor"]}
+        self.assertTrue({"cubespace-cubesense-sun", "newspace-ncss-sa05", "newspace-nfss-411", "solarmems-nanossoc-d60", "solarmems-ssoc-a60"} <= ids)
+        self.assertEqual(len(ids), 29)
 
     def test_newspace_datasheet_values(self):
         n, f = CAT["newspace-ncss-sa05"], CAT["newspace-nfss-411"]
@@ -143,9 +146,13 @@ class TestGnssAntennas(unittest.TestCase):
     """Antenne GNSS (categoria aggiunta il 2026-10-15): valori letti dai datasheet dei fornitori."""
 
     def test_the_three_antennas_and_their_documents(self):
-        self.assertEqual(sorted(c.id for c in BY["gnss_antenna"]), ["exa-gca01", "isis-gapa", "newspace-nant-ptcl1"])
+        # the three from vendor documents of 2026-10-14, plus six from the datasheet import of 2026-10-23
+        self.assertTrue({"exa-gca01", "isis-gapa", "newspace-nant-ptcl1"} <= {c.id for c in BY["gnss_antenna"]})
+        self.assertEqual(len(BY["gnss_antenna"]), 9)
         for c in BY["gnss_antenna"]:
-            self.assertTrue(c.raw["datasheet"]["file"] and c.raw["image"]["file"], c.id)
+            self.assertTrue(c.raw["datasheet"]["file"], c.id)
+            if c.id in ("exa-gca01", "isis-gapa", "newspace-nant-ptcl1"):      # the imported ones have no image yet
+                self.assertTrue(c.raw["image"]["file"], c.id)
         self.assertEqual(CAT["newspace-nant-ptcl1"].raw["datasheet"]["file"], CAT["newspace-ngps-01-422"].raw["datasheet"]["file"])    # stesso datasheet del ricevitore
 
     def test_datasheet_values(self):
@@ -164,7 +171,7 @@ class TestGnssAntennas(unittest.TestCase):
         for u in (1, 3, 6, 12):
             res = SERVICE.select({"form_factor_u": u})
             sub = next(s for s in res["subsystems"] if s["id"] == "gnss_antenna")
-            self.assertEqual(sub["n_database"], 3)
+            self.assertEqual(sub["n_database"], 9)
             self.assertTrue(sub["selected"]["external"], u)
             self.assertIsNone(sub["selected"]["volume_m3"], u)
             self.assertIn("gnss_antenna", {e["subsystem"] for e in res["fit"]["external"]}, u)
@@ -318,7 +325,7 @@ class TestMorePropulsion(unittest.TestCase):
 
 class TestPropulsionAntennaGps(unittest.TestCase):
     def test_counts(self):
-        self.assertEqual((len(BY["propulsion"]), len(BY["antenna"]), len(BY["gps"])), (27, 12, 6))
+        self.assertEqual((len(BY["propulsion"]), len(BY["antenna"]), len(BY["gps"])), (34, 32, 7))
 
     def test_busek_bit3_derived_impulse_matches_the_declared_delta_v(self):
         """Il datasheet dichiara 2.39 km/s per un CubeSat da 14 kg: l'impulso derivato (Isp x g0 x propellente) deve darlo."""
@@ -362,7 +369,7 @@ class TestUserDatasheets(unittest.TestCase):
     def test_xact_keeps_the_2026_sheet_and_notes_the_2019_one(self):
         c = CAT["bct-xact-100"]
         self.assertEqual(c.mass_kg, 1.52)
-        self.assertEqual(c.raw["datasheet"]["file"], "datasheets/Blue-Canyon-Technologies__ADCS-2026.pdf")
+        self.assertEqual(c.raw["datasheet"]["file"], "datasheets/adcs/Blue-Canyon-Technologies__ADCS-2026.pdf")
         self.assertIn("0.433 kg + 1.38 kg", c.raw["notes"])
         for cid in ("bct-xact-15", "bct-xact-50", "bct-xact-100"):
             self.assertEqual(CAT[cid].raw["notes"].count("Scheda BCT precedente (ottobre 2019"), 1, cid)

@@ -1,0 +1,37 @@
+table,subsystem,page,Manufacturer,Model,Sensor Type,Mass (kg),Peak Power (W),Analog or Digital,FOV,Accuracy (3s),# Measurement Angles,Rad. Tol. (krad)
+5-7,adcs,175,AAC Clyde Space Sweden,SS200,-,0.003,0.04,Digital,110°,<1°,-,>36
+5-7,adcs,175,Berlin Space Technologies Germany,FSSA-110,Fine Sun Sensor,With 3x sensor: 0.102,0.185,Analog,114°,5°,?,>20
+5-7,adcs,175,Bradford Space The Netherlands,CoSS,Cosine,0.024,0,Analog,160° full cone,3°,1,40000
+5-7,adcs,175,Bradford Space The Netherlands,CoSS-R,Cosine,0.015,0,Analog,180° full cone,3°,1,120000
+5-7,adcs,175,Bradford Space The Netherlands,CSS,Cosine,0.215,0,Analog,180°x180°,1.5°,2,70000
+5-7,adcs,175,Bradford Space The Netherlands,FSS,Quadrant,0.375,0.25,Analog,128° x 128°,0.3°,2,100
+5-7,adcs,175,Bradford Space The Netherlands,Mini-FSS,Quadrant,0.050,0,Analog,128° x 128°,0.2°,2,20000
+5-7,adcs,175,CubeSpace Satellite Systems South Africa,CubeSense,Camera,0.015,0.174,Digital,0.2°,2,24,-
+5-7,adcs,175,GomSpace Denmark,NanoSense FSS,Quadrant,0.002,-,Digital,"45°, 60°","±0.5°, ±2°",2,-
+5-7,adcs,175,Lens R&D The Netherlands,BiSon64-ET,Quadrant,0.023,0,Analog,±58° per axis,0.5°,2,9200
+5-7,adcs,175,Lens R&D The Netherlands,BiSon64-ET-B,Quadrant,0.033,0,Analog,±58° per axis,0.5°,2,9200
+5-7,adcs,175,Lens R&D The Netherlands,MAUS,Quadrant,0.014,0,Analog,±57° per axis,0.5°,2,9200
+5-7,adcs,175,Needronix Slovakia,Eagle,Fine Sun Sensor (±55°),0.003,<0.007,Digital,110°,< ±0.15°,2 plus Irradiation and Gyro,>20
+5-7,adcs,175,Needronix Slovakia,Eagle Plus,Fine Sun Sensor (±55°),0.005,<0.015,Digital,110°,< ±0.1°,2 plus Irradiation and Gyro,>20
+5-7,adcs,175,Needronix Slovakia,Eagle Point,Fine Sun Pointing (±5.5°),0.006,<0.015,Digital,11°,< ±0.01°,2 plus Irradiation and Gyro,>20
+5-7,adcs,175,Needronix Slovakia,Swan,Coarse Sun Sensor Pyramid,0.070,0,Analog,170° (~ 2π Steradian),< ±1° (Region I.),2,>1000
+5-7,adcs,175,NewSpace Systems,NFSS-411,-,0.035,0.150,Digital,140°,0.1°,--,20
+5-7,adcs,175,South Africa,NCSS-SA05,-,0.005,0.05,Analog,114°,0.5°,--,-
+5-7,adcs,175,Redwire Space USA,Coarse Analog Sun Sensor,Coarse Analog Sun Sensor,0.045,0,Analog,±40°,±1°,1,>100
+5-7,adcs,175,Redwire Space USA,Coarse Sun Sensor (Cosine Type),Coarse Sun Sensor (Cosine Type),0.010,0,Analog,"~ Cosine, Conical Symmetry",±2° to ±5°,Configuration dependent,>100
+5-7,adcs,175,Redwire Space USA,Coarse Sun Sensor Pyramid,Coarse Sun Sensor Pyramid,0.13,0,Analog,2π steradian+,±1° to ±3°,2,>100
+5-7,adcs,176,Redwire Space USA,Digital Sun Sensor (±32°),Digital Sun Sensor (±32°),Sensor 0.3 kg Electronics ~1,1,Digital,±32° x ±32° (each sensor),±0.125°,2,100
+5-7,adcs,176,Redwire Space USA,Digital Sun Sensor (±64°),Digital Sun Sensor (±64°),Sensor0.25 Electronics 0.29 - 1.1,0.5,Digital,128° X 128° (each sensor) Note: 4π steradians achieved with 5 sensors,±0.25°,2,100
+5-7,adcs,176,Redwire Space USA,Fine Pointing Sun Sensor,Fine Pointing Sun Sensor,Sensor .95 Electronics 1.08,< 3,Digital,±4.25° x ±4.25° (Typical),Better than ±0.01°,2,100
+5-7,adcs,176,Redwire Space USA,Fine Spinning Sun Sensor (±64°),Fine Spinning Sun Sensor (±64°),Sensor 0.109 Electronics 0.475 – 0.725,0.5,Analog and Digital,±64° Fan Shaped (each sensor),±0.1°,1 plus Sun Pulse,100
+5-7,adcs,176,Redwire Space USA,Micro Sun Sensor,Micro Sun Sensor,< 0.002,< 0.02,Analog,± 85° Minimum,±5°,2,~10
+5-7,adcs,176,Redwire Space USA,Miniature Spinning Sun Sensor (±87.5°),Miniature Spinning Sun Sensor (±87.5°),< 0.25,0.5,Digital,±87.5° (From normal to spin axis),±0.1°,1 plus Sun Pulse,100
+5-7,adcs,176,Redwire Space USA,Fine Sun Sensor (±50°),Fine Sun Sensor (±50°),-,-,Digital,100 X 100 Each Sensor,±0.01° TO ±0.05°,2,"100, 150, or 300"
+5-7,adcs,176,Solar MEMS Technologies Spain,nanoSSOC-A60,Orthogonal,0.004,0.007,Analog,±60° per axis,0.5°,2,100
+5-7,adcs,176,Solar MEMS Technologies Spain,nanoSSOC-D60,Orthogonal,0.007,0.076,Digital,±60° per axis,0.5°,2,30
+5-7,adcs,176,Solar MEMS Technologies Spain,SSOC-A60,Orthogonal,0.025,0.01,Analog,±60° per axis,0.5°,2,100
+5-7,adcs,176,Solar MEMS Technologies Spain,SSOC-D60,Orthogonal,0.035,0.315,Digital,±60° per axis,0.5°,2,30
+5-7,adcs,176,Solar MEMS Technologies Spain,ACSS,Quadrant & Redundant,0.035,0.072,Analog,±60° per axis,0.5°,2,200
+5-7,adcs,176,Space Inventor Denmark,FSS,Quadrant,0.01,0.1,Digital,55° half-cone,< 3 deg,2,-
+5-7,adcs,176,Space Micro USA,"CSS-01, CSS-02",Cosine,0.010,0,Analog,120° full cone,5°,1,100
+5-7,adcs,176,Space Micro USA,MSS-01,Quadrant,0.036,0,Analog,48° full cone,1°,2,100

@@ -1,0 +1,27 @@
+table,subsystem,page,Manufacturer,Product,Material
+7-5,thermal_passive,234,"Technology Applications, Inc.",Copper Cable,Copper
+7-5,thermal_passive,234,"Technology Applications, Inc.",Copper Foil,Copper
+7-5,thermal_passive,234,"Technology Applications, Inc.",Aluminum Foil,Aluminum 1100
+7-5,thermal_passive,234,"Technology Applications, Inc.",PGL,Pyro Graphite
+7-5,thermal_passive,234,"Technology Applications, Inc.",GFTS,Graphite Fiber
+7-5,thermal_passive,234,Thermotive,Copper Foil,Copper
+7-5,thermal_passive,234,Thermotive,Aluminum Foil,Aluminum 1100
+7-5,thermal_passive,234,Thermotive,Pyrovo,Pyro Graphite Film
+7-5,thermal_passive,234,Space Dynamics Laboratory,PGS,Pyrolytic Graphite Sheet
+7-5,thermal_passive,234,Space Dynamics Laboratory,Aluminum Foil,Aluminum 99.999% and 1235
+7-5,thermal_passive,234,Space Dynamics Laboratory,Copper Foil,Copper 101 and 110
+7-5,thermal_passive,234,Space Dynamics Laboratory,Copper Braid,Copper Braid
+7-5,thermal_passive,234,Redwire Space,Q-Strap,High-k graphite material
+7-5,thermal_passive,234,Thermal Management Technologies,TMT010-200 Series,Copper Foil
+7-5,thermal_passive,234,Thermal Management Technologies,TMT010-300 Series,Copper Braid (small)
+7-5,thermal_passive,234,Thermal Management Technologies,TMT010-400 Series,Copper Braid (large)
+7-5,thermal_passive,234,Thermal Management Technologies,Customized,Copper braid or foil or using aluminum foil
+7-5,thermal_passive,235,Boyd Corporation,k-Core Graphite- Encapsulated,Pyrolytic graphite
+7-5,thermal_passive,235,Boyd Corporation,Conductance [W/K],
+7-5,thermal_passive,235,Screw Size,Small Stiff Surface,Large Thin Surfaces
+7-5,thermal_passive,235,2-56,0.21,0.105
+7-5,thermal_passive,235,4-40,0.26,0.132
+7-5,thermal_passive,235,6-32,0.42,0.176
+7-5,thermal_passive,235,8-32,0.80,0.264
+7-5,thermal_passive,235,10-32,1.32,0.527
+7-5,thermal_passive,235,1/4-28,3.51,1.054

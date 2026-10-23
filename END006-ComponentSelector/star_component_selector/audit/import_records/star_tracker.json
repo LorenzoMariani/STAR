@@ -1,0 +1,6 @@
+[
+ {"file": "star_tracker/Leonardo__A-STR-Autonomous-Star-Tracker.pdf", "action": "skip", "name": "A-STR / AA-STR",
+  "reason": "GEO-class star tracker (3.55 kg, 9-14 W); the accuracy table lists several variants whose columns cannot be matched from the text"},
+ {"file": "star_tracker/Unknown__ARGO-1.0-Multicamera-Star-Tracker.pdf", "action": "skip", "name": "ARGO 1.0 (HIPPARCOS)",
+  "reason": "no accuracy, mass or power in the text (specification table is an image): required accuracy fields missing; needs OCR of the table"}
+]

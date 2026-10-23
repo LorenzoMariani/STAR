@@ -1,0 +1,12 @@
+[
+ {"file": "gps/ASTROFEIN__53-Datenblatt-ARGO-GPS.pdf", "action": "add", "category": "gps", "id": "astrofein-argo-l1", "vendor": "ASTROFEIN",
+  "name": "ARGO-L1 GPS receiver unit", "document": "ASTROFEIN ARGO-L1 GPS receiver datasheet (08.05.2019)",
+  "power_w": 2.2, "tid_krad": 20, "temp_op_c": [-20, 60], "dimensions_mm": [130.0, 216.6, 34.4],
+  "notes": "Redundant dual receiver assembly, GPS L1 C/A, 12 correlator channels, acquisition threshold 35 dB-Hz, warm start (90%) and cold start < 15 min (90%), timing accuracy < 0.1 us (1-sigma), accuracy 10 m and 0.1 m/s (3D rms), design life 7 years in LEO. The listed mass '< 1200 g' is for 2 antennas and 2 LNAs only (the receiver box mass is not declared), so mass_kg is null. Power 2.2 W is a single receiver (2.4 W with 2 LNAs). Box dimensions are configuration 1 (configuration 2: 51.0 x 216.6 x 109.4 mm); antenna 88.9 mm diameter x 28.7 mm. TID > 20 krad with 2 mm aluminium shielding. Antennas and LNAs are supplied.",
+  "specs": {"constellations": ["GPS"], "accuracy_position_m": 10, "accuracy_basis": "RMS", "accuracy_velocity_m_s": 0.1, "ttff_cold_s": 900, "update_rate_hz": 1,
+            "channels": 12, "antenna_included": true, "data_interfaces": ["CAN", "RS-422"], "supply_voltage_ranges_v": [[18, 36]]}},
+ {"file": "gps/Spacemanic__CELESTE-GNSS-Datasheet.pdf", "action": "update", "id": "spacemanic-celeste",
+  "document": "Spacemanic CELESTE datasheet SM-CEL-DS-0002 issue 20.2 (19/02/2026)", "flight_heritage": 10,
+  "notes": "Datasheet issue 20.2 (2026): flight heritage on 10+ nanosatellite missions; interfaces I2C, RS485, CAN and 2 x UART (command line, direct GNSS receiver access).",
+  "specs": {"data_interfaces": ["I2C", "RS485", "CAN", "UART"]}}
+]

@@ -65,6 +65,8 @@ _old*/
 /END006-ComponentSelector/star_integration/
 /END006-ComponentSelector/CONTINUARE_LA_CONVERSAZIONE.md
 /END006-ComponentSelector/LEGGIMI_INSTALLAZIONE.md
+# END-006: the downloaded datasheet collection (1.5 GB) with its selection folders, text cache and digests
+/END006-ComponentSelector/star_component_selector/Datasheet_CubeSat_1U-12U/
 # END-019: outputs of the example configurations (examples/input_*.json)
 /END019-ComponentsThermalAnalysis/examples/output_*/
 

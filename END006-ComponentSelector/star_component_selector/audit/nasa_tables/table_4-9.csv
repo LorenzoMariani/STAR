@@ -1,0 +1,13 @@
+table,subsystem,page,,,,,,Specific,Total,,,,Cathode,PMI,,
+4-9,propulsion,133,Manufacturer,Product,Type,Propellant,Thrust*,,,Mass,Envelope,Power,,,Missions,References
+4-9,propulsion,133,---,---,,---,[mN],[s],[kN-s],[kg],[cm3 or U],[W],---,"C,D,E,F",---,---
+4-9,propulsion,133,Integrated Propulsion Systems,,,,,,,,,,,,,
+4-9,propulsion,133,Avant Space Russia,GT-50,RF Ion,Xenon,< 7,-,-,< 8†,< 4U,< 240,Hollow,D,-,(345) (346)
+4-9,propulsion,133,Busek USA,BIT-3,RF Ion,Iodine,1.0,"1,960",31.7,2.9†,18 x 8.8 x 10.2,70,RF,E,Lunar IceCube; LunaH- Map,(188) (189) (190) (191) (192) (193) (347) (348) (349) (350) (351) (352)
+4-9,propulsion,133,Pale Blue Japan,PBI,RF Ion,Water,0.35,2000,7,1.6†,10 x 10 x 11,60,RF,E,ON-SCV 018; ON-SCV 021,(353) (354) (355) (356) (357)
+4-9,propulsion,133,ThrustMe France,NPT30-I2,RF Ion,Iodine,< 1.3,"2,400",5.5 (1U) 14 (1.5U),1.2† (1U) 1.85† (1.5U),1U 1.5U,< 81,Thermionic,F,Beihangkongshi-1; NORSAT-TD,(182) (183) (184) (185) (186) (187) (358) (359) (360)
+4-9,propulsion,133,Thruster Heads,,,,,,,,,,,,,
+4-9,propulsion,133,Ariane Group Germany,RIT µX,RF Ion,Xenon,< 0.5,-,-,0.44‡,7.8 x 7.8 x 7.6,< 50,RF,D,-,(361) (362) (363) (364) (365) (366)
+4-9,propulsion,133,Ariane Group Germany,RIT 10 EVO,RF Ion,Xenon,< 15,-,-,1.8‡,18.6 x 18.6 x 13.4,< 435,Hollow,E,(Identical to flight-heritage RIT-10 with contemporary grid design),(361) (363) (367)
+4-9,propulsion,133,QinetiQ UK,T5,DC Ion,Xenon,< 20,"< 3,000",-,2‡,19 x 19 x 24.2,< 600,Hollow,F,GOCE,(178) (179) (180) (181)
+4-9,propulsion,133,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable, RF = Radio Frequency, DC = Direct Current, DDL = Destroyed During Launch",,,,,,,,,,,,,

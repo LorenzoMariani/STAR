@@ -1,0 +1,5 @@
+table,subsystem,page,Manufacturer,Model,Sensor Type,Mass (kg),Peak Power (W),Analog or Digital,Accuracy,# Measurement Angles,Rad. Tol. (krad)
+5-8,adcs,177,CubeSpace Satellite Systems South Africa,CubeSense Earth,Infrared camera,0.018,0.28,Digital,1°,-,24
+5-8,adcs,177,Servo Space USA,Mini Digital HCI,Pyroelectric,0.050,Voltage Dependent,Digital,0.75°,--,--
+5-8,adcs,177,Servo Space USA,RH 310 HCI,Pyroelectric,1.5,1,--,0.015°,--,20
+5-8,adcs,177,Solar MEMS Technologies Spain,HSNS,Infrared,0.120,0.150,Digital,1°,2,30

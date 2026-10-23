@@ -1,0 +1,4 @@
+table,subsystem,page,Manufacturer,Product M,Mass (kg),Extendable ength (mm),Stowed Envelope (mm),DOF,Power Consumpti on (W),Actuator method,Form Factor
+6-7,mechanism,204,U.S. Naval Academy,3U CubeS at with two robotic arms,4,600,300x100x1 00,6 plus “claw” end- effector actuati on,-,Stepper motor,RECS 3U (Nov 2022)
+6-7,mechanism,204,Redwire Space,-,-,1 to 4 m reach,-,5 to 7,8 to 65,-,ESPA class satellit es
+6-7,mechanism,204,Sierra Lobo,Sierra Lobo Arm (SLAC 1),-,100x100x1 00,30x50x65,3,1.5,-,-

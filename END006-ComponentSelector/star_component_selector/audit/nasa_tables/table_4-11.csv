@@ -1,0 +1,15 @@
+table,subsystem,page,,,,,,Specific,Total,,,,,PMI,,
+4-11,propulsion,136,Manufacturer,Product,Propellant,Thrust*,Impulse Bit,,,Mass,Envelope,Power*,ACS,,Missions,References
+4-11,propulsion,136,---,---,---,[µN],[µNs],[s],[N-s],[kg],[cm3 or U],[W],Y/N,"C,D,E,F",---,---
+4-11,propulsion,136,Integrated Propulsion Systems,,,,,,,,,,,,,
+4-11,propulsion,136,AIS USA,AIS-VAT1-PQ,Bismuth,26,-,87,0.13,0.056†,37,5,N,D,---,(317)
+4-11,propulsion,136,AIS USA,AIS-VAT1-DUO,Bismuth,52,-,87,0.26,0.084†,74,10,N,D,---,(317)
+4-11,propulsion,136,AIS USA,AIS-VAT1-QUAD,Bismuth,104,-,87,0.52,0.177†,148,20,N,D,---,(317)
+4-11,propulsion,136,Benchmark Space Systems USA,Xantus Metal Plasma Thruster,Molybdenum,400,1,"1,774","5,000",1.2†,0.53U,40,N,E,"USSF RROCI (not deployed), USSF EWS",(411) (283) (284) (285)
+4-11,propulsion,136,Comat France,Plasma Jet Pack,Metal,150,20,"2,000",120£,1.2†£,0.66U£,30,N,E,∑yndeo-2,(286) (287) (412)
+4-11,propulsion,136,CU Aerospace USA,FPPT-1.7,PTFE Fiber,500,165,"3,200","24,000",3.0†,1.7U,96,Y,E,DUPLEX (2025),(148) (149) (150) (151) (152) (153) (154) (155)
+4-11,propulsion,136,Hypernova Space Technologies South Africa,"NanoThruster A, Size XS",Solid-state fuel,80,-,≥500,-,0.8†,0.5,10,N,D,---,(413)
+4-11,propulsion,136,Mars Space Ltd UK Clyde Space Sweden,PPTCUP,PTFE,40,40,600,44,0.28†,0.33U,2,N,D,---,(414) (415)
+4-11,propulsion,136,Neumann Space Australia,ND-15,Molybdenum,3.75,45,"2,000",880,1.9†,1.5U,15,N,F,"Skyride, Apogee",(288) (289) (290) (291) (292) (293) (294) (295)
+4-11,propulsion,136,Neumann Space Australia,ND-50,Molybdenum,100,150,"2,000","1,800",1.3†,1U,50,N,F,"Edison, CarbSAR",(288) (296) (297) (298)
+4-11,propulsion,136,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable, ESV = Ejector Spring Volume, £ assumes power unit and 2 nozzles",,,,,,,,,,,,,

@@ -1,0 +1,11 @@
+table,subsystem,page,,,,,Specific,Total,,,,,PMI,,
+4-12,propulsion,137,Manufacturer,Product,Propellant,Thrust*,,,Mass,Envelope,Power,ACS,,Missions,References
+4-12,propulsion,137,---,---,---,[mN],[s],[kN-s],[kg],[cm3],[W],Y/N,"C,D,E,F",---,---
+4-12,propulsion,137,Integrated Propulsion Systems,,,,,,,,,,,,
+4-12,propulsion,137,Phase Four USA,Maxwell (Block 1)RF,Xenon,7,400,5,5.9‡,19 x 13.5 x 19,450,N,F,Capella,(299) (301) (416) (417) (418) (419)
+4-12,propulsion,137,Phase Four USA,Maxwell (Block 2)RF,Xenon,13,700,-,5.0 (without tank),22 x 12 x 24 (without tank),450,N,E,(Mission Not Specified),(419) (420) (300)
+4-12,propulsion,137,Phase Four USA,Maxwell (Kr)RF,Krypton,13.6,"1,110",-,-,-,550,N,D,-,(300) (421)
+4-12,propulsion,137,T4i Italy,REGULUS-50-I2RF,Iodine,0.55,550,3 (Small); 7 (Medium); 11 (Large),2.5† (Small); 4† (Medium); 5.1† (Large),"9.4 x 9.5 x {15, 18, 20} {Small, Medium, Large}",50,N,E,UniSat-7,(302) (303) (422) (304) (423)
+4-12,propulsion,137,T4i Italy,REGULUS-150-I2RF,Iodine,2,1000,11,6.1†,12 x 12 x 27,150,N,D,-,(423)
+4-12,propulsion,137,Miles Space USA,M1.4,Water,17.2,-,-,1.0†,9.5 x 9.5 x 9.5,6,N,E,Team Miles,(305) (306) (424) (424)
+4-12,propulsion,137,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable, RF = Radio Frequency",,,,,,,,,,,,

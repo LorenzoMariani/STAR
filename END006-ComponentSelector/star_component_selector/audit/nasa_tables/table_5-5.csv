@@ -1,0 +1,32 @@
+table,subsystem,page,Manufacturer,Model,Mass (kg),Power (W),FOV,Cross axis Accuracy (1 or 3s),Twist Accuracy (1 or 3s),Rad. Tol. (krad)
+5-5,adcs,172,Arcsec Belgium,Sagitta,0.275,1.4,25.4°,6,30,20
+5-5,adcs,172,Arcsec Belgium,Twinkle,0.04,0.6,10.4°,30,180,-
+5-5,adcs,172,"BAE Systems Inc, Space and Mission Systems",CT-2020,3.000,8,-,1.5'',1'',-
+5-5,adcs,172,Berlin Space Technologies Germany AAC Clyde Space Sweden,ST200,"0.040, 0.106*",0.65,22°,"30""","200""",11
+5-5,adcs,172,Berlin Space Technologies Germany AAC Clyde Space Sweden,ST400,"0.250, 0.270*",0.75,15°,"15""","150""",11
+5-5,adcs,172,Blue Canyon Technologies USA,Standard NST,0.350,<1.5(5V) or <3.5(28V),10° x 12°,"Gen 2: 6""","Gen 2: 40""",-
+5-5,adcs,172,Blue Canyon Technologies USA,Full-Extension NST,0.85,<1.5(5V) or <3.5(28V),10° x 12°,Gen 2: 6 Gen 3: 1,Gen 2: 40 Gen 3: 10,
+5-5,adcs,172,Creare USA,UST,0.840,-,-,"7""","15""",-
+5-5,adcs,172,CubeSpace Satellite Systems South Africa,CubeStar,0.047,0.271,59.4°,0.02°,0.06°,24
+5-5,adcs,172,Danish Technical University Denmark,MicroASC,0.425,1.9,-,2”,-,-
+5-5,adcs,172,Jena-Optronik Germany,ASTRO CL,0.305,<1.0,25° full cone,"6""","48""",50
+5-5,adcs,172,Jena-Optronik Germany,ASTRO APS,~2,<6 (<12 w/ TEC),20° full cone,"3""","24""",100
+5-5,adcs,172,Jena-Optronik Germany,ASTRO APS3,1.8,<6 (<8 w/ TEC),20° full cone,"2.4""","21""",100
+5-5,adcs,172,Leonardo Italy,Spacestar,1.600,6,20° x 20°,"7.7""","10.6""",-
+5-5,adcs,172,NanoAvionics Lithuania,ST-1,0.108,1.2,21° full-cone,"8""","50""",20
+5-5,adcs,172,Redwire Space USA,Star Tracker,0.475,2.5,14x19,"10/27""","51""",75
+5-5,adcs,172,Rocket Lab USA,ST-16RT2,0.185,1,8° half-cone,"5""","55""",-
+5-5,adcs,172,Sodern France,Auriga-CP,0.225,0.8,30°,10'',70'',35
+5-5,adcs,172,Sodern France,Hydra-M,1.4,0.7,22°,3'',"30""",50
+5-5,adcs,172,Sodern France,Hydra-TC,1.6,9.5,"23,6°",3'',30'',50
+5-5,adcs,172,Solar MEMS Technologies Spain,STNS,0.14,1,12°,"40""","70""",20
+5-5,adcs,172,Space Inventor Denmark,ASTRO CL,0.465,1.5,25°,2,12,100
+5-5,adcs,172,Space Micro USA,MIST,0.520,3,14.5°,"15""","105""",30
+5-5,adcs,172,Space Micro USA,µSTAR-100M,1.800,5,-,"15""","105""",100
+5-5,adcs,172,Space Micro USA,µSTAR-200M,2.100,8-10,-,"15""","105""",100
+5-5,adcs,172,Space Micro USA,µSTAR-200H,2.700,10,-,"3""","21""",100
+5-5,adcs,172,Space Micro USA,µSTAR-400M,3.300,18,-,"15""","105""",100
+5-5,adcs,172,Terma USA,T1,0.637 OH,"0.8 OH*, 2.5",20° circular,"3.0""","21""",55†
+5-5,adcs,172,Terma USA,T3,0.45 (DPU) 0.330,2,20° circular,"3.2""","22""",35
+5-5,adcs,172,Vectronic Aerospace Germany,VST-41MN,0.7 - 0.9,2.5,14° x 14°,"27""","183""",20
+5-5,adcs,172,Vectronic Aerospace Germany,VST-68M,0.470,3,14° x 14°,"7.5""","45""",20

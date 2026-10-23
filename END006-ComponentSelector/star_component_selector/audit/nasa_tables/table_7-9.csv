@@ -1,0 +1,10 @@
+table,subsystem,page,Manufact urer,Product,Type,Max Conductan ce,Min Conductan ce,Mass,Max Q,Notes:
+7-9,thermal_passive,239,ACT,(Study),VCHP,20 W/K,0.01 to 0.04 W/K,0.3 to 0.5 kg,--,VCHP Variable Cond. Heat Pipe)
+7-9,thermal_passive,239,Sierra Space,Passive Thermal Control Heat Switch,Mecha nical,1 W/K,0.015 W/K,~0.110 kg,6 W,Originally designed for Martian surface ops.
+7-9,thermal_passive,240,Sierra Space,HP Thin Plate,Mecha nical,607 W/m^2/°C,7.8 W/m^2/°C,2.72 g/cm^3,12 W,"Based on single ""cell"" design (25.4 mm x 25.4 mm)"
+7-9,thermal_passive,240,Sierra Space,Diaphragm Thin Plate,Mecha nical,607 W/m^2/°C,7.1 W/m^2/°C,2.72 g/cm^3,12 W,"Based on single ""cell"" design (41.3 mm x 41.3 mm)"
+7-9,thermal_passive,240,Active Technology,Description,,,,,,
+7-9,thermal_passive,240,Electrical Heaters,Space heaters use an electrical-resistance element in between two sheets of flexible electrically insulating material.,,,,,,
+7-9,thermal_passive,240,Cryocoolers,Miniature refrigeration system designed to cool components to extremely low temperatures.,,,,,,
+7-9,thermal_passive,240,Thermoelectric Coolers (TEC),"Miniature solid-state heat pumps which provide localized cooling via the Peltier effect, which is cooling resulting from passing electric current through a junction formed by two dissimilar metals.",,,,,,
+7-9,thermal_passive,240,Fluid Loops,System that circulates a working fluid through the spacecraft to a heat sink.,,,,,,

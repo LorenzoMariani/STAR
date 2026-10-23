@@ -1,0 +1,10 @@
+table,subsystem,page,Manufacturer,Product,Recommended Conductance (W/in2-C)
+7-7,thermal_passive,236,Parker Chomerics,Nusil CV-2946,3.5
+7-7,thermal_passive,236,NeoGraf,Egraf HT-1210,2
+7-7,thermal_passive,236,NeoGraf,Egraf HT-C3200,2.5
+7-7,thermal_passive,236,Parker Chomerics,Chotherm 1671,0.75
+7-7,thermal_passive,236,Parker Chomerics,Therm a gap 579,0.9
+7-7,thermal_passive,236,Laird Performance Materials,T-PLI 220,1.5
+7-7,thermal_passive,236,Henkel Corporation,Gap Pad 300,1.25
+7-7,thermal_passive,236,Indium Corporation,"Indium foil 0.005""",0.9
+7-7,thermal_passive,236,Carbice Corporation,Structured Space Pad,1.94

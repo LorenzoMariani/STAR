@@ -1,0 +1,12 @@
+table,subsystem,page,Material,Melting Point (°C),Heat of Fusion (kJ/kg)
+7-8,thermal_passive,238,Salicylic Acid,159,199
+7-8,thermal_passive,238,Bee Wax,61.8,177
+7-8,thermal_passive,238,Paraffin,20-60,140-280
+7-8,thermal_passive,238,Polyethylene glycol 600,20-25,146
+7-8,thermal_passive,238,Glycerol,18,199
+7-8,thermal_passive,238,Acetic acid,17,187
+7-8,thermal_passive,238,Water,0,333
+7-8,thermal_passive,238,Isopropyl alcohol,-89,88
+7-8,thermal_passive,239,Butane,-135,76
+7-8,thermal_passive,239,Ethane,-172,93
+7-8,thermal_passive,239,Methane,-183,59

@@ -1,0 +1,11 @@
+table,subsystem,page,Manufacturer,Product,Power (W/cm2),Temp Limits,Material,Notes
+7-11,heater,241,Omega,"KHLVA, PLM- Series",0.4 to 1.56,-40°C to 149°C (w/PSA) -57°C to 232°C (w/o PSA),Kapton (polyimide),"Various sizes, rectangular/square/rou nd, w & w/o pressure sensitive adhesive (PSA), Low- Outgassing"
+7-11,heater,241,Omega,Polyimide Heater Kit,0.4 to 1.56,-200°C to 200°C (w/PSA),Kapton (polyimide),Various shapes. 149°C for continuous ops due to PSA limits.
+7-11,heater,241,Tempco,SHK Series,0.8 to 6.2,-35°C to 150°C (w/ Al Foil),Kapton (polyimide) Some w/ Al Foil,"Rectangular/square/ro und, w/ (PSA). Some model available w/ AL foil for extended temp limits."
+7-11,heater,241,Tayco,Flexible Circuit Heater,Up to 3.1,-200°C to 200°C,Kapton (polyimide),Various shapes and watt densities.
+7-11,heater,241,Hi-Heat Industries,Polyimide Flexible,Up to 3.1,-200°C to 200°C,Kapton (polyimide),Quick turnaround for custom sizes and resistances
+7-11,heater,241,Minco,Polyimide Thermofoil HK Series,0.8 to 5.1,-200°C to 200°C -200°C to 150°C (w/ Al Foil),Kapton (polyimide) Some w/ Al Foil,"Mountings: #12 & arcrylic PSA, epoxy, shrink band, stretch tape, clamping. NASA rated for materials & vacuum."
+7-11,heater,242,Birk Manufacturing,Polyimide- Traditional,0.02 to 3.1,See Notes,Kapton (polyimide),Max Temps: FEP- Bonded & All Polyimide(260°C); Acrylic Bonded(120°C).
+7-11,heater,242,Birk Manufacturing,Polyimide- High Temp,0.02 to 7.75,See Notes,Kapton (polyimide),Max Temp: up to 300°C
+7-11,heater,242,Chromalox,"KPH, KPM Series",0.4 to 1.56,-200°C to 200°C* -200°C to 121°C**,Kapton (polyimide),"* FEP Construction, Acrylic construction"
+7-11,heater,242,All Flex Solutions,Custom Designs,--,--,--,"See website for design guide, options."

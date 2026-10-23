@@ -1,0 +1,717 @@
+[
+ {
+  "file": "antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "2ndspace-chorus-01-lp",
+  "vendor": "2NDSpace",
+  "name": "CHORUS-01-LP deployable UHF/VHF antenna",
+  "document": "2NDSpace CHORUS antennas product portfolio (2025)",
+  "notes": "Dual dipole, 2x linear polarization, frequency customisable 140-928 MHz (150-928 in the text), VSWR < 1.3, main gain 0 dBi, triple-redundant deployment with integrated deployment switches and 2x redundant embedded deployment control, control voltage 3.3/5 V, I2C. The sheet gives no mass or dimensions; the 01 models target 1U-3U and the 06 models larger CubeSats (assumed from the 1U-12U statement, not entered).",
+  "specs": {
+   "bands": [
+    "VHF",
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     140,
+     928
+    ]
+   ],
+   "antenna_type": "wire",
+   "gain_dbi": 0,
+   "polarization": "linear",
+   "deployable": true,
+   "data_interfaces": [
+    "I2C"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "family": "2ndspace-chorus"
+ },
+ {
+  "file": "antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "2ndspace-chorus-01-cp",
+  "vendor": "2NDSpace",
+  "name": "CHORUS-01-CP deployable UHF/VHF antenna",
+  "document": "2NDSpace CHORUS antennas product portfolio (2025)",
+  "notes": "Turnstile, circular (handedness not stated) polarization, frequency customisable 140-928 MHz (150-928 in the text), VSWR < 1.3, main gain 0 dBi, triple-redundant deployment with integrated deployment switches and 2x redundant embedded deployment control, control voltage 3.3/5 V, I2C. The sheet gives no mass or dimensions; the 01 models target 1U-3U and the 06 models larger CubeSats (assumed from the 1U-12U statement, not entered).",
+  "specs": {
+   "bands": [
+    "VHF",
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     140,
+     928
+    ]
+   ],
+   "antenna_type": "wire",
+   "gain_dbi": 0,
+   "polarization": null,
+   "deployable": true,
+   "data_interfaces": [
+    "I2C"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "family": "2ndspace-chorus"
+ },
+ {
+  "file": "antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "2ndspace-chorus-06-lp",
+  "vendor": "2NDSpace",
+  "name": "CHORUS-06-LP deployable UHF/VHF antenna",
+  "document": "2NDSpace CHORUS antennas product portfolio (2025)",
+  "notes": "Dual dipole, 2x linear polarization, frequency customisable 140-928 MHz (150-928 in the text), VSWR < 1.3, main gain 0 dBi, triple-redundant deployment with integrated deployment switches and 2x redundant embedded deployment control, control voltage 3.3/5 V, I2C. The sheet gives no mass or dimensions; the 01 models target 1U-3U and the 06 models larger CubeSats (assumed from the 1U-12U statement, not entered).",
+  "specs": {
+   "bands": [
+    "VHF",
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     140,
+     928
+    ]
+   ],
+   "antenna_type": "wire",
+   "gain_dbi": 0,
+   "polarization": "linear",
+   "deployable": true,
+   "data_interfaces": [
+    "I2C"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "family": "2ndspace-chorus"
+ },
+ {
+  "file": "antenna/2ndspace__CHORUS-Antennas-CUBESAT-DEPLOYABLE-A.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "2ndspace-chorus-06-cp",
+  "vendor": "2NDSpace",
+  "name": "CHORUS-06-CP deployable UHF/VHF antenna",
+  "document": "2NDSpace CHORUS antennas product portfolio (2025)",
+  "notes": "Turnstile, circular (handedness not stated) polarization, frequency customisable 140-928 MHz (150-928 in the text), VSWR < 1.3, main gain 0 dBi, triple-redundant deployment with integrated deployment switches and 2x redundant embedded deployment control, control voltage 3.3/5 V, I2C. The sheet gives no mass or dimensions; the 01 models target 1U-3U and the 06 models larger CubeSats (assumed from the 1U-12U statement, not entered).",
+  "specs": {
+   "bands": [
+    "VHF",
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     140,
+     928
+    ]
+   ],
+   "antenna_type": "wire",
+   "gain_dbi": 0,
+   "polarization": null,
+   "deployable": true,
+   "data_interfaces": [
+    "I2C"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "family": "2ndspace-chorus"
+ },
+ {
+  "file": "antenna/Aac-clyde__ANT-100.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "aac-ant-100",
+  "vendor": "AAC Clyde Space",
+  "name": "ANT-100 static whip antenna",
+  "document": "AAC Clyde Space ANT-100 datasheet (25 May 2022)",
+  "notes": "Non-deployable tunable whip, omni-directional with a ground plane, bandwidth about 7.5% of the centre frequency (2:1 SWR), 50 ohm, SMA, mass 10-100 g and length 5-20 in depending on frequency (mass left null: it depends on the chosen frequency), -40 to +80 C, over 15 years of on-orbit heritage.",
+  "specs": {
+   "bands": [
+    "VHF",
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [],
+   "antenna_type": "wire",
+   "deployable": false
+  },
+  "temp_op_c": [
+   -40,
+   80
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__Compact-Dual-Polarized-X-Band-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-x-band-dual-pol-compact",
+  "vendor": "Anywaves",
+  "name": "Compact Dual-Polarized X-Band Antenna",
+  "document": "Anywaves compact dual-polarized X-band antenna datasheet",
+  "notes": "Simultaneous RHCP and LHCP, HPBW about 20 deg, bandwidth 375 MHz, power handling 20 W (1x20 W or 2x10 W), gain > 15.5 dBi at 8.2 GHz (the text also says boresight above 16.5 dBi), port isolation < -15 dB, SMA female, size L 100 x W 100 x H 26.1 mm (protruding 8.7 mm). Mass with connector 140 +-7 g. The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "X"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     8025,
+     8400
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 15.5,
+   "beamwidth_deg": 20,
+   "polarization": "RHCP/LHCP",
+   "rf_power_w_max": 20,
+   "deployable": false
+  },
+  "mass_kg": 0.14,
+  "dimensions_mm": [
+   100,
+   100,
+   26.1
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__Compact-S-Band-TTC-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-s-band-compact-ttc",
+  "vendor": "Anywaves",
+  "name": "Compact S-Band TT&C Antenna",
+  "document": "Anywaves compact S-band TT&C antenna datasheet",
+  "notes": "Full duplex TT&C, RHCP and/or LHCP simultaneously, bandwidth > 310 MHz, HPBW > 88 deg, gain > 5.4 dBi at boresight, power handling 20 W, 2 x SMP or SMA, envelope 70.9 x 70.9 x 9.78 mm. Mass with connector '< 77 g' (upper bound). The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "S"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     1980,
+     2290
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 5.4,
+   "beamwidth_deg": 88,
+   "polarization": "RHCP/LHCP",
+   "rf_power_w_max": 20,
+   "deployable": false
+  },
+  "mass_kg": 0.077,
+  "dimensions_mm": [
+   70.9,
+   70.9,
+   9.78
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__S-Band-TTC-Antenna-Hemispherical.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-s-band-hemispherical-ttc",
+  "vendor": "Anywaves",
+  "name": "S-Band TT&C Antenna (hemispherical, single or dual polarization)",
+  "document": "Anywaves compact S-band TT&C antenna datasheet (hemispherical coverage sheet)",
+  "notes": "Same performance as the compact S-band TT&C antenna (gain > 5.4 dBi at boresight, HPBW > 88 deg, 20 W, 310 MHz), envelope 70.9 x 70.9 x 10.3 mm, protruding 3.62 mm, mass with SMA connector '< 106 g' (upper bound). The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "S"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     1980,
+     2290
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 5.4,
+   "beamwidth_deg": 88,
+   "polarization": "RHCP/LHCP",
+   "rf_power_w_max": 20,
+   "deployable": false
+  },
+  "mass_kg": 0.106,
+  "dimensions_mm": [
+   70.9,
+   70.9,
+   10.3
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__S-Band-TTC-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-s-band-ttc",
+  "vendor": "Anywaves",
+  "name": "S-Band TT&C Antenna",
+  "document": "Anywaves S-band TT&C antenna datasheet",
+  "notes": "Flagship TT&C antenna (TRL 9, in orbit since 2019), RHCP or LHCP version, bandwidth > 265 MHz, HPBW > 90 deg, efficiency > 92%, power handling 10 W, gain > 6.5 dBi at boresight (2150 MHz), SMA female, envelope 84.3 x 84.3 x 12.1 mm (protruding 6.3 mm), mass with connector 136 +-3 g. The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "S"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     2025,
+     2290
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 6.5,
+   "beamwidth_deg": 90,
+   "polarization": "RHCP/LHCP",
+   "rf_power_w_max": 10,
+   "deployable": false
+  },
+  "mass_kg": 0.136,
+  "dimensions_mm": [
+   84.3,
+   84.3,
+   12.1
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__High-Gain-X-Band-Payload-Telemetry-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-x-band-high-gain",
+  "vendor": "Anywaves",
+  "name": "High-Gain X-Band Antenna",
+  "document": "Anywaves high-gain X-band antenna datasheet",
+  "notes": "Tx only, RHCP or LHCP version, bandwidth 600 MHz, HPBW about 20 deg, gain 15.5 dBi at 8.2 GHz, efficiency > 70%, SMA female, envelope 100 x 100 x 6.5 mm (height with connector 16 mm), mass with connector 70 +-7 g. The 'X-Band Antenna Ultra Low Profile' sheet describes the same antenna. The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "X"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     7900,
+     8500
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 15.5,
+   "beamwidth_deg": 20,
+   "polarization": "RHCP/LHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.07,
+  "dimensions_mm": [
+   100,
+   100,
+   6.5
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__X-Band-Antenna-Ultra-Low-Profile.pdf",
+  "action": "skip",
+  "name": "Anywaves X-band ultra low profile",
+  "reason": "same antenna as the High-Gain X-Band Antenna sheet (same band, gain, HPBW and mass)"
+ },
+ {
+  "file": "antenna/Anywaves__X-Band-Dual-Circularly-Polarized-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-x-band-dual-circular",
+  "vendor": "Anywaves",
+  "name": "High-Gain Dual-Polarized X-Band Antenna",
+  "document": "Anywaves high-gain dual circularly polarized X-band antenna datasheet",
+  "notes": "Simultaneous RHCP and LHCP (data rate can be doubled), bandwidth 375 MHz, HPBW about 20 deg, gain > 16.5 dBi at boresight, cross-polar discrimination > 24 dB, port isolation < -20 dB, power handling 20 W, envelope 100 x 100 x 9.15 mm (10.5 mm with connectors), mass without connectors 127 g +-5%. The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "X"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     8025,
+     8400
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 16.5,
+   "beamwidth_deg": 20,
+   "polarization": "RHCP/LHCP",
+   "rf_power_w_max": 20,
+   "deployable": false
+  },
+  "mass_kg": 0.127,
+  "dimensions_mm": [
+   100,
+   100,
+   9.15
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__X-Band-Payload-Telemetry-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "anywaves-x-band-payload-telemetry",
+  "vendor": "Anywaves",
+  "name": "X-Band Payload Telemetry Antenna",
+  "document": "Anywaves X-band payload telemetry antenna datasheet",
+  "notes": "TRL 9, in orbit since 2019, Tx, RHCP or LHCP version, bandwidth > 375 MHz, HPBW about 40 deg, gain 11.5 dBi at 8.2 GHz, efficiency > 88% (worst case), SMA female, envelope 72.6 x 72.6 x 11 mm, mass with connector 59 +-3 g. The sheet gives -120/+120 C as qualification temperature (not an operating range).",
+  "specs": {
+   "bands": [
+    "X"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     8025,
+     8400
+    ]
+   ],
+   "antenna_type": "patch",
+   "gain_dbi": 11.5,
+   "beamwidth_deg": 40,
+   "polarization": "RHCP/LHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.059,
+  "dimensions_mm": [
+   72.6,
+   72.6,
+   11
+  ]
+ },
+ {
+  "file": "antenna/Anywaves__Ka-Band-TTC-Antenna-Hemispherical.pdf",
+  "action": "skip",
+  "name": "Anywaves Ka-band TT&C antenna",
+  "reason": "choke-ring metal antenna: the antenna_type values (wire, patch, patch_array) cannot represent it"
+ },
+ {
+  "file": "antenna/IQ-Technologies__S-Band-Antennas.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "iq-spacecom-s-band-single",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "S-Band single patch antenna",
+  "document": "IQ Technologies S-band antennas datasheet (07-2025)",
+  "notes": "Single patch, 1.98-2.5 GHz depending on design, RHCP (LHCP optional), maximum gain 6-11 dBi typical across the variants (the text does not give the value per variant, so gain_dbi is null), HPBW +-20 deg typical, bandwidth 50 MHz, VSWR < 1.25 typical, SMA female or UMP, Rogers laminate, TRL 9. Dimensions 70 x 70 x 3.4 mm.",
+  "specs": {
+   "bands": [
+    "S"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     1980,
+     2500
+    ]
+   ],
+   "antenna_type": "patch",
+   "beamwidth_deg": 40,
+   "polarization": "RHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.049,
+  "dimensions_mm": [
+   70,
+   70,
+   3.4
+  ],
+  "family": "iq-spacecom-s-band"
+ },
+ {
+  "file": "antenna/IQ-Technologies__S-Band-Antennas.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "iq-spacecom-s-band-dual",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "S-Band dual patch antenna",
+  "document": "IQ Technologies S-band antennas datasheet (07-2025)",
+  "notes": "Dual (separate tx and rx ports) patch, 1.98-2.5 GHz depending on design, RHCP (LHCP optional), maximum gain 6-11 dBi typical across the variants (the text does not give the value per variant, so gain_dbi is null), HPBW +-20 deg typical, bandwidth 50 MHz, VSWR < 1.25 typical, SMA female or UMP, Rogers laminate, TRL 9. Dimensions 80 x 100 x 3.4 mm.",
+  "specs": {
+   "bands": [
+    "S"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     1980,
+     2500
+    ]
+   ],
+   "antenna_type": "patch",
+   "beamwidth_deg": 40,
+   "polarization": "RHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.062,
+  "dimensions_mm": [
+   80,
+   100,
+   3.4
+  ],
+  "family": "iq-spacecom-s-band"
+ },
+ {
+  "file": "antenna/IQ-Technologies__S-Band-Antennas.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "iq-spacecom-s-band-quad",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "S-Band quad patch antenna",
+  "document": "IQ Technologies S-band antennas datasheet (07-2025)",
+  "notes": "Quad (high gain) patch, 1.98-2.5 GHz depending on design, RHCP (LHCP optional), maximum gain 6-11 dBi typical across the variants (the text does not give the value per variant, so gain_dbi is null), HPBW +-20 deg typical, bandwidth 50 MHz, VSWR < 1.25 typical, SMA female or UMP, Rogers laminate, TRL 9. Dimensions 160 x 160 x 3.4 mm.",
+  "specs": {
+   "bands": [
+    "S"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     1980,
+     2500
+    ]
+   ],
+   "antenna_type": "patch_array",
+   "beamwidth_deg": 40,
+   "polarization": "RHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.18,
+  "dimensions_mm": [
+   160,
+   160,
+   3.4
+  ],
+  "family": "iq-spacecom-s-band"
+ },
+ {
+  "file": "antenna/IQ-Technologies__X-Band-Antennas.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "iq-spacecom-x-band-high-gain",
+  "vendor": "IQ Technologies for Earth and Space",
+  "name": "X-Band 4x4 high-gain patch antenna",
+  "document": "IQ Technologies X-band antennas datasheet (07-2025)",
+  "notes": "4x4 high-gain patch, 100 x 100 x 1.8 mm, mass 40 g, maximum gain 18 dBi, RHCP (LHCP optional), HPBW +-20 deg typical, temperature -30 to +60 C, RF input < 2 W, VSWR < 1.4 typical, SMA female. The 2x2 quad patch (60 x 40 x 1.8 mm, 20 g, 8.025-8.4 GHz) of the same sheet is already in the catalogue as iq-spacecom-x-band-patch.",
+  "specs": {
+   "bands": [
+    "X"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     7145,
+     7250
+    ]
+   ],
+   "antenna_type": "patch_array",
+   "gain_dbi": 18,
+   "beamwidth_deg": 40,
+   "polarization": "RHCP",
+   "rf_power_w_max": 2,
+   "deployable": false
+  },
+  "mass_kg": 0.04,
+  "dimensions_mm": [
+   100,
+   100,
+   1.8
+  ],
+  "temp_op_c": [
+   -30,
+   60
+  ]
+ },
+ {
+  "file": "antenna/PLAN-S__IoT-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "plan-s-iot-antenna",
+  "vendor": "PLAN-S Satellite & Space Technologies",
+  "name": "IoT circularly polarized antenna (EU868 / US915)",
+  "document": "PLAN-S satellite IoT antenna sheet",
+  "notes": "Circularly polarized antenna for satellite IoT at 868 MHz (EU) or 915 MHz (US), peak gain 3.30 dBic, mass '< 25 g' (upper bound), 80 x 80 x 13.65 mm, -40 to +85 C, UFL coaxial cable or SMA, also a GPS L1 element. Handedness not stated.",
+  "specs": {
+   "bands": [
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [],
+   "antenna_type": "patch",
+   "gain_dbi": 3.3,
+   "deployable": false
+  },
+  "mass_kg": 0.025,
+  "dimensions_mm": [
+   80,
+   80,
+   13.65
+  ],
+  "temp_op_c": [
+   -40,
+   85
+  ]
+ },
+ {
+  "file": "antenna/Picosats__BEAMSAT-X-BAND-PATCH-ANTENNA.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "picosats-beamsat-x-band-4x4",
+  "vendor": "Picosats",
+  "name": "BEAMSAT X-band 4x4 patch antenna",
+  "document": "Picosats BEAMSAT X-band patch antenna sheet",
+  "notes": "Planar 4x4 patch, peak gain 17.1 dBi, HPBW 22.6 deg, RHCP, axial ratio < 1.5 dB, matching < -15 dB, SMP connector; the mass and size are with enclosure (100 g, 98.0 x 98.0 x 10.8 mm), the antenna can also be supplied without enclosure.",
+  "specs": {
+   "bands": [
+    "X"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     8025,
+     8400
+    ]
+   ],
+   "antenna_type": "patch_array",
+   "gain_dbi": 17.1,
+   "beamwidth_deg": 22.6,
+   "polarization": "RHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.1,
+  "dimensions_mm": [
+   98,
+   98,
+   10.8
+  ]
+ },
+ {
+  "file": "antenna/Picosats__K-Band-Patch-Antenna.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "picosats-k-band-8x8",
+  "vendor": "Picosats",
+  "name": "K-band 8x8 patch antenna",
+  "document": "Picosats K-band patch antenna sheet",
+  "notes": "Planar 8x8 patch, peak gain 22 dBi, HPBW 10.2 deg, LHCP, axial ratio < 2 dB, matching < -15 dB, SMP connector; the mass and size are with enclosure (135 g, 110.0 x 96.0 x 14.0 mm).",
+  "specs": {
+   "bands": [
+    "K"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     17300,
+     21200
+    ]
+   ],
+   "antenna_type": "patch_array",
+   "gain_dbi": 22,
+   "beamwidth_deg": 10.2,
+   "polarization": "LHCP",
+   "deployable": false
+  },
+  "mass_kg": 0.135,
+  "dimensions_mm": [
+   110,
+   96,
+   14
+  ]
+ },
+ {
+  "file": "antenna/Picosats__BEAMSAT-K-KA-BAND-HORN-ANTENNA.pdf",
+  "action": "skip",
+  "name": "Picosats K/Ka horn antenna",
+  "reason": "horn antenna (569 g, < 2U): not representable by the antenna_type values (wire, patch, patch_array)"
+ },
+ {
+  "file": "antenna/Picosats__BEAMSAT-KU.pdf",
+  "action": "skip",
+  "name": "Picosats Ku horn antenna",
+  "reason": "horn antenna (633 g, < 2U): not representable by the antenna_type values (wire, patch, patch_array)"
+ },
+ {
+  "file": "antenna/Spacemanic__sam-small-antenna-module-uhfvhf.pdf",
+  "action": "add",
+  "category": "antenna",
+  "id": "spacemanic-sam-small-antenna-module",
+  "vendor": "Spacemanic",
+  "name": "SAM Small Antenna Module (VHF/UHF)",
+  "document": "Spacemanic SAM Small Antenna Module S sheet",
+  "notes": "Deployable module with configurable antennas (2x VHF dipole, 2x UHF dipole, VHF + UHF dipole or UHF turnstile): VSWR < 2 over 133-150 MHz (VHF) and 380-450 MHz (UHF), gain about 2.3 dBi (VHF dipole) and 2.6 dBi (UHF dipole and turnstile; gain_dbi = 2.6), 3.3 or 5 V by configuration, power 1.5 W average in deployment and < 75 mW in communication, I2C and RS485, MMCX, deployment-mechanism redundancy, mass about 55 g, mounting height 98 x 98 x 5.2 mm (total 98 x 98 x 9 mm), -40 to +85 C (deployment recommended 0 to +85 C).",
+  "specs": {
+   "bands": [
+    "VHF",
+    "UHF"
+   ],
+   "frequency_ranges_mhz": [
+    [
+     133,
+     150
+    ],
+    [
+     380,
+     450
+    ]
+   ],
+   "antenna_type": "wire",
+   "gain_dbi": 2.6,
+   "deployable": true,
+   "data_interfaces": [
+    "I2C",
+    "RS485"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.055,
+  "dimensions_mm": [
+   98,
+   98,
+   9
+  ],
+  "temp_op_c": [
+   -40,
+   85
+  ]
+ }
+]

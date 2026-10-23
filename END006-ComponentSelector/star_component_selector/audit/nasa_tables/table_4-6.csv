@@ -1,0 +1,10 @@
+table,subsystem,page,,,,Thrust,Specific,Total,,,,,PMI,,
+4-6,propulsion,130,Manufacturer,Product,Propellant,,,,Mass,Envelope,Power,ACS,,Missions,References
+4-6,propulsion,130,---,---,---,[N],[s],[N-s],[kg],[cm3 or U],[W],Y/N,"C,D,E,F",---,---
+4-6,propulsion,130,Integrated Propulsion Systems,,,,,,,,,,,,
+4-6,propulsion,130,PacSci EMC USA,MAPS,-,-,-,-,-,-,-,-,E,PacSciSat,(94) (95)
+4-6,propulsion,130,Thruster Heads,,,,,,,,,,,,
+4-6,propulsion,130,Industrial Solid Propulsion USA,ISP 30 sec. Motor,80% Solids HTPB/AP,37,187,996,0.95†,5.7,-,-,D,Optical target at Kirtland AFB,(130)
+4-6,propulsion,130,Northrop Grumman USA,STAR 3,TP-H-3498,461,266,"1,250",1.16†,8 dia. x 29,-,-,E,Mars Exploration Rover Spirit lander,(131)
+4-6,propulsion,130,Northrop Grumman USA,STAR 4G,TP-H-3399,258,269,"2,650",1.5†,11.3 dia. x 13.8,-,-,D,-,(131)
+4-6,propulsion,130,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable",,,,,,,,,,,,

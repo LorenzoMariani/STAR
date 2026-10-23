@@ -1,0 +1,304 @@
+[
+ {
+  "file": "propulsion/Applied-Ion-Systems__AIS-TR-006-gPPT3-1C-Ignition-Test.pdf",
+  "action": "skip",
+  "name": "Applied Ion Systems gPPT3-1C TR-006 ignition test",
+  "reason": "laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+ },
+ {
+  "file": "propulsion/Applied-Ion-Systems__AIS-TR-007-gPPT3-1C-Impulse-Bit-Test.pdf",
+  "action": "skip",
+  "name": "Applied Ion Systems gPPT3-1C TR-007 impulse bit test",
+  "reason": "laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+ },
+ {
+  "file": "propulsion/Applied-Ion-Systems__AIS-TR-008-gPPT3-1C-Lifetime-Test.pdf",
+  "action": "skip",
+  "name": "Applied Ion Systems gPPT3-1C TR-008 lifetime test",
+  "reason": "laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+ },
+ {
+  "file": "propulsion/Applied-Ion-Systems__AIS-TR-009-gPPT3-1C-Lifetime-Test-V4.pdf",
+  "action": "skip",
+  "name": "Applied Ion Systems gPPT3-1C TR-009 lifetime test V4",
+  "reason": "laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+ },
+ {
+  "file": "propulsion/Applied-Ion-Systems__AIS-TR-021-gPPT3-1C-Lifetime-Test-2.pdf",
+  "action": "skip",
+  "name": "Applied Ion Systems gPPT3-1C TR-021 lifetime test 2",
+  "reason": "laboratory test report of a prototype pulsed plasma thruster (130 shots lifetime, 0.65 uN s impulse bit): no product datasheet, no total impulse"
+ },
+ {
+  "file": "propulsion/Applied-Ion-Systems__AIS-VAT0-DEMO-Vacuum-Arc-Thruster-Kit.pdf",
+  "action": "skip",
+  "name": "Applied Ion Systems VAT0 demo kit",
+  "reason": "educational learning kit user manual, not a flight thruster"
+ },
+ {
+  "file": "propulsion/Armor-Arsenal__Cold-Gas-Thruster.pdf",
+  "action": "skip",
+  "name": "Armor Arsenal 5CGT0003 cold gas thruster",
+  "reason": "thruster valve only (70 g, 2-4 N, Isp > 60 s, 24-34 V, TRL 7): no tank or total impulse, so not a propulsion system"
+ },
+ {
+  "file": "propulsion/Blue-Orbit-Space-Systems__Datasheet.pdf",
+  "action": "skip",
+  "name": "Blue Orbit water resistojets",
+  "reason": "values are marked as estimates and no total impulse is given"
+ },
+ {
+  "file": "propulsion/Busek__11-Tech-Circle-Natick-Ma-01760.pdf",
+  "action": "skip",
+  "name": "Busek BHT-200",
+  "reason": "Hall thruster head (0.98 kg, 200 W, 13 mN) without PPU, tank or propellant: system mass and delta-v not representable"
+ },
+ {
+  "file": "propulsion/Busek__11-Tech-Circle-Natick-Ma-01760-2.pdf",
+  "action": "skip",
+  "name": "Busek BHT-1500",
+  "reason": "Hall thruster head (6.3 kg, 1.5 kW), not CubeSat class"
+ },
+ {
+  "file": "propulsion/Busek__BHT-100-v1.0.pdf",
+  "action": "skip",
+  "name": "Busek BHT-100",
+  "reason": "Hall thruster head (1.16 kg, 100 W, 7 mN) without PPU, tank or propellant: system mass and delta-v not representable"
+ },
+ {
+  "file": "propulsion/Busek__BHT-350-v1.0.1.pdf",
+  "action": "skip",
+  "name": "Busek BHT-350",
+  "reason": "Hall thruster head (1.7 kg, 300 W), without PPU, tank or propellant"
+ },
+ {
+  "file": "propulsion/Busek__BHT-600-v1.1.pdf",
+  "action": "skip",
+  "name": "Busek BHT-600",
+  "reason": "Hall thruster head (2.6 kg, 600 W), ESPA class"
+ },
+ {
+  "file": "propulsion/Busek__BGT-X5-v1.0.pdf",
+  "action": "skip",
+  "name": "Busek BGT-X5",
+  "reason": "same product as busek-bgt-x5, already in the catalogue from its datasheet"
+ },
+ {
+  "file": "propulsion/Busek__11-Tech-Circle-Natick-Ma-01760-4.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "busek-bet-max",
+  "vendor": "Busek",
+  "name": "BET-MAX electrospray thruster system",
+  "document": "Busek BET-MAX precision reaction control system datasheet (v1.0, 2021)",
+  "notes": "System of up to four BET-300-P electrospray thrusters (125 cm3 each) with a centralized PPU, thrust throttled from < 1 uN to 150 uN per thruster with sub-uN resolution, 28 V (customizable), RS-485, system mass 0.8 kg BOL, system volume 1250 cm3 (electronics, 4 thrusters, cathode), for platforms as small as 3U. Total impulse derived as 4 x 90 N s: the sheet says each thruster module holds 'over 90 N s' (lower bound). System power depends on the configuration.",
+  "specs": {
+   "propulsion_type": "electrospray",
+   "total_impulse_ns": 360,
+   "thrust_mn_max": 0.15,
+   "min_form_factor_u": 3,
+   "data_interfaces": [
+    "RS-485"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     28,
+     28
+    ]
+   ]
+  },
+  "mass_kg": 0.8,
+  "family": "busek-bet"
+ },
+ {
+  "file": "propulsion/CU-Aerospace__CHIPS-Aug-2026.pdf",
+  "action": "skip",
+  "name": "CU Aerospace CHIPS (Aug 2026 issue)",
+  "reason": "newer issue of the CHIPS sheet whose products (CHIPS-180/500/1000) are in the catalogue from the 2023 sheet; the values were not re-compared"
+ },
+ {
+  "file": "propulsion/CU-Aerospace__CHIPS-Jul-2025.pdf",
+  "action": "skip",
+  "name": "CU Aerospace CHIPS (Jul 2025 issue)",
+  "reason": "newer issue of the CHIPS sheet whose products (CHIPS-180/500/1000) are in the catalogue from the 2023 sheet; the values were not re-compared"
+ },
+ {
+  "file": "propulsion/DawnAerospace__B1-Thruster.pdf",
+  "action": "skip",
+  "name": "Dawn Aerospace B1 thruster",
+  "reason": "thruster without tank (260 g, 0.49-1.35 N, Isp >= 248 s): no total impulse"
+ },
+ {
+  "file": "propulsion/DawnAerospace__B20-Gen2-Thruster.pdf",
+  "action": "skip",
+  "name": "Dawn Aerospace B20 Gen 2 thruster",
+  "reason": "thruster without tank (695 g, 6.5-18 N, Isp >= 271 s): no total impulse"
+ },
+ {
+  "file": "propulsion/Enpulsion__IFM-Nano-Thruster.pdf",
+  "action": "skip",
+  "name": "Enpulsion IFM Nano (old sheet)",
+  "reason": "older sheet (Doc ENP2018-001 rev F.1) of the IFM Nano already in the catalogue as NANO R3 from the 2026 datasheet"
+ },
+ {
+  "file": "propulsion/Nammo__Additive-Manufactured-100ml-CubeSat-Tank.pdf",
+  "action": "skip",
+  "name": "Nammo 100 ml CubeSat tank",
+  "reason": "propellant tank, not a propulsion system"
+ },
+ {
+  "file": "propulsion/OHB-Sweden__EPsylon-Electric-Propulsion.pdf",
+  "action": "skip",
+  "name": "OHB Sweden EPsylon",
+  "reason": "Hall propulsion system of 15-35 kg dry mass, not CubeSat class"
+ },
+ {
+  "file": "propulsion/SteamJet__Steam-Thruster-One.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "steamjet-steam-thruster-one-2u",
+  "vendor": "SteamJet",
+  "name": "Steam Thruster One (2U unit)",
+  "document": "SteamJet Steam Thruster One sheet",
+  "notes": "Water-propelled electrothermal thruster, 2U unit: thrust 5-20 mN (more at higher power), Isp 172 s, total impulse 1200 N s (the table gives 1000 N s per 1U water tank for custom tanks), minimum impulse bit 10 mN s, power 19.9 W thrusting (estimate marked in the sheet) and 0.12 W idle, 17-33 V, RS 422 or TTL UART, 208 x 102 x 121 mm, wet mass 1700 g with 700 g of water. 6+ systems flown, space qualified to ECSS-E-ST-10-03C and GSFC-STD-7000A.",
+  "specs": {
+   "propulsion_type": "warm_gas",
+   "total_impulse_ns": 1200,
+   "propellant": "Water",
+   "thrust_mn_min": 5,
+   "thrust_mn_max": 20,
+   "isp_s": 172,
+   "propellant_mass_kg": 0.7,
+   "power_w_firing": 19.9,
+   "power_w_standby": 0.12,
+   "min_form_factor_u": 2,
+   "data_interfaces": [
+    "RS-422",
+    "UART"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     17,
+     33
+    ]
+   ]
+  },
+  "mass_kg": 1.7,
+  "dimensions_mm": [
+   208,
+   102,
+   121
+  ],
+  "family": "steamjet"
+ },
+ {
+  "file": "propulsion/SteamJet__Steam-TunaCan-Thruster.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "steamjet-tunacan",
+  "vendor": "SteamJet",
+  "name": "Steam TunaCan Thruster",
+  "document": "SteamJet Steam TunaCan Thruster sheet",
+  "notes": "Water electrothermal thruster built to fit the tunacan volume of CubeSat deployers (outside the main structure), total impulse 219 N s, operated at 5-20 W depending on the available power (power_w_firing = 20 W); on a 3U (5 kg) satellite at 400 km it gives 4.3 years life and +-70 km orbit change, on a 6U (10 kg) 3 years and +-35 km. Mass and size are not given.",
+  "specs": {
+   "propulsion_type": "warm_gas",
+   "total_impulse_ns": 219,
+   "propellant": "Water",
+   "power_w_firing": 20
+  },
+  "family": "steamjet"
+ },
+ {
+  "file": "propulsion/SteamJet__TunaTank-Thruster.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "steamjet-tunatank",
+  "vendor": "SteamJet",
+  "name": "TunaTank Thruster",
+  "document": "SteamJet TunaTank Thruster sheet",
+  "notes": "Water electrothermal thruster in the tunacan volume of CubeSat deployers with a larger tank: total impulse 600 N s, delta-v 114 m/s on a 3U (5 kg) and 58 m/s on a 6U (10 kg) satellite, orbit change +-206 km / +-105 km at 400 km. Mass, size and power are not given.",
+  "specs": {
+   "propulsion_type": "warm_gas",
+   "total_impulse_ns": 600,
+   "propellant": "Water"
+  },
+  "family": "steamjet"
+ },
+ {
+  "file": "propulsion/Unknown__ASTRA-Spacecraft-Engine-Krypton-Xenon.pdf",
+  "action": "skip",
+  "name": "Astra Spacecraft Engine (Hall)",
+  "reason": "Hall thruster system of 1.0 kg thruster + 1.5 kg PPU + tank (7.6 kg example), 400 W; no total impulse given"
+ },
+ {
+  "file": "propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "pale-blue-pbr-10",
+  "vendor": "Pale Blue",
+  "name": "PBR-10 resistojet",
+  "document": "Pale Blue propulsion systems brochure (PBR-10, PBR-20, PBR-50, PBI)",
+  "notes": "Resistojet with preloaded propellant, ITAR-free, flying heritage; values read from the product table whose columns follow the header order PBR-50, PBR-10, PBI, PBR-20: envelope 90 x 95 x 50 mm, wet mass '< 0.6 kg' (upper bound), total impulse '>55 N s' (lower bound), thrust 1 mN, input power 6 W. The larger PBR-50 (13.4 kg, 4400 N s) is not a CubeSat system and is not added.",
+  "specs": {
+   "propulsion_type": "warm_gas",
+   "total_impulse_ns": 55,
+   "power_w_firing": 6,
+   "propellant": "Water",
+   "thrust_mn_max": 1
+  },
+  "mass_kg": 0.6,
+  "dimensions_mm": [
+   90,
+   95,
+   50
+  ],
+  "family": "pale-blue"
+ },
+ {
+  "file": "propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "pale-blue-pbr-20",
+  "vendor": "Pale Blue",
+  "name": "PBR-20 resistojet",
+  "document": "Pale Blue propulsion systems brochure (PBR-10, PBR-20, PBR-50, PBI)",
+  "notes": "Resistojet with preloaded propellant, ITAR-free, flying heritage; values read from the product table whose columns follow the header order PBR-50, PBR-10, PBI, PBR-20: envelope 95 x 95 x 105 mm, wet mass '< 1.5 kg' (upper bound), total impulse '>220 N s' (lower bound), thrust 1 mN, input power 20 W. The larger PBR-50 (13.4 kg, 4400 N s) is not a CubeSat system and is not added.",
+  "specs": {
+   "propulsion_type": "warm_gas",
+   "total_impulse_ns": 220,
+   "power_w_firing": 20,
+   "propellant": "Water",
+   "thrust_mn_max": 1
+  },
+  "mass_kg": 1.5,
+  "dimensions_mm": [
+   95,
+   95,
+   105
+  ],
+  "family": "pale-blue"
+ },
+ {
+  "file": "propulsion/Unknown__PBR-Water-Resistojet-Thrusters.pdf",
+  "action": "add",
+  "category": "propulsion",
+  "id": "pale-blue-pbi",
+  "vendor": "Pale Blue",
+  "name": "PBI ion thruster",
+  "document": "Pale Blue propulsion systems brochure (PBR-10, PBR-20, PBR-50, PBI)",
+  "notes": "Ion thruster with preloaded propellant, ITAR-free, flying heritage; values read from the product table whose columns follow the header order PBR-50, PBR-10, PBI, PBR-20: envelope 98 x 98 x 110 mm, wet mass '< 1.6 kg' (upper bound), total impulse '>7000 N s' (lower bound), thrust > 0.35 mN (thrust_mn_min), input power < 60 W. The larger PBR-50 (13.4 kg, 4400 N s) is not a CubeSat system and is not added.",
+  "specs": {
+   "propulsion_type": "gridded_ion",
+   "total_impulse_ns": 7000,
+   "power_w_firing": 60,
+   "thrust_mn_min": 0.35
+  },
+  "mass_kg": 1.6,
+  "dimensions_mm": [
+   98,
+   98,
+   110
+  ],
+  "family": "pale-blue"
+ }
+]

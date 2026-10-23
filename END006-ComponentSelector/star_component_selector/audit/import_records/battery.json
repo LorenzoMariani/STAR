@@ -1,0 +1,305 @@
+[
+ {
+  "file": "battery/Ibeos__B14-M45-M90-14V-Modular-SmallSat-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b14-m45",
+  "vendor": "Ibeos",
+  "name": "B14-M45 14 V modular SmallSat battery (45 Wh)",
+  "family": "ibeos-b14",
+  "document": "Ibeos B14-M45/M90 datasheet (March 2024)",
+  "mass_kg": 0.375,
+  "tid_krad": 30,
+  "temp_op_c": [
+   0,
+   45
+  ],
+  "dimensions_mm": [
+   94.5,
+   84.1,
+   23.1
+  ],
+  "notes": "Mass is the declared '< 375 g' (upper bound). Maximum discharge 6.5 A, recommended charge 1.6 A, typical operating voltage 13.2-16.8 V, polyimide thermofoil heater 8 W at 16 V (integrated_heater_w) with 10k NTC thermistor, remove-before-flight inhibit, ISS compliant, SEE operate-through LET > 37. Charge cell temperature 10-45 C, discharge 0-45 C (temp_op_c = discharge range). Two modules can be mounted together for 90 Wh (B14-M90, not a separate entry). Designed for the Ibeos 150 W CubeSat EPS.",
+  "specs": {
+   "voltage_range_v": [
+    13.2,
+    16.8
+   ],
+   "capacity_wh": 45,
+   "max_discharge_a": 6.5,
+   "integrated_heater_w": 8
+  }
+ },
+ {
+  "file": "battery/Ibeos__B28-135-SmallSat-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b28-135",
+  "vendor": "Ibeos",
+  "name": "B28-135 28 V SmallSat battery (135 Wh)",
+  "family": "ibeos-b28",
+  "document": "Ibeos B28-135 datasheet (February 2026)",
+  "mass_kg": 0.85,
+  "tid_krad": 30,
+  "temp_op_c": [
+   0,
+   45
+  ],
+  "dimensions_mm": [
+   94.5,
+   88.7,
+   51
+  ],
+  "notes": "Mass is the declared '< 850 g' (upper bound). BOL capacity 135 Wh, sustained discharge 10 A, recommended charge 2.5 A, voltage 22-33.6 V, recommended operating temperature 0-45 C, heater power 20 W at 28 V (integrated_heater_w), PT1000 RTD, storage inhibit, SEE operate-through LET > 37. Compatible with the Ibeos E28-200 SmallSat EPS.",
+  "specs": {
+   "voltage_range_v": [
+    22,
+    33.6
+   ],
+   "capacity_wh": 135,
+   "max_discharge_a": 10,
+   "integrated_heater_w": 20
+  }
+ },
+ {
+  "file": "battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b28-275",
+  "vendor": "Ibeos",
+  "name": "B28-275 28 V modular battery (8S2P, 275 Wh)",
+  "family": "ibeos-b28",
+  "document": "Ibeos B28-275/550/825/1100 datasheet (February 2026)",
+  "mass_kg": 2.1,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   150,
+   147,
+   90
+  ],
+  "notes": "Configuration 8S2P: capacity 275 Wh, maximum discharge 20 A, heater power 20 W at 28 V (integrated_heater_w), operating voltage 24-33.6 V, recommended charge rate 5 A, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 150 mm, width x height 147 x 90 mm. Survives sustained short circuit, 100-pin 38999 connector, SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    24,
+    33.6
+   ],
+   "capacity_wh": 275,
+   "max_discharge_a": 20,
+   "integrated_heater_w": 20
+  }
+ },
+ {
+  "file": "battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b28-550",
+  "vendor": "Ibeos",
+  "name": "B28-550 28 V modular battery (8S4P, 550 Wh)",
+  "family": "ibeos-b28",
+  "document": "Ibeos B28-275/550/825/1100 datasheet (February 2026)",
+  "mass_kg": 4.0,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   250,
+   147,
+   90
+  ],
+  "notes": "Configuration 8S4P: capacity 550 Wh, maximum discharge 40 A, heater power 40 W at 28 V (integrated_heater_w), operating voltage 24-33.6 V, recommended charge rate 10 A, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 250 mm, width x height 147 x 90 mm. Survives sustained short circuit, 100-pin 38999 connector, SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    24,
+    33.6
+   ],
+   "capacity_wh": 550,
+   "max_discharge_a": 40,
+   "integrated_heater_w": 40
+  }
+ },
+ {
+  "file": "battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b28-825",
+  "vendor": "Ibeos",
+  "name": "B28-825 28 V modular battery (8S6P, 825 Wh)",
+  "family": "ibeos-b28",
+  "document": "Ibeos B28-275/550/825/1100 datasheet (February 2026)",
+  "mass_kg": 5.9,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   360,
+   147,
+   90
+  ],
+  "notes": "Configuration 8S6P: capacity 825 Wh, maximum discharge 60 A, heater power 60 W at 28 V (integrated_heater_w), operating voltage 24-33.6 V, recommended charge rate 15 A, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 360 mm, width x height 147 x 90 mm. Survives sustained short circuit, 100-pin 38999 connector, SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    24,
+    33.6
+   ],
+   "capacity_wh": 825,
+   "max_discharge_a": 60,
+   "integrated_heater_w": 60
+  }
+ },
+ {
+  "file": "battery/Ibeos__B28-275-1100-28V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b28-1100",
+  "vendor": "Ibeos",
+  "name": "B28-1100 28 V modular battery (8S8P, 1100 Wh)",
+  "family": "ibeos-b28",
+  "document": "Ibeos B28-275/550/825/1100 datasheet (February 2026)",
+  "mass_kg": 7.8,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   465,
+   147,
+   90
+  ],
+  "notes": "Configuration 8S8P: capacity 1100 Wh, maximum discharge 80 A, heater power 80 W at 28 V (integrated_heater_w), operating voltage 24-33.6 V, recommended charge rate 20 A, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 465 mm, width x height 147 x 90 mm. Survives sustained short circuit, 100-pin 38999 connector, SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    24,
+    33.6
+   ],
+   "capacity_wh": 1100,
+   "max_discharge_a": 80,
+   "integrated_heater_w": 80
+  }
+ },
+ {
+  "file": "battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b50-412",
+  "vendor": "Ibeos",
+  "name": "B50-412 50 V modular battery (12S2P, 412 Wh)",
+  "family": "ibeos-b50",
+  "document": "Ibeos B50-412/825/1237 datasheet (March 2024)",
+  "mass_kg": 3.0,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   185,
+   147,
+   90
+  ],
+  "notes": "Configuration 12S2P: capacity 412 Wh, maximum discharge 20 A, heater power 20 W at 28 V (integrated_heater_w), operating voltage 36-50.4 V, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 185 mm, width x height 147 x 90 mm. SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    36,
+    50.4
+   ],
+   "capacity_wh": 412,
+   "max_discharge_a": 20,
+   "integrated_heater_w": 20
+  }
+ },
+ {
+  "file": "battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b50-825",
+  "vendor": "Ibeos",
+  "name": "B50-825 50 V modular battery (12S4P, 825 Wh)",
+  "family": "ibeos-b50",
+  "document": "Ibeos B50-412/825/1237 datasheet (March 2024)",
+  "mass_kg": 5.9,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   350,
+   147,
+   90
+  ],
+  "notes": "Configuration 12S4P: capacity 825 Wh, maximum discharge 40 A, heater power 40 W at 28 V (integrated_heater_w), operating voltage 36-50.4 V, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 350 mm, width x height 147 x 90 mm. SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    36,
+    50.4
+   ],
+   "capacity_wh": 825,
+   "max_discharge_a": 40,
+   "integrated_heater_w": 40
+  }
+ },
+ {
+  "file": "battery/Ibeos__B50-412-1237-50V-Modular-Battery.pdf",
+  "action": "add",
+  "category": "battery",
+  "id": "ibeos-b50-1237",
+  "vendor": "Ibeos",
+  "name": "B50-1237 50 V modular battery (12S6P, 1237 Wh)",
+  "family": "ibeos-b50",
+  "document": "Ibeos B50-412/825/1237 datasheet (March 2024)",
+  "mass_kg": 8.8,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -25,
+   55
+  ],
+  "dimensions_mm": [
+   515,
+   147,
+   90
+  ],
+  "notes": "Configuration 12S6P: capacity 1237 Wh, maximum discharge 60 A, heater power 60 W at 28 V (integrated_heater_w), operating voltage 36-50.4 V, charge cell temperature 0-45 C, discharge cell temperature -25 to 55 C (temp_op_c = discharge range). Length 515 mm, width x height 147 x 90 mm. SEE operate-through LET > 37.",
+  "specs": {
+   "voltage_range_v": [
+    36,
+    50.4
+   ],
+   "capacity_wh": 1237,
+   "max_discharge_a": 60,
+   "integrated_heater_w": 60
+  }
+ },
+ {
+  "file": "battery/BST__BAT-110.pdf",
+  "action": "skip",
+  "name": "BST BAT-110",
+  "reason": "voltage range not declared (only nominal 23.1 V; scalable for 12-28 V): required battery field voltage_range_v missing. Data: 3 kg, 240 x 119 x 87 mm, 172 Wh, -20 to +40 C, Li-Fe, 5 years LEO, 30 krad"
+ },
+ {
+  "file": "battery/Airbus__ASTRO-BATT.pdf",
+  "action": "skip",
+  "name": "Airbus ASTRO-BATT",
+  "reason": "radar/optical satellite class (21-30 kg, 3.6-5.4 kWh), not CubeSat"
+ },
+ {
+  "file": "battery/Airbus__STELLAR-BATT.pdf",
+  "action": "skip",
+  "name": "Airbus STELLAR-BATT",
+  "reason": "constellation satellite class (0.9-3.6 kWh modules), not CubeSat"
+ },
+ {
+  "file": "battery/Airbus__Space-Batteries-Overview.pdf",
+  "action": "skip",
+  "name": "Airbus space batteries overview",
+  "reason": "company overview, no product data"
+ }
+]

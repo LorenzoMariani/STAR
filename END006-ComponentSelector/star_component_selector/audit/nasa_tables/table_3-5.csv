@@ -1,0 +1,25 @@
+table,subsystem,page,Company Headquarters,Product,Volumetric Energy Density [Wh L-1],Specific Energy [Wh/kg],Typical Capacity [Ah],Max Discharge Rate [A],Cells Used
+3-5,battery,61,AAC Clyde Space Sweden,Optimus,169.5,119.4,4.84,2.6,Clyde Space Li-Polymer
+3-5,battery,61,Aerospacelab Belgium,BM,380,-,14,12 (in / out),4 independent battery packs of 8 lithium-ion cells each
+3-5,battery,61,Astro Digital USA,Direct Energy Pack,187,144,10,50,21700 Li-Ion
+3-5,battery,61,Argotech Italy,ELEKTRA,243.5,152.5,3.4,4,Li-Ion
+3-5,battery,61,Berlin Space Technologies Germany,BAT-110 Modular Battery (Nominal 3 strings),69.73,57.75,7.5,3,Li-Fe
+3-5,battery,61,Dragonfly Aerospace South Africa,28-300-Battery Module,68.4,62,10,40,LiFePO4
+3-5,battery,61,EaglePicher Technologies USA,NPD-002271,271,153.5,14.5,15,EaglePicher Li-ion
+3-5,battery,61,EnduroSat Bulgaria,EPS IV (BMS),222.9,178.1,33.5,100,Li-Ion
+3-5,battery,61,GomSpace Denmark,Nanopower BPX 3000mA,262.2,172,6.0,4,GomSpace NanoPower Li-ion
+3-5,battery,61,GomSpace Denmark,Nanopower BP4 3000mAh,239.8,168.8,6.0,4,GomSpace NanoPower Li-ion
+3-5,battery,61,GomSpace Denmark,Nanopower BP8 (8S-1P),227.36,177.3,3.0,4,GomSpace NanoPower Li-ion
+3-5,battery,61,GUMUSH AeroSpace Istanbul,n-ART BAT,184.5,155.1,6.01,8,Li-Ion
+3-5,battery,61,Ibeos USA,28V Modular Battery,151.1,109.8,8 - 30+,20,*
+3-5,battery,61,ISISPACE The Netherlands,PBP-2S1P,129.1,156.5,6.4,4,Li-Ion
+3-5,battery,61,ISISPACE The Netherlands,PBP-2S2P,327.85,160,12.8,8,Li-Ion
+3-5,battery,61,ISISPACE The Netherlands,PBP-4S1P,327.85,160,12.8,4,Li-Ion
+3-5,battery,61,NPC SPACEMIND Italy,KANON,167,250,13.6,6,Li-Ion
+3-5,battery,61,Saft France,VES16 4S1P,109.2,91,4.5,4.5 – Cont. 9 – Pulse,SAFT Li-ion
+3-5,battery,61,SatRev S.A. Poland,1U battery pack,--,161,360 W,15,30
+3-5,battery,61,SkyLabs Slovenia,SKY-NANOeps-BMM,103,89,up to 18,up to 54,LiFePO4
+3-5,battery,61,Space Dynamics Laboratory USA,SDL 12V Battery Pack,144,75,12.0,96,EaglePicher LP32975
+3-5,battery,61,Space Inventor Denmark,Bat-28-P4,100,141.8,3.4,7.5A,Space Inventor Li-Ion
+3-5,battery,61,Space Inventor Denmark,Bat-14-P4,50,123.5,3.4,7.5A,Space Inventor Li-Ion
+3-5,battery,61,Vectronic Aerospace GmbH Germany,VLB-X,101.96,74.6,12,10 – Cont. 20 – Pulse,SAFT Li-Ion

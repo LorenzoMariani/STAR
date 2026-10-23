@@ -7,6 +7,6 @@ import unittest
 from pathlib import Path
 
 DATASHEETS_DIR = Path(__file__).resolve().parent.parent / "datasheets"
-PDFS_PRESENT = any(DATASHEETS_DIR.glob("*.pdf"))
+PDFS_PRESENT = any(DATASHEETS_DIR.rglob("*.pdf"))
 REASON = "libreria dei datasheet PDF assente in questa copia (datasheets/ senza PDF: si copiano a mano, vedi README)"
 needs_pdfs = unittest.skipUnless(PDFS_PRESENT, REASON)

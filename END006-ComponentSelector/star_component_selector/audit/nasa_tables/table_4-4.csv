@@ -1,0 +1,11 @@
+table,subsystem,page,,,,Thrust,Specific,Total,,,,,PMI,,
+4-4,propulsion,128,Manufacturer,Product,Propellant,,,,Mass,Envelope,Power,ACS,,Missions,References
+4-4,propulsion,128,---,---,---,[N],[s],[kN-s],[kg],[cm3 or U],[W],Y/N,"C,D,E,F",---,---
+4-4,propulsion,128,Aerospace Corp. USA,Propulsion Unit for CubeSats,Paraffin/Nitro us Oxide,-,-,-,-,1U,-,-,D,,(60)
+4-4,propulsion,128,JPL USA,Hybrid Rocket,PMMA/GOX,-,> 300,-,-,-,-,-,D,-,(54) (55) (56) (57)
+4-4,propulsion,128,NASA Ames USA,Hybrid Rocket,PMMA/ Nitrous Oxide,25,247,-,-,-,-,-,D,,(58) (59)
+4-4,propulsion,128,Parabilis Space Technologies USA,ROMBUS,Various/N2O,222,260,44.6,49,55 dia. x 46,-,Y,D,,(61)
+4-4,propulsion,128,Parabilis Space Technologies USA,NanoSat Obrital Transfer System,HTPB/N2O,9.4,245,-,-,-,-,Y,C,,(62)
+4-4,propulsion,128,Utah State Univ. USA,Green Hybrid Rocket,ABS/Nytrox,25 - 50,220 - 300,-,-,-,< 30 for 1-2 seconds,-,D,,(52) (53)
+4-4,propulsion,128,Utah State Univ. USA,Green Hybrid Rocket,ABS/GOX,8,215,-,-,-,-,-,D,-,(50) (51)
+4-4,propulsion,128,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable",,,,,,,,,,,,

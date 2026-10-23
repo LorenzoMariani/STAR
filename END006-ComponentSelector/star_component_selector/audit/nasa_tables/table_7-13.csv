@@ -1,0 +1,6 @@
+table,subsystem,page,Manufacturer,Product,Cooling Capacity,ΔT @ 27°C,Operating Temp,Notes:
+7-13,thermal_active,243,Laird Technologies,Examples: CP Series PolarTec PT Series UltraTEC UTX Series HighTemp ETX Series Multistage MS Series,1.8 - 118 W 18 - 71 W 69 - 299 W 7.7 - 322 W 0.3 - 38 W,68 - 74°C 68 - 74°C 68 - 74°C 68 - 74°C 81 - 129°C,< 80°C < 80°C < 80°C < 150°C < 80°C,
+7-13,thermal_active,243,Custom Thermoelectric,04801-9A30- 18RB,6.1 W,70°C (Max),< 200°C,
+7-13,thermal_active,244,FerroTec,9502/031/018 M,4.1 W,70°C (Max),,Values @ 50°C
+7-13,thermal_active,244,Coherent (formerly Marlow),Muti Stage SP2394-07AB,4.5 W,130°C (Max),< 85°C,"Values @27°C, Designed for zero/high G"
+7-13,thermal_active,244,Coherent (formerly Marlow),Single Stage CT12-4,37.0 W,70°C (Max),< 130°C,"Values @27°C, Designed for zero/high G"

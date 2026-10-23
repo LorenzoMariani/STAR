@@ -41,7 +41,7 @@ class TestDatasheets(unittest.TestCase):
     @needs_pdfs
     def test_record_exposes_file_document_and_page_but_no_link(self):
         rec = SERVICE.component("endurosat-structure-3u", with_image=False)["datasheet"]
-        self.assertEqual(rec["file"], "datasheets/EnduroSat__Endurosat_Product_Catalogue_02_22.pdf")
+        self.assertEqual(rec["file"], "datasheets/structure/EnduroSat__Endurosat_Product_Catalogue_02_22.pdf")
         self.assertEqual(rec["page"], 19)
         self.assertNotIn("source_url", rec)
 
@@ -74,7 +74,7 @@ class TestLibraryStats(unittest.TestCase):
         self.assertEqual(sum(c["n"] for c in L["classes"]), L["total"])
         self.assertTrue(all(c["images"] <= c["n"] and c["datasheets"] <= c["n"] for c in L["classes"]))
         by = {c["id"]: c for c in L["classes"]}
-        self.assertEqual((by["magnetorquer"]["n"], by["magnetorquer"]["images"]), (8, 0))   # nessuna immagine per i magnetorquer aggiunti
+        self.assertEqual((by["magnetorquer"]["n"], by["magnetorquer"]["images"]), (9, 0))   # nessuna immagine per i magnetorquer aggiunti
 
     def test_every_class_has_a_unique_acronym(self):
         self.assertEqual(set(ACRONYMS), {sid for sid, _, _ in SUBSYSTEMS} | {"heater"})

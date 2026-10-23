@@ -1,0 +1,109 @@
+﻿action,id,category,field,value,source
+add,2ndspace-solo-eps-4,eps,-,2NDSpace SOLO-EPS 4,Table 3-8 PDF p.68
+add,2ndspace-solo-eps-8,eps,-,2NDSpace SOLO-EPS 8,Table 3-8 PDF p.68
+add,aac-clyde-space-starbuck-micro,eps,-,AAC Clyde Space Starbuck Micro,Table 3-8 PDF p.68
+add,aac-clyde-space-starbuck-mini,eps,-,AAC Clyde Space Starbuck Mini,Table 3-8 PDF p.68
+add,aerospacelab-pcdu,eps,-,Aerospacelab PCDU,Table 3-8 PDF p.68
+add,argotec-pcdu-volta,eps,-,Argotec PCDU VOLTA,Table 3-8 PDF p.68
+add,argotec-pcdu-zeus,eps,-,Argotec PCDU ZEUS,Table 3-8 PDF p.68
+add,argotec-pcdu-phoenix,eps,-,Argotec PCDU PHOENIX,Table 3-8 PDF p.68
+add,berlin-space-technologies-pcu-110,eps,-,Berlin Space Technologies PCU-110,Table 3-8 PDF p.68
+add,bradford-space-supernova-modular-pcdu,eps,-,Bradford Space SuperNova modular PCDU,Table 3-8 PDF p.68
+add,c3s-electronics-development-eps1000,eps,-,C3S Electronics Development EPS1000,Table 3-8 PDF p.68
+add,c3s-electronics-development-eps2000,eps,-,C3S Electronics Development EPS2000,Table 3-8 PDF p.68
+add,dragonfly-aerospace-eps-lp-1k5-hpiu-28v,eps,-,Dragonfly Aerospace EPS-LP-1k5 + HPIU-28V,Table 3-8 PDF p.68
+add,dragonfly-aerospace-eps-lp-1k5-hpiu-48v,eps,-,Dragonfly Aerospace EPS-LP-1k5 + HPIU-48V,Table 3-8 PDF p.69
+add,ecarver-pcu-sb7,eps,-,Ecarver PCU-SB7,Table 3-8 PDF p.69
+add,emxys-odaliss-pdcu,eps,-,Emxys ODALISS PDCU,Table 3-8 PDF p.69
+fill,endurosat-eps-ii,eps,output_power_w_max,250.0,Table 3-8 PDF p.69
+fill,endurosat-eps-ii,eps,efficiency,0.89,Table 3-8 PDF p.69
+fill,endurosat-cubesat-eps,eps,efficiency,0.87,Table 3-8 PDF p.69
+add,endurosat-eps-iv,eps,-,EnduroSat EPS IV,Table 3-8 PDF p.69
+add,gomspace-p31u,eps,-,GomSpace P31U,Table 3-8 PDF p.69
+add,gumush-aerospace-n-art-eps,eps,-,GUMUSH AeroSpace n-ART EPS,Table 3-8 PDF p.69
+add,ibeos-150-w-cubesat-eps,eps,-,Ibeos 150 W CubeSat EPS,Table 3-8 PDF p.69
+add,ibeos-200-w-cubesat-eps,eps,-,Ibeos 200 W CubeSat EPS,Table 3-8 PDF p.69
+fill,isis-iceps2-type-a,eps,efficiency,0.96,Table 3-8 PDF p.69
+fill,isis-iceps2-type-b,eps,efficiency,0.95,Table 3-8 PDF p.69
+fill,isis-iceps2-type-c,eps,efficiency,0.95,Table 3-8 PDF p.69
+fill,spacemind-gemini-eps,eps,output_power_w_max,200.0,Table 3-8 PDF p.69
+fill,spacemind-gemini-eps,eps,efficiency,0.88,Table 3-8 PDF p.69
+add,pumpkin-epsm-1,eps,-,Pumpkin EPSM 1,Table 3-8 PDF p.69
+add,pumpkin-amps,eps,-,Pumpkin AMPS,Table 3-8 PDF p.69
+add,satrev-s-a-eps-3s1p,eps,-,SatRev S.A EPS 3S1P,Table 3-8 PDF p.69
+add,satrev-s-a-eps-3s2p,eps,-,SatRev S.A EPS 3S2P,Table 3-8 PDF p.69
+add,satrev-s-a-eps-3s3p,eps,-,SatRev S.A EPS 3S3P,Table 3-8 PDF p.69
+add,skylabs-sky-nanoeps-pcdu-23c-5d,eps,-,SkyLabs SKY-NANOeps­ PCDU-23c-5d,Table 3-8 PDF p.70
+add,spacemanic-amun-1u,eps,-,Spacemanic Amun 1U,Table 3-8 PDF p.70
+add,space-inventor-pdu-3v3,eps,-,Space Inventor PDU-3V3,Table 3-8 PDF p.70
+add,space-inventor-pdu-5v,eps,-,Space Inventor PDU-5V,Table 3-8 PDF p.70
+add,space-inventor-pdu-12v,eps,-,Space Inventor PDU-12V,Table 3-8 PDF p.70
+add,space-inventor-pdu-vbat,eps,-,Space Inventor PDU-VBAT,Table 3-8 PDF p.70
+add,aac-clyde-space-trillian-1,reaction_wheel,-,AAC Clyde Space Trillian-1,Table 5-3 PDF p.167
+fill,astrofein-rw35,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+fill,astrofein-rw90,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+fill,astrofein-rw100,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+fill,astrofein-rw150,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+fill,astrofein-rwt150,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+fill,astrofein-rw250,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+fill,astrofein-rwt250,reaction_wheel,tid_krad,20.0,Table 5-3 PDF p.167
+add,berlin-space-technologies-rwa05,reaction_wheel,-,Berlin Space Technologies RWA05,Table 5-3 PDF p.167
+fill,bct-rwp015,reaction_wheel,power_w_peak,5.5,Table 5-3 PDF p.167
+fill,bct-rwp050,reaction_wheel,power_w_peak,9.0,Table 5-3 PDF p.167
+add,blue-canyon-technologies-rwp100,reaction_wheel,-,Blue Canyon Technologies RWp100,Table 5-3 PDF p.167
+add,blue-canyon-technologies-rwp500,reaction_wheel,-,Blue Canyon Technologies RWp500,Table 5-3 PDF p.167
+add,blue-canyon-technologies-rw4,reaction_wheel,-,Blue Canyon Technologies RW4,Table 5-3 PDF p.167
+add,blue-canyon-technologies-rw8,reaction_wheel,-,Blue Canyon Technologies RW8,Table 5-3 PDF p.167
+add,blue-canyon-technologies-rw16,reaction_wheel,-,Blue Canyon Technologies RW16,Table 5-3 PDF p.167
+add,comat-rw20,reaction_wheel,-,Comat RW20,Table 5-3 PDF p.167
+add,comat-rw40,reaction_wheel,-,Comat RW40,Table 5-3 PDF p.167
+add,comat-rw60,reaction_wheel,-,Comat RW60,Table 5-3 PDF p.167
+add,cubespace-satellite-systems-cubewheel-cw0017,reaction_wheel,-,CubeSpace Satellite Systems CubeWheel CW0017,Table 5-3 PDF p.167
+add,cubespace-satellite-systems-cubewheel-cw0162,reaction_wheel,-,CubeSpace Satellite Systems CubeWheel CW0162,Table 5-3 PDF p.167
+add,cubespace-satellite-systems-cubewheel-cw0500,reaction_wheel,-,CubeSpace Satellite Systems CubeWheel CW0500,Table 5-3 PDF p.167
+add,cubespace-satellite-systems-cubewheel-cw5000,reaction_wheel,-,CubeSpace Satellite Systems CubeWheel CW5000,Table 5-3 PDF p.167
+add,nanoavionics-rwo,reaction_wheel,-,NanoAvionics RWO,Table 5-3 PDF p.168
+fill,newspace-nrwa-t065,reaction_wheel,power_w_peak,1.7,Table 5-3 PDF p.168
+fill,newspace-nrwa-t2,reaction_wheel,power_w_peak,0.4,Table 5-3 PDF p.168
+add,rocket-lab-rw-0-03,reaction_wheel,-,Rocket Lab RW-0.03,Table 5-3 PDF p.168
+add,rocket-lab-rw3-0-06,reaction_wheel,-,Rocket Lab RW3-0.06,Table 5-3 PDF p.168
+add,rocket-lab-rw4-0-2,reaction_wheel,-,Rocket Lab RW4-0.2,Table 5-3 PDF p.168
+add,rocket-lab-rw4-0-4,reaction_wheel,-,Rocket Lab RW4-0.4,Table 5-3 PDF p.168
+add,rocket-lab-rw4-1-0,reaction_wheel,-,Rocket Lab RW4-1.0,Table 5-3 PDF p.168
+add,space-inventor-whl-100,reaction_wheel,-,Space Inventor WHL-100,Table 5-3 PDF p.168
+add,space-inventor-whl-200,reaction_wheel,-,Space Inventor WHL-200,Table 5-3 PDF p.168
+add,space-inventor-whl-500,reaction_wheel,-,Space Inventor WHL-500,Table 5-3 PDF p.168
+add,space-inventor-whl-1000,reaction_wheel,-,Space Inventor WHL-1000,Table 5-3 PDF p.168
+add,space-inventor-whl-12000,reaction_wheel,-,Space Inventor WHL-12000,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-b-02,reaction_wheel,-,Vectronic Aerospace VRW-B-02,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-c-05,reaction_wheel,-,Vectronic Aerospace VRW-C-05,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-c-1,reaction_wheel,-,Vectronic Aerospace VRW-C-1,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-1,reaction_wheel,-,Vectronic Aerospace VRW-D-1,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-16,reaction_wheel,-,Vectronic Aerospace VRW-D-16,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-2,reaction_wheel,-,Vectronic Aerospace VRW-D-2,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-27,reaction_wheel,-,Vectronic Aerospace VRW-D-27,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-4,reaction_wheel,-,Vectronic Aerospace VRW-D-4,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-6,reaction_wheel,-,Vectronic Aerospace VRW-D-6,Table 5-3 PDF p.168
+add,vectronic-aerospace-vrw-d-8,reaction_wheel,-,Vectronic Aerospace VRW-D-8,Table 5-3 PDF p.168
+add,aac-clyde-space-ss200,sun_sensor,-,AAC Clyde Space SS200,Table 5-7 PDF p.175
+add,bradford-space-coss,sun_sensor,-,Bradford Space CoSS,Table 5-7 PDF p.175
+add,bradford-space-coss-r,sun_sensor,-,Bradford Space CoSS-R,Table 5-7 PDF p.175
+add,bradford-space-css,sun_sensor,-,Bradford Space CSS,Table 5-7 PDF p.175
+add,bradford-space-fss,sun_sensor,-,Bradford Space FSS,Table 5-7 PDF p.175
+add,bradford-space-mini-fss,sun_sensor,-,Bradford Space Mini-FSS,Table 5-7 PDF p.175
+add,gomspace-nanosense-fss,sun_sensor,-,GomSpace NanoSense FSS,Table 5-7 PDF p.175
+add,lens-r-d-bison64-et,sun_sensor,-,Lens R&D BiSon64-ET,Table 5-7 PDF p.175
+add,lens-r-d-bison64-et-b,sun_sensor,-,Lens R&D BiSon64-ET-B,Table 5-7 PDF p.175
+add,lens-r-d-maus,sun_sensor,-,Lens R&D MAUS,Table 5-7 PDF p.175
+add,needronix-slovakia-eagle,sun_sensor,-,Needronix Slovakia Eagle,Table 5-7 PDF p.175
+add,needronix-slovakia-eagle-plus,sun_sensor,-,Needronix Slovakia Eagle Plus,Table 5-7 PDF p.175
+add,needronix-slovakia-eagle-point,sun_sensor,-,Needronix Slovakia Eagle Point,Table 5-7 PDF p.175
+add,needronix-slovakia-swan,sun_sensor,-,Needronix Slovakia Swan,Table 5-7 PDF p.175
+add,redwire-space-coarse-analog-sun-sensor,sun_sensor,-,Redwire Space Coarse Analog Sun Sensor,Table 5-7 PDF p.175
+add,redwire-space-coarse-sun-sensor-cosine-type,sun_sensor,-,Redwire Space Coarse Sun Sensor (Cosine Type),Table 5-7 PDF p.175
+add,redwire-space-coarse-sun-sensor-pyramid,sun_sensor,-,Redwire Space Coarse Sun Sensor Pyramid,Table 5-7 PDF p.175
+add,solar-mems-technologies-nanossoc-a60,sun_sensor,-,Solar MEMS Technologies nanoSSOC-A60,Table 5-7 PDF p.176
+add,solar-mems-technologies-ssoc-d60,sun_sensor,-,Solar MEMS Technologies SSOC-D60,Table 5-7 PDF p.176
+add,solar-mems-technologies-acss,sun_sensor,-,Solar MEMS Technologies ACSS,Table 5-7 PDF p.176
+add,space-micro-css-01-css-02,sun_sensor,-,"Space Micro CSS-01, CSS-02",Table 5-7 PDF p.176
+add,space-micro-mss-01,sun_sensor,-,Space Micro MSS-01,Table 5-7 PDF p.176

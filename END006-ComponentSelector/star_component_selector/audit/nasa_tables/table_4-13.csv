@@ -1,0 +1,6 @@
+table,subsystem,page,,,,,Specific,Total,,,,,PMI,,
+4-13,propulsion,137,Manufacturer,Product,Propellant,Thrust*,,,Mass,Envelope,Power,ACS,,Missions,References
+4-13,propulsion,137,---,---,---,[mN],[s],[kN-s],[kg],[cm3],[W],Y/N,"C,D,E,F",---,---
+4-13,propulsion,137,Aurora Propulsion Technologies Finland,Plasma Brake,-,< 100 mN/m,-,-,< 2,1U,< 4,N,E,AuroraSat-1,(157) (158) (159)
+4-13,propulsion,137,Tethers Unlimited USA,NSTT,-,-,-,-,0.81,18 x 18 x 1.8,-,N,F,"Prox-1, NPSat-1, DragRacer",(312) (313) (314) (315) (316) (426)
+4-13,propulsion,137,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, † denotes a wet mass, ‡ denotes a dry mass, “-“ = denotes data not available or applicable See Chapter on Passive Deorbit Systems for review of aerodynamic drag devices.",,,,,,,,,,,,

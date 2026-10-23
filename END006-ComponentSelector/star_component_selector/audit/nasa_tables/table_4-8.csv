@@ -1,0 +1,14 @@
+table,subsystem,page,,,,,Specific,Total,,,,,PMI,,
+4-8,propulsion,132,Manufacturer,Product,Propellant,Thrust*,,,Mass,Envelope,Power,Neutralizer,,Missions,References
+4-8,propulsion,132,---,---,---,[µN],[s],[N-s],[kg],[cm3 or U],[W],---,"C,D,E,F",---,---
+4-8,propulsion,132,Integrated Propulsion Systems,,,,,,,,,,,,
+4-8,propulsion,132,Busek USA,CMNT (4x heads),EMI-Im (ionic),4 x 20,225,980,14.8†,29U,16.5,Carbon Nanotube,F,LISA Pathfinder,(163)
+4-8,propulsion,132,Busek USA,BET-MAX (Config. A),EMI-Im (ionic),4 x 55,850,4 x 92§,0.8†,1250,12,Carbon Nanotube,E,US Government,(329) (330) (331) (332) (333) (334) (335)
+4-8,propulsion,132,Busek USA,BET-MAX (Config. B),EMI-Im (ionic),4 x 40,2300,4 x 250,0.8†,1250,14,Carbon Nanotube,D,-,(335)
+4-8,propulsion,132,Enpulsion Austria,Nano,Indium (FEEP),330,"1,500 (alpha); 3,000 (gamma)","> 3,000 (alpha); > 5,000 (gamma)",0.90†,10 x 10 x 8.3,40,Thermionic,F,"Flock 3p’, ICEYE X2, Harbinger, NetSat, and others",(164) (165) (166) (167) (168) (169) (170) (171) (336) (337) (338)
+4-8,propulsion,132,Enpulsion Austria,Nano R3,Indium (FEEP),350,"1,500 (alpha); 2,700 (gamma)","> 3,000 (alpha); > 5,000 (gamma)",1.4†,9.8 x 9.9 x 9.5,45,Thermionic,E,(Evolution of Nano design),(171) (172) (339)
+4-8,propulsion,132,Enpulsion Austria,Micro R3,Indium (FEEP),"1,000","2,100 (alpha); 2,750 (gamma)","> 25,000 (alpha); > 35,000 (gamma)",3.9†,14 x 12 x 13.3,105,Thermionic,F,GMS-T,(172) (173) (340) (341)
+4-8,propulsion,132,Enpulsion Austria,Neo,Indium (FEEP),"20,000","1,500","> 550,000",30†,34 x 34 x 15,800,Thermionic,D,-,(342)
+4-8,propulsion,132,Morpheus Space Germany,NanoFEEP (2x heads),Gallium (FEEP),< 40,-,-,0.16‡,9 x 2.5 x 4.3,< 3,Propellant- less,E,UWE-4,(174) (175) (343) (344)
+4-8,propulsion,132,Morpheus Space Germany,MultiFEEP (2x heads),Gallium (FEEP),< 140,-,-,0.28‡,9 x 4.5 x 4.5,< 19,Propellant- less,D,-,(343)
+4-8,propulsion,132,"Note that all data is documented as provided in the references. Unless otherwise published, do not assume the data has been independently verified. *nominal values (see references for full performance ranges), ** anticipated launch date, † denotes a wet mass, ‡ denotes a dry mass, § demonstrated, “-“ = denotes data not available or applicable",,,,,,,,,,,,

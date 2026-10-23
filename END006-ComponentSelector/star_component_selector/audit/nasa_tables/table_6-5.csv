@@ -1,0 +1,31 @@
+table,subsystem,page,Manufacturer Headquarters,Product,Mass (kg),Size (mm),Power Consumption,Actuation method
+6-5,mechanism,201,Beyond Gravity Switzerland,Separation Nut PSM 3/8B,0.23,58.5x36x56,-,-
+6-5,mechanism,201,Comat Space France,Solar Array Drive Mechanism - 400,0.465,83x62x46,4 W,Geared motor
+6-5,mechanism,201,Comat Space France,Solar Array Drive Mechanism - 1500,3.5,201x132,13 W,Geared motor
+6-5,mechanism,201,DCUBED Germany,Micro Pin Puller (uD3PP),0.08,25.5x25.5x 25.5,-,SMA
+6-5,mechanism,201,DCUBED Germany,Nano Pin Puller (nD3PP),0.025,17x17x17,-,SMA
+6-5,mechanism,201,DCUBED Germany,Micro Release Nut (uD3RN),0.078,25x25x25,-,SMA
+6-5,mechanism,201,DHV Technology Spain,MicroSADA-10,< 0.25,100x100x10,< 6 W,Stepper Motor
+6-5,mechanism,201,DHV Technology Spain,MicroSADA-18,< 0.95,226x80x18,< 10 W,Stepper Motor
+6-5,mechanism,201,DHV Technology Spain,SADA-M,< 2,155x180,5W (nominal) / 10W (peak),Stepper Motor
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,TiNi™ Flat Pack FP50,0.033,2.3x1.3x0.24,1.25 W,SMA
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,TiNi™ FD04 Frangibolt,0.007,13.72x10.16,15 W @ 9 VD,SMA
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,TiNi™ ML50,0.010,25.4x16.5,2 W @ 7 VD,SMA
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,TiNi™P5 Nano Pin Puller,0.015,25.4x16.5,1.5A to 3.75A,SMA
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,TiNi™ P5 Pin Puller,0.018,28x26,0.5A to 2A,SMA
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,NEA 9040 Mini,0.030,28x32,0.4A to 1.5A,SMA
+6-5,mechanism,201,Ensign-Bickford Aerospace & Defense Company USA,NEA 1120 Pin Puller,0.014,21x22,Min 3A,Split Spool
+6-5,mechanism,201,Honeybee and MMA Design USA,Solar Array Drive Actuator (SADA),3.1,127x210,-,Stepper Motor
+6-5,mechanism,201,Nimesis Technology France,Triggy,0.004- 0.271,*,*,SMA
+6-5,mechanism,201,Nimesis Technology France,Gripper,<0.032,39x35x7.6,7.4 W (ave),SMA
+6-5,mechanism,202,Moog USA,Type 2 Side-Drive Solar Array Drive Mechanism (SADM),5,234x278.6,15 W,-
+6-5,mechanism,202,Revolv Space Netherlands,Solar array drive actuator (SARA),0.3,97x97x23,0.5 W (idle),-
+6-5,mechanism,202,Sierra Space USA,High-Output Paraffin Actuator (HOPA),0.35,44x14x14,5 W,Paraffin
+6-5,mechanism,202,Sierra Space USA,C14E-TC Solar Array Drive Assembly (SADA),2.9,210x140x140,-,Stepper Motor
+6-5,mechanism,202,Sierra Space USA,C14C-TC Solar Array Drive Assembly (SADA),2.2,172x140x140,-,Stepper Motor
+6-5,mechanism,202,Sierra Space USA,C14 Bi-Axis Gimbal,1.23,155x72x72,-,Stepper Motor
+6-5,mechanism,202,Sierra Space USA,C14E Bi-Axis Gimbal,1.72,221x112x112,-,Stepper Motor
+6-5,mechanism,202,ThermOmegaTech USA,High Output Paraffin Actuator (HOPA),1.27,71.2x35.56,-,Paraffin
+6-5,mechanism,202,UARX Space,HADES Pico,0.095,60x62x20,1.2A @12V,Fuse Wire
+6-5,mechanism,202,UARX Space,HADES Medius,0.15,70x80x25,1.2A @12V,Fuse Wire
+6-5,mechanism,202,UARX Space,HELIOS Coarse Sun Sensors,0.01,32x32x11,0.05 W,"5V, I2C"

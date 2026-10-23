@@ -1,0 +1,414 @@
+[
+ {
+  "file": "obc/BST__CDH-Command-and-Data-Handling.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "bst-cdh-110",
+  "vendor": "Berlin Space Technologies",
+  "name": "CDH-110 command and data handling (OBC-110 + ACC-110)",
+  "document": "BST CDH-110 command and data handling system sheet v1.0.1",
+  "notes": "OBC-110 (90 MIPS, 8x RS422 + 2x SPI/RS422: 4 TMTC, PCU, payload, GPS, ACC, OBC-HP, EGSE) and ACC-110 attitude computer in the same housing (10x RS422, 3 PWM coil drivers, reaction wheels, FOG, MEMS gyro, magnetometer, 2 star trackers, sun sensors) ; optional OBC-HP auxiliary processor (400 MIPS, Linux, USB, 16 temperature / 16 analogue / 32 GPIO); CCSDS engine for TMTC, optional encryption. Power < 2 W, digital electronics 5 V DC (magnetic coils from the bus voltage or 5 V), 176 x 94 x 69 mm, 815 g, operating -20 to +40 C (storage -30 to +50 C), 5 years LEO design life, 20 krad (Co60).",
+  "specs": {
+   "data_interfaces": [
+    "RS-422",
+    "SPI"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.815,
+  "power_w": 2,
+  "tid_krad": 20,
+  "temp_op_c": [
+   -20,
+   40
+  ],
+  "dimensions_mm": [
+   176,
+   94,
+   69
+  ]
+ },
+ {
+  "file": "obc/BST__CDH-110.pdf",
+  "action": "skip",
+  "name": "BST CDH-110 v1.0.0",
+  "reason": "older issue (v1.0.0, no power figure) of the CDH-110 sheet used above (v1.0.1)"
+ },
+ {
+  "file": "obc/Beyondgravity__cOBC-Constellation-On-Board-Computer.pdf",
+  "action": "skip",
+  "name": "Beyond Gravity cOBC",
+  "reason": "constellation-class dual-redundant computer with integrated GNSS: no mass, power or interface values in the text"
+ },
+ {
+  "file": "obc/Beyondgravity__cOBC-PDIO.pdf",
+  "action": "skip",
+  "name": "Beyond Gravity cOBC PDIO board",
+  "reason": "I/O board of the cOBC, not a standalone computer"
+ },
+ {
+  "file": "obc/CAVU-Aerospace__CDH-FS-Brochure.pdf",
+  "action": "skip",
+  "name": "CAVU CDH-FS",
+  "reason": "fully redundant OpenVPX-class subsystem (4.3 kg per the ICD), not CubeSat class"
+ },
+ {
+  "file": "obc/CAVU-Aerospace__CDH-FS-ICD.pdf",
+  "action": "skip",
+  "name": "CAVU CDH-FS ICD",
+  "reason": "interface control document of the CDH-FS (4.3 kg, 28 V), not CubeSat class"
+ },
+ {
+  "file": "obc/CAVU-Aerospace__CDH-FS-Option-Sheet.pdf",
+  "action": "skip",
+  "name": "CAVU CDH-FS option sheet",
+  "reason": "option sheet of the CDH-FS (OpenVPX 3U/6U), not CubeSat class"
+ },
+ {
+  "file": "obc/CAVU-Aerospace__OBC-1-Brochure.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "cavu-obc-1",
+  "vendor": "CAVU Aerospace",
+  "name": "OBC-1 satellite onboard computer",
+  "document": "CAVU Aerospace OBC-1 brochure CAVU-OBC1-Br-v2024.1",
+  "notes": "ARM Cortex-M3 soft core on a Microchip SmartFusion2 flash FPGA (150 DMIPS at 128 MHz), 80 Mbit MRAM, 96 Gbit SLC NAND, 70 digital outputs, 30 digital inputs, 32 channel 16-bit ADC, 2 DAC, 2 CAN 2.0 (1 Mbps), 4 RS422, 1 RS485, 2 RS232, I2C, SPI, 3-5 years in LEO, 30 krad (Si)/yr, latch-up immune, SEE at 60 MeV, -40 to +85 C, 160 x 100 mm, 75 g, 5 V +-5%. The power consumption figure is cut in the text ('1 W ~ 2...'), so power_w is null. Scalable to a redundant pair.",
+  "specs": {
+   "data_interfaces": [
+    "CAN",
+    "RS-422",
+    "RS-485",
+    "RS-232",
+    "I2C",
+    "SPI"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     4.75,
+     5.25
+    ]
+   ]
+  },
+  "mass_kg": 0.075,
+  "tid_krad": 30,
+  "temp_op_c": [
+   -40,
+   85
+  ],
+  "dimensions_mm": [
+   160,
+   100,
+   null
+  ]
+ },
+ {
+  "file": "obc/KP-Labs__Antelope-DPU.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "kplabs-antelope-dpu",
+  "vendor": "KP Labs",
+  "name": "Antelope DPU (Zynq UltraScale+)",
+  "document": "KP Labs Antelope DPU technical sheet (2025-06-24)",
+  "notes": "Data processing unit in PC/104 form factor: Zynq UltraScale+ MPSoC ZU2EG-ZU5EG (160 GOPS), quad Cortex-A53 up to 1.5 GHz plus dual Cortex-R5 in lock-step, 8 GiB DDR4 with ECC, 4 GB SLC NAND, optional SATA SSD, interfaces CAN, I2C, GPIO, SPI, RS422/485, UART, GPS PPS, LVDS or GTH, USB 3.0 and 2.0, Ethernet 1 Gb, SATA; supply 5.5-14 V (VBAT) or 5 V regulated; -40 to +85 C; flew in LEO 8 weeks. Mass, power and size are not given in the text.",
+  "specs": {
+   "data_interfaces": [
+    "CAN",
+    "I2C",
+    "SPI",
+    "RS-422",
+    "RS-485",
+    "UART",
+    "Ethernet",
+    "USB"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     5.5,
+     14
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "temp_op_c": [
+   -40,
+   85
+  ]
+ },
+ {
+  "file": "obc/Nara-Space__NSTOBC-Datasheet.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "nara-nstobc-a9",
+  "vendor": "Nara Space Technology",
+  "name": "NSTOBC-A9 onboard computer",
+  "document": "NARA Space NSTOBC-A9 datasheet NSTOBC-DS-R05 (2024-03-11)",
+  "notes": "ARM9 microprocessor up to 400 MHz, 256 MB NAND flash, 256 MB DDR2, micro SD up to 32 GB, CAN 1 Mbps as standard; options 3 UART / 2 USART (115.2 kbps, RS-422/485 over UART), I2C with buffer (400 kHz), 2 SPI (66 MHz), optional 6-axis inertial sensor and 3-axis magnetometer, temperature sensor +-0.5 C; the AX100 and AX2150 radios can be mounted on the module interface. Mass, power and dimensions are in pages not read.",
+  "specs": {
+   "data_interfaces": [
+    "CAN",
+    "UART",
+    "RS-422",
+    "RS-485",
+    "I2C",
+    "SPI"
+   ],
+   "supply_voltage_ranges_v": null
+  }
+ },
+ {
+  "file": "obc/SpaceMicro__CubeSat-Space-Processor.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "spacemicro-csp-02",
+  "vendor": "Space Micro",
+  "name": "CSP-02 CubeSat Space Processor (Zynq-7020)",
+  "document": "Space Micro Cubesat Space Processor (CSP) datasheet Rev 9 (9/5/2019)",
+  "notes": "Zynq-7020 dual ARM at 766 MHz plus reconfigurable FPGA, 32 Gbit rad-tolerant NAND (flight model), 8 Gbit DDR3 (4 Gbit with EDAC), 26 MIO and 60 HR SelectIO, 1U CubeSat form factor 88.1 x 89.5 mm, thickness 17.3 mm flight model (2.5 mm engineering model), mass 74 g flight model (60 g EM), power 1.6-2.85 W (power_w = upper value), patented radiation mitigation. Interfaces depend on the configuration (evaluation board lists USB, Ethernet, JTAG, UART, 3 SpaceWire, CameraLink).",
+  "specs": {
+   "data_interfaces": null,
+   "supply_voltage_ranges_v": null
+  },
+  "mass_kg": 0.074,
+  "power_w": 2.85,
+  "dimensions_mm": [
+   88.1,
+   89.5,
+   17.3
+  ]
+ },
+ {
+  "file": "obc/SpaceMicro__Proton200k-Lite.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "spacemicro-proton200k-lite",
+  "vendor": "Space Micro",
+  "name": "Proton200k Lite processor board",
+  "document": "Space Micro Proton200k Lite processor board sheet (4/9/2015)",
+  "notes": "DSP board in a standard CubeSat form factor, 900 MFLOPS, 1.5 W standard, 66 MHz floating point, SEL threshold > 36 MeV cm2/mg, TID 30 krad (Si) 100% recoverable, TTMR and H-Core mitigation; CubeSat-compatible; planned launch in 2016. Mass and interfaces are not in the text.",
+  "specs": {
+   "data_interfaces": null,
+   "supply_voltage_ranges_v": null
+  },
+  "power_w": 1.5,
+  "tid_krad": 30
+ },
+ {
+  "file": "obc/SpaceMicro__Proton200k.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "spacemicro-proton200k",
+  "vendor": "Space Micro",
+  "name": "Proton200k DSP processor board",
+  "document": "Space Micro Proton200k DSP processor board sheet Rev 2 (1/3/2017)",
+  "notes": "TI 320C6XXX DSP (4,000 MIPS fixed point or 900 MFLOPS floating point), 32-128 MB SDRAM with EDAC, optional 32 Gb flash, cPCI 3.3 V (3U 100 x 160 mm, 6U option) or PCI-104; 8 asynchronous UART with RS422 and 1 RS485 plus I2C and GPIO; power 2.3-5 W (power_w = upper value); TID 100 krad (Si) orbit dependent, SEL > 63 MeV cm2/mg. Suitable as the sole computer of micro- and nano-satellites. Mass is not in the text.",
+  "specs": {
+   "data_interfaces": [
+    "UART",
+    "RS-422",
+    "RS-485",
+    "I2C"
+   ],
+   "supply_voltage_ranges_v": null
+  },
+  "power_w": 5,
+  "tid_krad": 100
+ },
+ {
+  "file": "obc/SpaceMicro__Proton400k.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "spacemicro-proton400k",
+  "vendor": "Space Micro",
+  "name": "Proton400k single board computer",
+  "document": "Space Micro Proton400k single board computer sheet Rev 3 (7/20/2018)",
+  "notes": "Freescale P2020 dual core 1 GHz (up to 4,800 MIPS), 512 MB-1 GB DDR with EDAC, 512 MB boot MRAM, 32 Gb flash, PCI-104 stretch (3.6 x 5 in), 3U (100 x 160 mm) or 6U form factors, Linux or VxWorks; 8-12 W depending on peripherals and speed (power_w = upper value); TID 100 krad (Si) orbit dependent, SEL > 63 MeV cm2/mg; options SGMII Ethernet and SpaceWire. Mass is not in the text.",
+  "specs": {
+   "data_interfaces": [
+    "UART"
+   ],
+   "supply_voltage_ranges_v": null
+  },
+  "power_w": 12,
+  "tid_krad": 100
+ },
+ {
+  "file": "obc/SpaceMicro__Proton300k.pdf",
+  "action": "skip",
+  "name": "Space Micro Proton300k",
+  "reason": "FPGA reconfigurable computer with video LVDS channels: no mass, power or interface values in the text"
+ },
+ {
+  "file": "obc/SpaceMicro__ProtonX-Box.pdf",
+  "action": "skip",
+  "name": "Space Micro ProtonX-Box",
+  "reason": "modular avionics box of slices (150 g and 1.1-12.7 W per slice), not a single computer"
+ },
+ {
+  "file": "obc/SpaceMicro__Proton2X-Box.pdf",
+  "action": "skip",
+  "name": "Space Micro Proton2X-Box",
+  "reason": "modular avionics box (22.5 x 17.2 x 5.7 cm, 2205 cc), not a single computer"
+ },
+ {
+  "file": "obc/Pumpkin__CubeSat-Kit-Breakout-Board.pdf",
+  "action": "skip",
+  "name": "Pumpkin CubeSat Kit breakout board",
+  "reason": "debug interface board, not a computer"
+ },
+ {
+  "file": "obc/Pumpkin__CubeSat-Kit-Motherboard-Module-2-MBM2.pdf",
+  "action": "skip",
+  "name": "Pumpkin MBM2",
+  "reason": "BeagleBone Black host motherboard: no mass, power or supply values in the text"
+ },
+ {
+  "file": "obc/Pumpkin__CubeSat-Kit-PSPM-B.pdf",
+  "action": "skip",
+  "name": "Pumpkin PSPM B",
+  "reason": "socketed processor module for the development board (the flight PPM B1 is already in the catalogue)"
+ },
+ {
+  "file": "obc/SkyLabs__NANOhpc-DPU.pdf",
+  "action": "skip",
+  "name": "SkyLabs NANOhpc-DPU / AI / obc",
+  "reason": "one table for three products (DPU, AI accelerator, OBC) whose columns cannot be separated from the text"
+ },
+ {
+  "file": "obc/Spacemanic__Deep-Thought-OBC-Sheet.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "spacemanic-deep-thought-obc",
+  "vendor": "Spacemanic",
+  "name": "Deep Thought OBC (OBC-SM-DT-SAMV71)",
+  "document": "Spacemanic Deep Thought Onboard Computer OBC-SM-DT-SAMV71 sheet",
+  "notes": "32-bit Cortex-M7 (up to 300 MHz), 2048 kB flash, 384 kB multi-port SRAM, 128 MB flash storage, 2 x I2C plus 1 isolated I2C, RS485, UART, CAN, SPI, Ethernet RMII, USB, QSPI, 22 IO (4 x 12-bit ADC, 6 PWM), on-board gyro/magnetometer/accelerometer and temperature sensors, 3.3 V, 5 V (CAN) and 3.3 V isolated supply, 100 mW average, 25 g, 65 x 40 mm PC/104-compatible module, -40 to +85 C, radiation tolerant design, flight heritage hardware.",
+  "specs": {
+   "data_interfaces": [
+    "I2C",
+    "RS-485",
+    "UART",
+    "CAN",
+    "SPI",
+    "Ethernet",
+    "USB"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.025,
+  "power_w": 0.1,
+  "temp_op_c": [
+   -40,
+   85
+  ],
+  "dimensions_mm": [
+   65,
+   40,
+   null
+  ]
+ },
+ {
+  "file": "obc/Spacemanic__Eddie-OBC-Sheet.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "spacemanic-eddie-obc",
+  "vendor": "Spacemanic",
+  "name": "Eddie OBC",
+  "document": "Spacemanic Eddie onboard computer sheet",
+  "notes": "Ultra-low-power 16-bit RISC MCU (up to 16 MHz), 256 kb FRAM code memory plus up to 24 Mbit external FRAM, 1 x I2C plus 1 isolated I2C, RS485, UART, CAN, SPI, 3 PWM, 8 IO (4 x 12-bit ADC), on-board gyro/accelerometer/magnetometer and temperature sensors, 3.3 V, 5 V and 3.3 V isolated supply, 100 mW average, 25 g, 67 x 42 x 7 mm, -40 to +85 C, flight heritage hardware.",
+  "specs": {
+   "data_interfaces": [
+    "I2C",
+    "RS-485",
+    "UART",
+    "CAN",
+    "SPI"
+   ],
+   "supply_voltage_ranges_v": [
+    [
+     3.3,
+     3.3
+    ],
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "mass_kg": 0.025,
+  "power_w": 0.1,
+  "temp_op_c": [
+   -40,
+   85
+  ],
+  "dimensions_mm": [
+   67,
+   42,
+   7
+  ]
+ },
+ {
+  "file": "obc/Spacemanic__DEEP-THOUGHT-OBC.pdf",
+  "action": "skip",
+  "name": "Spacemanic Deep Thought OBC datasheet (24 pages)",
+  "reason": "same product as the Deep Thought sheet used above; the long datasheet issue 3.1 was not read in detail"
+ },
+ {
+  "file": "obc/Spacemanic__EDDIE-OBC.pdf",
+  "action": "skip",
+  "name": "Spacemanic Eddie OBC datasheet (18 pages)",
+  "reason": "same product as the Eddie sheet used above; the long datasheet issue 3.1 was not read in detail"
+ },
+ {
+  "file": "obc/Unknown__Antartix-OBC.pdf",
+  "action": "add",
+  "category": "obc",
+  "id": "veng-antartix-obc",
+  "vendor": "VENG",
+  "name": "Antartix v2.0 OBC",
+  "document": "VENG Antartix v2.0 OBC computer (CYM-PG-04307-V02)",
+  "notes": "FPGA computer on an AMD Artix-7 XC7A200T (MicroBlaze / PetaLinux), 4 Gb DDR3L, 128 Mbit SPI NOR, 512 Mbit parallel NOR, PCIe x1 Gen1, 11 GPIO at 3.3 V and 7 at 1.8 V, PCI/104-Express form factor 95.89 x 90.17 mm with 15.24 mm stand-off, 5 VDC supply (current not given), extended-temperature components, defense-grade variant XQ7A200T. Mass and power are not given.",
+  "specs": {
+   "data_interfaces": null,
+   "supply_voltage_ranges_v": [
+    [
+     5,
+     5
+    ]
+   ]
+  },
+  "dimensions_mm": [
+   95.89,
+   90.17,
+   15.24
+  ]
+ },
+ {
+  "file": "obc/Unknown__RAVEN-AI-Edge-Computer.pdf",
+  "action": "skip",
+  "name": "RAVEN AI edge computer",
+  "reason": "no numeric values in the text"
+ },
+ {
+  "file": "obc/Unknown__OBC-ABACUS-3-Flyer.pdf",
+  "action": "skip",
+  "name": "OBC ABACUS 3 flyer",
+  "reason": "no extractable text (bullets only): would need OCR"
+ }
+]

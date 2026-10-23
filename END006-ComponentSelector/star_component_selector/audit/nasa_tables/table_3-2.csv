@@ -1,0 +1,116 @@
+table,subsystem,page,Company Headquarters,Product,Panel Type,Specific Power (W/kg),Peak BOL Solar Array Power (W)
+3-2,solar_panel,49,AAC Clyde Space Sweden,Photon,*,*,9.25 / 3U-12 Face
+3-2,solar_panel,49,2NDSpace Italy,DROP-03X,Double Deployable,62.5,22.5
+3-2,solar_panel,49,2NDSpace Italy,DROP-04X,Double Deployable,62.5,30
+3-2,solar_panel,49,2NDSpace Italy,DROP-12,Deployable,70,40
+3-2,solar_panel,49,2NDSpace Italy,DROP-03XL,Triple Deployable,67.5,30
+3-2,solar_panel,49,2NDSpace Italy,CORE-01Z,Body Mounted,65,2.45
+3-2,solar_panel,49,2NDSpace Italy,CORE-01,Body Mounted,70,2.45
+3-2,solar_panel,49,2NDSpace Italy,CORE-02,Body Mounted,65,4.88
+3-2,solar_panel,49,2NDSpace Italy,CORE-03,Body Mounted,72.5,8.54
+3-2,solar_panel,49,2NDSpace Italy,CORE-04,Body Mounted,75,11
+3-2,solar_panel,49,2NDSpace Italy,CORE-06Z,Body Mounted,55,4.88
+3-2,solar_panel,49,2NDSpace Italy,CORE-12,Body Mounted,67.5,19.52
+3-2,solar_panel,49,2NDSpace Italy,CORE-12Z,Body Mounted,50,9.76
+3-2,solar_panel,49,2NDSpace Italy,CORE-16,Body Mounted,62.5,24.4
+3-2,solar_panel,49,Agencia Espacial Civil Ecuatoriana Italy,Deployable Multifunction Solar Array,Deployed Rigid,-,-
+3-2,solar_panel,49,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x570mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",18,88 per panel
+3-2,solar_panel,49,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x700mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",21,111 per panel
+3-2,solar_panel,49,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x820mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",24,133 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x965mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",25,155 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x820mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",29,177 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x965mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",30,199 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x1100mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",34,243 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 910x820mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",33,221 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 910x965mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",37,265 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1000x570mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",29,176 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1000x1100mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",39,309 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1070x820mm 36V,"Body Mounted, 1-3 deployed panels, Rigid",37,265 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x570mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",19,92 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x800mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",22,122 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x965mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",25,153 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 600x1100mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",28,183 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x570mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",23,122 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x800mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",25,153 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x965mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",36,241 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 750x1100mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",34,244 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 910x570mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",26,153 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 910x800mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",32,214 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 910x965mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",34,244 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 910x1100mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",40,305 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1070x570mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",29,183 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1070x800mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",34,244 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1070x965mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",39,305 per panel
+3-2,solar_panel,50,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1070x1100mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",45,366 per panel
+3-2,solar_panel,51,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1230x570mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",31,214 per panel
+3-2,solar_panel,51,Airbus Netherlands The Netherlands,Sparkwing Solar Panel 1230x800mm 50V,"Body Mounted, 1-3 deployed panels, Rigid",36,275 per panel
+3-2,solar_panel,51,Blue Canyon Technologies USA,BCT Solar Array,Body Mount + Deployed Rigid,*,28 – 42 for 3U / 48-118 for 6U-12U
+3-2,solar_panel,51,DHV Technologies Spain,DSA-042W,Simple Deployable,36,42
+3-2,solar_panel,51,DHV Technologies Spain,BMSA-066W,Body Mounted,68,66
+3-2,solar_panel,51,DHV Technologies Spain,DSA-079W,Simple Deployable,43,80
+3-2,solar_panel,51,DHV Technologies Spain,BMSA-050W,Body Mounted,65,50
+3-2,solar_panel,51,DHV Technologies Spain,DSA-079W,Simple Deployable,44,95
+3-2,solar_panel,51,DHV Technologies Spain,DSA-108W,Simple Deployable,50,109
+3-2,solar_panel,51,DHV Technologies Spain,BMSA-087W,Body Mounted,68,87
+3-2,solar_panel,51,DHV Technologies Spain,DSA-183W,Double Deployable,50,183
+3-2,solar_panel,51,DHV Technologies Spain,DSA-185W,Simple Deployable,56,185
+3-2,solar_panel,51,DHV Technologies Spain,DSA-255W,Double Deployable,60,256
+3-2,solar_panel,51,DHV Technologies Spain,BMSA-366W,Body Mounted,52,366
+3-2,solar_panel,51,DHV Technologies Spain,DSA-373W,Double Deployable,41,373
+3-2,solar_panel,51,DHV Technologies Spain,DSA-555W,Triple Deployable,60,556
+3-2,solar_panel,51,DHV Technologies Spain,DSA-686W,Quadruple Deployable,34,676
+3-2,solar_panel,51,DHV Technologies Spain,DSA-898W,Quintuple Deployable,34,889
+3-2,solar_panel,51,DHV Technologies Spain,DSA-1268W,Sextuple Deployable,46,1268
+3-2,solar_panel,51,DHV Technologies Spain,DHV-1U Series (Body Mounted),PCB Substrate (Polyimide),41,2
+3-2,solar_panel,51,DHV Technologies Spain,DHV-2U Series (Body Mounted),PCB Substrate (Polyimide),44,4
+3-2,solar_panel,51,DHV Technologies Spain,DHV-3U Series (Body Mounted),PCB Substrate (Polyimide),56,8
+3-2,solar_panel,51,DHV Technologies Spain,DHV-6U Series (Body Mounted),PCB Substrate (Polyimide),60,18
+3-2,solar_panel,51,DHV Technologies Spain,DSA-3U-1D-L (Simple Deployable),PCB Substrate (Polyimide),33,7
+3-2,solar_panel,51,DHV Technologies Spain,DSA-3U-2D-L (Double Deployable),PCB Substrate (Polyimide),35,11
+3-2,solar_panel,51,DHV Technologies Spain,DSA-3U-3D-L (Triple Deployable),PCB Substrate (Polyimide),46,21
+3-2,solar_panel,51,DHV Technologies Spain,DSA-6U-1D-L (Simple Deployable),PCB Substrate (Polyimide),67,28
+3-2,solar_panel,51,DHV Technologies Spain,DSA-6U-1D-S (Simple Deployable),PCB Substrate (Polyimide),35,19
+3-2,solar_panel,51,DHV Technologies Spain,DSA-6U-2D-S (Double Deployable),PCB Substrate (Polyimide),67,55
+3-2,solar_panel,51,DHV Technologies Spain,DSA-6U-2D-L (Double Deployable),PCB Substrate (Polyimide),66,41
+3-2,solar_panel,51,EmxysSpain,"3U Solar panel: 327.5x83x 2.2mm, 14.7V",Body Mounted (Rigid Polyimide),66.6,8.2
+3-2,solar_panel,51,EmxysSpain,"6U Solar panel: 226.3x366x2.2mm, 33.6V",Body Mounted (Rigid Polyimide),53.3,17.6
+3-2,solar_panel,52,EnduroSat Bulgaria,3U Solar Panel/Array,Deployed Rigid,66,14.4
+3-2,solar_panel,52,EnduroSat Bulgaria,6U Solar Panel/Array,Deployed Rigid,64,19.2
+3-2,solar_panel,52,EnduroSat Bulgaria,8U Solar Panel/Array,Deployed Rigid,65,24.0
+3-2,solar_panel,52,Exobotics UK,XO-PANEL 1U,Body Mounted,46,2.3
+3-2,solar_panel,52,Exobotics UK,XO-PANEL 2U,Body Mounted,46,4.6
+3-2,solar_panel,52,Exobotics UK,XO-PANEL 3U,Body Mounted,54,8.1
+3-2,solar_panel,52,Exobotics UK,XO-PANEL 6U,Body Mounted,62,27.8
+3-2,solar_panel,52,ExoTerra Resource USA,Fold Out Solar Arrays (FOSA),Deployed Flexible,140,150
+3-2,solar_panel,52,GomSpace Denmark,Nanopower DSP,Deployed Rigid,*,1.2
+3-2,solar_panel,52,GomSpace Denmark,NanoPower P110,Fixed,36.9 – 92,1.2 / cell 2.4
+3-2,solar_panel,52,GomSpace Denmark,NanoPower MSP 16 cell,Fixed,42,1.2 /cell 19.2
+3-2,solar_panel,52,GomSpace Denmark,NanoPower TSP Per wing,Deployed Rigid,60,45
+3-2,solar_panel,52,ISISPACE The Netherlands,Smallsat Solar Panels,Body Mount + Deployed Rigid,46,2.3 / U
+3-2,solar_panel,52,Lockheed Martin USA,SmallSat Solar Array,Deployed Rigid with Additively Manufactured Substrate,53.6,170 / panel BOL at 28C
+3-2,solar_panel,52,MMA Design USA,Hawk,Deployed Rigid (PCB),121,36-112
+3-2,solar_panel,52,MMA Design USA,zHawk,Deployed Rigid (PCB),95,36
+3-2,solar_panel,52,MMA Design USA,Next-Gen HaWK,Deployed Rigid (PCB),100,45 - 310
+3-2,solar_panel,52,NPC Spacemind Italy,SP1X,Body Mounted 1U,68,2.4
+3-2,solar_panel,52,NPC Spacemind Italy,SP1Z,Body Mounted 1U Top,68,2.4
+3-2,solar_panel,52,NPC Spacemind Italy,SP2X,Body Mounted 2U,64,4.8
+3-2,solar_panel,52,NPC Spacemind Italy,SP2Z,Body Mounted 2U Top,64,4.8
+3-2,solar_panel,52,NPC Spacemind Italy,SP3X,Body Mounted 3U,76,8.4
+3-2,solar_panel,52,NPC Spacemind Italy,SP4X,Body Mounted 4U,75,10.8
+3-2,solar_panel,52,NPC Spacemind Italy,SP4Z,Body Mounted 4U Top,58,9.6
+3-2,solar_panel,52,NPC Spacemind Italy,SP6X,Body Mounted 6U,74,19.2
+3-2,solar_panel,52,NPC Spacemind Italy,SP8X,Body Mounted 8U,68,24
+3-2,solar_panel,52,NPC Spacemind Italy,SP3X Deployable,"Double, Deployable 3U",75,21.6
+3-2,solar_panel,52,NPC Spacemind Italy,SP4X Deployable,"Double, Deployable 4U",58,28.8
+3-2,solar_panel,52,NPC Spacemind Italy,SP6X Deployable,"Double, Deployable 6U",74,57.6
+3-2,solar_panel,52,NPC Spacemind Italy,SP8X Deployable,"Double, Deployable 8U",68,72
+3-2,solar_panel,52,Pumpkin Space Systems USA,Dual Articulated Deployable Solar Array,Deployed Rigid,31,135
+3-2,solar_panel,52,Pumpkin Space Systems USA,Dual-Quad Articulated Deployable Solar Array,Deployed Rigid,30,240
+3-2,solar_panel,52,Pumpkin Space Systems USA,Deployable Clamshell Solar Array (DCSA),Deployed Rigid,44,220
+3-2,solar_panel,52,Pumpkin Space Systems USA,Deployable Clamshell Solar Array (DCSA),Deployed Rigid,38,350
+3-2,solar_panel,52,Redwire Space USA,ROSA,Flexible PV blanket,100,1000
+3-2,solar_panel,52,Redwire Space USA,Aladdin SmallSat Array,Hybrid Array: Flex Rigid,80,300
+3-2,solar_panel,52,SatRev S.A. Poland,Deployable panel,Custom size deployable 3U – 6U,40,36 for a typical 6U deployment
+3-2,solar_panel,52,Sierra Space Corp USA,Surface Mount Technology Solar Panel,Composite,-,2500
+3-2,solar_panel,53,Space Dynamics Laboratory USA,SDL Modular Solar Panels,Deployed Rigid,84.5,180 / panel
+3-2,solar_panel,53,Spacemanic Czech Republic,RA Solar Panels,Triple Junction GaAs,38.55,19.2

@@ -1,0 +1,9 @@
+[
+ {"file": "payload/Aac-clyde__CUBECAT-2.pdf", "action": "skip", "name": "CubeCAT", "reason": "same document as the CubeCAT datasheet already linked to aac-cubecat"},
+ {"file": "payload/Aac-clyde__STS-300-2.pdf", "action": "skip", "name": "STS-300 AIS receiver", "reason": "AIS receiver: the payload category only has imagers and optical terminals (payload_type), an AIS receiver would be mistaken for an imager"},
+ {"file": "payload/Thoth__Argus-2000-IR-Spectrometer-Owners-Manual.pdf", "action": "skip", "name": "Argus 2000 IR spectrometer", "reason": "single-pixel-scan IR spectrometer, not an imager or optical terminal (see STS-300)"},
+ {"file": "payload/Unknown__Cobalt-Optical-Terminal.pdf", "action": "add", "category": "payload", "id": "bluecubed-cobalt", "vendor": "Blue Cubed", "name": "Cobalt Optical Terminal",
+  "document": "Blue Cubed Cobalt Optical Terminal datasheet", "mass_kg": 5.3, "power_w": 30, "temp_op_c": [-20, 55], "dimensions_mm": [255, 255, 295],
+  "notes": "Laser terminal: 850 nm, Ethernet 1000BASE-T host interface, adaptive data rate (range/rate curve, no single maximum in the text), full duplex, cross-plane / in-plane / space-to-air / space-to-ground, integrated coarse steering (10 deg/s) and fine steering mirror, hyper-hemispheric field of regard, 2 deg acquisition FOV, self-orienting without host ADCS. Power is 20-30 W by mode (power_w = upper value); bus voltage 40 VDC max. Dimensions 295 mm tall x 255 mm diameter (dynamic volume). Gen 0 prototype performance verified, Gen 1 pending customer interest; a gimbal-less CubeSat version suitable for 6U and larger is mentioned (no data). Not declared: data rate, uplink rate, range.",
+  "specs": {"payload_type": "optical_terminal", "link_type": "both", "wavelength_nm": 850, "data_interfaces": ["Ethernet"]}}
+]

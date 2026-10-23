@@ -1,0 +1,32 @@
+table,subsystem,page,Product / Mission,Manufacturer,Mission host and launch mass,Device mass (kg),Initial orbit (alt and inc.),,Launch Year,Deployment Year,Drag Area (m2)
+13-2,deorbit,438,NanoSail-D2,NASA MSFC/ARC,FASTSAT (4.2 kg),N/A,650 km 72 deg,,2010,2011,10
+13-2,deorbit,438,Drag-Net,MMA Design,ORS-3 Deployed a Minotaur Upper Stage (100 kg),2.8,N/A,,2016,2016,14
+13-2,deorbit,438,Drag-Net,MMA Design,General Atomics GAzelle Satellite,2.8,N/A,,2022,TBC,14
+13-2,deorbit,438,Icarus-1,Cranfield Aerospace Solutions,SSTL TechDemoSat-1 (157 kg),3.5,635 km,,2014,2019,6.7
+13-2,deorbit,438,Icarus-3,Cranfield Aerospace Solutions,Carbonite-1 (80 kg),2.3,6,650 km,2015,2018,2
+13-2,deorbit,438,Icarus-3,,,,,98 deg,,,
+13-2,deorbit,438,DOM,Cranfield Aerospace Solutions,ESEO (45 kg),0.5,572 × 588 km 97.77 deg,,2018,2020,0.5
+13-2,deorbit,438,Terminator Tape,"Tethers Unlimited, Inc.",Prox-1 (71 kg),0.808,717 km 24 deg,,2019,2019,10.5
+13-2,deorbit,438,DragSail,Surrey Space Centre,InflateSail (3.2 kg),N/A,505 km 97.44 deg,,2017,2017,10
+13-2,deorbit,438,Exo-Brake,NASA,TechEdSat 5 (3.4 kg),N/A,405 km 51.5 deg,,2014,2015,0.35
+13-2,deorbit,438,Exo-Brake,NASA,TechEdSat 7 (3 kg),N/A,485 x 513 km 60.7 deg,,2021,2021,1.2
+13-2,deorbit,438,Exo-Brake,NASA,TechEdSat 13 (4 kg),N/A,499 x 509 km 45 deg,,2022,2022,0.083
+13-2,deorbit,438,Exo-Brake,NASA,TechEdSat 15 (4.5 kg),N/A,215 x 285 km 137 deg,,2022,2022,0.087
+13-2,deorbit,438,removeDebris,Surrey Space Centre,removeDebris (100 kg),N/A,405 km 51.5 deg,,2018,2019,16
+13-2,deorbit,438,CanX-7,UTIAS-SFL,3U CubeSat (3.6 kg),0.8 (4 modules of 0.200),688 km 98 deg,,2016,2017,4
+13-2,deorbit,438,NABEO-1,HPS,1U CubeSat (attached to Rocket Lab Kick Stage),0.85,500 km,,2018,2018,2.5
+13-2,deorbit,438,ADEO-2,HPS,1U CubeSat (attached to the D-orbit ION carrier),3.4,N/A,,2021,2022,3.6
+13-2,deorbit,439,ADEO-Cube series,HPS,1-50 kg,0.5,LEO,N/A,N/A,2,
+13-2,deorbit,439,ADEO-N series,HPS,20-250 kg,0.8,LEO,N/A,N/A,5±2,
+13-2,deorbit,439,ADEO-M series,HPS,100-700 kg,4,LEO,N/A,N/A,15±5,
+13-2,deorbit,439,ADEO-L series,HPS,500-1500 kg,9.5,LEO,N/A,N/A,20±100,
+13-2,deorbit,439,ARTICA (ALPHA),NPC Spacemind,1U CubeSat,0.285 (0.3U),"5865 Km, 70.16 deg",2020,2020,2.2,
+13-2,deorbit,439,ARTICA (FUTURA SM 3),NPC Spacemind,6U CubeSat,0.285 (0.3U),N/A,2023,N/A,2.2,
+13-2,deorbit,439,ARTICA (DANTESAT),NPC Spacemind,3U CubeSat,0.285 (0.3U),415 km,2022,2022,2.2,
+13-2,deorbit,439,ARTICA (URSA MAIOR),NPC Spacemind,3U CubeSat,0.285 (0.3U),"450 km, 97.1 deg",2017,2019,2.2,
+13-2,deorbit,439,ARTICA (1KUNS),NPC Spacemind,1U CubeSat,0.285 (0.3U),N/A,2018,2019,2.2,
+13-2,deorbit,439,LightSail – 2,The Planetary Society,3U CubeSat,N/A,720 km,2019,2022,32,
+13-2,deorbit,439,ACS3,NASA,12U CubeSat,1 (6U),1000 km SSO,2024,2024,81,
+13-2,deorbit,439,Gama ALPHA,Gama,6U CubeSat,N/A,550 km,2023,N/A,73.3,
+13-2,deorbit,439,NANO dragsail (28),Frond Space Systems,2U-12U CubeSat,0.25,<650 km,2025,N/A,1,
+13-2,deorbit,439,MICRO dragsail (29),Frond Space Systems,50-100 kg spacecraft,<1600,<650 km,2025,N/A,10,

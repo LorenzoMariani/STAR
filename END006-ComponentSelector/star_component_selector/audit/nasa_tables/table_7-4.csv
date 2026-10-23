@@ -1,0 +1,18 @@
+table,subsystem,page,Manufacturer,Film Product,Typical Solar Absorptivity BOL
+7-4,thermal_passive,232,Astral Technologies Unlimited,StaMet/100XC Kapton,0.5
+7-4,thermal_passive,232,Astral Technologies Unlimited,StaMet/275XC Kapton,0.56
+7-4,thermal_passive,233,Astral Technologies Unlimited Multek/Sheldahl,"0.010"" FEP/Ag/Inconel",0.08
+7-4,thermal_passive,233,Astral Technologies Unlimited Multek/Sheldahl,"0.005"" FEP/Ag/Inconel",0.07
+7-4,thermal_passive,233,Astral Technologies Unlimited Multek/Sheldahl,"ITO/0.010"" FEP/Ag/Inconel, perforated",0.09
+7-4,thermal_passive,233,Astral Technologies Unlimited Multek/Sheldahl,"ITO/0.005"" FEP/Ag/Inconel, perforated",0.08
+7-4,thermal_passive,233,Astral Technologies Unlimited Multek/Sheldahl,Germanium/100XC Kapton,0.55
+7-4,thermal_passive,233,Dunmore Multek/Sheldahl,VDA/200HN/PSA,0.08
+7-4,thermal_passive,233,Dunmore Multek/Sheldahl,200HN/VDA/PSA,0.41
+7-4,thermal_passive,233,Dunmore Multek/Sheldahl,100HN/VDA/PSA,0.38
+7-4,thermal_passive,233,Dunmore Multek/Sheldahl,VDG/200HN/PSA,0.2
+7-4,thermal_passive,233,NASA GSFC,GSFC Silver Composite Coating/ 200HN Kapton,0.1
+7-4,thermal_passive,233,NASA GSFC,GSFC Aluminum Composite Coating/200HN Kapton,0.14
+7-4,thermal_passive,233,NASA GSFC,GSFC Aluminum Composite Coating/100XC Kapton,0.2
+7-4,thermal_passive,233,NASA GSFC,GSFC Aluminum Composite Coating/275XC Kapton,0.28
+7-4,thermal_passive,233,NASA GSFC,GSFC Tailorable Emittance Coating/200HN Kapton,0.14
+7-4,thermal_passive,233,Thales,"Optical Solar Reflector CMX 0.005""",0.08

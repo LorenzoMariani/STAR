@@ -1,0 +1,6 @@
+table,subsystem,page,Manufacturer,Product,Wh/kg,Wh/L
+3-7,battery,65,Solid Power,Silicon EV Cell,390,930
+3-7,battery,65,Solid Power,Lithium Metal,440,930
+3-7,battery,65,Solid Power,Conversion Reaction Cell,560,785
+3-7,battery,65,QuantumScape,LFP (projected),230,600
+3-7,battery,65,QuantumScape,NMC (projected),300,1000
