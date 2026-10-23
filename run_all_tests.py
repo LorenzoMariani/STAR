@@ -12,8 +12,10 @@ MATLAB suites (matlab.unittest, all in one MATLAB session):
     END-016  END016-CollisionAvoidance/tests   (2026-10-20)
     END-004  END004-PowerBudget/tests
     END-019  END019-ComponentsThermalAnalysis/tests   (2026-10-20)
+    HEATER   tests/test_end019_heater_cases.m   (battery heater of END-019, outside the module: BackEnd/runners/matlab; 2026-10-23)
 Python suites (unittest):
     STAR     tests/test_*.py   (BackEnd imports, Python syntax, generated results page, runners without MATLAB; 2026-10-20)
+    CEF      tests/test_cef_*.py   (design loop of phase F: criteria and controller with fake modules, 2026-10-23; also part of STAR)
     END-006  END006-ComponentSelector/star_component_selector/tests
 On GitHub at every push and pull request (.github/workflows/tests.yml): the Python suites and every MATLAB suite but END-001.
 
@@ -47,9 +49,11 @@ SUITES = [
     {"id": "END-016", "kind": "matlab", "path": "END016-CollisionAvoidance/tests"},
     {"id": "END-004", "kind": "matlab", "path": "END004-PowerBudget/tests"},
     {"id": "STAR", "kind": "python", "path": ".", "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]},
+    {"id": "CEF", "kind": "python", "path": ".", "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_cef_*.py"]},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
     {"id": "END-019", "kind": "matlab", "path": "END019-ComponentsThermalAnalysis/tests"},
+    {"id": "HEATER", "kind": "matlab", "path": "tests/test_end019_heater_cases.m"},
 ]
 # not in the default run: python run_all_tests.py SMOKE
 OPTIONAL_SUITES = [

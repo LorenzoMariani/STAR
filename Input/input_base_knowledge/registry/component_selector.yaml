@@ -125,6 +125,14 @@ phases:
       required: false
       used_for: disposal delta-v for the propulsion
       fallback: no disposal delta-v
+    - product: kpis_end003
+      required: false
+      used_for: END-003 peak wheel momentum and control torque for the wheel sizing at 50 % utilisation (IF-003-006)
+      fallback: wheels declared by the vendor for the class
+    - product: kpis_end019
+      required: false
+      used_for: END-019 battery temperatures and cold-case heater sizing for the battery heater (IF-019-006)
+      fallback: no battery heater, battery temperature not checked
     produces:
     - product: kpis_end006
       path: kpis.json
@@ -137,6 +145,7 @@ phases:
       format: json
       required_keys: [mass_kg, class_u]
       guaranteed: true
+      feeds_back_to: spacecraft_definition   # CEF loop (phase F): promoted over spacecraft_definition before the next iteration
       description: the satellite of the final design and its changes with respect to the initial one
     - product: component_selector_results
       path: output_component_selector/component_selector_results.json

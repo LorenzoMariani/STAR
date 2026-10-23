@@ -561,6 +561,17 @@ def apply_fallbacks(rows: list[dict[str, Any]], fallbacks: dict[str, list[str]])
             r["reason"] = "; ".join(f"{m} used a critical fallback ({', '.join(fallbacks[m][:3])})" for m in used)
 
 
+def design_loop_summary(run_path: Path) -> dict[str, Any] | None:
+    """Outcome of the design loop (<run>/convergence.json, phase F) for the banner of the compliance tab; None without a loop."""
+    try:
+        conv = json.loads((Path(run_path) / "convergence.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(conv, dict):
+        return None
+    return {k: conv.get(k) for k in ("status", "reason", "iterations_run", "max_iterations", "converged_at", "failing_criteria")}
+
+
 def build(run_path: str | Path, requirements: list[dict[str, Any]], run_mode: str = "test", workflow: list | None = None,
           write: bool = True, out_dir: str | Path | None = None) -> dict[str, Any]:
     """Compliance of a run: compliance.json (+ _data.js), requirement_kpi_map.json, traceability.json / .csv in <run>/compliance
@@ -583,6 +594,7 @@ def build(run_path: str | Path, requirements: list[dict[str, Any]], run_mode: st
         "modules_run": modules_run,
         "workflow": [s.get("module_id") for s in (workflow or [])],
         "counts": counts,
+        "design_loop": design_loop_summary(run_path),
         "requirements": rows,
         "module_assessments": module_assessments(kpis),
         "kpis": kpi_table(kpis),

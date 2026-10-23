@@ -264,6 +264,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END-016</span><span class="tab-title">Collision Avoidance</span></button>
         <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END-019</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
+        <button class="tab-button" id="tab-cefloop" data-tab="cefloop" type="button"><span class="tab-code">STAR</span><span class="tab-title">Design loop</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
       </div>
@@ -282,6 +283,7 @@ code{color:var(--accent-2)}
       <iframe id="frame-thermal" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_THERMAL__" title="Components Thermal Analysis"></iframe>
       <iframe id="frame-compsel" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__" title="Component Selector"></iframe>
       <iframe id="frame-compliance" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPLIANCE__" title="Requirements and KPIs"></iframe>
+      <iframe id="frame-cefloop" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_CEFLOOP__" title="Design loop"></iframe>
       <iframe id="frame-diagnostics" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_DIAGNOSTICS__" title="Run Diagnostics"></iframe>
     </div>
   </section>
@@ -368,7 +370,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-cefloop'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -953,6 +955,29 @@ async function loadComplianceFromStarRoot() {
   }
 }
 
+// Design loop (phase F, 2026-10-23): <run>/convergence.json and the archive <run>/cef/iteration_0k written by the CEF loop
+async function readRunRootFile(name) {
+  if (Array.isArray(starRunFiles)) return fileFromSelectedRunPath([name]);
+  if (!starRootHandle) return null;
+  try { return await (await starRootHandle.getFileHandle(name)).getFile(); } catch (_) { return null; }
+}
+
+async function loadCefLoopFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-cefloop');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveCefLoopFilesFromParent !== 'function') return false;
+  try {
+    const convergence = await readRunRootFile('convergence.json');
+    let archive = [];
+    try { archive = await collectFilesFromSelectedPath(['cef']); } catch (_) { archive = []; }
+    await frame.contentWindow.receiveCefLoopFilesFromParent({ convergence, archive }, { run: selectedRunName() });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load the design loop data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function getDirectoryHandleIfExists(rootHandle, pathParts) {
   try {
     return await resolveDirectoryHandle(rootHandle, pathParts);
@@ -1128,7 +1153,7 @@ function scheduleAttitudeDataDelivery() {
 const TAB_FRAMES = {
   constellation: 'frame-constellation', attitude: 'frame-attitude', powerviz: 'frame-powerviz', synthetic: 'frame-synthetic',
   reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', compsel: 'frame-compsel',
-  compliance: 'frame-compliance', diagnostics: 'frame-diagnostics'
+  compliance: 'frame-compliance', cefloop: 'frame-cefloop', diagnostics: 'frame-diagnostics'
 };
 const TAB_LOADERS = {
   constellation: loadConstellationFromStarRoot,
@@ -1144,12 +1169,13 @@ const TAB_LOADERS = {
   thermal: loadThermalAnalysisFromStarRoot,
   compsel: loadComponentSelectorFromStarRoot,
   compliance: loadComplianceFromStarRoot,
+  cefloop: loadCefLoopFromStarRoot,
   diagnostics: updateRunDiagnostics
 };
 // module redraws; refreshDiagnosticsDashboard is left out because it scans the RUN again (its loader already did)
 const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshComponentSelectorDashboard',
   'refreshConstellationDashboard', 'refreshAttitudeDashboard', 'refreshPowerInsightsDashboard', 'refreshSyntheticDashboard',
-  'refreshReflectanceDashboard', 'refreshComplianceDashboard'];
+  'refreshReflectanceDashboard', 'refreshComplianceDashboard', 'refreshCefLoopDashboard'];
 const tabLoads = {};    // tab -> { run, promise, size }: data read for the selected RUN, frame size at the last redraw
 
 function activeTabName() {

@@ -2779,3 +2779,32 @@ body[data-theme="light"] .star-doc-modal-foot { border-color: #d9e0eb; color: #6
 
 body[data-theme="light"] .star-doc-text { color: #1f2937; }
 body[data-theme="light"] .star-doc-text-head { color: #475467; border-color: #d9e0eb; }
+
+
+/* Design loop (phase F6): iteration chip on the cards of the loop modules and in the module bay header */
+.module-card { position: relative; }
+.iter-chip {
+  position: absolute;
+  right: 6px;
+  bottom: 3px;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0;
+  vertical-align: middle;
+  color: #07100d;
+  background: linear-gradient(135deg, #e8ff47, #4dffc3);
+}
+.cef-chip {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 255, 195, 0.5);
+  font-size: 11px;
+  font-weight: 700;
+  color: #4dffc3;
+}
+.cef-chip[hidden] { display: none; }
+.cef-chip.converged { color: #61f6a8; border-color: #61f6a8; }
+.cef-chip.not_converged, .cef-chip.stalled, .cef-chip.interrupted { color: #fbbf24; border-color: #fbbf24; }

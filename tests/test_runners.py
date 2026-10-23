@@ -421,6 +421,37 @@ class TestRunnerHelpers(unittest.TestCase):
         self.assertTrue(is_fallback_source(out["battery_worst_case"]["eclipse_source"]))
         self.assertIsNone(out["battery_within_dod_limit"])
 
+    def test_end004_battery_heater_in_the_worst_case_only(self):
+        on = {"sun": 1, "eclipse": 1}
+        cfg = {"orbit": {"sunlight_min": 60.0, "eclipse_min": 35.0}, "battery": {"capacity_Wh": 80.0}, "margin_fraction": 0.0,
+               "generation": {"power_generated_per_orbit_Wh": 30.0},
+               "operations": {"mode_orbits_per_day": {"idle": 15, "tx_uhf": 0, "tx_sband": 0, "payload": 0}},
+               "subsystems": [{"name": "OBDH", "powerW": 2.0, "duty": {m: on for m in end004_runner.MODE_KEYS}},
+                              {"name": "THERMAL", "powerW": 3.0, "duty": {m: {"sun": 0, "eclipse": 0.1} for m in end004_runner.MODE_KEYS}}]}
+        env = {"mission_life_years": 1, "life_envelope": {"eclipse_max_min": 38.0, "satellite_eclipse_max": 1}}
+        sat = {"thermal_control": {"battery_heater": {"component": "minco-hk6911", "power_w": 6.3, "mean_w_cold": 2.5}}}
+        heater = end004_runner.battery_heater(sat)
+        self.assertIsNotNone(heater)
+        self.assertIsNone(end004_runner.battery_heater({"thermal_control": None}))
+        base = end004_runner.design_cases(cfg, env)
+        out = end004_runner.design_cases(cfg, env, None, heater)
+        idle_b, idle_h = base["battery_worst_case"]["modes"]["idle"], out["battery_worst_case"]["modes"]["idle"]
+        # cold-case mean x period, all in eclipse, in place of the template heaters (3 W x 10 % of the eclipse)
+        self.assertAlmostEqual(idle_h["eclipse_consumption_Wh"] - idle_b["eclipse_consumption_Wh"], 2.5 * 95 / 60 - 3.0 * 0.1 * 38 / 60, places=3)
+        self.assertGreater(out["worst_dod_pct"], base["worst_dod_pct"])
+        bh = out["battery_heater"]
+        self.assertAlmostEqual(bh["energy_per_orbit_Wh"], 2.5 * 95 / 60, places=3)
+        self.assertEqual(bh["replaces"], "template heaters (THERMAL)")
+        # nominal budget and dissipation unchanged; the heater listed apart (END-019 owns its heat)
+        self.assertEqual(out["nominal"], base["nominal"])
+        for case in ("hot", "cold", "nominal"):
+            self.assertEqual(out["dissipation_W"][case], base["dissipation_W"][case])
+        self.assertEqual(out["dissipation_W"]["heater_W"], 2.5)
+        self.assertEqual(base["dissipation_W"]["heater_W"], 0.0)
+        self.assertIsNone(base["battery_heater"])
+        # the heater is not an always-on load of the budget
+        self.assertIn("battery_heater", end004_runner.NO_LOAD)
+
     def test_end019_design_from_end006_end004_end001(self):
         with tempfile.TemporaryDirectory() as tmp:
             t = Path(tmp)
@@ -439,6 +470,13 @@ class TestRunnerHelpers(unittest.TestCase):
                              (8.0, [-60.0], [75.0], 1.5, [0.5]))
             self.assertEqual((config["bat_min_C"], config["bat_max_C"]), (-10.0, 45.0))
             self.assertFalse(any(is_fallback_source(v) for v in prov.values()))
+            self.assertNotIn("battery_heater", config)
+            # phase F4: the battery heater of the design goes to end019_heater_cases.m
+            config, prov, notes = {}, {}, []
+            sat_h = {**sat, "thermal_control": {"battery_heater": {"component": "minco-hk6911", "power_w": 6.3, "setpoint_c": -5.0}}}
+            end019_runner._apply_design(payload, sat_h, config, prov, {}, notes)
+            self.assertEqual(config["battery_heater"], {"power_w": 6.3, "setpoint_c": -5.0})
+            self.assertIn("minco-hk6911", prov["battery_heater"])
             # no END-004, no END-001 envelope, no battery temperatures: model powers (critical), window beta, default limits
             config, prov, notes = {}, {}, []
             end019_runner._apply_design({}, {"mass_kg": 7.8}, config, prov, {}, notes)
@@ -474,6 +512,26 @@ class TestRunnerHelpers(unittest.TestCase):
             # a payload without the upstream_products block (hand-built): token match on the upstream artifacts
             sat = star_runner_io.load_spacecraft_definition({"upstream_artifacts_absolute": [str(path)]})
             self.assertEqual(sat["_source_path"], str(path))
+
+    def test_design_loads_are_logged_with_iteration_and_signature(self):
+        """Phase F5: every load of the satellite goes to <run>/design_loads.jsonl; the signature ignores the promotion stamps."""
+        with tempfile.TemporaryDirectory() as tmp:
+            mo = Path(tmp) / "modules_output"
+            path = mo / "END-006" / "output_component_selector" / "spacecraft_definition.json"
+            d0 = {"form_factor": "6U", "mass_kg": 7.8, "components": {"adcs": "xact-100"}, "design_iteration": 0}
+            write_json(path, d0)
+            star_runner_io.load_spacecraft_definition({}, mo)
+            _, offset = star_runner_io.read_design_loads(mo)
+            write_json(path, {**d0, "design_iteration": 1, "promoted_from": "END-006/final", "generated_at": "later"})
+            star_runner_io.load_spacecraft_definition({}, mo)
+            loads, _ = star_runner_io.read_design_loads(mo, 0)
+            self.assertEqual([x["design_iteration"] for x in loads], [0, 1])
+            self.assertEqual(loads[0]["signature"], loads[1]["signature"])             # same content, only the stamps differ
+            self.assertEqual(loads[1]["promoted_from"], "END-006/final")
+            self.assertEqual(len(star_runner_io.read_design_loads(mo, offset)[0]), 1)  # only the loads after the offset
+            write_json(path, {**d0, "mass_kg": 9.0})
+            star_runner_io.load_spacecraft_definition({}, mo)
+            self.assertNotEqual(star_runner_io.read_design_loads(mo, 0)[0][-1]["signature"], loads[0]["signature"])
 
 
 if __name__ == "__main__":

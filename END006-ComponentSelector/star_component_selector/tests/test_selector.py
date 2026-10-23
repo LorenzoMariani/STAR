@@ -38,8 +38,8 @@ class TestCatalog(unittest.TestCase):
     def setUpClass(cls):
         cls.cat = load_catalog(CATALOG)
 
-    def test_catalog_is_valid_and_has_236_components_in_all_categories(self):
-        self.assertEqual(len(self.cat), 236)
+    def test_catalog_is_valid_and_has_243_components_in_all_categories(self):
+        self.assertEqual(len(self.cat), 243)
         by_cat = {}
         for c in self.cat:
             by_cat[c.category] = by_cat.get(c.category, 0) + 1
@@ -147,7 +147,7 @@ class TestRows(unittest.TestCase):
         self.assertEqual(declared_power_w(CAT["cubespace-cubewheel-cw0057"]), 2.7)    # picco
 
     def test_every_component_belongs_to_one_subsystem(self):
-        ids = {sid for sid, _, _ in SUBSYSTEMS}
+        ids = {sid for sid, _, _ in SUBSYSTEMS} | {"heater"}      # battery heaters: chosen by mission.battery_heater, not by the search
         for c in SERVICE.catalog:
             self.assertIn(subsystem_of(c), ids, c.id)
 

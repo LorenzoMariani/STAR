@@ -1,0 +1,69 @@
+# STAR CEF loop criteria (phase F, 2026-10-23). Read by BackEnd/runners/star_cef.py; the loop ends when every criterion is
+# pass or not_applicable. KPI ids are the global ids of star_kpis.CATALOGUE, read from the kpis.json of the iteration.
+#
+# A criterion is a list of checks. A check: {kpi, op, threshold | ref, label, if_missing, if_no_limit}
+#   op:        <= >= < > ==    value op threshold   (== compares numbers with a relative 1e-9 and anything else by equality)
+#              rel_le          |value - ref| <= threshold x |ref|     (threshold = the relative band, e.g. 0.01 = 1 %)
+#   threshold: a constant | {kpi: <id>, factor: f}  f x the value of another KPI of the iteration (factor 1 by default)
+#                         | {kpi_limit: <id>}      the limit the module used for that KPI (its assessment.threshold) - the
+#                                                  syntax of requirement_kpi_rules.yaml
+#   ref:       used                the same KPI of the design the modules USED in the iteration (END-006 initial design for
+#                                  iteration 1, the final design of the iteration before after that)
+#            | {kpi: <id>}         another KPI of the iteration
+# A criterion may have applies_if: {kpi, op, threshold} - not_applicable when it does not hold or the KPI is missing.
+# Check statuses: pass | fail | not_applicable | not_evaluable. not_evaluable = a KPI is missing (e.g. the module failed): it
+# counts as a failure of the criterion and gets a reason. A check on a KPI of a module that is not in the workflow is
+# not_applicable; if_missing: not_applicable also covers a KPI that the module completed without writing (e.g. no wheels);
+# if_no_limit: not_applicable covers a kpi_limit threshold the module did not publish.
+# Criterion status: fail if a check fails, else not_evaluable if one is, else not_applicable if all checks are, else pass.
+schema_version: 1
+max_iterations: 3      # passes, the first one included
+# The design the modules used and the one END-006 produced are the same (signature and mass) but a criterion still fails:
+# the runs are deterministic, another iteration would give the same result -> status "stalled".
+stall_mass_rel: 0.001
+
+# KPIs shown as "design evolution" in the results (convergence.json iterations[].evolution), not part of any criterion.
+evolution_kpis:
+- {kpi: END-006.mass_kg, label: Satellite mass}
+- {kpi: END-006.dv_capacity_m_s, label: Delta-v capacity}
+- {kpi: END-006.dv_need_m_s, label: Delta-v need}
+- {kpi: END-016.mass_used_kg, label: Mass END-016 used}
+- {kpi: END-006.wheel_momentum_ratio, label: Wheel momentum capacity / need}
+- {kpi: END-006.wheel_torque_ratio, label: Wheel torque capacity / need}
+- {kpi: END-003.peak_wheel_momentum_pct, label: Peak wheel momentum}
+- {kpi: END-006.battery_heater_W, label: Battery heater in the design}
+- {kpi: END-019.heater_needed_peak_W, label: Heater power needed (peak)}
+- {kpi: END-019.battery_min_C, label: Battery min temperature}
+- {kpi: END-019.battery_max_C, label: Battery max temperature}
+- {kpi: END-004.worst_dod_pct, label: Worst depth of discharge}
+
+criteria:
+- id: CEF-MASS
+  name: Mass of the produced design within 1 % of the design the modules used
+  checks:
+  - {kpi: END-006.mass_kg, op: rel_le, ref: used, threshold: 0.01, label: Satellite mass against the design used}
+
+- id: CEF-COMPONENTS
+  name: Same components in the design used and in the design produced
+  checks:
+  - {kpi: END-006.design_signature, op: "==", ref: used, label: Design signature against the design used}
+
+- id: CEF-DV
+  name: Delta-v capacity at least 1.05 x the need, the need computed on the mass of the design
+  applies_if: {kpi: END-006.dv_need_m_s, op: ">", threshold: 0}
+  checks:
+  - {kpi: END-006.dv_capacity_m_s, op: ">=", threshold: {kpi: END-006.dv_need_m_s, factor: 1.05}, label: Delta-v capacity against 1.05 x the need}
+  - {kpi: END-016.mass_used_kg, op: rel_le, ref: {kpi: END-006.mass_kg}, threshold: 0.01, label: Mass END-016 computed the need on}
+
+- id: CEF-WHEELS
+  name: Wheel momentum and control torque below 80 % of the capacity
+  checks:
+  - {kpi: END-003.peak_wheel_momentum_pct, op: "<", threshold: 80, if_missing: not_applicable, label: Peak wheel momentum}
+  - {kpi: END-003.peak_control_torque_pct, op: "<", threshold: 80, if_missing: not_applicable, label: Peak control torque}
+
+- id: CEF-BATTERY
+  name: Depth of discharge and battery temperatures inside the limits
+  checks:
+  - {kpi: END-004.worst_dod_pct, op: "<=", threshold: {kpi_limit: END-004.worst_dod_pct}, if_no_limit: not_applicable, label: Worst-case depth of discharge}
+  - {kpi: END-019.battery_min_C, op: ">=", threshold: {kpi: END-019.battery_limit_min_C}, label: Battery minimum temperature}
+  - {kpi: END-019.battery_max_C, op: "<=", threshold: {kpi: END-019.battery_limit_max_C}, label: Battery maximum temperature}

@@ -1,10 +1,11 @@
 """Progetto per una missione (star_selector/mission.py, STAR 2026-10-15): sottosistemi richiesti, classe piu' piccola, requisiti verificati con i
 dati pubblicati, sottosistemi non richiesti a parte, requisiti che nessun componente del catalogo soddisfa."""
+import math
 import unittest
 from pathlib import Path
 
 from star_selector.api import SelectorService
-from star_selector.mission import analyse, design
+from star_selector.mission import analyse, battery_heater, design
 from star_selector.models import load_catalog
 from star_selector.rows import subsystem_of
 from star_selector.selector import CLASSES, Slot, select, total_impulse_ns
@@ -522,6 +523,142 @@ class SelectorExtensionsTest(unittest.TestCase):
         self.assertTrue(all(s["design"] for s in out["subsystems"]))
         self.assertTrue(out["mission"]["extras"])
         self.assertEqual({s["subsystem"] for s in out["subsystems"]} & {"reaction_wheel", "star_tracker"}, set())
+
+
+class WheelSizingTest(unittest.TestCase):
+    """IF-003-006: ruote al 50% dei picchi di END-003 (wheel_sizing), poi la capacita' piu' piccola (prefer), poi la massa."""
+    REQS = [{"id": "REQ-001", "text": "The satellite shall be three-axis stabilised and point at nadir."}]
+
+    def adcs(self, end003, forced=6):
+        sel, m = design(CATALOG, self.REQS, {"end003": end003} if end003 else {}, forced_class_u=forced)
+        r = next(r for r in sel.subsystems if r.subsystem == "adcs")
+        ck = next((x for x in m["requirements"] if x["slot"] == "adcs" and "END-003" in x["what"]), None)
+        return r.selected.comp.id, ck, m
+
+    def test_without_end003_todays_rule(self):
+        cid, ck, m = self.adcs(None)
+        self.assertEqual(cid, "bct-xact-50")      # declared for 6U, the lightest
+        self.assertIsNone(ck)
+        self.assertIsNone(m["wheel_sizing"])
+
+    def test_smallest_capacity_that_meets_twice_the_need(self):
+        # 6U units declared for the class: XACT-50 (50 mN m s, 6 mN m, 1.23 kg), iADCS400 (15 mN m s, 2 mN m, 1.7 kg)
+        cid, ck, m = self.adcs({"peak_momentum_nms": 1e-3, "peak_torque_nm": 1e-4})
+        self.assertEqual(cid, "hyperion-iadcs400")
+        self.assertEqual(ck["status"], "met")
+        ws = m["wheel_sizing"]
+        self.assertAlmostEqual(ws["momentum_ratio"], 15.0)
+        self.assertAlmostEqual(ws["torque_ratio"], 20.0)
+        self.assertEqual(ws["design_factor"], 2.0)
+
+    def test_momentum_at_fifty_percent(self):
+        # 2 x 10 mN m s > 15: the iADCS400 is out
+        self.assertEqual(self.adcs({"peak_momentum_nms": 1e-2, "peak_torque_nm": 1e-4})[0], "bct-xact-50")
+        # 2 x 7.5 = 15: exactly at 50 %, still in
+        self.assertEqual(self.adcs({"peak_momentum_nms": 7.5e-3, "peak_torque_nm": 1e-4})[0], "hyperion-iadcs400")
+
+    def test_torque_at_fifty_percent(self):
+        self.assertEqual(self.adcs({"peak_momentum_nms": 1e-3, "peak_torque_nm": 1.5e-3})[0], "bct-xact-50")
+
+    def test_declared_class_rule_still_applies(self):
+        # MAI-200 (10.8 mN m s, no declared class) is smaller but the class has its own units
+        self.assertNotEqual(self.adcs({"peak_momentum_nms": 1e-3, "peak_torque_nm": 1e-4})[0], "pumpkin-mai-200")
+
+    def test_need_no_unit_meets(self):
+        cid, ck, m = self.adcs({"peak_momentum_nms": 1.0, "peak_torque_nm": 1e-4})
+        self.assertEqual(ck["status"], "not_met")
+        self.assertTrue(any("END-003" in u for u in m["unmet"]))
+
+    def test_need_drives_the_class(self):
+        # the 1U iADCS200 (1.5 mN m s, 0.1 mN m) cannot give 2 x 0.1 mN m: a larger class
+        self.assertEqual(design(CATALOG, self.REQS, {})[0].cubesat.units, 1)
+        sel, m = design(CATALOG, self.REQS, {"end003": {"peak_momentum_nms": 1e-3, "peak_torque_nm": 1e-4}})
+        self.assertGreater(sel.cubesat.units, 1)
+        self.assertGreaterEqual(m["wheel_sizing"]["torque_ratio"], 2.0)
+
+    def test_slew_momentum_with_the_inertia_end003_used(self):
+        reqs = self.REQS + [{"id": "REQ-002", "text": "The satellite shall slew at 1 deg/s."}]
+        a = analyse(reqs, {"end003": {"peak_momentum_nms": 1e-4, "peak_torque_nm": 1e-5, "inertia_max_kgm2": 0.1}})
+        ck = next(c for nd in a["needs"] for c in nd.checks if c.key == "wheel_sizing")
+        self.assertAlmostEqual(a["wheel_sizing"]["need_momentum_nms"], 0.1 * math.radians(1.0))
+        self.assertEqual(ck.req.id, "REQ-002")
+
+    def test_separate_wheels_carry_the_check(self):
+        reqs = self.REQS + [{"id": "REQ-002", "text": "The satellite shall carry reaction wheels."}]
+        a = analyse(reqs, {"end003": {"peak_momentum_nms": 1e-4, "peak_torque_nm": 1e-5}})
+        self.assertEqual(a["wheel_sizing"]["slot"], "reaction_wheel")
+        self.assertEqual([nd.slot.id for nd in a["needs"] if any(c.key == "wheel_sizing" for c in nd.checks)], ["reaction_wheel"])
+
+
+class BatteryHeaterTest(unittest.TestCase):
+    """IF-019-006 (phase F4): battery heater >= 1.25 x the END-019 cold-case peak, integrated in the battery if it is enough,
+    otherwise the lightest catalogued film heater (power V^2 / R at the lowest battery voltage)."""
+    REQS = [{"id": "REQ-001", "text": "The satellite shall be three-axis stabilised and point at nadir."}]
+
+    @staticmethod
+    def e19(peak, mean=None, hot=8.6, cold=-36.8):
+        return {"needed_peak_w": peak, "needed_mean_w_cold": mean if mean is not None else peak / 2, "setpoint_c": 5.0, "battery_min_c": cold,
+                "battery_max_c": hot, "limit_min_c": 0.0, "limit_max_c": 45.0, "heater_in_design_w": 0.0, "source": "test"}
+
+    @staticmethod
+    def holding(battery_id):
+        """A design whose battery is the given pack (only what battery_heater reads)."""
+        from types import SimpleNamespace as NS
+        return NS(subsystems=[NS(id="battery", subsystem="battery", selected=NS(comp=BY_ID[battery_id]))])
+
+    def test_catalogue_heaters_from_the_datasheet(self):
+        heaters = [c for c in CATALOG if c.category == "heater"]
+        self.assertGreaterEqual(len(heaters), 2)
+        h = BY_ID["minco-hk6911"]
+        self.assertEqual((h.spec("resistance_ohm"), h.spec("rated_power_w"), h.spec("rated_voltage_v")), (22.1, 36, 28))
+        self.assertAlmostEqual(h.mass_kg, 0.04 * 5.08 * 5.08 / 1000.0, places=6)      # areal density x heated area
+        self.assertEqual(BY_ID["gomspace-bpx-100wh-16v"].spec("integrated_heater_w"), 6.0)
+        self.assertIsNone(BY_ID["aac-optimus-30"].spec("integrated_heater_w"))          # declared, power not published
+
+    def test_without_end019_no_heater(self):
+        _, m = design(CATALOG, self.REQS, {}, forced_class_u=6)
+        self.assertIsNone(m["battery_heater"])
+
+    def test_integrated_heater_when_it_is_enough(self):
+        h = battery_heater(CATALOG, self.holding("gomspace-bpx-100wh-16v"), self.e19(4.0))       # 1.25 x 4 = 5 W <= 6 W
+        self.assertEqual((h["source"], h["component"], h["power_w"], h["mass_kg"], h["status"]), ("integrated", "gomspace-bpx-100wh-16v", 6.0, 0.0, "met"))
+        self.assertTrue(h["temperature_check"]["met"])
+        self.assertAlmostEqual(h["duty_cold"], 2.0 / 6.0)
+
+    def test_lightest_separate_heater_at_the_lowest_battery_voltage(self):
+        # 1.25 x 5 = 6.25 W > 6 W integrated; at 11.8 V: HK6911 6.30 W (1.03 g), HK6905 7.21 W (1.29 g), HK6912 9.47 W (1.55 g)
+        h = battery_heater(CATALOG, self.holding("gomspace-bpx-100wh-16v"), self.e19(5.0))
+        self.assertEqual((h["source"], h["component"], h["bus_voltage_v"]), ("separate", "minco-hk6911", 11.8))
+        self.assertAlmostEqual(h["power_w"], 11.8 ** 2 / 22.1)
+        self.assertGreaterEqual(h["power_w"], 1.25 * 5.0)
+        lighter = [c for c in CATALOG if c.category == "heater" and c.mass_kg < h["mass_kg"] and 11.8 ** 2 / c.spec("resistance_ohm") >= 6.25]
+        self.assertEqual(lighter, [])
+
+    def test_no_heater_meets_the_need(self):
+        h = battery_heater(CATALOG, self.holding("aac-optimus-30"), self.e19(21.3, 12.3))
+        self.assertEqual((h["status"], h["component"], h["bus_voltage_v"]), ("not_met", None, 6.2))
+        self.assertIn("no catalogued heater gives 26.62 W", h["why"])
+        self.assertFalse(h["temperature_check"]["met"])
+
+    def test_no_heater_needed_and_hot_violation(self):
+        h = battery_heater(CATALOG, self.holding("aac-optimus-30"), self.e19(0.0, hot=10.0, cold=3.0))
+        self.assertEqual((h["status"], h["component"]), ("not_needed", None))
+        self.assertTrue(h["temperature_check"]["met"])
+        h = battery_heater(CATALOG, self.holding("aac-optimus-30"), self.e19(0.0, hot=50.0, cold=3.0))
+        self.assertFalse(h["temperature_check"]["met"])           # no cooling option: the hot violation is reported
+
+    def test_design_adds_the_heater_mass_and_power(self):
+        svc = SelectorService()
+        base = svc.design({"requirements": self.REQS, "form_factor_u": 6})
+        out = svc.design({"requirements": self.REQS, "form_factor_u": 6, "context": {"end019": self.e19(0.2)}})
+        h = out["mission"]["battery_heater"]
+        self.assertEqual(h["status"], "met")
+        self.assertGreaterEqual(h["power_w"], 0.25 - 1e-9)
+        self.assertEqual(out["breakdown"]["power_w"]["battery_heater"], h["power_w"])
+        if h["source"] == "separate":
+            self.assertAlmostEqual(out["totals"]["mass_kg"], base["totals"]["mass_kg"] + h["mass_kg"])
+        row = next(r for r in out["mission"]["subsystems"][h["slot"]]["checks"] if r["what"].startswith("battery heater"))
+        self.assertTrue(row["met"])
 
 
 if __name__ == "__main__":

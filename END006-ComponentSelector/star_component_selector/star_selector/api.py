@@ -49,7 +49,7 @@ ACRONYMS = {"structure": ("STR", "Structure"), "obc": ("OBC", "On-board computer
             "solar_panel": ("SOL", "Solar cells"), "comms": ("COM", "Communications"), "antenna": ("ANT", "Antenna"),
             "adcs": ("ADCS", "Attitude determination and control"), "magnetorquer": ("MTQ", "Magnetorquer"), "reaction_wheel": ("RW", "Reaction wheel"),
             "star_tracker": ("STK", "Star tracker"), "sun_sensor": ("SUN", "Sun sensor"), "gps": ("GPS", "GNSS receiver"), "gnss_antenna": ("GNA", "GNSS antenna"), "propulsion": ("PRP", "Propulsion"),
-            "payload_imager": ("IMG", "Payload imager"), "payload_optical": ("OPT", "Payload optical terminal")}
+            "payload_imager": ("IMG", "Payload imager"), "payload_optical": ("OPT", "Payload optical terminal"), "heater": ("HTR", "Battery heater")}
 
 
 def _pdf_page(raw: dict) -> int | None:
@@ -62,7 +62,9 @@ def _pdf_page(raw: dict) -> int | None:
 
 def library_stats(catalog: list[Component], root: Path = ROOT) -> dict[str, Any]:
     """Conteggi del database per classe (sottosistema): componenti, immagini e datasheet realmente presenti come file."""
-    rows = {sid: {"id": sid, "acronym": ACRONYMS[sid][0], "name": ACRONYMS[sid][1], "n": 0, "images": 0, "datasheets": 0} for sid, _, _ in SUBSYSTEMS}
+    # the search subsystems, then the battery heaters (catalogue category chosen by mission.battery_heater, not by the search)
+    rows = {sid: {"id": sid, "acronym": ACRONYMS[sid][0], "name": ACRONYMS[sid][1], "n": 0, "images": 0, "datasheets": 0}
+            for sid in [*(sid for sid, _, _ in SUBSYSTEMS), "heater"]}
     for c in catalog:
         r = rows[subsystem_of(c)]
         r["n"] += 1
@@ -132,6 +134,20 @@ def selection_to_dict(sel: Selection, root: Path = ROOT, with_images: bool = Fal
         },
         "messages": sel.messages, "truncated": sel.truncated,
     }
+
+
+def add_battery_heater(result: dict[str, Any]) -> None:
+    """The battery heater of mission.battery_heater (IF-019-006) in the totals: a separate film heater adds its mass and its power
+    (key "battery_heater" of the breakdown, which STAR passes on as consumers_declared_peak_w); an integrated one adds its power only."""
+    h = (result.get("mission") or {}).get("battery_heater") or {}
+    if not h.get("component") or not h.get("power_w"):
+        return
+    totals, bd = result["totals"], result["breakdown"]
+    if h.get("source") == "separate" and h.get("mass_kg"):
+        totals["mass_kg"] = (totals.get("mass_kg") or 0.0) + float(h["mass_kg"])
+        bd["mass_kg"]["battery_heater"] = float(h["mass_kg"])
+    totals["power_w_declared_peak"] = (totals.get("power_w_declared_peak") or 0.0) + float(h["power_w"])
+    bd["power_w"]["battery_heater"] = float(h["power_w"])
 
 
 # --------------------------------------------------------------------------- servizio
@@ -210,7 +226,9 @@ class SelectorService:
         if forced is not None and forced not in CLASSES:
             raise ValueError(f"unsupported CubeSat class {forced}U (allowed: {', '.join(f'{u}U' for u in CLASSES)})")
         sel, mission = design(self.catalog, params.get("requirements") or [], params.get("context") or {}, forced, float(params.get("time_budget_s") or 2.0))
-        return selection_to_dict(sel, self.root, with_images=with_images or bool(params.get("with_images")), library=self.library(), mission=mission)
+        out = selection_to_dict(sel, self.root, with_images=with_images or bool(params.get("with_images")), library=self.library(), mission=mission)
+        add_battery_heater(out)
+        return out
 
 
 # --------------------------------------------------------------------------- orchestratore: requisiti -> parametri

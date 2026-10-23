@@ -10,6 +10,7 @@ From the STAR folder:   python -m unittest discover -s tests -p "test_*.py"     
 - Produces vs reality: tests/fixtures/smoke_products_manifest.json (written by the smoke test) lists the files of a real run;
   every `guaranteed` product of the registry has to be in it.
 - Graph behaviour: closure over the required products, order, blocking, product checks, cycles, planner view size.
+- CEF loop (phase F): one feedback edge, loop / post-loop / fixed nodes, rerun_on and uses keys, criteria KPIs.
 """
 import ast
 import fnmatch
@@ -157,6 +158,85 @@ class TestProductsVersusARealRun(unittest.TestCase):
                 with self.subTest(product=item["product"]):
                     matches = [f for f in files[node.module_id] if fnmatch.fnmatch(f, item["path"])]
                     self.assertGreaterEqual(len(matches), int(item.get("min_count", 1) or 1), f"{item['product']} ({item['path']})")
+
+
+@unittest.skipIf(Registry is None, "PyYAML not installed")
+class TestCefLoopDeclarations(unittest.TestCase):
+    """What the registry declares for the design loop (phase F): the feedback edge, the fixed module, the post-loop triggers."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.registry = Registry.load(REGISTRY)
+        cls.graph = WorkflowGraph(cls.registry, list(cls.registry.nodes))
+        from runners import star_cef
+        cls.cef = star_cef
+        cls.config = star_cef.load_config()
+        cls.crit_nodes = star_cef.criteria_nodes(cls.config)
+
+    def test_exactly_one_feedback_edge(self):
+        self.assertEqual(self.registry.feedback_edges(), [("END-006/final", "spacecraft_definition_final", "spacecraft_definition")])
+        self.assertEqual(self.graph.feedback_edges(), self.registry.feedback_edges())
+
+    def test_the_feedback_edge_is_not_in_the_dependencies(self):
+        self.assertNotIn("spacecraft_definition_final", {c["product"] for n in self.registry.nodes.values() for c in n.consumes})
+        self.assertEqual(self.graph.order()[-1], "END-006/final")
+
+    def test_loop_and_post_loop_nodes(self):
+        self.assertEqual(set(self.graph.loop_nodes(self.crit_nodes)), {"END-003", "END-004", "END-016", "END-019", "END-006/final"})
+        self.assertEqual(set(self.graph.post_loop_nodes(self.crit_nodes)), {"END-010", "END-007"})
+        self.assertEqual(self.graph.fixed_nodes(), ["END-001"])
+        self.assertEqual(self.graph.affected_by("spacecraft_definition"),
+                         ["END-003", "END-004", "END-007", "END-010", "END-016", "END-019"])      # no END-001 (fixed), no END-006/final (producer)
+
+    def test_loop_nodes_follow_the_workflow(self):
+        # without the modules of the criteria only the ancestors of END-006 final stay in the loop
+        graph = WorkflowGraph.build(self.registry, ["END-003", "END-004"])
+        self.assertEqual(graph.loop_nodes(self.crit_nodes), ["END-003", "END-004", "END-006/final"])
+        self.assertEqual(WorkflowGraph.build(self.registry, []).loop_nodes(self.crit_nodes), ["END-006/final"])
+
+    def test_end001_is_fixed_and_declares_the_keys_it_uses(self):
+        self.assertEqual(self.registry.cef_loop("END-001"), {"fixed": True, "rerun_on": []})
+        uses = [c.get("uses") for c in self.registry.nodes["END-001"].consumes if c["product"] == "spacecraft_definition"]
+        self.assertEqual(uses, [["radios"]])
+
+    def test_rerun_on_declarations(self):
+        end010 = self.registry.cef_loop("END-010")
+        self.assertFalse(end010["fixed"])
+        self.assertEqual([r["product"] for r in end010["rerun_on"]], ["spacecraft_definition"])
+        self.assertEqual(self.registry.cef_loop("END-007")["rerun_on"], [{"product": "satellite_orbits"}])
+        for module_id in self.registry.modules:
+            for rule in self.registry.cef_loop(module_id)["rerun_on"]:
+                self.assertTrue(self.registry.producers_of(rule["product"]), f"{module_id}: rerun_on {rule['product']} has no producer")
+
+    def test_rerun_on_and_uses_keys_exist_in_the_spacecraft_definition(self):
+        """The keys (dotted paths) must be written by end006_runner.spacecraft_definition(): a renamed key would silently stop the trigger."""
+        tree = ast.parse((RUNNERS / "end006_runner.py").read_text(encoding="utf-8"))
+        func = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name == "spacecraft_definition")
+        written = {n.value for n in ast.walk(func) if isinstance(n, ast.Constant) and isinstance(n.value, str)}
+        keys = []
+        for module_id in self.registry.modules:
+            for rule in self.registry.cef_loop(module_id)["rerun_on"]:
+                if rule["product"] == "spacecraft_definition":
+                    keys += [str(k) for k in rule.get("keys") or []]
+        for node in self.registry.nodes.values():
+            for c in node.consumes:
+                if c.get("product") == "spacecraft_definition":
+                    keys += [str(k) for k in c.get("uses") or []]
+        self.assertTrue(keys)
+        for key in keys:
+            for part in key.split("."):
+                self.assertIn(part, written, f"'{key}': '{part}' is not a key of the spacecraft definition")
+
+    def test_criteria_read_catalogue_kpis_of_modules_in_the_registry(self):
+        from runners import star_kpis
+        modules = {n.module_id for n in self.registry.nodes.values()}
+        for c in self.config["criteria"]:
+            for chk in c["checks"]:
+                for kid in self.cef._check_kpis(chk):
+                    self.assertIsNotNone(star_kpis.catalogue_entry(kid), kid)
+                    self.assertIn(self.cef.kpi_module(kid), modules, kid)
+        for node_id in self.crit_nodes:
+            self.assertIn(node_id, self.registry.nodes)
 
 
 @unittest.skipIf(Registry is None, "PyYAML not installed")

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STAR — Design loop</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{--bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);--text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;--danger:#ff5c7a;--warning:#ffc857;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);color-scheme:dark}
+:root[data-theme="light"]{--bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);--text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;--danger:#bd2450;--warning:#936000;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}.app-shell{padding:0;width:100%;margin:0}.dashboard{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:18px}.panel,.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}.panel-header,.card-header{padding:16px 18px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-header h2,.card-header h3,.section-title{margin:0;color:var(--text-strong);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:13px}.panel-body,.card-body{padding:18px}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.summary-card{border:1px solid var(--border-soft);background:var(--panel-muted);border-radius:16px;padding:14px}.summary-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.summary-value{font-family:'Syne',Inter,system-ui,sans-serif;color:var(--accent);font-weight:800;font-size:24px;line-height:1.1;margin-top:6px}.summary-note{color:var(--muted);font-size:11px;margin-top:6px;overflow-wrap:anywhere}.status-dot{width:11px;height:11px;margin-top:4px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}.status-dot.warning{background:var(--warning);box-shadow:0 0 0 4px color-mix(in srgb,var(--warning) 18%,transparent)}.file-status-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--border-soft)}.file-title{color:var(--text-strong);font-weight:700}.file-path{color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:3px}.badge{display:inline-flex;align-items:center;border:1px solid var(--border-soft);border-radius:999px;padding:3px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.05em}.badge.ok{color:var(--success)}.badge.warning{color:var(--warning)}.badge.error{color:var(--danger)}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 12px;border-bottom:1px solid var(--border-soft);text-align:left;vertical-align:top}th{background:var(--panel-strong);color:var(--muted-2);font-family:'Syne',Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.045em;font-size:11px;position:sticky;top:0}.table-wrap{overflow:auto;max-height:calc(100vh - 230px);border:1px solid var(--border-soft);border-radius:16px}.muted{color:var(--muted)}.empty{color:var(--muted);padding:24px;text-align:center}.path{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.issues-list{display:flex;flex-direction:column;gap:10px}.issue{border:1px solid var(--border-soft);border-left:4px solid var(--warning);background:var(--panel-muted);border-radius:12px;padding:10px 12px}.issue.error{border-left-color:var(--danger)}.issue.ok{border-left-color:var(--success)}@media(max-width:1180px){.dashboard{grid-template-columns:1fr}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.summary-grid{grid-template-columns:1fr}.file-status-row{grid-template-columns:18px minmax(0,1fr)}}
+</style>
+<style>
+.cl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.cl-head h2{margin:0;font-family:'Syne',Inter,system-ui,sans-serif;font-size:20px;color:var(--text-strong);letter-spacing:-.02em}
+.cl-note{margin-top:6px;color:var(--muted);font-size:11px;max-width:980px}
+.banner{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:14px;background:var(--panel-muted)}
+.banner h3{margin:0 0 4px;font-family:'Syne',Inter,system-ui,sans-serif;font-size:15px;color:var(--text-strong)}
+.banner p{margin:0;color:var(--muted-2);font-size:12px}
+.banner.converged{border-left-color:var(--success)}.banner.converged h3{color:var(--success)}
+.banner.not_converged,.banner.stalled{border-left-color:var(--accent)}.banner.not_converged h3,.banner.stalled h3{color:var(--accent)}
+.banner.interrupted,.banner.stopped{border-left-color:var(--danger)}.banner.interrupted h3,.banner.stopped h3{color:var(--danger)}
+.banner.not_applicable{border-left-color:var(--muted)}
+.banner ul{margin:6px 0 0;padding-left:18px;color:var(--muted-2);font-size:11px}
+.st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:10px;font-weight:700;white-space:nowrap}
+.st.pass,.st.ok,.st.completed{background:color-mix(in srgb,var(--success) 20%,transparent);color:var(--success)}
+.st.fail,.st.mismatch,.st.failed{background:color-mix(in srgb,var(--danger) 22%,transparent);color:var(--danger)}
+.st.not_evaluable,.st.completed_with_fallback{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.st.not_applicable,.st.not_recorded,.st.idle,.st.skipped_out_of_scope{background:var(--panel-muted);color:var(--muted)}
+.grid{display:grid;gap:14px;margin-bottom:14px}
+.iter-th{white-space:nowrap}
+.cell small{display:block;color:var(--muted);font-size:10px;margin-top:2px;max-width:260px;white-space:normal}
+.vals{color:var(--muted-2);font-size:10.5px;margin-top:3px}
+.vals div{white-space:nowrap}
+.reason{color:var(--danger);font-size:10.5px;margin-top:3px;max-width:300px;white-space:normal}
+.chg{margin:4px 0 0;padding-left:16px;color:var(--muted-2);font-size:11px}
+.sub{color:var(--muted);font-size:10px}
+a.arch{color:var(--accent-2);cursor:pointer;text-decoration:underline;font-size:11px}
+.files{display:none;margin:6px 0 0;padding:0;list-style:none;font-size:10.5px;max-height:220px;overflow:auto}
+.files li{padding:1px 0}
+.files.open{display:block}
+.delta{color:var(--accent);font-weight:700}
+.warn-list li{color:var(--accent);font-size:11px;margin-bottom:3px}
+.empty{color:var(--muted);padding:14px}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="cl-head"><div><h2>Design loop</h2>
+    <div class="cl-note" id="cl-note">Select a RUN folder: the outcome of the CEF loop (END-006 final design fed back to the modules) is read from convergence.json.</div></div></div>
+  <div id="cl-banner"></div>
+  <div class="grid">
+    <section class="card"><div class="card-header"><h3>Criteria &times; iterations</h3><span class="muted" id="cl-crit-count">&mdash;</span></div>
+      <div class="card-body"><div class="table-wrap"><table><thead id="cl-crit-head"></thead><tbody id="cl-crit-body"><tr><td class="empty">No design loop data loaded.</td></tr></tbody></table></div></div></section>
+    <section class="card"><div class="card-header"><h3>Design evolution</h3><span class="muted">design used &rarr; design produced by END-006 in each iteration</span></div>
+      <div class="card-body"><div class="table-wrap"><table><thead id="cl-evo-head"></thead><tbody id="cl-evo-body"><tr><td class="empty">&mdash;</td></tr></tbody></table></div></div></section>
+    <section class="card"><div class="card-header"><h3>Nodes run</h3><span class="muted">per iteration and after the loop</span></div>
+      <div class="card-body"><div class="table-wrap"><table><thead id="cl-node-head"></thead><tbody id="cl-node-body"><tr><td class="empty">&mdash;</td></tr></tbody></table></div>
+        <h3 class="section-title" style="margin-top:16px">After the loop</h3>
+        <div class="table-wrap"><table><thead><tr><th>Node</th><th>Trigger</th><th>Fired</th><th>Status</th></tr></thead><tbody id="cl-post-body"><tr><td colspan="4" class="empty">&mdash;</td></tr></tbody></table></div>
+        <div class="cl-note" id="cl-fixed"></div></div></section>
+    <section class="card"><div class="card-header"><h3>Warnings</h3><span class="muted" id="cl-warn-count">&mdash;</span></div>
+      <div class="card-body"><ul class="warn-list" id="cl-warnings"><li>&mdash;</li></ul></div></section>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const BANNER = {
+  converged: ['Converged', k => `All the criteria are met at iteration ${k.converged_at}. The modules ran on the design END-006 produced.`],
+  not_converged: ['Not converged', k => `The criteria still fail after ${k.iterations_run} iteration(s). This is a result of the design, not an error: the run is complete.`],
+  stalled: ['Stalled', k => 'END-006 returns the design the modules already used and a criterion still fails: another iteration would give the same result.'],
+  interrupted: ['Interrupted', k => 'A node of the loop failed or was skipped, so the criteria could not be evaluated.'],
+  stopped: ['Stopped', k => 'The run was stopped by the user.'],
+  not_applicable: ['No design loop', k => 'The workflow has no loop to iterate.'],
+  running: ['Running', k => 'The loop is still working.']
+};
+let DATA = null, ARCH = [];
+function esc(v){return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
+function fmt(v){
+  if (v === null || v === undefined || v === '') return '—';
+  if (typeof v === 'number') return Math.abs(v) >= 1000 || Number.isInteger(v) ? String(Math.round(v * 100) / 100) : v.toPrecision(4).replace(/\.?0+$/,'');
+  if (typeof v === 'boolean') return v ? 'yes' : 'no';
+  return String(v);
+}
+const sid = k => k.split('.').slice(1).join('.') || k;
+function badge(s){return `<span class="st ${esc(s)}">${esc(String(s).replaceAll('_',' '))}</span>`;}
+function iters(){return (DATA && DATA.iterations) || [];}
+function lastCrit(id){ const it = iters().slice(-1)[0]; return it ? (it.criteria || []).find(c => c.id === id) : null; }
+function renderBanner(){
+  const [title, text] = BANNER[DATA.status] || [DATA.status, () => ''];
+  const failing = (DATA.failing_criteria || []);
+  $('cl-banner').innerHTML = `<div class="banner ${esc(DATA.status)}"><h3>${esc(title)}${DATA.status === 'converged' ? '' : ` &middot; ${esc(DATA.iterations_run)} of ${esc(DATA.max_iterations)} iteration(s)`}</h3>
+    <p>${esc(text(DATA))}</p><p style="margin-top:4px">${esc(DATA.reason || '')}</p>
+    ${failing.length ? `<ul>${failing.map(id => { const c = lastCrit(id); return `<li><b>${esc(id)}</b> ${esc(c ? c.name : '')}${c && c.reason ? ' &mdash; ' + esc(c.reason) : ''}</li>`; }).join('')}</ul>` : ''}</div>`;
+  $('cl-note').textContent = `${DATA.run_id || ''} · loop nodes: ${(DATA.loop_nodes || []).join(', ')} · generated ${String(DATA.generated_at || '').replace('T', ' ').slice(0, 19)}`;
+}
+function head(cols){ return `<tr><th>&nbsp;</th>${cols.map(c => `<th class="iter-th">${c}</th>`).join('')}</tr>`; }
+function iterCols(){ return iters().map(it => `Iteration ${it.k}<div class="sub">${esc((it.design_used || {}).source || '')}</div>`); }
+function renderCriteria(){
+  const its = iters();
+  const defs = DATA.criteria_def || [];
+  $('cl-crit-count').textContent = `${defs.length} criteria × ${its.length} iteration(s)`;
+  $('cl-crit-head').innerHTML = head(iterCols());
+  $('cl-crit-body').innerHTML = defs.map(d => `<tr><td><b>${esc(d.id)}</b><div class="sub">${esc(d.name)}</div></td>` + its.map(it => {
+    const c = (it.criteria || []).find(x => x.id === d.id);
+    if (!c) return '<td></td>';
+    const vals = Object.entries(c.values || {}).map(([k, v]) => {
+      const t = (c.threshold || {})[k], m = (c.margin || {})[k];
+      return `<div title="${esc(k)}">${esc(sid(k))}: <b>${esc(fmt(v))}</b>${t !== undefined && t !== null ? ` <span class="sub">(limit ${esc(fmt(t))}${m !== undefined && m !== null ? `, margin ${esc(fmt(m))}` : ''})</span>` : ''}</div>`;
+    }).join('');
+    return `<td class="cell">${badge(c.status)}<div class="vals">${vals}</div>${c.reason && c.status !== 'pass' ? `<div class="reason">${esc(c.reason)}</div>` : ''}</td>`;
+  }).join('') + '</tr>').join('') || '<tr><td class="empty">No criteria.</td></tr>';
+}
+function renderEvolution(){
+  const its = iters();
+  $('cl-evo-head').innerHTML = head(iterCols());
+  const keys = [];
+  its.forEach(it => (it.evolution || []).forEach(e => { if (!keys.find(k => k.kpi === e.kpi)) keys.push(e); }));
+  let html = `<tr><td><b>Design signature</b><div class="sub">hash of slot &rarr; component</div></td>` + its.map(it => {
+    const u = (it.design_used || {}).signature, p = (it.design_produced || {}).signature;
+    return `<td class="cell">${esc(u || '—')} &rarr; ${p && p !== u ? `<span class="delta">${esc(p)}</span>` : esc(p || '—')}</td>`;
+  }).join('') + '</tr>';
+  html += `<tr><td><b>Changes END-006 made</b><div class="sub">against the design used</div></td>` + its.map(it => {
+    const ch = (it.design_produced || {}).changes || [];
+    return `<td class="cell">${ch.length ? `<ul class="chg">${ch.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : '<span class="sub">none: same design</span>'}</td>`;
+  }).join('') + '</tr>';
+  html += keys.map(e => `<tr><td title="${esc(e.kpi)}">${esc(e.label)}<div class="sub">${esc(e.unit || '')}</div></td>` + its.map((it, i) => {
+    const x = (it.evolution || []).find(y => y.kpi === e.kpi);
+    const prev = i ? (its[i - 1].evolution || []).find(y => y.kpi === e.kpi) : null;
+    const changed = x && prev && x.value !== prev.value;
+    return `<td class="cell">${x ? `<span class="${changed ? 'delta' : ''}">${esc(fmt(x.value))}</span>` : '—'}</td>`;
+  }).join('') + '</tr>').join('');
+  $('cl-evo-body').innerHTML = html;
+}
+function archiveLinks(k){
+  const prefix = `iteration_${String(k).padStart(2, '0')}`;
+  const marker = `cef/${prefix}/`;
+  const pathOf = f => String(f.relativeDisplayPath || f.webkitRelativePath || f.name || '').replaceAll('\\', '/');
+  const files = ARCH.filter(f => pathOf(f).includes(marker));
+  if (!files.length) return `<span class="sub">${marker}: not in the loaded folder</span>`;
+  const items = files.map(f => {
+    const rel = pathOf(f).split(marker).pop();
+    let url = '';
+    try { url = URL.createObjectURL(f); } catch (_) {}
+    return `<li>${url ? `<a class="arch" href="${esc(url)}" target="_blank" rel="noopener">${esc(rel)}</a>` : esc(rel)}</li>`;
+  }).join('');
+  return `<a class="arch" data-toggle="${prefix}">cef/${prefix} (${files.length} files)</a><ul class="files" id="files-${prefix}">${items}</ul>`;
+}
+function renderNodes(){
+  const its = iters();
+  $('cl-node-head').innerHTML = `<tr><th>Node</th>${its.map(it => `<th class="iter-th">Iteration ${it.k}</th>`).join('')}</tr>`;
+  const nodes = [];
+  its.forEach(it => (it.nodes || []).forEach(n => { if (!nodes.includes(n.node)) nodes.push(n.node); }));
+  const loop = DATA.loop_nodes || [];
+  const order = loop.filter(n => nodes.includes(n)).concat(nodes.filter(n => !loop.includes(n)));
+  let html = order.map(n => `<tr><td><b>${esc(n)}</b></td>` + its.map(it => {
+    const x = (it.nodes || []).find(y => y.node === n);
+    if (!x) return '<td class="cell"><span class="sub">not run</span></td>';
+    const dur = x.duration_s !== null && x.duration_s !== undefined ? `${fmt(Math.round(x.duration_s * 10) / 10)} s` : '';
+    const chk = x.design_check && x.design_check !== 'not_recorded' ? ` ${badge(x.design_check)}` : '';
+    return `<td class="cell">${badge(x.status)}${chk}<small>${esc(dur)}${x.design_check === 'ok' ? ` · used design D${esc(it.k - 1)}` : ''}</small></td>`;
+  }).join('') + '</tr>').join('');
+  html += `<tr><td><b>Archive</b></td>` + its.map(it => `<td class="cell">${archiveLinks(it.k)}</td>`).join('') + '</tr>';
+  $('cl-node-body').innerHTML = html || '<tr><td class="empty">No node run.</td></tr>';
+  document.querySelectorAll('a[data-toggle]').forEach(a => a.addEventListener('click', () => $('files-' + a.dataset.toggle).classList.toggle('open')));
+}
+function renderPost(){
+  const post = DATA.post_loop_nodes || [];
+  const trig = t => typeof t === 'string' ? t : (t || []).map(r => `${r.product}${r.keys ? ' [' + r.keys.join(', ') + ']' : ''}`).join('; ');
+  $('cl-post-body').innerHTML = post.length ? post.map(p => `<tr><td><b>${esc(p.node)}</b></td><td class="sub">${esc(trig(p.trigger))}</td>
+    <td>${p.fired === null || p.fired === undefined ? '<span class="sub">not evaluated</span>' : p.fired ? '<span class="delta">yes: re-run on the final design</span>' : 'no: keeps the results of iteration 1'}${p.changed && p.changed.length ? `<div class="sub">changed: ${esc(p.changed.map(c => (c.keys && c.keys.length) ? c.keys.join(', ') : c.product).join('; '))}</div>` : ''}</td>
+    <td>${p.status ? badge(p.status) : '—'}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">None.</td></tr>';
+  $('cl-fixed').textContent = (DATA.fixed_modules || []).length ? `Never re-run in the loop (orbit fixed): ${DATA.fixed_modules.join(', ')}.` : '';
+}
+function renderWarnings(){
+  const w = DATA.warnings || [];
+  $('cl-warn-count').textContent = `${w.length}`;
+  $('cl-warnings').innerHTML = w.length ? w.map(x => `<li>${esc(x)}</li>`).join('') : '<li style="color:var(--muted)">None.</li>';
+}
+function render(){
+  if (!DATA) return;
+  renderBanner(); renderCriteria(); renderEvolution(); renderNodes(); renderPost(); renderWarnings();
+}
+async function fileText(f){ return f && typeof f.text === 'function' ? await f.text() : null; }
+window.receiveCefLoopFilesFromParent = async function(payload){
+  ARCH = Array.from((payload && payload.archive) || []);
+  const file = payload && payload.convergence;
+  if (!file) {
+    DATA = null;
+    $('cl-banner').innerHTML = '';
+    $('cl-note').textContent = 'No convergence.json in the selected RUN folder: this run was made without the design loop (before phase F) or the workflow has no END-006 final design.';
+    return;
+  }
+  try { DATA = JSON.parse(await fileText(file)); render(); }
+  catch (e) { $('cl-note').textContent = 'convergence.json could not be read: ' + e; }
+};
+window.refreshCefLoopDashboard = function(){ render(); };
+window.setTheme = function(theme){ document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark'; };
+})();
+</script>
+</body>
+</html>

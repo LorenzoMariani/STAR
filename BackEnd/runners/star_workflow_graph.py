@@ -139,6 +139,21 @@ class Registry:
         found.discard(str(module_id).upper())
         return sorted(found, key=module_number)
 
+    def cef_loop(self, module_id: str) -> dict[str, Any]:
+        """CEF loop declaration of a module (phase F): ``cef_loop: fixed`` -> {"fixed": True, "rerun_on": []};
+        ``cef_loop: {rerun_on: [{product, keys}]}`` -> {"fixed": False, "rerun_on": [...]}; nothing -> no rule."""
+        raw = (self.modules.get(str(module_id).upper()) or {}).get("cef_loop")
+        if isinstance(raw, str):
+            return {"fixed": raw.strip().lower() == "fixed", "rerun_on": []}
+        raw = raw if isinstance(raw, dict) else {}
+        return {"fixed": bool(raw.get("fixed")) or str(raw.get("mode", "")).lower() == "fixed",
+                "rerun_on": [dict(r) for r in (raw.get("rerun_on") or []) if isinstance(r, dict) and r.get("product")]}
+
+    def feedback_edges(self) -> list[tuple[str, str, str]]:
+        """(producer node, produced product, product it feeds back to) of the whole registry."""
+        return [(n.id, str(p.get("product")), str(p.get("feeds_back_to"))) for n in self.nodes.values() for p in n.produces
+                if p.get("feeds_back_to")]
+
     def consumer_nodes(self, module_id: str) -> list[str]:
         """Nodes that consume a product of the module (any requirement level), execution order."""
         mine = {item.get("product") for node in self.nodes_for(module_id) for item in node.produces}
@@ -171,6 +186,9 @@ class Registry:
                     issues.append(f"{node.id}: consumes entry without product")
                 elif not self.producers_of(product):
                     issues.append(f"{node.id} consumes {product}, which no module produces")
+        for producer, product, target in self.feedback_edges():
+            if not self.producers_of(target):
+                issues.append(f"{producer}: {product} feeds_back_to {target}, which no module produces")
         try:
             WorkflowGraph(self, list(self.nodes), {}).order()
         except WorkflowGraphError as exc:
@@ -326,6 +344,72 @@ class WorkflowGraph:
     def downstream(self, node_id: str, required_only: bool = False) -> list[str]:
         return [n for n in self.node_ids if n != node_id and node_id in self.upstream(n, required_only)]
 
+    # ------------------------------------------------------------------ CEF loop (phase F)
+    def feedback_edges(self) -> list[tuple[str, str, str]]:
+        """Feedback edges whose producer is in this workflow. They are not dependencies: order() ignores them."""
+        present = set(self.node_ids)
+        return [e for e in self.registry.feedback_edges() if e[0] in present]
+
+    def fixed_nodes(self) -> list[str]:
+        return [n for n in self.node_ids if self.registry.cef_loop(self.node(n).module_id)["fixed"]]
+
+    def consumers_of_product(self, product: str) -> list[str]:
+        return [n for n in self.node_ids if any(str(c.get("product")) == product for c in self.node(n).consumes)]
+
+    def affected_by(self, product: str) -> list[str]:
+        """Nodes whose results depend on the feedback product: its transitive consumers (required or optional), minus the
+        fixed modules (and what only reaches them) and minus the nodes that produce the feedback. Execution order."""
+        producers = {p for p, _, target in self.feedback_edges() if target == product}
+        fixed = set(self.fixed_nodes())
+        found: list[str] = []
+        todo = list(self.consumers_of_product(product))
+        while todo:
+            node_id = todo.pop()
+            if node_id in found or node_id in fixed or node_id in producers:
+                continue
+            found.append(node_id)
+            for item in self.node(node_id).produces:
+                todo.extend(self.consumers_of_product(str(item.get("product"))))
+        return sorted(found, key=lambda n: self.node(n).rank)
+
+    def ancestors(self, node_id: str) -> set[str]:
+        """All nodes the node depends on (required or optional consumes), transitively."""
+        found: set[str] = set()
+        todo = [node_id]
+        while todo:
+            for up in self.upstream(todo.pop(), required_only=False):
+                if up not in found:
+                    found.add(up)
+                    todo.append(up)
+        return found
+
+    def _affected_by_feedback(self) -> set[str]:
+        affected: set[str] = set()
+        for _, _, target in self.feedback_edges():
+            affected |= set(self.affected_by(target))
+        return affected
+
+    def loop_nodes(self, criteria_nodes: Iterable[str] = ()) -> list[str]:
+        """The nodes the CEF loop re-runs: the producers of the feedback plus the affected nodes that are ancestors of one
+        of them or the node of a criterion KPI. Execution order; empty without a feedback edge."""
+        producers = {p for p, _, _ in self.feedback_edges()}
+        if not producers:
+            return []
+        wanted = set(producers)
+        for p in producers:
+            wanted |= self.ancestors(p)
+        for n in criteria_nodes:
+            if n in self.node_ids:
+                wanted |= {n} | self.ancestors(n)
+        chosen = (self._affected_by_feedback() & wanted) | producers
+        return [n for n in self.order() if n in chosen]
+
+    def post_loop_nodes(self, criteria_nodes: Iterable[str] = ()) -> list[str]:
+        """Affected nodes the loop does not re-run: they run once after it, if their trigger fired."""
+        inside = set(self.loop_nodes(criteria_nodes))
+        affected = self._affected_by_feedback()
+        return [n for n in self.order() if n in affected and n not in inside]
+
     def why(self, module_id: str) -> str:
         return self.reasons.get(module_id, "")
 
@@ -364,7 +448,9 @@ class WorkflowGraph:
         path = root / pattern
         return [path] if path.is_file() else []
 
-    def _problems(self, product: str, modules_output_root: Path | str) -> list[str]:
+    def _problems(self, product: str, modules_output_root: Path | str, since: float | None = None) -> list[str]:
+        """Why a product is not usable. ``since`` (epoch seconds): an older file is stale (CEF loop: the product of a re-run
+        node must have been written by the re-run, not left by an earlier iteration)."""
         spec = self.registry.produce_spec(product) or {}
         found = self.find_product(product, modules_output_root)
         need = int(spec.get("min_count", 1) or 1)
@@ -374,6 +460,9 @@ class WorkflowGraph:
         for path in found:
             if path.stat().st_size <= 0:
                 problems.append(f"{path.name} is empty")
+                continue
+            if since is not None and path.stat().st_mtime < since:
+                problems.append(f"{path.name} is older than the re-run (stale product of an earlier iteration)")
                 continue
             if str(spec.get("format", "")).lower() == "json":
                 try:
@@ -405,11 +494,11 @@ class WorkflowGraph:
             out.append(f"{node.module_id}: missing {file_name} from {producer_module} ({spec.get('path', '?')}): {'; '.join(problems)}")
         return out
 
-    def missing_outputs(self, node_id: str, modules_output_root: Path | str) -> list[str]:
-        """Guaranteed products of the node that its run did not write."""
+    def missing_outputs(self, node_id: str, modules_output_root: Path | str, since: float | None = None) -> list[str]:
+        """Guaranteed products of the node that its run did not write (with ``since``: or wrote before that time)."""
         out = []
         for item in self.node(node_id).produces:
-            if item.get("guaranteed") and self._problems(str(item.get("product")), modules_output_root):
+            if item.get("guaranteed") and self._problems(str(item.get("product")), modules_output_root, since):
                 out.append(str(item.get("product")))
         return out
 

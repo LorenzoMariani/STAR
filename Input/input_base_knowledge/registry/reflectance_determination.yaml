@@ -56,6 +56,11 @@ required_inputs:
     required: true
     description: JSON configuration file for the reflectance determination MATLAB pipeline.
 
+cef_loop:   # CEF loop (phase F): re-run once after the loop, only if the size or the external shape of the satellite changed
+  rerun_on:
+  - product: spacecraft_definition
+    keys: [class_u, envelope_mm, dims_m, face_areas_m2, area_mean_projected_m2, solar_panels.face_type, solar_panels.n_panels,
+      solar_panels.body_faces]
 consumes:
 - product: selected_passes
   required: true

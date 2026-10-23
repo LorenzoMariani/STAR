@@ -300,7 +300,8 @@
      "I2C",
      "USB"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/EnduroSat-EPS-I.png",
@@ -366,7 +367,8 @@
      "RS-485",
      "USB"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/EnduroSat-EPS-II.png",
@@ -445,7 +447,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/AACClydeSpace-STARBUCK-NANO.png",
@@ -490,7 +493,7 @@
     45
    ],
    "flight_heritage": 100,
-   "notes": "Litio-polimero, 2S; carica massima 8.4 V, scarica minima 6.2 V (tipici: fine carica 8.26 V). Riscaldatori integrati. Ottimizzata per LEO fino a 850 km; qualificata NASA EP-Wi-032. Ingombro 95.89 x 90.17 mm, altezza 21.55 mm. 'Over 100 missions' dichiarate per la famiglia. DoD e cicli non dichiarati. AGGIORNAMENTO: la pagina prodotto attuale (aac-clyde.space, cubesat-batteries, letta il 2026-10-13) riporta massa 288 / 360 / 720 g, temperatura operativa -10..+45 C e altezza 58.95 mm per l'80 Wh; il PDF del 2020 riportava 268 / 335 / 670 g e -10..+50 C. Si usano i valori della pagina, piu' prudenti.",
+   "notes": "Litio-polimero, 2S; carica massima 8.4 V, scarica minima 6.2 V (tipici: fine carica 8.26 V). Riscaldatori integrati. Ottimizzata per LEO fino a 850 km; qualificata NASA EP-Wi-032. Ingombro 95.89 x 90.17 mm, altezza 21.55 mm. 'Over 100 missions' dichiarate per la famiglia. DoD e cicli non dichiarati. AGGIORNAMENTO: la pagina prodotto attuale (aac-clyde.space, cubesat-batteries, letta il 2026-10-13) riporta massa 288 / 360 / 720 g, temperatura operativa -10..+45 C e altezza 58.95 mm per l'80 Wh; il PDF del 2020 riportava 268 / 335 / 670 g e -10..+50 C. Si usano i valori della pagina, piu' prudenti. Integrated battery heater declared (AAC Optimus datasheet: 'autonomous integrated heater systems'), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/AAC_DataSheet_Optimus.pdf",
     "document": "AAC Clyde Space OPTIMUS datasheet (release 28 Jul 2020)",
@@ -506,7 +509,8 @@
     "capacity_wh": 30.0,
     "max_discharge_a": 1.95,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/AACClydeSpace-OPTIMUS-30.png",
@@ -551,7 +555,7 @@
     45
    ],
    "flight_heritage": 100,
-   "notes": "Litio-polimero, 2S; carica massima 8.4 V, scarica minima 6.2 V (tipici: fine carica 8.26 V). Riscaldatori integrati. Ottimizzata per LEO fino a 850 km; qualificata NASA EP-Wi-032. Ingombro 95.89 x 90.17 mm, altezza 27.35 mm. 'Over 100 missions' dichiarate per la famiglia. DoD e cicli non dichiarati. AGGIORNAMENTO: la pagina prodotto attuale (aac-clyde.space, cubesat-batteries, letta il 2026-10-13) riporta massa 288 / 360 / 720 g, temperatura operativa -10..+45 C e altezza 58.95 mm per l'80 Wh; il PDF del 2020 riportava 268 / 335 / 670 g e -10..+50 C. Si usano i valori della pagina, piu' prudenti.",
+   "notes": "Litio-polimero, 2S; carica massima 8.4 V, scarica minima 6.2 V (tipici: fine carica 8.26 V). Riscaldatori integrati. Ottimizzata per LEO fino a 850 km; qualificata NASA EP-Wi-032. Ingombro 95.89 x 90.17 mm, altezza 27.35 mm. 'Over 100 missions' dichiarate per la famiglia. DoD e cicli non dichiarati. AGGIORNAMENTO: la pagina prodotto attuale (aac-clyde.space, cubesat-batteries, letta il 2026-10-13) riporta massa 288 / 360 / 720 g, temperatura operativa -10..+45 C e altezza 58.95 mm per l'80 Wh; il PDF del 2020 riportava 268 / 335 / 670 g e -10..+50 C. Si usano i valori della pagina, piu' prudenti. Integrated battery heater declared (AAC Optimus datasheet: 'autonomous integrated heater systems'), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/AAC_DataSheet_Optimus.pdf",
     "document": "AAC Clyde Space OPTIMUS datasheet (release 28 Jul 2020)",
@@ -567,7 +571,8 @@
     "capacity_wh": 40.0,
     "max_discharge_a": 2.6,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/AACClydeSpace-OPTIMUS-40.png",
@@ -612,7 +617,7 @@
     45
    ],
    "flight_heritage": 100,
-   "notes": "Litio-polimero, 2S; carica massima 8.4 V, scarica minima 6.2 V (tipici: fine carica 8.26 V). Riscaldatori integrati. Ottimizzata per LEO fino a 850 km; qualificata NASA EP-Wi-032. Ingombro 95.89 x 90.17 mm, altezza 56.94 mm. 'Over 100 missions' dichiarate per la famiglia. DoD e cicli non dichiarati. AGGIORNAMENTO: la pagina prodotto attuale (aac-clyde.space, cubesat-batteries, letta il 2026-10-13) riporta massa 288 / 360 / 720 g, temperatura operativa -10..+45 C e altezza 58.95 mm per l'80 Wh; il PDF del 2020 riportava 268 / 335 / 670 g e -10..+50 C. Si usano i valori della pagina, piu' prudenti.",
+   "notes": "Litio-polimero, 2S; carica massima 8.4 V, scarica minima 6.2 V (tipici: fine carica 8.26 V). Riscaldatori integrati. Ottimizzata per LEO fino a 850 km; qualificata NASA EP-Wi-032. Ingombro 95.89 x 90.17 mm, altezza 56.94 mm. 'Over 100 missions' dichiarate per la famiglia. DoD e cicli non dichiarati. AGGIORNAMENTO: la pagina prodotto attuale (aac-clyde.space, cubesat-batteries, letta il 2026-10-13) riporta massa 288 / 360 / 720 g, temperatura operativa -10..+45 C e altezza 58.95 mm per l'80 Wh; il PDF del 2020 riportava 268 / 335 / 670 g e -10..+50 C. Si usano i valori della pagina, piu' prudenti. Integrated battery heater declared (AAC Optimus datasheet: 'autonomous integrated heater systems'), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.aac-clyde.space/wp-content/uploads/2021/10/AAC_DataSheet_Optimus.pdf",
     "document": "AAC Clyde Space OPTIMUS datasheet (release 28 Jul 2020)",
@@ -628,7 +633,8 @@
     "capacity_wh": 80.0,
     "max_discharge_a": 5.2,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/AACClydeSpace-OPTIMUS-80.png",
@@ -1306,7 +1312,8 @@
      "UART",
      "RS-422"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/GomSpace-NanoPowerP60.png",
@@ -1397,7 +1404,8 @@
      "CAN",
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/GomSpace-NanoPowerP80.png",
@@ -1456,7 +1464,8 @@
     "capacity_wh": 86.0,
     "max_discharge_a": 6.0,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": 6.0
    },
    "image": {
     "file": "images/GomSpace-NanoPowerBPX-16V.png",
@@ -1516,7 +1525,8 @@
     "capacity_wh": 86.0,
     "max_discharge_a": 6.0,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": 6.0
    },
    "image": {
     "file": "images/GomSpace-NanoPowerBPX-32V.png",
@@ -1576,7 +1586,8 @@
     "capacity_wh": 86.0,
     "max_discharge_a": 4.0,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": 6.0
    },
    "image": {
     "file": "images/GomSpace-NanoPowerBP8.png",
@@ -2239,7 +2250,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/Pumpkin-LinearEPS-11Wh.png",
@@ -2318,7 +2330,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/Pumpkin-LinearEPS-22Wh.png",
@@ -2357,7 +2370,7 @@
    "vendor": "Pumpkin",
    "name": "Battery Module 1 (BM 1) 40 Wh",
    "mass_kg": 0.31,
-   "notes": "Datasheet datato: i prodotti CubeSat Kit sono di generazione precedente (documenti 2010-2014), verificare la disponibilita' attuale. Quattro celle 18650 Li-Ion (2S2P, due pacchi da 20 Wh indipendenti con protezioni OC/OV/UT/OT/UV). Soglie: sovratensione 8.40 V (reset 8.30 V), sottotensione 5.00 V (reset 6.20 V); 6.2-8.4 V usato come range. 'Overcurrent trip 5 A' (non specificato se per pacco o totale). Molti campi del datasheet sono ancora 'TBD' (corrente di quiescenza, temperature). Temperatura: -40..+85 C vale per l'elettronica, non per le celle (tipico 0..45 C). Nessun prezzo nel listino 2022. Nel MISC 3 e' abbinato all'EPS Clyde Space XUEPS.",
+   "notes": "Datasheet datato: i prodotti CubeSat Kit sono di generazione precedente (documenti 2010-2014), verificare la disponibilita' attuale. Quattro celle 18650 Li-Ion (2S2P, due pacchi da 20 Wh indipendenti con protezioni OC/OV/UT/OT/UV). Soglie: sovratensione 8.40 V (reset 8.30 V), sottotensione 5.00 V (reset 6.20 V); 6.2-8.4 V usato come range. 'Overcurrent trip 5 A' (non specificato se per pacco o totale). Molti campi del datasheet sono ancora 'TBD' (corrente di quiescenza, temperature). Temperatura: -40..+85 C vale per l'elettronica, non per le celle (tipico 0..45 C). Nessun prezzo nel listino 2022. Nel MISC 3 e' abbinato all'EPS Clyde Space XUEPS. Integrated battery heater declared (Pumpkin BM 1 datasheet: battery heaters driven by the supervisor MCU), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.cubesatkit.com/docs/datasheet/DS_CSK_BM_1_710-01006-A.pdf",
     "document": "Pumpkin CubeSat Kit Battery Module 1 (BM 1) 710-01006 Rev A (doc Rev B, feb 2014)",
@@ -2373,7 +2386,8 @@
     "capacity_wh": 40.0,
     "max_discharge_a": 5.0,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/Pumpkin-BatteryModule1-BM1.png",
@@ -2675,7 +2689,8 @@
      "CAN",
      "USB"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/NanoAvionics-EPS1.0.png",
@@ -2754,7 +2769,8 @@
      "RS-422",
      "USB"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/NanoAvionics-EPS2.0.png",
@@ -3258,7 +3274,8 @@
     "capacity_wh": 99.0,
     "max_discharge_a": null,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/BlueCanyon-Battery28V-1P8S.png",
@@ -3312,7 +3329,8 @@
     "capacity_wh": 198.0,
     "max_discharge_a": null,
     "max_dod": null,
-    "cycle_life": null
+    "cycle_life": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/BlueCanyon-Battery28V-2P8S.png",
@@ -3492,7 +3510,8 @@
     ],
     "output_power_w_max": null,
     "data_interfaces": null,
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/Spacemind-GEMINI-EPS.png",
@@ -4089,7 +4108,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/AACClydeSpace-STARBUCK-NANO-PLUS.png",
@@ -4760,7 +4780,8 @@
     "data_interfaces": [
      "CAN"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "image": {
     "file": "images/EnduroSat-CubeSatEPS.png",
@@ -4787,7 +4808,7 @@
     60
    ],
    "power_w": 0.093,
-   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE A: scheda principale PIU con la batteria PBP-2S1P (2 celle in serie, 7.2 V, 28.8 Wh dichiarati nel testo) montata direttamente sopra; non combinabile con la DaughterBoard. 3 ingressi MPPT, tensione funzionale 3.5-7.5 V (massimo assoluto 15 V), 2 A per canale. Massa 184 g (179-189 g), 96 x 92 x 26.5 mm (PIU + batteria). Soglia software di spegnimento 6.0 V.",
+   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE A: scheda principale PIU con la batteria PBP-2S1P (2 celle in serie, 7.2 V, 28.8 Wh dichiarati nel testo) montata direttamente sopra; non combinabile con la DaughterBoard. 3 ingressi MPPT, tensione funzionale 3.5-7.5 V (massimo assoluto 15 V), 2 A per canale. Massa 184 g (179-189 g), 96 x 92 x 26.5 mm (PIU + batteria). Soglia software di spegnimento 6.0 V. Integrated battery heater declared (ISIS ICEPS2 datasheet: 'automatic integrated battery heater and thermostat control'), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
     "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
@@ -4825,7 +4846,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "dimensions": {
     "mm": [
@@ -4869,7 +4891,7 @@
     60
    ],
    "power_w": 0.093,
-   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE B: scheda principale PIU + batteria PBP-4S1P (4 celle in serie, 14.4 V, 57.6 Wh dichiarati nel testo), la batteria si monta in un punto qualsiasi dello stack. 3 ingressi MPPT, tensione funzionale 3.5-13 V (massimo assoluto 15 V), 2 A per canale. Massa 310 g (305-315 g) nella tabella 'Physical characteristics', senza indicare esplicitamente se comprende la batteria. Dimensioni: il datasheet da' PIU 96 x 92 x 11.3 mm e batteria a 4 celle 94 x 89 x 21.0 mm come volumi separati: altezza 32.3 mm DERIVATA come somma 11.3 + 21.0 (impilati), non dichiarata. Soglia software di spegnimento 12.0 V.",
+   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE B: scheda principale PIU + batteria PBP-4S1P (4 celle in serie, 14.4 V, 57.6 Wh dichiarati nel testo), la batteria si monta in un punto qualsiasi dello stack. 3 ingressi MPPT, tensione funzionale 3.5-13 V (massimo assoluto 15 V), 2 A per canale. Massa 310 g (305-315 g) nella tabella 'Physical characteristics', senza indicare esplicitamente se comprende la batteria. Dimensioni: il datasheet da' PIU 96 x 92 x 11.3 mm e batteria a 4 celle 94 x 89 x 21.0 mm come volumi separati: altezza 32.3 mm DERIVATA come somma 11.3 + 21.0 (impilati), non dichiarata. Soglia software di spegnimento 12.0 V. Integrated battery heater declared (ISIS ICEPS2 datasheet: 'automatic integrated battery heater and thermostat control'), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
     "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
@@ -4907,7 +4929,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "dimensions": {
     "mm": [
@@ -4951,7 +4974,7 @@
     60
    ],
    "power_w": 0.093,
-   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE C: come il Type B piu' la DaughterBoard (PIU-DB): 2 ingressi MPPT in piu' (3+2 = 5), 3 domini di tensione in piu' (VD3 e VD4 buck, default 5 V e 3.3 V, personalizzabili 2.8-12.08 V a costo aggiuntivo; VD5 boost, default 28.2 V (27.4-29.0 V), 1.5 A) e 8 canali di uscita in piu'. Tensione funzionale MPPT 3.5-13 V, 2 A per canale. Massa 360 g (355-365 g), senza indicare esplicitamente se comprende la batteria. Dimensioni: PIU + DaughterBoard 96 x 92 x 16 mm e batteria a 4 celle 94 x 89 x 21.0 mm come volumi separati: altezza 37.0 mm DERIVATA come somma 16 + 21.0, non dichiarata. Soglia software di spegnimento 12.0 V.",
+   "notes": "Datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26): EPS PC104 per piattaforme 1U-3U in LEO ('fino a 3U XL'), MPPT in hardware, riscaldatore automatico di batteria, interfaccia I2C (slave, 7 bit, 100/400 kbit/s). Potenza statica 0.093 W (93 mW dichiarati, a riposo). Rail VD0 = tensione di batteria non regolata, VD1 = 5 V (4.91-5.07 V a vuoto), VD2 = 3.3 V (3.26-3.41 V a vuoto), 4 canali per dominio, 3.01 A tipici per canale e 4 A totali per dominio. Temperatura 'con batteria' (usata in temp_op_c): scarica da -20 a +60 C, carica da +10 a +45 C (da 0 a +45 C fino a 800 mA), riscaldatori disabilitati; 'senza batteria' -40..+85 C (stima da valutazione di progetto). Qualificazione termica -40..+80 C, carico statico +10.8 g. Energia: il testo dichiara 28.8 Wh (2S1P, 7.2 V) e 57.6 Wh (4S1P, 14.4 V), la copertina 'da 28.2 Wh a 57.6 Wh' e la tabella celle 3.2 Ah nominali (3.2 Ah x 7.2 V = 23 Wh): valori in contraddizione tra loro, si riportano i Wh dichiarati nel testo; capacita' in Ah non usata. TYPE C: come il Type B piu' la DaughterBoard (PIU-DB): 2 ingressi MPPT in piu' (3+2 = 5), 3 domini di tensione in piu' (VD3 e VD4 buck, default 5 V e 3.3 V, personalizzabili 2.8-12.08 V a costo aggiuntivo; VD5 boost, default 28.2 V (27.4-29.0 V), 1.5 A) e 8 canali di uscita in piu'. Tensione funzionale MPPT 3.5-13 V, 2 A per canale. Massa 360 g (355-365 g), senza indicare esplicitamente se comprende la batteria. Dimensioni: PIU + DaughterBoard 96 x 92 x 16 mm e batteria a 4 celle 94 x 89 x 21.0 mm come volumi separati: altezza 37.0 mm DERIVATA come somma 16 + 21.0, non dichiarata. Soglia software di spegnimento 12.0 V. Integrated battery heater declared (ISIS ICEPS2 datasheet: 'automatic integrated battery heater and thermostat control'), heater power not published: integrated_heater_w = null.",
    "source": {
     "url": "https://www.isispace.nl/wp-content/uploads/2025/01/ISIS-ICEPS2-DSH-0001-ICEPS2_Datasheet-01_02.pdf",
     "document": "ISISpace ICEPS2 datasheet ISIS-ICEPS2-DSH-0001 issue 1.2 (2024-07-26)",
@@ -4993,7 +5016,8 @@
     "data_interfaces": [
      "I2C"
     ],
-    "efficiency": null
+    "efficiency": null,
+    "integrated_heater_w": null
    },
    "dimensions": {
     "mm": [
@@ -5754,6 +5778,363 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-15"
+   }
+  },
+  {
+   "id": "minco-hk6900",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6900 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.000129,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "12.7 x 25.4 mm, type 21, 210.1 ohm, typical 4 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 3.23 cm2 = 0.13 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 210.1,
+    "rated_power_w": 4,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 2.39
+   },
+   "dimensions": {
+    "mm": [
+     12.7,
+     25.4,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
+   }
+  },
+  {
+   "id": "minco-hk6901",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6901 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.000258,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "12.7 x 50.8 mm, type 21, 100.1 ohm, typical 8 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 6.45 cm2 = 0.26 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 100.1,
+    "rated_power_w": 8,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 5.03
+   },
+   "dimensions": {
+    "mm": [
+     12.7,
+     50.8,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
+   }
+  },
+  {
+   "id": "minco-hk6905",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6905 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.00129,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "12.7 x 254 mm, type 21, 19.3 ohm, typical 41 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 32.26 cm2 = 1.29 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 19.3,
+    "rated_power_w": 41,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 26.19
+   },
+   "dimensions": {
+    "mm": [
+     12.7,
+     254.0,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
+   }
+  },
+  {
+   "id": "minco-hk6906",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6906 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.000258,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "25.4 x 25.4 mm, type 21, 94.7 ohm, typical 8 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 6.45 cm2 = 0.26 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 94.7,
+    "rated_power_w": 8,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 5.35
+   },
+   "dimensions": {
+    "mm": [
+     25.4,
+     25.4,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
+   }
+  },
+  {
+   "id": "minco-hk6907",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6907 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.000516,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "25.4 x 50.8 mm, type 1, 47.8 ohm, typical 16 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 12.90 cm2 = 0.52 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 47.8,
+    "rated_power_w": 16,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 10.59
+   },
+   "dimensions": {
+    "mm": [
+     25.4,
+     50.8,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
+   }
+  },
+  {
+   "id": "minco-hk6911",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6911 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.001032,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "50.8 x 50.8 mm, type 1, 22.1 ohm, typical 36 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 25.81 cm2 = 1.03 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 22.1,
+    "rated_power_w": 36,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 22.9
+   },
+   "dimensions": {
+    "mm": [
+     50.8,
+     50.8,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
+   }
+  },
+  {
+   "id": "minco-hk6912",
+   "category": "heater",
+   "vendor": "Minco",
+   "name": "HK6912 stock polyimide Thermofoil heater",
+   "family": "Minco polyimide Thermofoil",
+   "mass_kg": 0.001548,
+   "power_w": null,
+   "volume_u": 0,
+   "temp_op_c": [
+    -32,
+    100
+   ],
+   "notes": "50.8 x 76.2 mm, type 1, 14.7 ohm, typical 53 W at 28 V (reference only; power at the bus voltage = V^2/R). Mass derived: 0.04 g/cm2 (design guide p. 9) x 38.71 cm2 = 1.55 g, lead wires (12 in min.) not included. Temperature range of the acrylic PSA backing (-32..100 C). Outgassing of the polyimide Thermofoil construction: 0.36% TML, 0.01% CVCM per NASA-JSC (design guide).",
+   "source": {
+    "url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "retrieved": "2026-10-23",
+    "verified": false,
+    "method": "transcribed from the vendor's public design guide; to be checked manually"
+   },
+   "specs": {
+    "heater_type": "polyimide film (Kapton) Thermofoil",
+    "resistance_ohm": 14.7,
+    "rated_power_w": 53,
+    "rated_voltage_v": 28,
+    "effective_area_cm2": 34.32
+   },
+   "dimensions": {
+    "mm": [
+     50.8,
+     76.2,
+     0.25
+    ],
+    "basis": "declared",
+    "note": "heated area X x Y; 0.25 mm over the element (design guide p. 9)"
+   },
+   "shape": {
+    "type": "panel",
+    "axis": null,
+    "basis": "subsystem",
+    "set": "2026-10-23"
+   },
+   "datasheet": {
+    "file": "datasheets/Minco__Minco-Thermal-Solutions-Design-Guide.pdf",
+    "document": "Minco Thermal Solutions Design Guide (stock polyimide Thermofoil heaters, page 27)",
+    "source_url": "https://www.minco.com/wp-content/uploads/Minco-Thermal-Solutions-Design-Guide.pdf",
+    "retrieved": "2026-10-23",
+    "bytes": 3420207
    }
   },
   {

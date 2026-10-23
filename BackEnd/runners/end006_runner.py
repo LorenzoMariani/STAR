@@ -124,6 +124,12 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
     cell = chosen.get("battery") or (chosen.get("eps") if ((chosen.get("eps") or {}).get("specs") or {}).get("integrated_battery_wh") else None) or {}
     temp = cell.get("temp_op_c")
     temp = [float(temp[0]), float(temp[1])] if isinstance(temp, (list, tuple)) and len(temp) == 2 and None not in temp else None
+    components = {k: v.get("id") for k, v in chosen.items()}
+    heater = thermal_control((result.get("mission") or {}).get("battery_heater"))
+    if heater and heater["battery_heater"].get("component"):
+        bh = heater["battery_heater"]
+        # an integrated heater is part of the battery, named so that switching it on changes the design signature
+        components["battery_heater"] = bh["component"] if bh.get("source") == "separate" else f"{bh['component']}:integrated_heater"
     return {
         "schema_version": 1, "module_id": MODULE_ID, "phase": phase, "run_id": run_id, "generated_at": datetime.now().isoformat(),
         "class_u": cs.get("class_u"), "form_factor": f"{cs.get('class_u')}U", "envelope_mm": env, "dims_m": [a, b, c],
@@ -146,10 +152,25 @@ def spacecraft_definition(result: dict[str, Any], phase: str, run_id: str | None
                    for k, v in chosen.items() if str(k).startswith("comms")},
         "power_unknown": totals.get("power_unknown") or [],
         "attitude_control": attitude_control(chosen),
-        "components": {k: v.get("id") for k, v in chosen.items()},
+        "components": components,
+        "thermal_control": heater,
         "conventions": "body frame: +Z payload boresight (nadir), long axis of the envelope along Z; envelope X x Y x Z; "
                        "Cd and Cr are STAR defaults; area_mean_projected = surface / 4 (orientation average)",
     }
+
+
+def thermal_control(heater: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Thermal control of the design (phase F4, IF-019-006): the battery heater chosen from the END-019 cold-case sizing, with the
+    thermostat setpoint END-019 used and the orbit-mean power of the cold case (END-004 counts its energy in the cold case,
+    END-019 verifies it). None without END-019 in the run (or when no heater is needed)."""
+    if not heater or not heater.get("component"):
+        return None
+    return {"battery_heater": {"component": heater["component"], "name": heater.get("name"), "source": heater.get("source"),
+                               "power_w": heater.get("power_w"), "setpoint_c": heater.get("setpoint_c"),
+                               "mean_w_cold": heater.get("mean_w_cold"), "duty_cold": heater.get("duty_cold"),
+                               "mass_kg": heater.get("mass_kg"), "bus_voltage_v": heater.get("bus_voltage_v"),
+                               "rule": f"thermostat at the setpoint; power >= {heater.get('design_factor')} x the END-019 cold-case peak "
+                                       f"({heater.get('need_peak_w')} W)"}}
 
 
 def attitude_control(chosen: dict[str, Any]) -> dict[str, Any]:
@@ -233,7 +254,56 @@ def mission_context(payload: dict[str, Any]) -> dict[str, Any]:
                 ctx[key] = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 pass
+    end003 = end003_peaks(upstream_product(payload, "kpis_end003"), upstream_product(payload, "spacecraft_definition"))
+    if end003:
+        ctx["end003"] = end003
+    end019 = end019_heater(upstream_product(payload, "kpis_end019"))
+    if end019:
+        ctx["end019"] = end019
     return ctx
+
+
+def end019_heater(kpis_path: Path | None) -> dict[str, Any] | None:
+    """IF-019-006: the END-019 battery temperatures and the cold-case heater sizing (kpis_end019). None without END-019."""
+    if not kpis_path or not kpis_path.is_file():
+        return None
+    try:
+        kpis = {k.get("id"): k for k in json.loads(kpis_path.read_text(encoding="utf-8")).get("kpis") or []}
+    except (OSError, ValueError, AttributeError):
+        return None
+
+    def val(key: str) -> float | None:
+        return _number((kpis.get(f"END-019.{key}") or {}).get("value"))
+    if val("battery_min_C") is None and val("battery_max_C") is None:
+        return None
+    return {"needed_peak_w": val("heater_needed_peak_W"), "needed_mean_w_cold": val("heater_needed_mean_W_cold"),
+            "setpoint_c": ((kpis.get("END-019.heater_needed_peak_W") or {}).get("context") or {}).get("setpoint_C"),
+            "battery_min_c": val("battery_min_C"), "battery_max_c": val("battery_max_C"), "limit_min_c": val("battery_limit_min_C"),
+            "limit_max_c": val("battery_limit_max_C"), "battery_min_no_heater_c": val("battery_min_no_heater_C"),
+            "heater_in_design_w": val("heater_in_design_W"), "source": "END-019 of this run (kpis_end019)"}
+
+
+def end003_peaks(kpis_path: Path | None, design_path: Path | None) -> dict[str, Any] | None:
+    """IF-003-006: the END-003 peaks the wheels are sized on (kpis_end003): momentum = max(peak angular momentum, peak wheel
+    momentum), peak control torque; the largest principal inertia of the design END-003 used (spacecraft_definition) for the
+    slew momentum. None without END-003 (today's rule: wheels declared for the class)."""
+    if not kpis_path or not kpis_path.is_file():
+        return None
+    try:
+        values = {k.get("id"): k.get("value") for k in json.loads(kpis_path.read_text(encoding="utf-8")).get("kpis") or []}
+    except (OSError, ValueError, AttributeError):
+        return None
+    moms = [v for v in (_number(values.get("END-003.peak_momentum_Nms")), _number(values.get("END-003.peak_wheel_momentum_Nms"))) if v is not None]
+    torque = _number(values.get("END-003.peak_control_torque_Nm"))
+    if not moms or torque is None:
+        return None
+    out: dict[str, Any] = {"peak_momentum_nms": max(moms), "peak_torque_nm": torque, "source": "END-003 of this run (kpis_end003)"}
+    try:
+        inertia = json.loads(design_path.read_text(encoding="utf-8")).get("inertia_kg_m2") if design_path and design_path.is_file() else None
+        out["inertia_max_kgm2"] = max(float(x) for x in inertia) if inertia else None
+    except (OSError, ValueError, TypeError):
+        pass
+    return out
 
 
 def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
@@ -289,7 +359,7 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
     if forced:
         notes.append(f"CubeSat class chosen by the user: {forced}U")
     context = mission_context(payload) if phase == "final" else {}
-    used = [k for k in ("altitude_km", "end004", "end016") if k in context]
+    used = [k for k in ("altitude_km", "end003", "end004", "end016", "end019") if k in context]
     log("EXECUTION", f"END-006 {phase} design; class chosen by the user: {forced or 'no'}; products of this run used: {', '.join(used) or 'none'}")
 
     service = SelectorService()
@@ -335,15 +405,20 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
         record["spacecraft"] = sc
         if phase == "initial":
             # the satellite every module of the workflow uses
+            sc["design_iteration"] = 0
             write(product_dir / SPACECRAFT_FILE, dumps(sc))
             record["evidence"] = evidence = "Initial design, used by the other modules: " + evidence
         else:
             initial_path = upstream_product(payload, "spacecraft_definition") or product_dir / SPACECRAFT_FILE
             initial = json.loads(initial_path.read_text(encoding="utf-8")) if initial_path.is_file() else None
             changes = design_changes(initial, sc)
+            used_iteration = int((initial or {}).get("design_iteration") or 0)
             record["initial_spacecraft"] = initial
             record["design_changes"] = changes
-            write(product_dir / "spacecraft_definition_final.json", dumps({**sc, "changes_from_initial": changes}))
+            # D(k): relative to the design the modules used in this iteration, D(k-1) (the initial design in the first pass)
+            write(product_dir / "spacecraft_definition_final.json",
+                  dumps({**sc, "design_iteration": used_iteration + 1, "used_design_iteration": used_iteration,
+                         "changes_from_used_design": changes}))
             if initial is None:
                 note = "no initial design in this run: the other modules did not use an END-006 satellite"
             elif changes:

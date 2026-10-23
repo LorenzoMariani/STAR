@@ -15,8 +15,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-# `payload` resta sempre l'ultima (la ricerca la tratta a parte); star_tracker, propulsion, antenna e gps sono opzionali
-CATEGORIES = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna", "adcs", "magnetorquer", "reaction_wheel", "star_tracker", "sun_sensor", "gps", "gnss_antenna", "propulsion", "payload")
+# `payload` resta sempre l'ultima (la ricerca la tratta a parte); star_tracker, propulsion, antenna e gps sono opzionali;
+# `heater` (riscaldatori a film della batteria, fase F4 2026-10-23) non e' un sottosistema della ricerca: lo sceglie mission.battery_heater
+CATEGORIES = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna", "adcs", "magnetorquer", "reaction_wheel", "star_tracker", "sun_sensor", "gps", "gnss_antenna", "propulsion", "heater", "payload")
 
 # Tipi dei campi di `specs`:
 #   num, int, str, strs (lista di stringhe), nums (lista di numeri),
@@ -55,6 +56,7 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
         "output_power_w_max": ("num", "Potenza massima in uscita", False),
         "data_interfaces": ("strs", "Interfacce di telemetria/comando", False),
         "efficiency": ("num", "Rendimento di conversione 0-1", False),
+        "integrated_heater_w": ("num", "Potenza del riscaldatore della batteria integrata dichiarata dal fornitore (null = nessuno o non pubblicata)", False),
     },
     "battery": {
         "voltage_range_v": ("range", "Tensione [scarica minima, carica massima]", True),
@@ -62,6 +64,14 @@ SPEC_FIELDS: dict[str, dict[str, tuple[str, str, bool]]] = {
         "max_discharge_a": ("num", "Corrente massima di scarica", False),
         "max_dod": ("num", "DoD massimo raccomandato 0-1", False),
         "cycle_life": ("int", "Cicli garantiti al DoD massimo", False),
+        "integrated_heater_w": ("num", "Potenza del riscaldatore integrato dichiarata dal fornitore (null = nessuno o non pubblicata)", False),
+    },
+    "heater": {
+        "heater_type": ("str", "Tipo, es. 'polyimide film (Kapton)'", True),
+        "resistance_ohm": ("num", "Resistenza nominale: la potenza alla tensione del bus e' V^2 / R", True),
+        "rated_power_w": ("num", "Potenza tipica dichiarata alla tensione rated_voltage_v (solo riferimento)", False),
+        "rated_voltage_v": ("num", "Tensione della potenza tipica dichiarata", False),
+        "effective_area_cm2": ("num", "Area riscaldata efficace", False),
     },
     "solar_panel": {
         "face": ("str", "Faccia su cui si monta, es. '3U'", True),

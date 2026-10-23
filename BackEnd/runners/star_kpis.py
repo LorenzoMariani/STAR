@@ -44,7 +44,7 @@ from typing import Any
 SCHEMA_VERSION = 1
 
 UNITS = ("h", "min", "s", "km", "m", "m2", "deg", "deg/s", "kg", "%", "Wh", "W", "C", "m/s", "m/s/year", "years", "mag",
-         "Nm", "Nms", "Nms/day", "U", "bool", "-")
+         "Nm", "Nms", "Nms/day", "Am2", "U", "bool", "-")
 # the spellings the modules write today, and what they mean in UNITS
 UNIT_ALIASES = {"": "-", "none": "-", "count": "-", "unity units": "-", "hours": "h", "hour": "h", "hr": "h", "minutes": "min",
                 "seconds": "s", "sec": "s", "degrees": "deg", "°": "deg", "degc": "C", "°c": "C", "deg c": "C", "celsius": "C",
@@ -130,6 +130,11 @@ CATALOGUE: dict[str, dict[str, Any]] = {
     "END-003.worst_drag_torque_Nm": _c("Worst-case drag torque", "Nm", "environment", "attitude_summary", "kpis[Worst-Case Drag Torque]", "Worst-Case Drag Torque"),
     "END-003.peak_mtq_dipole_pct": _c("Peak magnetorquer dipole (% of dipole)", "%", "design", "attitude_summary", "kpis[Peak Magnetorquer Dipole]", "Peak Magnetorquer Dipole"),
     "END-003.end_wheel_momentum_pct": _c("Wheel momentum at the end of the window (% of capacity)", "%", "design", "attitude_summary", "kpis[Wheel Momentum at the End of the Window]", "Wheel Momentum at the End of the Window"),
+    # IF-003-006 (phase F): absolute values for the END-006 wheel sizing; derived from the % KPIs and the wheels / magnetorquers
+    # END-003 used (attitude_summary.attitude_control) when the module does not write them
+    "END-003.peak_wheel_momentum_Nms": _c("Peak wheel momentum", "Nms", "design", "attitude_summary", "peak_wheel_momentum_pct x attitude_control.wheel_momentum_Nms"),
+    "END-003.peak_control_torque_Nm": _c("Peak control torque", "Nm", "design", "attitude_summary", "peak_control_torque_pct x attitude_control.wheel_torque_Nm"),
+    "END-003.peak_mtq_dipole_Am2": _c("Peak magnetorquer dipole", "Am2", "design", "attitude_summary", "peak_mtq_dipole_pct x attitude_control.magnetorquer_dipole_Am2"),
     "END-003.attitude_mode": _c("Attitude mode", "-", "design", "attitude_summary", "attitude_mode"),
 
     # END-004 power budget: power_budget_summary.json and power_design_cases.json (phase D)
@@ -146,12 +151,18 @@ CATALOGUE: dict[str, dict[str, Any]] = {
     "END-004.design_margin_pct": _c("Power design margin", "%", "design", "power_budget_summary", "analysis.margin_fraction x 100"),
     "END-004.dissipation_hot_W": _c("Internal dissipation, hot case", "W", "performance", "power_design_cases", "dissipation_W.hot"),
     "END-004.dissipation_cold_W": _c("Internal dissipation, cold case", "W", "performance", "power_design_cases", "dissipation_W.cold"),
+    "END-004.heater_energy_per_orbit_Wh": _c("Battery heater energy per orbit in the worst case (END-019 cold-case mean x period)", "Wh", "performance", "power_design_cases", "battery_heater.energy_per_orbit_Wh"),
     "END-004.dissipation_nominal_W": _c("Internal dissipation, nominal (mean of the day)", "W", "performance", "power_design_cases", "dissipation_W.nominal"),
 
     # END-006 component selector. Final node: component_selector_results / spacecraft_definition_final (kpis.json);
     # initial node: the *_initial products and spacecraft_definition (kpis_initial.json), same ids.
     "END-006.class_u": _c("CubeSat class", "U", "design", "spacecraft_definition_final", "class_u"),
     "END-006.stated_class_u": _c("CubeSat class stated in the requirements (reported only)", "U", "design", "component_selector_results", "result.mission.stated_class.class_u"),
+    "END-006.design_signature": _c("Design signature (hash of the slot -> component choice; CEF loop criterion)", "-", "design", "component_selector_results", "result.subsystems[].selected.id"),
+    "END-006.wheel_momentum_ratio": _c("Wheel momentum capacity / END-003 need (IF-003-006)", "-", "design", "component_selector_results", "result.mission.wheel_sizing.momentum_ratio"),
+    "END-006.wheel_torque_ratio": _c("Wheel torque capacity / END-003 need (IF-003-006)", "-", "design", "component_selector_results", "result.mission.wheel_sizing.torque_ratio"),
+    "END-006.battery_heater_W": _c("Battery heater power of the design (IF-019-006, at the lowest battery voltage)", "W", "design", "component_selector_results", "result.mission.battery_heater.power_w"),
+    "END-006.check_battery_temperature": _c("Battery within its limits: cold case held by the heater, hot max <= upper limit (IF-019-006)", "bool", "evidence", "component_selector_results", "result.mission.battery_heater.temperature_check.met"),
     "END-006.mass_kg": _c("Satellite mass", "kg", "design", "component_selector_results", "result.totals.mass_kg"),
     "END-006.mass_limit_kg": _c("Mass limit of the class / requirement", "kg", "design", "component_selector_results", "result.totals.mass_limit_kg"),
     "END-006.volume_used_pct": _c("Volume used (% of the class envelope)", "%", "design", "component_selector_results", "result.totals.volume_m3 / volume_limit_m3 x 100"),
@@ -218,7 +229,12 @@ CATALOGUE: dict[str, dict[str, Any]] = {
     # END-019 components thermal analysis: thermal_summary_SAT-*.json (window + hot / cold design cases), worst over
     # the satellites; context = {"satellite", "case": "window|hot|cold"} of the worst value
     "END-019.battery_max_C": _c("Battery max temperature (window and hot case)", "C", "mission_compliance", "thermal_summary", "max(nodes.BAT.max_C, design_cases.hot.nodes.BAT.max_C)"),
-    "END-019.battery_min_C": _c("Battery min temperature (window and cold case)", "C", "mission_compliance", "thermal_summary", "min(nodes.BAT.min_C, design_cases.cold.nodes.BAT.min_C)"),
+    "END-019.battery_min_C": _c("Battery min temperature (window and cold case; with the heater of the design when it has one)", "C", "mission_compliance", "thermal_summary", "min(nodes.BAT.min_C, design_cases.cold.nodes.BAT.min_C); heater_cases.worst.battery_min_with_heater_C with a heater"),
+    "END-019.battery_min_no_heater_C": _c("Battery min temperature without heater (window and cold case)", "C", "performance", "thermal_summary", "min(nodes.BAT.min_C, design_cases.cold.nodes.BAT.min_C)"),
+    "END-019.heater_needed_peak_W": _c("Battery heater power needed, peak (cold case, ideal thermostat at the setpoint)", "W", "design", "heater_cases", "worst.needed_peak_W"),
+    "END-019.heater_needed_mean_W_cold": _c("Battery heater power needed, orbit mean (cold case, ideal thermostat)", "W", "design", "heater_cases", "worst.needed_mean_W_cold"),
+    "END-019.heater_duty_cold_pct": _c("Battery heater duty in the cold case", "%", "performance", "heater_cases", "worst.duty_cold_pct"),
+    "END-019.heater_in_design_W": _c("Battery heater power of the design END-019 used", "W", "design", "heater_cases", "heater_in_design.power_W"),
     "END-019.central_body_max_C": _c("Central body max temperature (window and hot case)", "C", "mission_compliance", "thermal_summary", "max(nodes.CTR.max_C, design_cases.hot.nodes.CTR.max_C)"),
     "END-019.central_body_min_C": _c("Central body min temperature (window and cold case)", "C", "performance", "thermal_summary", "min(nodes.CTR.min_C, design_cases.cold.nodes.CTR.min_C)"),
     "END-019.solar_panel_max_C": _c("Solar panel max temperature (window)", "C", "performance", "thermal_summary", "solar_panels.max_C"),

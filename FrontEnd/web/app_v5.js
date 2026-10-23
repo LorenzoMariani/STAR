@@ -373,6 +373,7 @@ function renderModules(moduleList) {
         <div class="module-owner-small">${escapeHtml(owner)}</div>
       </div>
       <div class="status-pill ${escapeHtml(status)}">${escapeHtml(status)}</div>
+      ${module.cef_iteration ? `<span class="iter-chip" title="Design loop: the module ran in iteration ${escapeHtml(module.cef_iteration)} of at most ${escapeHtml(module.cef_max || "")}">iter ${escapeHtml(module.cef_iteration)}/${escapeHtml(module.cef_max || "?")}</span>` : ""}
     `;
 
     grid.appendChild(card);
@@ -2685,6 +2686,20 @@ async function approveMissingInformation() {
 /* ------------------------------------------------------------------
    Execution stop-state hardening patch v2
    ------------------------------------------------------------------ */
+function renderCefChip(progress) {
+  const chip = getElement("cef-loop-chip");
+  if (!chip) return;
+  if (!progress || !progress.max_iterations || !progress.iteration) {
+    chip.hidden = true;
+    return;
+  }
+  const done = progress.status;
+  const labels = { converged: "converged", not_converged: "not converged", stalled: "stalled", interrupted: "interrupted", stopped: "stopped", not_applicable: "" };
+  chip.hidden = false;
+  chip.className = "cef-chip" + (done ? " " + done : "");
+  chip.textContent = `Design loop · iteration ${progress.iteration}/${progress.max_iterations}` + (labels[done] ? ` · ${labels[done]}` : "");
+}
+
 function applyExecutionBackendState(state, options = {}) {
   if (!state) return;
   const renderResults = options.renderResults !== false;
@@ -2696,6 +2711,7 @@ function applyExecutionBackendState(state, options = {}) {
 
   if (Array.isArray(state.logs)) setLogs(state.logs);
   if (Array.isArray(state.modules)) renderModules(state.modules);
+  renderCefChip(state.cef_progress);
 
   if (renderResults && Object.prototype.hasOwnProperty.call(state, "execution_results")) {
     renderExecutionResults(

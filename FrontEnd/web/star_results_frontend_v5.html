@@ -264,6 +264,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END-016</span><span class="tab-title">Collision Avoidance</span></button>
         <button class="tab-button" id="tab-thermal" data-tab="thermal" type="button"><span class="tab-code">END-019</span><span class="tab-title">Thermal Analysis</span></button>
         <button class="tab-button" id="tab-compliance" data-tab="compliance" type="button"><span class="tab-code">STAR</span><span class="tab-title">Requirements &amp; KPIs</span></button>
+        <button class="tab-button" id="tab-cefloop" data-tab="cefloop" type="button"><span class="tab-code">STAR</span><span class="tab-title">Design loop</span></button>
         <button class="tab-button" id="tab-diagnostics" data-tab="diagnostics" type="button"><span class="tab-code">RUN</span><span class="tab-title">Run Diagnostics</span></button>
       
       </div>
@@ -5802,6 +5803,9 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
 .checks li .mod{color:var(--accent-2);min-width:58px}
 .checks li .why{color:var(--muted)}
 .kpi-mod td:first-child{color:var(--accent-2);font-weight:700}
+.loop-banner{border:1px solid var(--border);border-left:5px solid var(--accent);border-radius:14px;padding:10px 16px;margin-bottom:12px;background:var(--panel-muted);font-size:12px;color:var(--muted-2)}
+.loop-banner b{color:var(--accent);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:13px}
+.loop-banner.interrupted,.loop-banner.stopped{border-left-color:var(--danger)}.loop-banner.interrupted b,.loop-banner.stopped b{color:var(--danger)}
 .two-col{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
 @media(max-width:1100px){.two-col{grid-template-columns:1fr}}
 &lt;/style&gt;
@@ -5815,6 +5819,7 @@ for (const w of [window, window.parent, window.top]) { try { w.addEventListener(
     &lt;/div&gt;
     &lt;div class=&quot;chips&quot; id=&quot;cmp-chips&quot;&gt;&lt;/div&gt;
   &lt;/div&gt;
+  &lt;div id=&quot;cmp-loop&quot;&gt;&lt;/div&gt;
   &lt;div class=&quot;views&quot;&gt;&lt;button class=&quot;view-btn on&quot; data-v=&quot;comp&quot;&gt;Compliance&lt;/button&gt;&lt;button class=&quot;view-btn&quot; data-v=&quot;trace&quot;&gt;Traceability&lt;/button&gt;&lt;/div&gt;
   &lt;div id=&quot;view-comp&quot; class=&quot;two-col&quot;&gt;
     &lt;main class=&quot;card&quot;&gt;
@@ -5939,6 +5944,12 @@ function renderComp(){
   note.push(`Modules with results: ${esc((DATA.modules_run || []).join(&#x27;, &#x27;) || &#x27;none&#x27;)}. Generated ${esc(String(DATA.generated_at || &#x27;&#x27;).replace(&#x27;T&#x27;, &#x27; &#x27;).slice(0, 19))}.`);
   $(&#x27;cmp-note&#x27;).innerHTML = note.join(&#x27; &#x27;);
   $(&#x27;cmp-note&#x27;).classList.toggle(&#x27;warn&#x27;, false);
+  const dl = DATA.design_loop;
+  const LOOP_TXT = {not_converged: &#x27;Design loop not converged&#x27;, stalled: &#x27;Design loop stalled&#x27;, interrupted: &#x27;Design loop interrupted&#x27;, stopped: &#x27;Design loop stopped&#x27;};
+  $(&#x27;cmp-loop&#x27;).innerHTML = dl &amp;&amp; LOOP_TXT[dl.status]
+    ? `&lt;div class=&quot;loop-banner ${esc(dl.status)}&quot;&gt;&lt;b&gt;${esc(LOOP_TXT[dl.status])}&lt;/b&gt; after ${esc(dl.iterations_run)} of ${esc(dl.max_iterations)} iteration(s): the satellite delivered by the final design does not satisfy every design criterion` +
+      `${(dl.failing_criteria || []).length ? &#x27; (&#x27; + esc(dl.failing_criteria.join(&#x27;, &#x27;)) + &#x27;)&#x27; : &#x27;&#x27;}, so the statuses and KPIs below are those of the last iteration. ${esc(dl.reason || &#x27;&#x27;)} See the &lt;i&gt;Design loop&lt;/i&gt; tab.&lt;/div&gt;`
+    : &#x27;&#x27;;
   const rows = (DATA.requirements || []).filter(r =&gt; !FILTER || r.status === FILTER);
   $(&#x27;cmp-count&#x27;).textContent = `${rows.length} of ${total} requirements`;
   $(&#x27;cmp-table&#x27;).innerHTML = rows.length ? rows.map(reqRow).join(&#x27;&#x27;) : &#x27;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;No requirement with this status.&lt;/td&gt;&lt;/tr&gt;&#x27;;
@@ -6027,6 +6038,211 @@ if (window.starComplianceData) render(window.starComplianceData);
 &lt;/body&gt;
 &lt;/html&gt;
 " title="Requirements and KPIs"></iframe>
+      <iframe id="frame-cefloop" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+&lt;title&gt;STAR — Design loop&lt;/title&gt;
+&lt;style&gt;
+@import url(&#x27;https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap&#x27;);
+:root{--bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);--text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;--danger:#ff5c7a;--warning:#ffc857;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);color-scheme:dark}
+:root[data-theme=&quot;light&quot;]{--bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);--text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;--danger:#bd2450;--warning:#936000;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:&#x27;Space Mono&#x27;,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}.app-shell{padding:0;width:100%;margin:0}.dashboard{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:18px}.panel,.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}.panel-header,.card-header{padding:16px 18px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-header h2,.card-header h3,.section-title{margin:0;color:var(--text-strong);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:13px}.panel-body,.card-body{padding:18px}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.summary-card{border:1px solid var(--border-soft);background:var(--panel-muted);border-radius:16px;padding:14px}.summary-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.summary-value{font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;color:var(--accent);font-weight:800;font-size:24px;line-height:1.1;margin-top:6px}.summary-note{color:var(--muted);font-size:11px;margin-top:6px;overflow-wrap:anywhere}.status-dot{width:11px;height:11px;margin-top:4px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}.status-dot.warning{background:var(--warning);box-shadow:0 0 0 4px color-mix(in srgb,var(--warning) 18%,transparent)}.file-status-row{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--border-soft)}.file-title{color:var(--text-strong);font-weight:700}.file-path{color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:3px}.badge{display:inline-flex;align-items:center;border:1px solid var(--border-soft);border-radius:999px;padding:3px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.05em}.badge.ok{color:var(--success)}.badge.warning{color:var(--warning)}.badge.error{color:var(--danger)}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 12px;border-bottom:1px solid var(--border-soft);text-align:left;vertical-align:top}th{background:var(--panel-strong);color:var(--muted-2);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.045em;font-size:11px;position:sticky;top:0}.table-wrap{overflow:auto;max-height:calc(100vh - 230px);border:1px solid var(--border-soft);border-radius:16px}.muted{color:var(--muted)}.empty{color:var(--muted);padding:24px;text-align:center}.path{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.issues-list{display:flex;flex-direction:column;gap:10px}.issue{border:1px solid var(--border-soft);border-left:4px solid var(--warning);background:var(--panel-muted);border-radius:12px;padding:10px 12px}.issue.error{border-left-color:var(--danger)}.issue.ok{border-left-color:var(--success)}@media(max-width:1180px){.dashboard{grid-template-columns:1fr}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.summary-grid{grid-template-columns:1fr}.file-status-row{grid-template-columns:18px minmax(0,1fr)}}
+&lt;/style&gt;
+&lt;style&gt;
+.cl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.cl-head h2{margin:0;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:20px;color:var(--text-strong);letter-spacing:-.02em}
+.cl-note{margin-top:6px;color:var(--muted);font-size:11px;max-width:980px}
+.banner{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:14px;background:var(--panel-muted)}
+.banner h3{margin:0 0 4px;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:15px;color:var(--text-strong)}
+.banner p{margin:0;color:var(--muted-2);font-size:12px}
+.banner.converged{border-left-color:var(--success)}.banner.converged h3{color:var(--success)}
+.banner.not_converged,.banner.stalled{border-left-color:var(--accent)}.banner.not_converged h3,.banner.stalled h3{color:var(--accent)}
+.banner.interrupted,.banner.stopped{border-left-color:var(--danger)}.banner.interrupted h3,.banner.stopped h3{color:var(--danger)}
+.banner.not_applicable{border-left-color:var(--muted)}
+.banner ul{margin:6px 0 0;padding-left:18px;color:var(--muted-2);font-size:11px}
+.st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:10px;font-weight:700;white-space:nowrap}
+.st.pass,.st.ok,.st.completed{background:color-mix(in srgb,var(--success) 20%,transparent);color:var(--success)}
+.st.fail,.st.mismatch,.st.failed{background:color-mix(in srgb,var(--danger) 22%,transparent);color:var(--danger)}
+.st.not_evaluable,.st.completed_with_fallback{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.st.not_applicable,.st.not_recorded,.st.idle,.st.skipped_out_of_scope{background:var(--panel-muted);color:var(--muted)}
+.grid{display:grid;gap:14px;margin-bottom:14px}
+.iter-th{white-space:nowrap}
+.cell small{display:block;color:var(--muted);font-size:10px;margin-top:2px;max-width:260px;white-space:normal}
+.vals{color:var(--muted-2);font-size:10.5px;margin-top:3px}
+.vals div{white-space:nowrap}
+.reason{color:var(--danger);font-size:10.5px;margin-top:3px;max-width:300px;white-space:normal}
+.chg{margin:4px 0 0;padding-left:16px;color:var(--muted-2);font-size:11px}
+.sub{color:var(--muted);font-size:10px}
+a.arch{color:var(--accent-2);cursor:pointer;text-decoration:underline;font-size:11px}
+.files{display:none;margin:6px 0 0;padding:0;list-style:none;font-size:10.5px;max-height:220px;overflow:auto}
+.files li{padding:1px 0}
+.files.open{display:block}
+.delta{color:var(--accent);font-weight:700}
+.warn-list li{color:var(--accent);font-size:11px;margin-bottom:3px}
+.empty{color:var(--muted);padding:14px}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;app-shell&quot;&gt;
+  &lt;div class=&quot;cl-head&quot;&gt;&lt;div&gt;&lt;h2&gt;Design loop&lt;/h2&gt;
+    &lt;div class=&quot;cl-note&quot; id=&quot;cl-note&quot;&gt;Select a RUN folder: the outcome of the CEF loop (END-006 final design fed back to the modules) is read from convergence.json.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div id=&quot;cl-banner&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;grid&quot;&gt;
+    &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Criteria &amp;times; iterations&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;cl-crit-count&quot;&gt;&amp;mdash;&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-crit-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-crit-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No design loop data loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+    &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Design evolution&lt;/h3&gt;&lt;span class=&quot;muted&quot;&gt;design used &amp;rarr; design produced by END-006 in each iteration&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-evo-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-evo-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;&amp;mdash;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+    &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Nodes run&lt;/h3&gt;&lt;span class=&quot;muted&quot;&gt;per iteration and after the loop&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-node-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-node-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;&amp;mdash;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+        &lt;h3 class=&quot;section-title&quot; style=&quot;margin-top:16px&quot;&gt;After the loop&lt;/h3&gt;
+        &lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Node&lt;/th&gt;&lt;th&gt;Trigger&lt;/th&gt;&lt;th&gt;Fired&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-post-body&quot;&gt;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;&amp;mdash;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+        &lt;div class=&quot;cl-note&quot; id=&quot;cl-fixed&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+    &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Warnings&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;cl-warn-count&quot;&gt;&amp;mdash;&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;ul class=&quot;warn-list&quot; id=&quot;cl-warnings&quot;&gt;&lt;li&gt;&amp;mdash;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/section&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+(() =&gt; {
+&#x27;use strict&#x27;;
+const $ = id =&gt; document.getElementById(id);
+const BANNER = {
+  converged: [&#x27;Converged&#x27;, k =&gt; `All the criteria are met at iteration ${k.converged_at}. The modules ran on the design END-006 produced.`],
+  not_converged: [&#x27;Not converged&#x27;, k =&gt; `The criteria still fail after ${k.iterations_run} iteration(s). This is a result of the design, not an error: the run is complete.`],
+  stalled: [&#x27;Stalled&#x27;, k =&gt; &#x27;END-006 returns the design the modules already used and a criterion still fails: another iteration would give the same result.&#x27;],
+  interrupted: [&#x27;Interrupted&#x27;, k =&gt; &#x27;A node of the loop failed or was skipped, so the criteria could not be evaluated.&#x27;],
+  stopped: [&#x27;Stopped&#x27;, k =&gt; &#x27;The run was stopped by the user.&#x27;],
+  not_applicable: [&#x27;No design loop&#x27;, k =&gt; &#x27;The workflow has no loop to iterate.&#x27;],
+  running: [&#x27;Running&#x27;, k =&gt; &#x27;The loop is still working.&#x27;]
+};
+let DATA = null, ARCH = [];
+function esc(v){return String(v ?? &#x27;&#x27;).replaceAll(&#x27;&amp;&#x27;,&#x27;&amp;amp;&#x27;).replaceAll(&#x27;&lt;&#x27;,&#x27;&amp;lt;&#x27;).replaceAll(&#x27;&gt;&#x27;,&#x27;&amp;gt;&#x27;).replaceAll(&#x27;&quot;&#x27;,&#x27;&amp;quot;&#x27;);}
+function fmt(v){
+  if (v === null || v === undefined || v === &#x27;&#x27;) return &#x27;—&#x27;;
+  if (typeof v === &#x27;number&#x27;) return Math.abs(v) &gt;= 1000 || Number.isInteger(v) ? String(Math.round(v * 100) / 100) : v.toPrecision(4).replace(/\.?0+$/,&#x27;&#x27;);
+  if (typeof v === &#x27;boolean&#x27;) return v ? &#x27;yes&#x27; : &#x27;no&#x27;;
+  return String(v);
+}
+const sid = k =&gt; k.split(&#x27;.&#x27;).slice(1).join(&#x27;.&#x27;) || k;
+function badge(s){return `&lt;span class=&quot;st ${esc(s)}&quot;&gt;${esc(String(s).replaceAll(&#x27;_&#x27;,&#x27; &#x27;))}&lt;/span&gt;`;}
+function iters(){return (DATA &amp;&amp; DATA.iterations) || [];}
+function lastCrit(id){ const it = iters().slice(-1)[0]; return it ? (it.criteria || []).find(c =&gt; c.id === id) : null; }
+function renderBanner(){
+  const [title, text] = BANNER[DATA.status] || [DATA.status, () =&gt; &#x27;&#x27;];
+  const failing = (DATA.failing_criteria || []);
+  $(&#x27;cl-banner&#x27;).innerHTML = `&lt;div class=&quot;banner ${esc(DATA.status)}&quot;&gt;&lt;h3&gt;${esc(title)}${DATA.status === &#x27;converged&#x27; ? &#x27;&#x27; : ` &amp;middot; ${esc(DATA.iterations_run)} of ${esc(DATA.max_iterations)} iteration(s)`}&lt;/h3&gt;
+    &lt;p&gt;${esc(text(DATA))}&lt;/p&gt;&lt;p style=&quot;margin-top:4px&quot;&gt;${esc(DATA.reason || &#x27;&#x27;)}&lt;/p&gt;
+    ${failing.length ? `&lt;ul&gt;${failing.map(id =&gt; { const c = lastCrit(id); return `&lt;li&gt;&lt;b&gt;${esc(id)}&lt;/b&gt; ${esc(c ? c.name : &#x27;&#x27;)}${c &amp;&amp; c.reason ? &#x27; &amp;mdash; &#x27; + esc(c.reason) : &#x27;&#x27;}&lt;/li&gt;`; }).join(&#x27;&#x27;)}&lt;/ul&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+  $(&#x27;cl-note&#x27;).textContent = `${DATA.run_id || &#x27;&#x27;} · loop nodes: ${(DATA.loop_nodes || []).join(&#x27;, &#x27;)} · generated ${String(DATA.generated_at || &#x27;&#x27;).replace(&#x27;T&#x27;, &#x27; &#x27;).slice(0, 19)}`;
+}
+function head(cols){ return `&lt;tr&gt;&lt;th&gt;&amp;nbsp;&lt;/th&gt;${cols.map(c =&gt; `&lt;th class=&quot;iter-th&quot;&gt;${c}&lt;/th&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;`; }
+function iterCols(){ return iters().map(it =&gt; `Iteration ${it.k}&lt;div class=&quot;sub&quot;&gt;${esc((it.design_used || {}).source || &#x27;&#x27;)}&lt;/div&gt;`); }
+function renderCriteria(){
+  const its = iters();
+  const defs = DATA.criteria_def || [];
+  $(&#x27;cl-crit-count&#x27;).textContent = `${defs.length} criteria × ${its.length} iteration(s)`;
+  $(&#x27;cl-crit-head&#x27;).innerHTML = head(iterCols());
+  $(&#x27;cl-crit-body&#x27;).innerHTML = defs.map(d =&gt; `&lt;tr&gt;&lt;td&gt;&lt;b&gt;${esc(d.id)}&lt;/b&gt;&lt;div class=&quot;sub&quot;&gt;${esc(d.name)}&lt;/div&gt;&lt;/td&gt;` + its.map(it =&gt; {
+    const c = (it.criteria || []).find(x =&gt; x.id === d.id);
+    if (!c) return &#x27;&lt;td&gt;&lt;/td&gt;&#x27;;
+    const vals = Object.entries(c.values || {}).map(([k, v]) =&gt; {
+      const t = (c.threshold || {})[k], m = (c.margin || {})[k];
+      return `&lt;div title=&quot;${esc(k)}&quot;&gt;${esc(sid(k))}: &lt;b&gt;${esc(fmt(v))}&lt;/b&gt;${t !== undefined &amp;&amp; t !== null ? ` &lt;span class=&quot;sub&quot;&gt;(limit ${esc(fmt(t))}${m !== undefined &amp;&amp; m !== null ? `, margin ${esc(fmt(m))}` : &#x27;&#x27;})&lt;/span&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+    }).join(&#x27;&#x27;);
+    return `&lt;td class=&quot;cell&quot;&gt;${badge(c.status)}&lt;div class=&quot;vals&quot;&gt;${vals}&lt;/div&gt;${c.reason &amp;&amp; c.status !== &#x27;pass&#x27; ? `&lt;div class=&quot;reason&quot;&gt;${esc(c.reason)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/td&gt;`;
+  }).join(&#x27;&#x27;) + &#x27;&lt;/tr&gt;&#x27;).join(&#x27;&#x27;) || &#x27;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No criteria.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+function renderEvolution(){
+  const its = iters();
+  $(&#x27;cl-evo-head&#x27;).innerHTML = head(iterCols());
+  const keys = [];
+  its.forEach(it =&gt; (it.evolution || []).forEach(e =&gt; { if (!keys.find(k =&gt; k.kpi === e.kpi)) keys.push(e); }));
+  let html = `&lt;tr&gt;&lt;td&gt;&lt;b&gt;Design signature&lt;/b&gt;&lt;div class=&quot;sub&quot;&gt;hash of slot &amp;rarr; component&lt;/div&gt;&lt;/td&gt;` + its.map(it =&gt; {
+    const u = (it.design_used || {}).signature, p = (it.design_produced || {}).signature;
+    return `&lt;td class=&quot;cell&quot;&gt;${esc(u || &#x27;—&#x27;)} &amp;rarr; ${p &amp;&amp; p !== u ? `&lt;span class=&quot;delta&quot;&gt;${esc(p)}&lt;/span&gt;` : esc(p || &#x27;—&#x27;)}&lt;/td&gt;`;
+  }).join(&#x27;&#x27;) + &#x27;&lt;/tr&gt;&#x27;;
+  html += `&lt;tr&gt;&lt;td&gt;&lt;b&gt;Changes END-006 made&lt;/b&gt;&lt;div class=&quot;sub&quot;&gt;against the design used&lt;/div&gt;&lt;/td&gt;` + its.map(it =&gt; {
+    const ch = (it.design_produced || {}).changes || [];
+    return `&lt;td class=&quot;cell&quot;&gt;${ch.length ? `&lt;ul class=&quot;chg&quot;&gt;${ch.map(c =&gt; `&lt;li&gt;${esc(c)}&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;` : &#x27;&lt;span class=&quot;sub&quot;&gt;none: same design&lt;/span&gt;&#x27;}&lt;/td&gt;`;
+  }).join(&#x27;&#x27;) + &#x27;&lt;/tr&gt;&#x27;;
+  html += keys.map(e =&gt; `&lt;tr&gt;&lt;td title=&quot;${esc(e.kpi)}&quot;&gt;${esc(e.label)}&lt;div class=&quot;sub&quot;&gt;${esc(e.unit || &#x27;&#x27;)}&lt;/div&gt;&lt;/td&gt;` + its.map((it, i) =&gt; {
+    const x = (it.evolution || []).find(y =&gt; y.kpi === e.kpi);
+    const prev = i ? (its[i - 1].evolution || []).find(y =&gt; y.kpi === e.kpi) : null;
+    const changed = x &amp;&amp; prev &amp;&amp; x.value !== prev.value;
+    return `&lt;td class=&quot;cell&quot;&gt;${x ? `&lt;span class=&quot;${changed ? &#x27;delta&#x27; : &#x27;&#x27;}&quot;&gt;${esc(fmt(x.value))}&lt;/span&gt;` : &#x27;—&#x27;}&lt;/td&gt;`;
+  }).join(&#x27;&#x27;) + &#x27;&lt;/tr&gt;&#x27;).join(&#x27;&#x27;);
+  $(&#x27;cl-evo-body&#x27;).innerHTML = html;
+}
+function archiveLinks(k){
+  const prefix = `iteration_${String(k).padStart(2, &#x27;0&#x27;)}`;
+  const marker = `cef/${prefix}/`;
+  const pathOf = f =&gt; String(f.relativeDisplayPath || f.webkitRelativePath || f.name || &#x27;&#x27;).replaceAll(&#x27;\\&#x27;, &#x27;/&#x27;);
+  const files = ARCH.filter(f =&gt; pathOf(f).includes(marker));
+  if (!files.length) return `&lt;span class=&quot;sub&quot;&gt;${marker}: not in the loaded folder&lt;/span&gt;`;
+  const items = files.map(f =&gt; {
+    const rel = pathOf(f).split(marker).pop();
+    let url = &#x27;&#x27;;
+    try { url = URL.createObjectURL(f); } catch (_) {}
+    return `&lt;li&gt;${url ? `&lt;a class=&quot;arch&quot; href=&quot;${esc(url)}&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;${esc(rel)}&lt;/a&gt;` : esc(rel)}&lt;/li&gt;`;
+  }).join(&#x27;&#x27;);
+  return `&lt;a class=&quot;arch&quot; data-toggle=&quot;${prefix}&quot;&gt;cef/${prefix} (${files.length} files)&lt;/a&gt;&lt;ul class=&quot;files&quot; id=&quot;files-${prefix}&quot;&gt;${items}&lt;/ul&gt;`;
+}
+function renderNodes(){
+  const its = iters();
+  $(&#x27;cl-node-head&#x27;).innerHTML = `&lt;tr&gt;&lt;th&gt;Node&lt;/th&gt;${its.map(it =&gt; `&lt;th class=&quot;iter-th&quot;&gt;Iteration ${it.k}&lt;/th&gt;`).join(&#x27;&#x27;)}&lt;/tr&gt;`;
+  const nodes = [];
+  its.forEach(it =&gt; (it.nodes || []).forEach(n =&gt; { if (!nodes.includes(n.node)) nodes.push(n.node); }));
+  const loop = DATA.loop_nodes || [];
+  const order = loop.filter(n =&gt; nodes.includes(n)).concat(nodes.filter(n =&gt; !loop.includes(n)));
+  let html = order.map(n =&gt; `&lt;tr&gt;&lt;td&gt;&lt;b&gt;${esc(n)}&lt;/b&gt;&lt;/td&gt;` + its.map(it =&gt; {
+    const x = (it.nodes || []).find(y =&gt; y.node === n);
+    if (!x) return &#x27;&lt;td class=&quot;cell&quot;&gt;&lt;span class=&quot;sub&quot;&gt;not run&lt;/span&gt;&lt;/td&gt;&#x27;;
+    const dur = x.duration_s !== null &amp;&amp; x.duration_s !== undefined ? `${fmt(Math.round(x.duration_s * 10) / 10)} s` : &#x27;&#x27;;
+    const chk = x.design_check &amp;&amp; x.design_check !== &#x27;not_recorded&#x27; ? ` ${badge(x.design_check)}` : &#x27;&#x27;;
+    return `&lt;td class=&quot;cell&quot;&gt;${badge(x.status)}${chk}&lt;small&gt;${esc(dur)}${x.design_check === &#x27;ok&#x27; ? ` · used design D${esc(it.k - 1)}` : &#x27;&#x27;}&lt;/small&gt;&lt;/td&gt;`;
+  }).join(&#x27;&#x27;) + &#x27;&lt;/tr&gt;&#x27;).join(&#x27;&#x27;);
+  html += `&lt;tr&gt;&lt;td&gt;&lt;b&gt;Archive&lt;/b&gt;&lt;/td&gt;` + its.map(it =&gt; `&lt;td class=&quot;cell&quot;&gt;${archiveLinks(it.k)}&lt;/td&gt;`).join(&#x27;&#x27;) + &#x27;&lt;/tr&gt;&#x27;;
+  $(&#x27;cl-node-body&#x27;).innerHTML = html || &#x27;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No node run.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+  document.querySelectorAll(&#x27;a[data-toggle]&#x27;).forEach(a =&gt; a.addEventListener(&#x27;click&#x27;, () =&gt; $(&#x27;files-&#x27; + a.dataset.toggle).classList.toggle(&#x27;open&#x27;)));
+}
+function renderPost(){
+  const post = DATA.post_loop_nodes || [];
+  const trig = t =&gt; typeof t === &#x27;string&#x27; ? t : (t || []).map(r =&gt; `${r.product}${r.keys ? &#x27; [&#x27; + r.keys.join(&#x27;, &#x27;) + &#x27;]&#x27; : &#x27;&#x27;}`).join(&#x27;; &#x27;);
+  $(&#x27;cl-post-body&#x27;).innerHTML = post.length ? post.map(p =&gt; `&lt;tr&gt;&lt;td&gt;&lt;b&gt;${esc(p.node)}&lt;/b&gt;&lt;/td&gt;&lt;td class=&quot;sub&quot;&gt;${esc(trig(p.trigger))}&lt;/td&gt;
+    &lt;td&gt;${p.fired === null || p.fired === undefined ? &#x27;&lt;span class=&quot;sub&quot;&gt;not evaluated&lt;/span&gt;&#x27; : p.fired ? &#x27;&lt;span class=&quot;delta&quot;&gt;yes: re-run on the final design&lt;/span&gt;&#x27; : &#x27;no: keeps the results of iteration 1&#x27;}${p.changed &amp;&amp; p.changed.length ? `&lt;div class=&quot;sub&quot;&gt;changed: ${esc(p.changed.map(c =&gt; (c.keys &amp;&amp; c.keys.length) ? c.keys.join(&#x27;, &#x27;) : c.product).join(&#x27;; &#x27;))}&lt;/div&gt;` : &#x27;&#x27;}&lt;/td&gt;
+    &lt;td&gt;${p.status ? badge(p.status) : &#x27;—&#x27;}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;) : &#x27;&lt;tr&gt;&lt;td colspan=&quot;4&quot; class=&quot;empty&quot;&gt;None.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+  $(&#x27;cl-fixed&#x27;).textContent = (DATA.fixed_modules || []).length ? `Never re-run in the loop (orbit fixed): ${DATA.fixed_modules.join(&#x27;, &#x27;)}.` : &#x27;&#x27;;
+}
+function renderWarnings(){
+  const w = DATA.warnings || [];
+  $(&#x27;cl-warn-count&#x27;).textContent = `${w.length}`;
+  $(&#x27;cl-warnings&#x27;).innerHTML = w.length ? w.map(x =&gt; `&lt;li&gt;${esc(x)}&lt;/li&gt;`).join(&#x27;&#x27;) : &#x27;&lt;li style=&quot;color:var(--muted)&quot;&gt;None.&lt;/li&gt;&#x27;;
+}
+function render(){
+  if (!DATA) return;
+  renderBanner(); renderCriteria(); renderEvolution(); renderNodes(); renderPost(); renderWarnings();
+}
+async function fileText(f){ return f &amp;&amp; typeof f.text === &#x27;function&#x27; ? await f.text() : null; }
+window.receiveCefLoopFilesFromParent = async function(payload){
+  ARCH = Array.from((payload &amp;&amp; payload.archive) || []);
+  const file = payload &amp;&amp; payload.convergence;
+  if (!file) {
+    DATA = null;
+    $(&#x27;cl-banner&#x27;).innerHTML = &#x27;&#x27;;
+    $(&#x27;cl-note&#x27;).textContent = &#x27;No convergence.json in the selected RUN folder: this run was made without the design loop (before phase F) or the workflow has no END-006 final design.&#x27;;
+    return;
+  }
+  try { DATA = JSON.parse(await fileText(file)); render(); }
+  catch (e) { $(&#x27;cl-note&#x27;).textContent = &#x27;convergence.json could not be read: &#x27; + e; }
+};
+window.refreshCefLoopDashboard = function(){ render(); };
+window.setTheme = function(theme){ document.documentElement.dataset.theme = theme === &#x27;light&#x27; ? &#x27;light&#x27; : &#x27;dark&#x27;; };
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" title="Design loop"></iframe>
       <iframe id="frame-diagnostics" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -6184,7 +6400,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-cefloop'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -6769,6 +6985,29 @@ async function loadComplianceFromStarRoot() {
   }
 }
 
+// Design loop (phase F, 2026-10-23): <run>/convergence.json and the archive <run>/cef/iteration_0k written by the CEF loop
+async function readRunRootFile(name) {
+  if (Array.isArray(starRunFiles)) return fileFromSelectedRunPath([name]);
+  if (!starRootHandle) return null;
+  try { return await (await starRootHandle.getFileHandle(name)).getFile(); } catch (_) { return null; }
+}
+
+async function loadCefLoopFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-cefloop');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveCefLoopFilesFromParent !== 'function') return false;
+  try {
+    const convergence = await readRunRootFile('convergence.json');
+    let archive = [];
+    try { archive = await collectFilesFromSelectedPath(['cef']); } catch (_) { archive = []; }
+    await frame.contentWindow.receiveCefLoopFilesFromParent({ convergence, archive }, { run: selectedRunName() });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load the design loop data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function getDirectoryHandleIfExists(rootHandle, pathParts) {
   try {
     return await resolveDirectoryHandle(rootHandle, pathParts);
@@ -6944,7 +7183,7 @@ function scheduleAttitudeDataDelivery() {
 const TAB_FRAMES = {
   constellation: 'frame-constellation', attitude: 'frame-attitude', powerviz: 'frame-powerviz', synthetic: 'frame-synthetic',
   reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', compsel: 'frame-compsel',
-  compliance: 'frame-compliance', diagnostics: 'frame-diagnostics'
+  compliance: 'frame-compliance', cefloop: 'frame-cefloop', diagnostics: 'frame-diagnostics'
 };
 const TAB_LOADERS = {
   constellation: loadConstellationFromStarRoot,
@@ -6960,12 +7199,13 @@ const TAB_LOADERS = {
   thermal: loadThermalAnalysisFromStarRoot,
   compsel: loadComponentSelectorFromStarRoot,
   compliance: loadComplianceFromStarRoot,
+  cefloop: loadCefLoopFromStarRoot,
   diagnostics: updateRunDiagnostics
 };
 // module redraws; refreshDiagnosticsDashboard is left out because it scans the RUN again (its loader already did)
 const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshComponentSelectorDashboard',
   'refreshConstellationDashboard', 'refreshAttitudeDashboard', 'refreshPowerInsightsDashboard', 'refreshSyntheticDashboard',
-  'refreshReflectanceDashboard', 'refreshComplianceDashboard'];
+  'refreshReflectanceDashboard', 'refreshComplianceDashboard', 'refreshCefLoopDashboard'];
 const tabLoads = {};    // tab -> { run, promise, size }: data read for the selected RUN, frame size at the last redraw
 
 function activeTabName() {

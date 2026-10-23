@@ -25,7 +25,10 @@ The runner
    STAR_END019_EXECUTABLE = blackbox_build/star_thermal.exe it runs the compiled
    black box instead (the model as delivered, before the 2026-10-15 fixes;
    needs the MATLAB Runtime R2026a, a missing Runtime is reported explicitly);
-5. writes thermal_run_info.json (configuration, provenance, domain notes,
+5. with the MATLAB sources, runs BackEnd/runners/matlab/end019_heater_cases.m in the same session (phase F4,
+   outside the module: END-019 is a black box): battery heater sizing in the cold case (ideal thermostat) and
+   verification with the heater of the design, heater_cases.json;
+6. writes thermal_run_info.json (configuration, provenance, domain notes,
    status) for the results tab.
 """
 from __future__ import annotations
@@ -236,6 +239,14 @@ def _apply_design(payload: dict[str, Any], sat: dict[str, Any] | None, config: d
                                f"dissipation hot {p_hot:.2f} W / cold {p_cold:.2f} W from {power_src}")
     config["cases"] = [hot, cold]
     # battery limits (END-006)
+    # battery heater of the design (phase F4, H1 thermostat): verified by BackEnd/runners/matlab/end019_heater_cases.m
+    heater = ((sat or {}).get("thermal_control") or {}).get("battery_heater") or {}
+    if isinstance(heater.get("power_w"), (int, float)) and heater["power_w"] > 0:
+        config["battery_heater"] = {"power_w": float(heater["power_w"])}
+        if isinstance(heater.get("setpoint_c"), (int, float)):
+            config["battery_heater"]["setpoint_c"] = float(heater["setpoint_c"])
+        provenance["battery_heater"] = (f"END-006 design (thermal_control.battery_heater: {heater.get('component')}, "
+                                        f"{float(heater['power_w']):g} W, {heater.get('source') or 'heater'})")
     temp = ((sat or {}).get("battery") or {}).get("temp_op_c")
     if isinstance(temp, list) and len(temp) == 2 and None not in temp:
         config["bat_min_C"], config["bat_max_C"] = float(temp[0]), float(temp[1])
@@ -312,6 +323,23 @@ def _constellation_evidence(path: Path) -> str:
         text += f"; battery design cases: hot max {hot:.1f} degC, cold min {cold:.1f} degC"
         if lo is not None and hi is not None:
             text += f" (limits {lo:g}..{hi:g} degC)"
+    return text
+
+
+def _heater_evidence(path: Path) -> str:
+    """Short evidence line from heater_cases.json (end019_heater_cases.m)."""
+    try:
+        h = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    w = h.get("worst") or {}
+    if h.get("status") != "completed" or not isinstance(w.get("needed_peak_W"), (int, float)):
+        return f"battery heater: {h.get('reason') or h.get('status')}" if h.get("status") else ""
+    text = (f"battery heater (cold case, setpoint {h.get('setpoint_C'):g} degC): needed peak {w['needed_peak_W']:.2f} W, "
+            f"mean {w['needed_mean_W_cold']:.2f} W")
+    if isinstance(w.get("battery_min_with_heater_C"), (int, float)):
+        text += (f"; with the {((h.get('heater_in_design') or {}).get('power_W') or 0):g} W heater of the design the battery stays "
+                 f"at >= {w['battery_min_with_heater_C']:.1f} degC")
     return text
 
 
@@ -444,8 +472,10 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
         if not (Path(matlab).is_file() or shutil.which(matlab)):
             return finish("failed", f"MATLAB not found ('{matlab}'): END-019 runs its MATLAB sources (set MATLAB_EXECUTABLE).")
         src, cfg_m = str(src_dir).replace("'", "''"), str(cfg_path).replace("'", "''")
-        cmd = [matlab, "-batch", f"addpath('{src}'); star_thermal_main('{cfg_m}')"]
-        info["engine"] = f"MATLAB sources {src_dir}"
+        # battery heater cases (phase F4): a separate .m outside the END-019 module, same MATLAB session
+        ext = str(Path(__file__).resolve().parent / "matlab").replace("'", "''")
+        cmd = [matlab, "-batch", f"addpath('{src}'); addpath('{ext}'); star_thermal_main('{cfg_m}'); end019_heater_cases('{cfg_m}');"]
+        info["engine"] = f"MATLAB sources {src_dir} + BackEnd/runners/matlab/end019_heater_cases.m"
     log("EXECUTION", f"END-019 running {' '.join(cmd)}")
     rc, out = _run_process(cmd, module_root, module_root / "end019_process_log.txt", stop_event, log)
     info["command"] = cmd
@@ -464,6 +494,11 @@ def run_end019(input_file: str, output_dir: str, run_id: str | None = None,
     if not constellation.is_file():
         return finish("failed", "The END-019 model ended without thermal_constellation_output.csv.", products=products)
     evidence_text = _constellation_evidence(constellation) or f"{len(satellites)} satellite(s) analysed"
+    heater_text = _heater_evidence(product_dir / "heater_cases.json")
+    if heater_text:
+        evidence_text += "; " + heater_text
+    elif not exe_env:
+        notes.append("heater_cases.json not written: battery heater sizing not available")
     # scalar settings only: the design cases are in thermal_run_info.json and in the evidence above
     shown = ", ".join(f"{k}={v}" for k, v in config.items() if not isinstance(v, (list, dict)))
     return finish("completed", f"{evidence_text} ({shown}).", products=products)

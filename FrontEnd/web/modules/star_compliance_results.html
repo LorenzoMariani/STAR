@@ -66,6 +66,9 @@
 .checks li .mod{color:var(--accent-2);min-width:58px}
 .checks li .why{color:var(--muted)}
 .kpi-mod td:first-child{color:var(--accent-2);font-weight:700}
+.loop-banner{border:1px solid var(--border);border-left:5px solid var(--accent);border-radius:14px;padding:10px 16px;margin-bottom:12px;background:var(--panel-muted);font-size:12px;color:var(--muted-2)}
+.loop-banner b{color:var(--accent);font-family:'Syne',Inter,system-ui,sans-serif;font-size:13px}
+.loop-banner.interrupted,.loop-banner.stopped{border-left-color:var(--danger)}.loop-banner.interrupted b,.loop-banner.stopped b{color:var(--danger)}
 .two-col{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
 @media(max-width:1100px){.two-col{grid-template-columns:1fr}}
 </style>
@@ -79,6 +82,7 @@
     </div>
     <div class="chips" id="cmp-chips"></div>
   </div>
+  <div id="cmp-loop"></div>
   <div class="views"><button class="view-btn on" data-v="comp">Compliance</button><button class="view-btn" data-v="trace">Traceability</button></div>
   <div id="view-comp" class="two-col">
     <main class="card">
@@ -203,6 +207,12 @@ function renderComp(){
   note.push(`Modules with results: ${esc((DATA.modules_run || []).join(', ') || 'none')}. Generated ${esc(String(DATA.generated_at || '').replace('T', ' ').slice(0, 19))}.`);
   $('cmp-note').innerHTML = note.join(' ');
   $('cmp-note').classList.toggle('warn', false);
+  const dl = DATA.design_loop;
+  const LOOP_TXT = {not_converged: 'Design loop not converged', stalled: 'Design loop stalled', interrupted: 'Design loop interrupted', stopped: 'Design loop stopped'};
+  $('cmp-loop').innerHTML = dl && LOOP_TXT[dl.status]
+    ? `<div class="loop-banner ${esc(dl.status)}"><b>${esc(LOOP_TXT[dl.status])}</b> after ${esc(dl.iterations_run)} of ${esc(dl.max_iterations)} iteration(s): the satellite delivered by the final design does not satisfy every design criterion` +
+      `${(dl.failing_criteria || []).length ? ' (' + esc(dl.failing_criteria.join(', ')) + ')' : ''}, so the statuses and KPIs below are those of the last iteration. ${esc(dl.reason || '')} See the <i>Design loop</i> tab.</div>`
+    : '';
   const rows = (DATA.requirements || []).filter(r => !FILTER || r.status === FILTER);
   $('cmp-count').textContent = `${rows.length} of ${total} requirements`;
   $('cmp-table').innerHTML = rows.length ? rows.map(reqRow).join('') : '<tr><td colspan="4" class="empty">No requirement with this status.</td></tr>';

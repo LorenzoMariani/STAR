@@ -276,6 +276,9 @@ required_inputs:
     volcanic activity.
 
     '
+cef_loop:   # CEF loop (phase F): re-run after the loop only if the orbit changes (END-001 is fixed: never)
+  rerun_on:
+  - product: satellite_orbits
 consumes:
 - product: attitude_propagation_csv
   required: true

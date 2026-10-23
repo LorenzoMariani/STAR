@@ -42,6 +42,9 @@ Requisiti verificati con i dati pubblicati:
   * ruote di reazione (quando nel progetto o suggerite tra i non richiesti): classe dichiarata dal fornitore (come l'ADCS), tre ruote
     con il controllo su tre assi (una per asse), momento di ciascuna >= inerzia x velocita' di rotazione richiesta (blocco uniforme con la
     massa limite e l'ingombro della classe, per eccesso);
+  * ruote (IF-003-006, con i KPI di END-003 della stessa run): sul posto che porta le ruote (ruote separate, altrimenti quelle
+    integrate nell'ADCS) momento >= 2 x max(picco di END-003, momento per la rotazione richiesta) e coppia >= 2 x picco di END-003
+    (utilizzo del 50%, wheel_sizing); tra i componenti che lo soddisfano la capacita' piu' piccola, poi la massa;
   * magnetorquer (quando nel progetto o suggeriti tra i non richiesti): tre assi (una scheda a tre assi o tre barre a un asse); con
     ruote separate e la quota nota, il dipolo scarica in un'orbita il momento di una ruota (dipolo >= H / (B x T), dump_dipole_per_nms);
   * star tracker (quando nel progetto o suggeriti tra i non richiesti): accuratezza a 3 sigma sull'asse peggiore (tracker_accuracy_3sigma_arcsec)
@@ -167,6 +170,7 @@ class Check:
     status: str = "met"            # met | not_met | not_verifiable
     message: str = ""
     metric: Callable[[Component], float | None] | None = None     # requisiti di prestazione: valore numerico, piu' alto = meglio
+    prefer: Callable[[Component], float | None] | None = None     # tra i componenti che soddisfano il requisito: piu' basso = meglio
 
 
 @dataclass
@@ -216,6 +220,8 @@ def _scaled(c: Component, key: str, h_km: float) -> float | None:
 EARTH_RADIUS_KM = 6378.137
 MU_EARTH_KM3_S2 = 398600.4418
 B_EQUATOR_SURFACE_T = 3.12e-5      # campo del dipolo terrestre all'equatore magnetico, in superficie
+HEATER_DESIGN_FACTOR = 1.25        # IF-019-006 (user decision 2026-10-23): battery heater power >= 1.25 x the END-019 cold-case peak
+WHEEL_DESIGN_FACTOR = 2.0         # IF-003-006 (decisione dell'utente 2026-10-23): ruote usate al 50% della capacita' (momento e coppia)
 
 
 def tracker_accuracy_3sigma_arcsec(c: Component) -> float | None:
@@ -257,7 +263,8 @@ def altitude_from_requirements(reqs: list[Req]) -> tuple[float, float, Req] | No
 
 def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Sottosistemi richiesti (posti), requisiti verificabili, delta-v e massa massima. context: {"altitude_km": [min, max], "altitude_source",
-    "end016": riepilogo di END-016 (space_safety_summary.json)}."""
+    "end016": riepilogo di END-016 (space_safety_summary.json), "end003": picchi di END-003 {"peak_momentum_nms", "peak_torque_nm",
+    "inertia_max_kgm2", "source"}}."""
     ctx = context or {}
     reqs = _reqs(requirements)
     needs: dict[str, Need] = {}
@@ -537,9 +544,131 @@ def analyse(requirements: Any, context: dict[str, Any] | None = None) -> dict[st
     if "magnetorquer" in needs:
         nd = needs["magnetorquer"]
         nd.slot = replace(nd.slot, axes_needed=3, dump_am2_per_nms=mtq["dump_am2_per_nms"])
+    # IF-003-006: le ruote del progetto (separate, altrimenti quelle integrate nell'ADCS) usate al 50% dei picchi di END-003: momento >=
+    # 2 x max(picco, momento per la rotazione richiesta con l'inerzia del satellite che END-003 ha usato), coppia >= 2 x picco
+    wheel_sizing = None
+    e3 = ctx.get("end003") or {}
+    h3, t3 = e3.get("peak_momentum_nms"), e3.get("peak_torque_nm")
+    w_sid = "reaction_wheel" if "reaction_wheel" in needs else "adcs" if "adcs" in needs else None
+    if w_sid and isinstance(h3, (int, float)) and isinstance(t3, (int, float)):
+        h_slew = None
+        if wheels["slew_deg_s"] and isinstance(e3.get("inertia_max_kgm2"), (int, float)):
+            h_slew = float(e3["inertia_max_kgm2"]) * math.radians(wheels["slew_deg_s"])
+        need_h, need_t, f = max(float(h3), h_slew or 0.0), float(t3), WHEEL_DESIGN_FACTOR
+        km, kt = ("momentum_mnms", "max_torque_mnm") if w_sid == "reaction_wheel" else ("wheel_momentum_mnms", "wheel_max_torque_mnm")
+
+        def caps(c: Component, km=km, kt=kt) -> tuple[float, float] | None:
+            h, t = c.spec(km), c.spec(kt)
+            return None if h is None or t is None else (float(h) / 1000.0, float(t) / 1000.0)
+        wheel_sizing = {"slot": w_sid, "need_momentum_nms": need_h, "need_torque_nm": need_t, "slew_momentum_nms": h_slew,
+                        "design_factor": f, "source": e3.get("source") or "END-003 of this run", "caps": caps}
+        nd = needs[w_sid]
+        nd.checks.append(Check("wheel_sizing", nd.slot.id, wheels["req"] if h_slew and h_slew > float(h3) else None,
+                               f"wheels at <= {100 / f:g}% of the END-003 peaks: momentum >= {1000 * f * need_h:.3g} mN m s, "
+                               f"torque >= {1000 * f * need_t:.3g} mN m",
+                               lambda c: None if (v := caps(c)) is None else v[0] >= f * need_h - 1e-12 and v[1] >= f * need_t - 1e-12,
+                               lambda c: None if (v := caps(c)) is None else f"{1000 * v[0]:g} mN m s, {1000 * v[1]:g} mN m",
+                               metric=lambda c: None if (v := caps(c)) is None else min(v[0] / max(f * need_h, 1e-15), v[1] / max(f * need_t, 1e-15)),
+                               prefer=lambda c: None if (v := caps(c)) is None else v[0]))
     return {"reqs": reqs, "needs": ordered, "wheels": wheels, "dv": dv, "mass_limit": mass_limit, "stated": stated, "altitude": alt, "battery": battery,
             "data_radio": data_radio.slot.id if data_radio else None, "data_rate": data_rate, "notes": notes,
-            "extra_checks": {"star_tracker": (stk_checks, stk_quantity)}}
+            "extra_checks": {"star_tracker": (stk_checks, stk_quantity)}, "wheel_sizing": wheel_sizing}
+
+
+# --------------------------------------------------------------------------- battery heater (IF-019-006, phase F4)
+
+
+def _battery_holder(sel: Selection) -> tuple[str, Component] | None:
+    """The slot and the component that carry the satellite battery: the battery pack, else the EPS with the integrated battery."""
+    for r in sel.subsystems:
+        if r.subsystem == "battery" and r.selected:
+            return r.id, r.selected.comp
+    for r in sel.subsystems:
+        if r.subsystem == "eps" and r.selected and r.selected.comp.spec("integrated_battery_wh"):
+            return r.id, r.selected.comp
+    return None
+
+
+def _bus_voltage(catalog: list[Component], holder: Component | None) -> tuple[float, str]:
+    """Lowest battery voltage the heater sees (its power V^2 / R is lowest at the end of discharge): the minimum of the battery pack
+    range, else the nominal voltage of the integrated battery; when the vendor publishes neither, the lowest end-of-discharge
+    voltage of the catalogued battery packs (2S Li-ion, conservative: it asks for the most powerful heater)."""
+    if holder is not None:
+        rng = holder.raw["specs"].get("voltage_range_v")
+        if rng:
+            return float(rng[0]), f"{holder.raw['name']} minimum voltage (end of discharge)"
+        v = holder.raw["specs"].get("integrated_battery_voltage_v")
+        if v:
+            return float(v), f"{holder.raw['name']} integrated battery nominal voltage"
+    lows = [float(c.spec("voltage_range_v")[0]) for c in catalog if c.category == "battery" and c.spec("voltage_range_v")]
+    v = min(lows) if lows else 3.0
+    who = holder.raw["name"] if holder is not None else "the battery"
+    return v, f"{who} publishes no voltage: lowest end-of-discharge voltage of the catalogued battery packs ({v:g} V), conservative"
+
+
+def battery_heater(catalog: list[Component], sel: Selection, end019: dict[str, Any] | None) -> dict[str, Any] | None:
+    """IF-019-006 (heater H1, thermostat). END-019 sizes the heater in the cold case (ideal thermostat at the battery lower limit + 5 K:
+    peak and orbit mean, heater_cases.json); END-006 takes the heater integrated in the chosen battery if its declared power is
+    >= HEATER_DESIGN_FACTOR x the peak, else the lightest catalogued film heater whose power at the lowest battery voltage (V^2 / R)
+    is >= that. END-004 owns its energy (mean_w_cold in the cold case), END-019 its heat. Temperature check: the cold case is held
+    when the heater covers the need (or none is needed); the hot maximum must stay below the battery upper limit (no cooling
+    option). None without END-019 in the run."""
+    if not end019:
+        return None
+    f = HEATER_DESIGN_FACTOR
+    need = end019.get("needed_peak_w")
+    found = _battery_holder(sel)
+    slot, holder = found if found else (None, None)
+    info: dict[str, Any] = {"component": None, "name": None, "vendor": None, "source": None, "slot": slot, "power_w": 0.0, "mass_kg": 0.0,
+                            "need_peak_w": need, "design_factor": f, "required_w": None, "setpoint_c": end019.get("setpoint_c"),
+                            "mean_w_cold": end019.get("needed_mean_w_cold"), "duty_cold": None, "bus_voltage_v": None,
+                            "bus_voltage_source": None, "resistance_ohm": None, "status": "not_evaluable", "why": "",
+                            "end019_source": end019.get("source")}
+    if not isinstance(need, (int, float)):
+        info["why"] = "END-019 gives no heater sizing (heater_cases.json not available)"
+    elif need <= 1e-9:
+        info.update({"status": "not_needed", "mean_w_cold": 0.0,
+                     "why": "the battery stays above its lower limit + 5 K in the cold case without heater (END-019)"})
+    else:
+        req = f * float(need)
+        info["required_w"] = req
+        integrated = holder.raw["specs"].get("integrated_heater_w") if holder is not None else None
+        if isinstance(integrated, (int, float)) and integrated >= req - 1e-9:
+            info.update({"component": holder.id, "name": holder.raw["name"], "vendor": holder.raw["vendor"], "source": "integrated",
+                         "power_w": float(integrated), "status": "met",
+                         "why": f"the heater integrated in {holder.raw['name']} ({integrated:g} W declared) covers {f:g} x the "
+                                f"END-019 cold-case peak ({need:.2f} W)"})
+        else:
+            v, v_src = _bus_voltage(catalog, holder)
+            info.update({"bus_voltage_v": v, "bus_voltage_source": v_src})
+            cands = [(v * v / float(c.spec("resistance_ohm")), c) for c in catalog
+                     if c.category == "heater" and c.spec("resistance_ohm") and c.mass_kg is not None]
+            ok = sorted(((c.mass_kg, p, c) for p, c in cands if p >= req - 1e-9), key=lambda t: (t[0], t[1]))
+            pre = (f"the heater integrated in {holder.raw['name']} ({integrated:g} W) is below {req:.2f} W; "
+                   if isinstance(integrated, (int, float)) else "")
+            if ok:
+                m, p, c = ok[0]
+                info.update({"component": c.id, "name": c.raw["name"], "vendor": c.raw["vendor"], "source": "separate", "power_w": p,
+                             "mass_kg": m, "resistance_ohm": float(c.spec("resistance_ohm")), "status": "met",
+                             "why": pre + f"lightest catalogued film heater with >= {f:g} x the END-019 cold-case peak ({need:.2f} W): "
+                                          f"{p:.2f} W at {v:g} V"})
+            else:
+                best = max(cands, key=lambda t: t[0]) if cands else None
+                info.update({"status": "not_met",
+                             "why": pre + f"no catalogued heater gives {req:.2f} W ({f:g} x the END-019 cold-case peak of {need:.2f} W) at {v:g} V"
+                                    + (f"; the most powerful, {best[1].raw['name']}, gives {best[0]:.2f} W" if best else "")})
+        if info["power_w"] and isinstance(info["mean_w_cold"], (int, float)):
+            info["duty_cold"] = min(1.0, float(info["mean_w_cold"]) / info["power_w"])
+    # temperature check (END-006.check_battery_temperature)
+    hot, hot_lim = end019.get("battery_max_c"), end019.get("limit_max_c")
+    hot_ok = None if not isinstance(hot, (int, float)) or not isinstance(hot_lim, (int, float)) else bool(hot <= hot_lim + 1e-9)
+    cold_ok = {"met": True, "not_needed": True, "not_met": False}.get(info["status"])
+    info["temperature_check"] = {
+        "met": None if cold_ok is None or hot_ok is None else bool(cold_ok and hot_ok), "cold_held": cold_ok, "hot_within_limit": hot_ok,
+        "hot_max_c": hot, "limit_max_c": hot_lim, "cold_min_c_end019": end019.get("battery_min_c"), "limit_min_c": end019.get("limit_min_c"),
+        "heater_used_by_end019_w": end019.get("heater_in_design_w"),
+        "what": "battery within its limits: cold case held by the heater of the design, hot maximum <= the upper limit (no cooling option)"}
+    return info
 
 
 # --------------------------------------------------------------------------- componenti ammessi per posto
@@ -567,7 +696,7 @@ def _allowed(catalog: list[Component], nd: Need) -> tuple[frozenset[str] | None,
 # requisiti di prestazione (quanto rende il componente): vengono dopo la classe, nella classe scelta si prende il componente che piu' si avvicina.
 # Gli altri requisiti verificabili dicono che cosa e' il componente (banda, tipo di immagine, push-broom, ricevitore, tre assi, pannello
 # dispiegabile, propellente, tipo di link, star tracker completo) e vengono prima della classe (regola dell'utente, 2026-10-16).
-PERFORMANCE = ("gsd", "swath", "data_rate", "optical_rate", "pointing", "stk_accuracy", "stk_rate", "tid")
+PERFORMANCE = ("gsd", "swath", "data_rate", "optical_rate", "pointing", "stk_accuracy", "stk_rate", "tid", "wheel_sizing")
 
 
 def _tests(nd: Need) -> list[Check]:
@@ -576,11 +705,13 @@ def _tests(nd: Need) -> list[Check]:
 
 def _perf_key(c: Component, perf: list[Check]) -> tuple:
     """Ordine lessicografico dei requisiti di prestazione (nell'ordine in cui sono elencati): soddisfatto prima di non soddisfatto; tra i non
-    soddisfatti il valore piu' vicino (metric, piu' alto = meglio); tra i soddisfatti nessuna preferenza (la ricerca sceglie poi per massa)."""
+    soddisfatti il valore piu' vicino (metric, piu' alto = meglio); tra i soddisfatti il valore prefer piu' basso se il requisito lo dichiara
+    (wheel_sizing: la capacita' piu' piccola), altrimenti nessuna preferenza (la ricerca sceglie poi per massa)."""
     out: list[float] = []
     for ck in perf:
         if ck.test(c):
-            out += [1.0, 0.0]
+            p = ck.prefer(c) if ck.prefer else 0.0
+            out += [1.0, -p if p is not None else -math.inf]
         else:
             m = ck.metric(c) if ck.metric else None
             out += [0.0, m if m is not None else -math.inf]
@@ -679,6 +810,12 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                 # ricerca (massa e quote pubblicate, prodotti in vendita) valgono poi dentro il gruppo di prestazione, come prima
                 adm = [c for c in catalog if subsystem_of(c) == s.subsystem and (s.allowed is None or c.id in s.allowed)
                        and admitted(catalog, replace(s, allowed=frozenset({c.id})), u, mass_limit_kg=ml_x, dv_m_s=dv_x)]
+                ok_ids = frozenset(c.id for c in adm if all(ck.test(c) for ck in perf[s.id]))
+                if ok_ids and any(ck.prefer for ck in perf[s.id]):
+                    # la preferenza (wheel_sizing: capacita' piu' piccola) vale tra i componenti che soddisfano i requisiti e che la
+                    # ricerca considererebbe insieme (stesse regole: classe dichiarata dal fornitore, prodotti in vendita...)
+                    grp = {c.id for c in admitted(catalog, replace(s, allowed=ok_ids), u, mass_limit_kg=ml_x, dv_m_s=dv_x)}
+                    adm = [c for c in adm if c.id not in ok_ids or c.id in grp]
                 if adm:
                     levels[s.id] = _perf_levels(adm, perf[s.id])
         best = [replace(s, allowed=levels[s.id][0]) if s.id in levels else s for s in slots_x]
@@ -698,13 +835,16 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
                     break
         return cur, cur_slots
 
+    # requisiti con una preferenza tra i componenti che li soddisfano (wheel_sizing): la ricerca parte dal gruppo preferito (fit_class)
+    prefers = any(ck.prefer for cks in perf.values() for ck in cks)
+
     def search(slots_x, dv_x, ml_x, closest=False):
         """La classe piu' piccola in cui i componenti ammessi stanno insieme. closest: i componenti del tipo richiesto che nella classe piu' si
         avvicinano alle prestazioni (fit_class), anche senza il delta-v. Restituisce ((classe, selezione, posti, delta-v non raggiunto) o None, log)."""
         log, found = [], None
         for u in classes:
             for dv_try in ([dv_x, None] if dv_x and closest else [dv_x]):
-                sel_u, sl_u = fit_class(u, slots_x, dv_try, ml_x) if closest else (select(catalog, u, time_budget_s, slots=slots_x, dv_m_s=dv_try,
+                sel_u, sl_u = fit_class(u, slots_x, dv_try, ml_x) if closest or prefers else (select(catalog, u, time_budget_s, slots=slots_x, dv_m_s=dv_try,
                                                                                             mass_limit_kg=ml_x), slots_x)
                 if ok_sel(sel_u):
                     break
@@ -862,6 +1002,16 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         checks.append(ck)
     # requisiti di prestazione: verificati sul componente scelto nella classe (la classe piu' piccola viene prima)
     chosen = {r.id: r.selected for r in sel.subsystems}
+    ws_info = None
+    if a["wheel_sizing"]:          # IF-003-006: capacita' / bisogno delle ruote scelte (END-006.wheel_momentum_ratio, wheel_torque_ratio)
+        ws = a["wheel_sizing"]
+        k = chosen.get(ws["slot"])
+        cap = ws["caps"](k.comp) if k is not None else None
+        ws_info = {key: v for key, v in ws.items() if key != "caps"}
+        ws_info.update({"component": k.comp.id if k is not None else None,
+                        "capacity_momentum_nms": cap[0] if cap else None, "capacity_torque_nm": cap[1] if cap else None,
+                        "momentum_ratio": cap[0] / ws["need_momentum_nms"] if cap and ws["need_momentum_nms"] > 0 else None,
+                        "torque_ratio": cap[1] / ws["need_torque_nm"] if cap and ws["need_torque_nm"] > 0 else None})
     for nd in needs:
         for ck in perf.get(nd.slot.id, []):
             k = chosen.get(nd.slot.id)
@@ -918,6 +1068,9 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
     for ck in checks:
         if ck.status == "not_verifiable" and ck not in unmet:
             unmet.append(ck)
+
+    # battery heater (IF-019-006): chosen after the selection from the END-019 cold-case sizing (a film heater has no volume)
+    heater_info = battery_heater(catalog, sel, (context or {}).get("end019"))
 
     # schede del progetto: motivo e requisiti verificati sul componente scelto
     by_slot = {nd.slot.id: nd for nd in needs}
@@ -1032,6 +1185,11 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
             why = f"{nd.why}; highest published data rate that fits the design ({float(radio_info['data_rate_kbps']) / 1e3:g} Mbps)"
         if r.subsystem == "eps" and bat_info and bat_info.get("integrated_wh") is not None:
             why += "; its integrated battery is the satellite battery"
+        if heater_info and heater_info["slot"] == r.id and heater_info["status"] in ("met", "not_met"):
+            rows.append({"requirement": None, "what": f"battery heater >= {heater_info['required_w']:.2f} W ({heater_info['design_factor']:g} x the "
+                                                      "END-019 cold-case peak)",
+                         "value": f"{heater_info['name']}, {heater_info['power_w']:.2f} W" if heater_info["component"] else "none in the catalogue",
+                         "met": heater_info["status"] == "met"})
         per_slot[r.id] = {"why": why, "source": nd.source, "requirement": nd.req.as_dict() if nd.req else None, "checks": rows}
 
     # sottosistemi non richiesti: miglior componente che entra nella classe e se starebbe insieme al progetto
@@ -1075,6 +1233,8 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
 
     stated = a["stated"]
     notes = list(a["notes"])
+    if heater_info and heater_info["status"] == "not_met":
+        notes.append(f"Battery heater: {heater_info['why']}.")
     if stated and stated["class_u"] != units and not forced_class_u:
         why_not = next((c["why"] for c in log if c["class_u"] == stated["class_u"] and not c["ok"]), None)
         notes.append(f"{stated['req'].id} states a {stated['class_u']}U CubeSat: the class is not taken from the requirements, it follows from the "
@@ -1095,6 +1255,8 @@ def design(catalog: list[Component], requirements: Any, context: dict[str, Any] 
         "dv": dv_info,
         "battery": bat_info,
         "radio": radio_info,
+        "wheel_sizing": ws_info,
+        "battery_heater": heater_info,
         "mass_limit": None if not a["mass_limit"] else {"kg": a["mass_limit"]["kg"], "requirement": a["mass_limit"]["req"].as_dict()},
         "requirements": [{"requirement": ck.req.as_dict() if ck.req else None, "what": ck.what, "slot": ck.slot, "status": ck.status,
                           "message": ck.message} for ck in checks],

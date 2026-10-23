@@ -10,6 +10,7 @@ compliance read is lost.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -139,6 +140,25 @@ def adapt_end003(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str,
                        "END-003.peak_elevation_deg") and isinstance(sat, (int, float)):
             e["context"] = {"scope": "imaging pass", "satellite": f"SAT-{int(sat):02d}"}
     _add(out, "END-003.attitude_mode", d.get("attitude_mode"))
+    out += end003_absolute(d)
+    return out
+
+
+def end003_absolute(d: dict[str, Any]) -> list[dict[str, Any]]:
+    """IF-003-006: peak wheel momentum, control torque and magnetorquer dipole in physical units. The module's own absolute value
+    when attitude_control writes it, otherwise the % KPI x the capacity of the wheels / magnetorquers END-003 used."""
+    names = _by_name(d.get("kpis"))
+    ac = d.get("attitude_control") or {}
+    out: list[dict[str, Any]] = []
+    for kpi_id, native, own, cap_key, src_key in (
+            ("END-003.peak_wheel_momentum_Nms", "peak wheel momentum", "peak_wheel_momentum_Nms", "wheel_momentum_Nms", "wheels_source"),
+            ("END-003.peak_control_torque_Nm", "peak control torque", "peak_control_torque_Nm", "wheel_torque_Nm", "wheels_source"),
+            ("END-003.peak_mtq_dipole_Am2", "peak magnetorquer dipole", "peak_mtq_dipole_Am2", "magnetorquer_dipole_Am2", "magnetorquer_source")):
+        value, how = _num(ac.get(own)), "module value"
+        pct, cap = _num(names.get(native, {}).get("value")), _num(ac.get(cap_key))
+        if value is None and pct is not None and cap is not None:
+            value, how = pct / 100.0 * cap, f"{pct:.4g} % of {cap:g}"
+        _add(out, kpi_id, value, context={"derived_from": how, "capacity_used": cap, "design_used": str(ac.get(src_key) or "")})
     return out
 
 
@@ -181,6 +201,9 @@ def adapt_end004(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str,
         _add(out, "END-004.battery_capacity_Wh", cases.get("battery_capacity_Wh"))
         for case in ("hot", "cold", "nominal"):
             _add(out, f"END-004.dissipation_{case}_W", _get(cases, f"dissipation_W.{case}"), context={"case": case})
+        bh = cases.get("battery_heater") or {}          # phase F4: the battery heater energy of the worst (cold) case
+        _add(out, "END-004.heater_energy_per_orbit_Wh", bh.get("energy_per_orbit_Wh", 0.0),
+             context={"case": "worst", "component": bh.get("component") or "", "mean_w_cold": bh.get("mean_w_cold")})
     else:
         _add(out, "END-004.worst_dod_pct", nominal_dod, context={"case": "nominal", "note": "power_design_cases.json not available: nominal eclipse"})
         _add(out, "END-004.nominal_dod_pct", nominal_dod, context={"case": "nominal"})
@@ -191,6 +214,27 @@ def adapt_end004(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str,
 
 
 # --------------------------------------------------------------------------- END-006 component selector
+def design_components(results: dict[str, Any] | None) -> dict[str, str]:
+    """{slot: component id} of a component_selector_results.json (the slots with a selected component)."""
+    out: dict[str, str] = {}
+    for s in ((results or {}).get("result") or {}).get("subsystems") or []:
+        sel = s.get("selected")
+        slot = s.get("id") or s.get("subsystem")
+        if slot and isinstance(sel, dict) and sel.get("id"):
+            out[str(slot)] = str(sel["id"])
+    # the battery heater (IF-019-006) is chosen after the search: an integrated one is named so that switching it on is a change
+    h = (((results or {}).get("result") or {}).get("mission") or {}).get("battery_heater") or {}
+    if h.get("component"):
+        out["battery_heater"] = str(h["component"]) if h.get("source") == "separate" else f"{h['component']}:integrated_heater"
+    return out
+
+
+def design_signature(components: dict[str, str]) -> str:
+    """Hash of the slot -> component choice: the same signature means the same components (CEF-COMPONENTS)."""
+    text = "\n".join(f"{slot}={components[slot]}" for slot in sorted(components))
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+
+
 def adapt_end006(module_root: str | Path, run_ctx: Ctx = None, phase: str = "final") -> list[dict[str, Any]]:
     """phase 'final' reads the final design products, 'initial' the *_initial ones (the satellite the other modules use)."""
     base = Path(module_root) / "output_component_selector"
@@ -206,6 +250,9 @@ def adapt_end006(module_root: str | Path, run_ctx: Ctx = None, phase: str = "fin
     out: list[dict[str, Any]] = []
     _add(out, "END-006.class_u", sd.get("class_u") or mission.get("chosen_class_u") or _get(res, "cubesat.form_factor_u"), context=ctx)
     _add(out, "END-006.stated_class_u", _get(mission, "stated_class.class_u"), context=ctx)
+    components = design_components(d)
+    if components:
+        _add(out, "END-006.design_signature", design_signature(components), context={**ctx, "components": components})
     mass = _num(totals.get("mass_kg"))
     lim = mission.get("mass_limit") or {}
     mass_a = None
@@ -223,6 +270,22 @@ def adapt_end006(module_root: str | Path, run_ctx: Ctx = None, phase: str = "fin
     _add(out, "END-006.battery_capacity_Wh", sd.get("battery_wh"), context=ctx)
     _add(out, "END-006.battery_need_Wh", _get(mission, "battery.need_wh"), context=ctx)
     _add(out, "END-006.pointing_accuracy_deg", _get(sd, "attitude_control.pointing_accuracy_deg"), context=ctx)
+    ws = mission.get("wheel_sizing") or {}      # IF-003-006: capacity / END-003 need of the chosen wheels
+    for key, need, cap in (("momentum_ratio", "need_momentum_nms", "capacity_momentum_nms"), ("torque_ratio", "need_torque_nm", "capacity_torque_nm")):
+        _add(out, f"END-006.wheel_{key}", ws.get(key), context={**ctx, "component": ws.get("component") or "", "need": ws.get(need),
+                                                                "capacity": ws.get(cap), "design_factor": ws.get("design_factor")})
+    bh = mission.get("battery_heater") or {}       # IF-019-006: heater sized on the END-019 cold case
+    if bh:
+        hctx = {**ctx, "component": bh.get("component") or "", "source": bh.get("source") or "", "status": bh.get("status") or "",
+                "need_peak_w": bh.get("need_peak_w"), "required_w": bh.get("required_w"), "why": bh.get("why") or ""}
+        _add(out, "END-006.battery_heater_W", bh.get("power_w") if bh.get("component") else 0.0, context=hctx,
+             assessment=None if bh.get("required_w") is None else K.assessment(
+                 bh.get("status") == "met", ">=", round(float(bh["required_w"]), 4), "W", "module_default",
+                 note=f"{bh.get('design_factor')} x the END-019 cold-case peak"))
+        tc = bh.get("temperature_check") or {}
+        if tc:
+            out.append(K.kpi("END-006.check_battery_temperature", tc.get("met"), context={**ctx, **{k: v for k, v in tc.items() if k != "met"}},
+                             assessment=K.assessment(tc.get("met"), "==", True, "bool", "module_default", note=str(tc.get("what") or ""))))
     _add(out, "END-006.solar_peak_power_W", _get(sd, "solar_panels.total_peak_w"), context=ctx)
     _add(out, "END-006.declared_peak_power_W", totals.get("power_w_declared_peak"), context=ctx)
     _add(out, "END-006.drag_area_m2", sd.get("area_mean_projected_m2"), context=ctx)
@@ -422,8 +485,31 @@ def adapt_end019(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str,
         meets = w[0] <= limit + 1e-9 if high else w[0] >= limit - 1e-9
         return K.assessment(meets, "<=" if high else ">=", limit, "C", source, note=note)
 
+    # battery heater (phase F4, heater_cases.json of end019_heater_cases.m): the minimum with the heater of the design
+    # replaces the unheated one; the hot side does not change (the heater only raises the minimum)
+    heat = _load(_first(root, "*/heater_cases.json")) or {}
+    hw = (heat.get("worst") or {}) if heat.get("status") == "completed" else {}
+    no_heater = worst("bat_min", False)
+    with_heater = _num(hw.get("battery_min_with_heater_C"))
     put("END-019.battery_max_C", "bat_max", True, limit_assessment("bat_max", True, bat_max, src_max, note_max))
-    put("END-019.battery_min_C", "bat_min", False, limit_assessment("bat_min", False, bat_min, src_min, note_min))
+    if with_heater is not None:
+        heater_w = _num((heat.get("heater_in_design") or {}).get("power_W"))
+        meets = with_heater >= bat_min - 1e-9 if bat_min is not None else None
+        out.append(K.kpi("END-019.battery_min_C", with_heater,
+                         context={"case": "cold case and window with the heater of the design", "heater_W": heater_w,
+                                  "satellite": hw.get("satellite_label") or "", "scope": f"worst of {len(files)} satellite(s)"},
+                         assessment=None if meets is None else K.assessment(meets, ">=", bat_min, "C", src_min, note=note_min)))
+    else:
+        put("END-019.battery_min_C", "bat_min", False, limit_assessment("bat_min", False, bat_min, src_min, note_min))
+    if no_heater:
+        _add(out, "END-019.battery_min_no_heater_C", no_heater[0], context=no_heater[1])
+    if hw:
+        hctx = {"setpoint_C": heat.get("setpoint_C"), "satellite": hw.get("satellite_label") or "", "case": "cold"}
+        _add(out, "END-019.heater_needed_peak_W", hw.get("needed_peak_W"), context={**hctx, "rule": "ideal thermostat"})
+        _add(out, "END-019.heater_needed_mean_W_cold", hw.get("needed_mean_W_cold"), context={**hctx, "rule": "ideal thermostat"})
+        _add(out, "END-019.heater_duty_cold_pct", hw.get("duty_cold_pct"),
+             context={**hctx, "rule": "bang-bang with the heater of the design" if with_heater is not None else "ideal thermostat on-fraction"})
+        _add(out, "END-019.heater_in_design_W", _num((heat.get("heater_in_design") or {}).get("power_W")) or 0.0, context=hctx)
     put("END-019.central_body_max_C", "ctr_max", True, limit_assessment("ctr_max", True, _num(limits.get("CTR")), "module_default", "END-019 default limit"))
     put("END-019.central_body_min_C", "ctr_min", False)
     put("END-019.solar_panel_max_C", "sp_max", True)

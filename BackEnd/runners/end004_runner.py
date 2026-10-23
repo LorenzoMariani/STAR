@@ -107,7 +107,7 @@ ROLE_TEMPLATE = {"obc": ["OBDH"], "eps": ["EPS"], "comms_uhf": ["RX UHF", "TX UH
                  "comms_s": ["RX S BAND", "TX S BAND"], "adcs": ["ADCS"], "payload_imager": ["CAMERAS"]}
 ROLE_POWER_ENTRY = {"comms_uhf": "TX UHF", "comms_s": "TX S BAND"}
 ALWAYS_ON = ("gps", "gnss_antenna", "star_tracker", "reaction_wheel", "magnetorquer", "obc", "eps")
-NO_LOAD = ("structure", "solar_panel", "battery", "antenna_s", "antenna_uhf", "antenna_x")
+NO_LOAD = ("structure", "solar_panel", "battery", "antenna_s", "antenna_uhf", "antenna_x", "battery_heater")   # battery heater: design_cases
 FACE_KEYS = {"+X": "x_plus", "-X": "x_minus", "+Y": "y_plus", "-Y": "y_minus", "+Z": "z_plus", "-Z": "z_minus"}
 
 
@@ -413,13 +413,25 @@ def _mode_budget(cfg: dict[str, Any], sun_min: float, ecl_min: float, gen_scale:
     return out
 
 
-def design_cases(cfg: dict[str, Any], eclipses: dict[str, Any] | None, dod_limit_pct: float | None = None) -> dict[str, Any]:
+def battery_heater(sat: dict[str, Any] | None) -> dict[str, Any] | None:
+    """The battery heater of the design (END-006 thermal_control.battery_heater, sized by END-019 in the cold case of the previous
+    iteration, so there is no cycle inside an iteration), or None."""
+    h = ((sat or {}).get("thermal_control") or {}).get("battery_heater") or {}
+    return h if isinstance(h.get("mean_w_cold"), (int, float)) and h["mean_w_cold"] > 0 else None
+
+
+def design_cases(cfg: dict[str, Any], eclipses: dict[str, Any] | None, dod_limit_pct: float | None = None,
+                 heater: dict[str, Any] | None = None) -> dict[str, Any]:
     """power_design_cases.json (phase D, 2026-10-21), the single source of the powers and of the battery case:
     - battery worst case: the longest eclipse over the mission life of the constellation (END-001 life envelope), sunlight
       = period - that eclipse, the generation of every mode reduced in proportion to the shorter sunlight; DoD per mode as
       the MATLAB budget. Compliance and the CEF loop use worst_dod_pct;
     - internal dissipation for END-019 (all the electrical power ends as heat inside): hot = every subsystem at its highest
-      orbit-average duty of any mode (payload and transmitters on), cold = idle mode, nominal = mean of the day."""
+      orbit-average duty of any mode (payload and transmitters on), cold = idle mode, nominal = mean of the day.
+    Battery heater of the design (phase F4, heater: END-006 thermal_control.battery_heater): END-004 owns its energy, only in the
+    worst case (longest eclipse = the END-019 cold case): its cold-case orbit mean x period, all drawn in eclipse (conservative for
+    the DoD), in place of the template heaters (THERMAL). The hot case and the nominal MATLAB budget do not change; the dissipation
+    excludes the battery heater (END-019 owns its heat) and lists it as heater_W."""
     orbit = cfg.get("orbit") or {}
     sun, ecl = float(orbit.get("sunlight_min") or 0), float(orbit.get("eclipse_min") or 0)
     period = sun + ecl
@@ -435,7 +447,20 @@ def design_cases(cfg: dict[str, Any], eclipses: dict[str, Any] | None, dod_limit
     worst_ecl = max(worst_ecl, ecl)
     worst_sun = period - worst_ecl
     scale = worst_sun / sun if sun > 0 else 1.0
-    worst = _mode_budget(cfg, worst_sun, worst_ecl, scale)
+    heater_case = None
+    worst_cfg = cfg
+    if heater and worst_ecl > 0:
+        mean_w = float(heater["mean_w_cold"])
+        p_ecl = mean_w * period / worst_ecl
+        entry = {"name": "BATTERY HEATER", "powerW": round(p_ecl, 4), "heater": True,
+                 "duty": {m: {"sun": 0, "eclipse": 1} for m in MODE_KEYS},
+                 "source": f"END-006 {heater.get('component')} (thermostat, END-019 cold-case mean {mean_w:g} W x period, drawn in eclipse)"}
+        worst_cfg = {**cfg, "subsystems": [s for s in cfg.get("subsystems") or [] if str(s.get("name")) != "THERMAL"] + [entry]}
+        heater_case = {"component": heater.get("component"), "power_w": heater.get("power_w"), "mean_w_cold": mean_w,
+                       "energy_per_orbit_Wh": round(mean_w * period / 60.0, 4), "eclipse_power_W": round(p_ecl, 4),
+                       "replaces": "template heaters (THERMAL)" if any(str(s.get("name")) == "THERMAL" for s in cfg.get("subsystems") or []) else None,
+                       "rule": "worst case only (= END-019 cold case); cold-case orbit mean x period, all in eclipse"}
+    worst = _mode_budget(worst_cfg, worst_sun, worst_ecl, scale)
     flown = [k for k in MODE_KEYS if float(alloc.get(k) or 0) > 0] or list(MODE_KEYS)
 
     def daily(b: dict[str, dict[str, float]]) -> float:
@@ -462,8 +487,11 @@ def design_cases(cfg: dict[str, Any], eclipses: dict[str, Any] | None, dod_limit
         "dod_limit_pct": dod_limit_pct,
         "battery_within_dod_limit": None if dod_limit_pct is None else bool(worst_dod <= dod_limit_pct),
         "dissipation_W": {"hot": round(hot, 4), "cold": nominal["idle"]["mean_power_W"], "nominal": round(mean, 4),
+                          "heater_W": heater_case["mean_w_cold"] if heater_case else 0.0,
                           "rule": "electrical consumption = internal heat; hot: every subsystem at its highest orbit-average duty "
-                                  "(payload and transmitters), cold: idle mode, nominal: mean over the modes of the day"},
+                                  "(payload and transmitters), cold: idle mode, nominal: mean over the modes of the day; the battery "
+                                  "heater (heater_W, cold-case mean) is excluded: END-019 owns its heat"},
+        "battery_heater": heater_case,
         "flown_modes": flown,
     }
     return out
@@ -879,7 +907,8 @@ def run_end004(
 
     cases = None
     if status == "completed":
-        cases = design_cases(runtime_data, _eclipse_summary(star_payload), _dod_limit(star_payload))
+        cases = design_cases(runtime_data, _eclipse_summary(star_payload), _dod_limit(star_payload),
+                             battery_heater(load_spacecraft_definition(star_payload)))
         write_json(product_dir / "power_design_cases.json", cases)
         wc = cases["battery_worst_case"]
         _emit(log_callback, "EXECUTION", f"END-004 battery worst case: eclipse {wc['eclipse_min']} min, max DoD {wc['max_dod_pct']:.2f}% "

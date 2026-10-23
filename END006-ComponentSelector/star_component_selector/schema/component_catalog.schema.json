@@ -29,6 +29,7 @@
               "gps",
               "gnss_antenna",
               "propulsion",
+              "heater",
               "payload"
             ]
           },
@@ -418,6 +419,17 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "integrated_heater_w": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza del riscaldatore della batteria integrata dichiarata dal fornitore (null = nessuno o non pubblicata)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -432,7 +444,8 @@
                     "output_voltage_ranges_v",
                     "output_power_w_max",
                     "data_interfaces",
-                    "efficiency"
+                    "efficiency",
+                    "integrated_heater_w"
                   ],
                   "additionalProperties": false
                 }
@@ -500,6 +513,17 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "integrated_heater_w": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza del riscaldatore integrato dichiarata dal fornitore (null = nessuno o non pubblicata)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -507,7 +531,78 @@
                     "capacity_wh",
                     "max_discharge_a",
                     "max_dod",
-                    "cycle_life"
+                    "cycle_life",
+                    "integrated_heater_w"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "heater"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "properties": {
+                "specs": {
+                  "type": "object",
+                  "properties": {
+                    "heater_type": {
+                      "type": "string",
+                      "description": "Tipo, es. 'polyimide film (Kapton)'"
+                    },
+                    "resistance_ohm": {
+                      "type": "number",
+                      "description": "Resistenza nominale: la potenza alla tensione del bus e' V^2 / R"
+                    },
+                    "rated_power_w": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Potenza tipica dichiarata alla tensione rated_voltage_v (solo riferimento)"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rated_voltage_v": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Tensione della potenza tipica dichiarata"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "effective_area_cm2": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "description": "Area riscaldata efficace"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "heater_type",
+                    "resistance_ohm",
+                    "rated_power_w",
+                    "rated_voltage_v",
+                    "effective_area_cm2"
                   ],
                   "additionalProperties": false
                 }

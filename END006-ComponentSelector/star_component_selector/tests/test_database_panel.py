@@ -66,7 +66,7 @@ class TestDatasheets(unittest.TestCase):
 class TestLibraryStats(unittest.TestCase):
     def test_counts_match_the_catalogue_and_the_files(self):
         L = SERVICE.library()
-        self.assertEqual([c["id"] for c in L["classes"]], [sid for sid, _, _ in SUBSYSTEMS])
+        self.assertEqual([c["id"] for c in L["classes"]], [sid for sid, _, _ in SUBSYSTEMS] + ["heater"])     # + the battery heaters (F4)
         self.assertEqual(L["total"], len(SERVICE.catalog))
         self.assertEqual(L["images"], sum(1 for c in SERVICE.catalog if c.raw.get("image")))
         registered = sum(1 for c in SERVICE.catalog if c.raw.get("datasheet"))
@@ -77,7 +77,7 @@ class TestLibraryStats(unittest.TestCase):
         self.assertEqual((by["magnetorquer"]["n"], by["magnetorquer"]["images"]), (8, 0))   # nessuna immagine per i magnetorquer aggiunti
 
     def test_every_class_has_a_unique_acronym(self):
-        self.assertEqual(set(ACRONYMS), {sid for sid, _, _ in SUBSYSTEMS})
+        self.assertEqual(set(ACRONYMS), {sid for sid, _, _ in SUBSYSTEMS} | {"heater"})
         self.assertEqual(len({a for a, _ in ACRONYMS.values()}), len(ACRONYMS))
 
     def test_selection_carries_the_library(self):

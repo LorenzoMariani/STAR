@@ -138,6 +138,14 @@ produces:
   format: csv
   guaranteed: true
   description: one row per satellite (class, beta angle, passes, maximum temperatures, battery minimum and the hot / cold design cases with limit flags)
+- product: heater_cases
+  path: output_components_thermal_analysis/heater_cases.json
+  format: json
+  required_keys: [status, setpoint_C, worst]
+  guaranteed: false
+  description: battery heater of the cold case (BackEnd/runners/matlab/end019_heater_cases.m, outside the module) - ideal-thermostat
+    sizing (needed peak and orbit mean at the battery lower limit + 5 K) and bang-bang verification with the heater of the design;
+    not written by the compiled black box
 - product: thermal_run_info
   path: results_components_thermal_analysis/thermal_run_info.json
   format: json

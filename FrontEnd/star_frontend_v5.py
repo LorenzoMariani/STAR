@@ -159,10 +159,12 @@ STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
     "END-007": {"test": 150},
     "END-010": {"test": 49},
     "END-016": {"test": 6, "full": 9},
-    "END-019": {"test": 12},          # measured 2026-10-19/21 (test mode, 20 satellites)
+    "END-019": {"test": 32},          # measured 2026-10-23 (test mode, 20 satellites, with the heater cases)
     "END-006": {"test": 1},
 }
 STAR_MODULE_TIME_DEFAULT_S = 5     # modules without a runner (placeholders)
+STAR_CEF_LOOP_MODULES = ("END-003", "END-004", "END-016", "END-019", "END-006")   # re-run in each design-loop iteration
+STAR_CEF_MAX_ITERATIONS = 3
 
 
 def star_estimate_seconds(mode: str, level: int, module_ids: list[str]) -> dict[str, Any]:
@@ -172,7 +174,10 @@ def star_estimate_seconds(mode: str, level: int, module_ids: list[str]) -> dict[
     for module_id in module_ids:
         table = STAR_MODULE_TIME_S.get(module_id, {})
         per_module[module_id] = next((table[k] for k in keys if k in table), STAR_MODULE_TIME_DEFAULT_S)
-    return {"total_s": round(sum(per_module.values())), "per_module": per_module}
+    # design loop (phase F): the loop modules run again for each extra iteration (worst case: 3 passes)
+    loop_ids = [m for m in STAR_CEF_LOOP_MODULES if m in per_module]
+    extra = (STAR_CEF_MAX_ITERATIONS - 1) * sum(per_module[m] for m in loop_ids) if "END-006" in per_module and len(loop_ids) > 1 else 0
+    return {"total_s": round(sum(per_module.values()) + extra), "per_module": per_module, "cef_extra_s": round(extra)}
 
 
 class StarApi:
@@ -2516,7 +2521,8 @@ Return only valid JSON:
 
             if not step_value:
                 raise ValueError(f"Execution row {index} has an empty step.")
-            if step_value in seen_steps:
+            step_key = (step_value, str(result.get("iteration", 1)))      # CEF loop: a node re-run has the same step, another iteration
+            if step_key in seen_steps:
                 raise ValueError(f"Duplicate execution step found: {step_value}")
             if not module_name:
                 raise ValueError(f"Execution step {step_value} has an empty module name.")
@@ -2531,7 +2537,7 @@ Return only valid JSON:
             if not evidence:
                 raise ValueError(f"Execution step {step_value} has empty evidence.")
 
-            seen_steps.add(step_value)
+            seen_steps.add(step_key)
             module = self.get_module_by_name(module_name)
 
             normalized.append(
@@ -2549,6 +2555,7 @@ Return only valid JSON:
                     "duration_seconds": result.get("duration_seconds", ""),
                     "duration_human": str(result.get("duration_human", "")),
                     "reviewed_by_user": True,
+                    **({"iteration": result["iteration"], "node": result.get("node", "")} if result.get("iteration") else {}),
                 }
             )
 
@@ -4401,6 +4408,7 @@ Return only valid JSON:
             "active_module_name": self.active_module_name,
             "active_module_id": self.active_module_id,
             "execution_error": self.execution_error,
+            "cef_progress": getattr(self, "cef_progress", None),
         }
 
         if not self.execution_running and self.execution_result_payload:
@@ -4413,6 +4421,7 @@ Return only valid JSON:
                 "active_module_name",
                 "active_module_id",
                 "execution_error",
+                "cef_progress",
             }
             payload.update({
                 key: value
@@ -4469,7 +4478,6 @@ Return only valid JSON:
         eta = f"{max(1, round(total_s / 60))} min" if total_s < 5400 else f"{total_s / 3600:.1f} h"
         self.add_log("EXECUTION", f"Estimated time: about {eta} "
                                   f"(measured module times on the STAR workstation; the scenario changes them)")
-        execution_results = []
         selected_modules = {step.get("module") for step in self.workflow_steps}
 
         for module in self.modules:
@@ -4491,159 +4499,22 @@ Return only valid JSON:
             graph_path.write_text(json.dumps(graph.to_json(), indent=2, ensure_ascii=False), encoding="utf-8")
         except Exception as exc:
             self.add_log("WARNING", f"workflow_graph.json not saved: {exc}")
-        modules_root = self.get_modules_output_root()
-        steps_by_module = {str(s.get("module_id", "")).upper(): s for s in self.workflow_steps}
         blocked: dict[str, str] = {}        # node id -> why its products are not there
+        execution_results: list[dict[str, Any]] = []
+        self.execution_results = execution_results
+        self.init_cef_progress(graph)
+        first_pass: dict[str, dict[str, Any]] = {}
         for node_id in order:
-            node = graph.node(node_id)
-            module_id = node.module_id
-            base_step = steps_by_module[module_id]
-            module_name = base_step.get("module")
-            if node.phase == "initial":
-                workflow_step = {**base_step, "step": 0, "phase": "initial"}
-                label = f"{module_name} (initial design)"
-            elif node.phase == "final":
-                workflow_step = {**base_step, "phase": "final"}
-                label = str(module_name)
-            else:
-                workflow_step = base_step
-                label = str(module_name)
-            step_label = "step 0" if node.phase == "initial" else f"module step {workflow_step.get('step')}"
-
-            if self.execution_stop_event.is_set():
-                self.add_log("EXECUTION", f"Workflow execution stopped before {step_label}: {label}.")
-                execution_results.append(self.build_stopped_execution_result(workflow_step, "Execution stopped before this module started."))
-                self.execution_results = execution_results
+            result, stop = self._run_node(node_id, graph, blocked, 1)
+            first_pass[node_id] = result
+            if stop:
                 workflow_stopped = True
                 break
 
-            skip_reason = self.blocked_reason(node_id, graph, blocked)
-            if skip_reason:
-                result = self.build_stopped_execution_result(workflow_step, f"Not run: {skip_reason}.")
-                result["status"] = star_status.SKIP_BLOCKED
-                result["skipped_because"] = skip_reason
-                result["node"] = node_id
-                result["evidence"] = star_status.evidence(str(module_id), star_status.SKIP_BLOCKED, reason=skip_reason)
-                if node.phase == "initial":
-                    result.update({"phase": "initial", "module": label})
-                execution_results.append(result)
-                self.execution_results = execution_results
-                self.save_star_provenance(execution_results)
-                blocked[node_id] = skip_reason
-                for module in self.modules:
-                    if module.get("module_name") == module_name:
-                        module["status"] = star_status.ui_status(star_status.SKIP_BLOCKED)
-                self.add_log("WARNING", f"{label} ({module_id}) not run: {skip_reason}.")
-                continue
-
-            # Products the module requires must be on disk, usable and with their keys before the runner starts.
-            missing_required = graph.check_products(node_id, modules_root, required_only=True)
-            if missing_required:
-                evidence = "; ".join(missing_required)
-                result = self.build_stopped_execution_result(workflow_step, evidence)
-                result["status"] = "failed"
-                result["missing_required_inputs"] = missing_required
-                result["node"] = node_id
-                if node.phase == "initial":
-                    result.update({"phase": "initial", "module": label})
-                execution_results.append(result)
-                self.execution_results = execution_results
-                self.save_star_provenance(execution_results)
-                blocked[node_id] = f"{module_id} failed: {evidence[:160]}"
-                for module in self.modules:
-                    if module.get("module_name") == module_name:
-                        module["status"] = "Error"
-                for line in missing_required:
-                    self.add_log("ERROR", line)
-                self.add_log("ERROR", f"{label} not launched: a required product is missing; the modules that need its data are skipped, the others run.")
-                continue
-            optional_missing = [m for m in graph.check_products(node_id, modules_root, required_only=False) if m not in missing_required]
-            for line in optional_missing:
-                self.add_log("WARNING", f"{line} (optional: the module uses its fallback)")
-
-            self.active_module_name = module_name
-            self.active_module_id = module_id
-            if node.phase == "initial":
-                self.add_log("EXECUTION", f"Starting step 0: {module_name} ({module_id}) initial design, the satellite the other modules use.")
-            else:
-                self.add_log("EXECUTION", f"Starting module step {workflow_step.get('step')}: {module_name} ({module_id}).")
-                self.add_log("EXECUTION", f"Input artifacts declared for {module_name}: {workflow_step.get('input_data_artifacts', '-')}")
-                self.add_log("EXECUTION", f"Expected outputs for {module_name}: {workflow_step.get('output_artifacts', '-')}")
-
-            for module in self.modules:
-                if module.get("module_name") == module_name:
-                    module["status"] = "Running"
-
-            module_started_perf = time.perf_counter()
-            try:
-                result = self.execute_workflow_step(workflow_step)
-            except Exception as exc:
-                duration = time.perf_counter() - module_started_perf
-                if self.execution_stop_event.is_set():
-                    result = self.build_stopped_execution_result(
-                        workflow_step,
-                        f"Execution stopped while running {module_name}: {exc}",
-                    )
-                    result["duration_seconds"] = round(duration, 3)
-                    result["duration_human"] = self.format_duration(duration)
-                else:
-                    self.add_log("ERROR", f"Module {label} failed after {self.format_duration(duration)}: {exc}")
-                    now = datetime.now().isoformat()
-                    result = {"step": workflow_step.get("step", ""), "module": module_name, "module_id": module_id,
-                              "status": "failed", "evidence": f"{label} raised an error: {exc}", "generated_artifacts": "",
-                              "started_at": now, "completed_at": now, "reviewed_by_user": False}
-
-            duration = time.perf_counter() - module_started_perf
-            result["duration_seconds"] = round(duration, 3)
-            result["duration_human"] = self.format_duration(duration)
-            result["node"] = node_id
-            if node.phase == "initial":
-                result.update({"phase": "initial", "module": label})
-            if optional_missing:
-                result["missing_optional_inputs"] = optional_missing
-
-            if self.execution_stop_event.is_set() and result.get("status") != "stopped":
-                result["status"] = "stopped"
-                result["evidence"] = f"Stop was requested while or immediately after executing {module_name}."
-
-            result["status"] = star_status.normalize(result.get("status"))
-            if star_status.is_success(result["status"]):
-                missing_outputs = graph.missing_outputs(node_id, modules_root)
-                if missing_outputs:
-                    result["missing_outputs"] = missing_outputs
-                    self.add_log("WARNING", f"{label} completed without its guaranteed products: {', '.join(missing_outputs)}; "
-                                            "the modules that need them are stopped with a clear message.")
-
-            execution_results.append(result)
-            self.execution_results = execution_results
-            self.save_star_provenance(execution_results)
-
-            # a runner's skipped_out_of_scope is a decision about the mission, not an error: it gets the Skipped card
-            ui = star_status.ui_status(result["status"], result.get("fallback_severity"))
-            for module in self.modules:
-                if module.get("module_name") == module_name:
-                    module["status"] = "Ready" if (node.phase == "initial" and ui == "Error") else ui
-            if result["status"] == star_status.FALLBACK:
-                self.add_log("WARNING" if result.get("fallback_severity") == "critical" else "EXECUTION",
-                             f"{label} completed with {result.get('fallback_severity')} fallback(s): "
-                             + "; ".join(f"{f.get('item')} ({f.get('source')})" for f in result.get("fallbacks", [])[:4]))
-
-            self.add_log("EXECUTION", f"Finished {step_label}: {label} -> {result['status']} ({self.format_duration(duration)}).")
-            if node.phase != "initial":
-                self.add_log("EXECUTION", f"Module {module_name} execution time: {self.format_duration(duration)} ({duration:.2f} s).")
-
-            self.active_module_name = None
-            self.active_module_id = None
-
-            if result.get("status") == "stopped" or self.execution_stop_event.is_set():
-                self.add_log("EXECUTION", "Workflow execution stopped by user request. Remaining modules were not executed.")
-                workflow_stopped = True
-                break
-
-            if not star_status.is_success(result.get("status")):
-                blocked[node_id] = f"{module_id} {result.get('status')}: {str(result.get('evidence', ''))[:160]}"
-            if result.get("status") == "failed":
-                self.add_log("ERROR", f"{label} failed: the modules that need its data are skipped, the others run.")
+        # CEF loop (phase F): iterate the nodes that use the satellite design until END-006's final design settles
+        self.cef_state = None
+        if not workflow_stopped:
+            workflow_stopped = self._run_cef_loop(graph, blocked, first_pass)
 
         for module in self.modules:
             if module.get("module_name") not in selected_modules:
@@ -4697,6 +4568,229 @@ Return only valid JSON:
             "message": "Workflow execution stopped by user." if workflow_stopped else f"{len(execution_results)} workflow step(s) executed from approved workflow.",
         }
 
+    def init_cef_progress(self, graph: WorkflowGraph) -> None:
+        """Design loop progress for the execution page ("iter k/3" on the cards of the loop modules and in the module bay header)."""
+        self.cef_progress = {"loop_modules": [], "iteration": 0, "max_iterations": 0, "status": ""}
+        for module in self.modules:
+            module.pop("cef_iteration", None)
+            module.pop("cef_max", None)
+        try:
+            from runners import star_cef
+            config = star_cef.load_config()
+            if graph.feedback_edges():
+                nodes = graph.loop_nodes(star_cef.criteria_nodes(config))
+                self.cef_progress.update({"loop_modules": sorted({graph.node(n).module_id for n in nodes}),
+                                          "max_iterations": int(config.get("max_iterations", 3))})
+        except Exception as exc:
+            self.add_log("WARNING", f"Design loop progress not available: {exc}")
+
+    def mark_cef_iteration(self, module_name: str, module_id: str, iteration: int) -> None:
+        progress = getattr(self, "cef_progress", None) or {}
+        if module_id not in progress.get("loop_modules", []):
+            return
+        progress["iteration"] = max(int(progress.get("iteration") or 0), iteration)
+        for module in self.modules:
+            if module.get("module_name") == module_name:
+                module["cef_iteration"], module["cef_max"] = iteration, progress.get("max_iterations")
+
+    def _run_node(self, node_id: str, graph: WorkflowGraph, blocked: dict[str, str], iteration: int = 1) -> tuple[dict[str, Any], bool]:
+        """Run one node of the workflow graph: blocking, required-product check, runner, status, provenance. Returns (result,
+        stop). The result is appended to self.execution_results with ``iteration``; iteration 1 is the ordinary workflow, the
+        next ones are re-runs of the CEF loop (star_cef). ``blocked`` (node -> why) is shared by all the runs."""
+        execution_results = self.execution_results
+        modules_root = self.get_modules_output_root()
+        steps_by_module = {str(s.get("module_id", "")).upper(): s for s in self.workflow_steps}
+        node = graph.node(node_id)
+        module_id = node.module_id
+        base_step = steps_by_module[module_id]
+        module_name = base_step.get("module")
+        if node.phase == "initial":
+            workflow_step = {**base_step, "step": 0, "phase": "initial"}
+            label = f"{module_name} (initial design)"
+        elif node.phase == "final":
+            workflow_step = {**base_step, "phase": "final"}
+            label = str(module_name)
+        else:
+            workflow_step = base_step
+            label = str(module_name)
+        step_label = "step 0" if node.phase == "initial" else f"module step {workflow_step.get('step')}"
+
+        if self.execution_stop_event.is_set():
+            self.add_log("EXECUTION", f"Workflow execution stopped before {step_label}: {label}.")
+            result = self.build_stopped_execution_result(workflow_step, "Execution stopped before this module started.")
+            result["node"], result["iteration"] = node_id, iteration
+            execution_results.append(result)
+            self.execution_results = execution_results
+            return result, True
+
+        skip_reason = self.blocked_reason(node_id, graph, blocked)
+        if skip_reason:
+            result = self.build_stopped_execution_result(workflow_step, f"Not run: {skip_reason}.")
+            result["status"] = star_status.SKIP_BLOCKED
+            result["skipped_because"] = skip_reason
+            result["node"], result["iteration"] = node_id, iteration
+            result["evidence"] = star_status.evidence(str(module_id), star_status.SKIP_BLOCKED, reason=skip_reason)
+            if node.phase == "initial":
+                result.update({"phase": "initial", "module": label})
+            execution_results.append(result)
+            self.execution_results = execution_results
+            self.save_star_provenance(execution_results)
+            blocked[node_id] = skip_reason
+            for module in self.modules:
+                if module.get("module_name") == module_name:
+                    module["status"] = star_status.ui_status(star_status.SKIP_BLOCKED)
+            self.add_log("WARNING", f"{label} ({module_id}) not run: {skip_reason}.")
+            return result, False
+
+        # Products the module requires must be on disk, usable and with their keys before the runner starts.
+        missing_required = graph.check_products(node_id, modules_root, required_only=True)
+        if missing_required:
+            evidence = "; ".join(missing_required)
+            result = self.build_stopped_execution_result(workflow_step, evidence)
+            result["status"] = "failed"
+            result["missing_required_inputs"] = missing_required
+            result["node"], result["iteration"] = node_id, iteration
+            if node.phase == "initial":
+                result.update({"phase": "initial", "module": label})
+            execution_results.append(result)
+            self.execution_results = execution_results
+            self.save_star_provenance(execution_results)
+            blocked[node_id] = f"{module_id} failed: {evidence[:160]}"
+            for module in self.modules:
+                if module.get("module_name") == module_name:
+                    module["status"] = "Error"
+            for line in missing_required:
+                self.add_log("ERROR", line)
+            self.add_log("ERROR", f"{label} not launched: a required product is missing; the modules that need its data are skipped, the others run.")
+            return result, False
+        optional_missing = [m for m in graph.check_products(node_id, modules_root, required_only=False) if m not in missing_required]
+        for line in optional_missing:
+            self.add_log("WARNING", f"{line} (optional: the module uses its fallback)")
+
+        self.active_module_name = module_name
+        self.active_module_id = module_id
+        self.mark_cef_iteration(str(module_name), str(module_id), iteration)
+        if node.phase == "initial":
+            self.add_log("EXECUTION", f"Starting step 0: {module_name} ({module_id}) initial design, the satellite the other modules use.")
+        else:
+            self.add_log("EXECUTION", f"Starting module step {workflow_step.get('step')}: {module_name} ({module_id}).")
+            self.add_log("EXECUTION", f"Input artifacts declared for {module_name}: {workflow_step.get('input_data_artifacts', '-')}")
+            self.add_log("EXECUTION", f"Expected outputs for {module_name}: {workflow_step.get('output_artifacts', '-')}")
+
+        for module in self.modules:
+            if module.get("module_name") == module_name:
+                module["status"] = "Running"
+
+        module_started_perf = time.perf_counter()
+        node_started_epoch = time.time()
+        from runners import star_runner_io
+        _, loads_offset = star_runner_io.read_design_loads(modules_root)
+        try:
+            result = self.execute_workflow_step(workflow_step)
+        except Exception as exc:
+            duration = time.perf_counter() - module_started_perf
+            if self.execution_stop_event.is_set():
+                result = self.build_stopped_execution_result(
+                    workflow_step,
+                    f"Execution stopped while running {module_name}: {exc}",
+                )
+                result["duration_seconds"] = round(duration, 3)
+                result["duration_human"] = self.format_duration(duration)
+            else:
+                self.add_log("ERROR", f"Module {label} failed after {self.format_duration(duration)}: {exc}")
+                now = datetime.now().isoformat()
+                result = {"step": workflow_step.get("step", ""), "module": module_name, "module_id": module_id,
+                          "status": "failed", "evidence": f"{label} raised an error: {exc}", "generated_artifacts": "",
+                          "started_at": now, "completed_at": now, "reviewed_by_user": False}
+
+        duration = time.perf_counter() - module_started_perf
+        result["duration_seconds"] = round(duration, 3)
+        result["duration_human"] = self.format_duration(duration)
+        result["node"], result["iteration"] = node_id, iteration
+        if node.phase == "initial":
+            result.update({"phase": "initial", "module": label})
+        if optional_missing:
+            result["missing_optional_inputs"] = optional_missing
+        # phase F5: which version of the satellite the module really loaded (load_spacecraft_definition logs every load)
+        loads, _ = star_runner_io.read_design_loads(modules_root, loads_offset)
+        if loads:
+            used = sorted({(int(x.get("design_iteration") or 0), str(x.get("signature"))) for x in loads})
+            result["design_used"] = [{"design_iteration": it, "signature": sig} for it, sig in used]
+            prov = result.get("provenance")
+            if isinstance(prov, dict) and isinstance(prov.get("entries"), list):
+                for it, sig in used:
+                    prov["entries"].append({"item": "spacecraft_definition", "value": f"design iteration {it}, signature {sig}",
+                                            "source": "END-006 " + ("initial design" if it == 0 else f"final design of iteration {it} (promoted)"),
+                                            "kind": "input", "severity": None, "reason": "design loop (phase F)"})
+
+        if self.execution_stop_event.is_set() and result.get("status") != "stopped":
+            result["status"] = "stopped"
+            result["evidence"] = f"Stop was requested while or immediately after executing {module_name}."
+
+        result["status"] = star_status.normalize(result.get("status"))
+        if star_status.is_success(result["status"]):
+            # CEF loop: in a re-run a product older than the node's start is a leftover of an earlier iteration
+            missing_outputs = graph.missing_outputs(node_id, modules_root, since=node_started_epoch - 1.0 if iteration > 1 else None)
+            if missing_outputs:
+                result["missing_outputs"] = missing_outputs
+                self.add_log("WARNING", f"{label} completed without its guaranteed products: {', '.join(missing_outputs)}; "
+                                        "the modules that need them are stopped with a clear message.")
+
+        execution_results.append(result)
+        self.execution_results = execution_results
+        self.save_star_provenance(execution_results)
+
+        # a runner's skipped_out_of_scope is a decision about the mission, not an error: it gets the Skipped card
+        ui = star_status.ui_status(result["status"], result.get("fallback_severity"))
+        for module in self.modules:
+            if module.get("module_name") == module_name:
+                module["status"] = "Ready" if (node.phase == "initial" and ui == "Error") else ui
+        if result["status"] == star_status.FALLBACK:
+            self.add_log("WARNING" if result.get("fallback_severity") == "critical" else "EXECUTION",
+                         f"{label} completed with {result.get('fallback_severity')} fallback(s): "
+                         + "; ".join(f"{f.get('item')} ({f.get('source')})" for f in result.get("fallbacks", [])[:4]))
+
+        self.add_log("EXECUTION", f"Finished {step_label}: {label} -> {result['status']} ({self.format_duration(duration)}).")
+        if node.phase != "initial":
+            self.add_log("EXECUTION", f"Module {module_name} execution time: {self.format_duration(duration)} ({duration:.2f} s).")
+
+        self.active_module_name = None
+        self.active_module_id = None
+
+        if result.get("status") == "stopped" or self.execution_stop_event.is_set():
+            self.add_log("EXECUTION", "Workflow execution stopped by user request. Remaining modules were not executed.")
+            return result, True
+
+        if not star_status.is_success(result.get("status")):
+            blocked[node_id] = f"{module_id} {result.get('status')}: {str(result.get('evidence', ''))[:160]}"
+        else:
+            blocked.pop(node_id, None)      # a re-run of the CEF loop that succeeds clears the block of the first pass
+        if result.get("status") == "failed":
+            self.add_log("ERROR", f"{label} failed: the modules that need its data are skipped, the others run.")
+        return result, False
+
+    def _run_cef_loop(self, graph: WorkflowGraph, blocked: dict[str, str], first_pass: dict[str, dict[str, Any]]) -> bool:
+        """Close the design loop after the first pass (BackEnd/runners/star_cef.py). Returns True when the user stopped."""
+        from runners import star_cef
+        try:
+            config = star_cef.load_config()
+        except Exception as exc:
+            self.add_log("WARNING", f"Design loop skipped: cef_loop.yaml not readable ({exc}).")
+            return False
+        loop = star_cef.CefLoop(
+            graph, config, self.get_modules_output_root(), self.current_run_path,
+            run_node=lambda node_id, iteration: self._run_node(node_id, graph, blocked, iteration)[0],
+            log=self.add_log, stop_event=self.execution_stop_event, run_id=str(self.current_run_id or ""))
+        try:
+            self.cef_state = loop.run(first_pass)
+            if getattr(self, "cef_progress", None) is not None:
+                self.cef_progress["status"] = str(self.cef_state.get("status", ""))
+        except Exception as exc:
+            self.add_log("ERROR", f"Design loop failed: {exc}")
+            return False
+        self.save_star_provenance(self.execution_results)
+        return self.cef_state.get("status") == star_cef.STOPPED
+
     def save_star_provenance(self, execution_results: list[dict[str, Any]]) -> None:
         """<run>/star_provenance.json (phase C): status, evidence, inputs with their source and fallbacks of every module run,
         rewritten after each module so that a crashed or stopped run still leaves it."""
@@ -4708,6 +4802,7 @@ Return only valid JSON:
             prov = r.get("provenance") or {}
             modules.append({
                 "node": r.get("node") or r.get("module_id"), "module_id": r.get("module_id"), "phase": r.get("phase", ""),
+                "iteration": r.get("iteration", 1), "design_used": r.get("design_used", []),
                 "status": status, "fallback_severity": r.get("fallback_severity"), "evidence": r.get("evidence", ""),
                 "inputs": prov.get("entries", []), "fallbacks": r.get("fallbacks", []),
                 "missing_required_inputs": r.get("missing_required_inputs", []), "missing_optional_inputs": r.get("missing_optional_inputs", []),
@@ -5530,6 +5625,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__": "end003_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_DIAGNOSTICS__": "run_diagnostics_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COMPLIANCE__": "star_compliance_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_CEFLOOP__": "cef_loop.html",
     }
     for placeholder, filename in frame_files.items():
         content = (modules_dir / filename).read_text(encoding="utf-8")

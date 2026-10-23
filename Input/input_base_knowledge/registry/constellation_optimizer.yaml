@@ -434,9 +434,11 @@ required_inputs:
 
     '
 always_in_workflow: true
+cef_loop: fixed   # CEF loop (phase F): the orbit is fixed, END-001 is never re-run
 consumes:
 - product: spacecraft_definition
   required: false
+  uses: [radios]   # keys of the product END-001 reads: a change after the loop is only reported
   used_for: mass, drag area and Cd of the satellite, and its radio bands (choice of the ground stations)
   fallback: ground stations of the mission request
 produces:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import time
@@ -1160,10 +1161,64 @@ def load_spacecraft_definition(star_payload: dict[str, Any] | None, modules_outp
                 data = json.loads(path.read_text(encoding="utf-8"))
                 if isinstance(data, dict) and data.get("mass_kg"):
                     data["_source_path"] = str(path)
+                    _log_design_load(path, data)
                     return data
         except Exception:
             continue
     return None
+
+
+DESIGN_LOADS_FILENAME = "design_loads.jsonl"
+DESIGN_VOLATILE_KEYS = {"generated_at", "run_id", "design_iteration", "promoted_from", "used_design_iteration", "_source_path",
+                        "changes_from_initial", "changes_from_used_design", "timestamp"}
+
+
+def design_fingerprint(data: Any) -> str:
+    """Signature of a spacecraft_definition (the content without the stamps and run-specific keys): the same value for the file
+    that was promoted and for the copy a module loads."""
+    def strip(x: Any) -> Any:
+        if isinstance(x, dict):
+            return {k: strip(v) for k, v in x.items() if k not in DESIGN_VOLATILE_KEYS}
+        return [strip(v) for v in x] if isinstance(x, list) else x
+    return hashlib.sha1(json.dumps(strip(data), sort_keys=True, default=str).encode("utf-8")).hexdigest()[:16]
+
+
+def design_loads_path(modules_output: Path | str) -> Path:
+    return Path(modules_output).parent / DESIGN_LOADS_FILENAME
+
+
+def _log_design_load(path: Path, data: dict[str, Any]) -> None:
+    """Phase F5: every load of the satellite is logged (design iteration and signature) in <run>/design_loads.jsonl, so that the
+    orchestrator can say which design each module of the design loop really used. The file is the channel (not a global)
+    because the runners can be imported under two names."""
+    try:
+        root = next((p for p in Path(path).resolve().parents if p.name == "modules_output"), None)
+        if root is None:
+            return
+        rec = {"loaded_at": time.time(), "path": str(path), "design_iteration": int(data.get("design_iteration") or 0),
+               "promoted_from": data.get("promoted_from"), "signature": design_fingerprint(data)}
+        with design_loads_path(root).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec) + "\n")
+    except Exception:
+        pass
+
+
+def read_design_loads(modules_output: Path | str, offset: int = 0) -> tuple[list[dict[str, Any]], int]:
+    """(loads logged after byte ``offset``, new offset)."""
+    path = design_loads_path(modules_output)
+    try:
+        with path.open("rb") as fh:
+            fh.seek(offset)
+            raw = fh.read()
+    except OSError:
+        return [], offset
+    out = []
+    for line in raw.decode("utf-8", "replace").splitlines():
+        try:
+            out.append(json.loads(line))
+        except ValueError:
+            continue
+    return out, offset + len(raw)
 
 
 # ---------------------------------------------------------------------------

@@ -102,6 +102,7 @@ def main() -> int:
         print(f"{mid:8s} {status:24s} {(f'{float(secs):.0f} s' if secs is not None else '-'):>8s} "
               f"{str(round(est['per_module'].get(mid, 0))) + ' s':>7s}  {str(r.get('evidence', ''))[:150]}")
     bad += check_products(api, rows)
+    bad += check_convergence(api)
     print(f"\n{'PASS' if not bad and rows else 'FAIL'}: {len(rows)} module(s), {bad} not completed or inconsistent, total {time.time() - t_start:.0f} s; run folder {api.current_run_path}")
     return 0 if not bad and rows else 1
 
@@ -153,6 +154,59 @@ def check_products(api, rows) -> int:
     for line in problems:
         print(f"[PRODUCTS] {line}", flush=True)
     print(f"[PRODUCTS] {len(problems)} problem(s); manifest {target}", flush=True)
+    return len(problems)
+
+
+def check_convergence(api) -> int:
+    """Phase F7: the design loop ends converged (or not_converged on CEF-BATTERY only) within 3 iterations, every criterion passes, the iterations are archived, END-001
+    ran once, END-010 ran only if its trigger fired, REQ-020 is met. A failure prints the failing criteria and their values."""
+    problems: list[str] = []
+    run = api.current_run_path
+    path = run / "convergence.json"
+    if not path.is_file():
+        print("[CEF] convergence.json not written", flush=True)
+        return 1
+    conv = json.loads(path.read_text(encoding="utf-8"))
+    iterations = conv.get("iterations") or []
+    # accepted outcome (2026-10-23): no catalogued heater covers the cold-case battery, so the loop may end not_converged
+    # with CEF-BATTERY as the only failing criterion; anything else failing is a regression
+    converged = conv.get("status") == "converged"
+    if not converged and conv.get("status") != "not_converged":
+        problems.append(f"status {conv.get('status')} (expected converged or not_converged): {conv.get('reason')}")
+    if not converged and sorted(conv.get("failing_criteria") or []) != ["CEF-BATTERY"]:
+        problems.append(f"failing criteria {conv.get('failing_criteria')} (expected only CEF-BATTERY)")
+    if int(conv.get("iterations_run") or 0) > 3 or len(iterations) != int(conv.get("iterations_run") or 0):
+        problems.append(f"iterations_run {conv.get('iterations_run')} / {len(iterations)} recorded (max 3)")
+    for it in iterations[-1:]:
+        for c in it.get("criteria", []):
+            if c.get("status") not in ("pass", "not_applicable") and (converged or c.get("id") != "CEF-BATTERY"):
+                problems.append(f"iteration {it['k']} {c.get('id')} {c.get('status')}: {c.get('reason') or c.get('values')} (threshold {c.get('threshold')})")
+    for it in iterations:
+        if not (run / "cef" / f"iteration_{int(it['k']):02d}").is_dir():
+            problems.append(f"cef/iteration_{int(it['k']):02d} missing")
+    # END-001 is fixed: one entry in the results/provenance, and never in a loop iteration
+    prov = json.loads((run / "star_provenance.json").read_text(encoding="utf-8")) if (run / "star_provenance.json").is_file() else {}
+    n001 = sum(1 for m in prov.get("modules", []) if m.get("node") == "END-001")
+    if n001 != 1:
+        problems.append(f"END-001 recorded {n001} times (expected once)")
+    if any(n.get("node") == "END-001" for it in iterations for n in it.get("nodes", [])):
+        problems.append("END-001 re-run inside the loop")
+    # END-010 follows its trigger: re-run exactly when fired
+    for post in conv.get("post_loop_nodes") or []:
+        runs = sum(1 for m in prov.get("modules", []) if m.get("node") == post.get("node"))
+        expected = 1 + (1 if post.get("fired") else 0)
+        if runs != expected:
+            problems.append(f"{post.get('node')} recorded {runs} times, trigger fired={post.get('fired')} (expected {expected})")
+    comp_path = run / "compliance" / "compliance.json"
+    comp = json.loads(comp_path.read_text(encoding="utf-8")) if comp_path.is_file() else {}
+    reqs = comp.get("requirements") or comp.get("items") or []
+    req20 = next((r for r in reqs if str(r.get("id") or r.get("requirement_id")) == "REQ-020"), None)
+    want20 = "met" if converged else "not_met"
+    if not req20 or req20.get("status") != want20:
+        problems.append(f"REQ-020 {None if not req20 else req20.get('status')} (expected {want20}): {None if not req20 else req20.get('reason')}")
+    for line in problems:
+        print(f"[CEF] {line}", flush=True)
+    print(f"[CEF] {conv.get('status')} after {conv.get('iterations_run')} iteration(s); {len(problems)} problem(s)", flush=True)
     return len(problems)
 
 
