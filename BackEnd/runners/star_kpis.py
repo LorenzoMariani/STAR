@@ -248,6 +248,13 @@ CATALOGUE: dict[str, dict[str, Any]] = {
     "END-019.hot_case_beta_deg": _c("Beta angle of the hot case", "deg", "environment", "thermal_summary", "design_cases.hot.beta_deg"),
     "END-019.cold_case_eclipse_min": _c("Eclipse of the cold case", "min", "environment", "thermal_summary", "design_cases.cold.eclipse_min"),
     "END-019.n_satellites": _c("Satellites analysed", "-", "run_validity", "thermal_summary", "count of thermal_summary_SAT-*.json"),
+    # END-008 battery health monitoring: battery_health_summary.json (battery_monitoring.exe summary, run once after the loop)
+    "END-008.soh_end_of_mission": _c("Battery state of health at the end of the mission (median)", "%", "mission_compliance", "battery_health_summary", "soh_end_of_mission"),
+    "END-008.soh_p05": _c("Battery state of health at the end of the mission (5th percentile)", "%", "mission_compliance", "battery_health_summary", "soh_p05"),
+    "END-008.eol_reached": _c("Battery end of life reached within the mission", "bool", "mission_compliance", "battery_health_summary", "eol_reached"),
+    "END-008.soc_min_mission": _c("Lowest battery state of charge of the mission", "%", "performance", "battery_health_summary", "soc_min_mission"),
+    "END-008.orbits_below_soc_min": _c("Orbits with the state of charge below its minimum", "-", "performance", "battery_health_summary", "orbits_below_soc_min"),
+    "END-008.law_domain_outside_fraction": _c("Orbits outside the domain of the degradation law", "%", "run_validity", "battery_health_summary", "law_domain_outside_fraction"),
 }
 
 # END-006 initial node: the products of the initial design carry these names

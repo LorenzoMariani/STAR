@@ -17,6 +17,8 @@ Python suites (unittest):
     STAR     tests/test_*.py   (BackEnd imports, Python syntax, generated results page, runners without MATLAB; 2026-10-20)
     CEF      tests/test_cef_*.py   (design loop of phase F: criteria and controller with fake modules, 2026-10-23; also part of STAR)
     END-006  END006-ComponentSelector/star_component_selector/tests
+    END-008  tests/test_end008_*.py   (star_integration, runner, KPIs, rule; the tests that need the vendor delivery, not in git,
+             are skipped without it; 2026-10-23; also part of STAR)
 On GitHub at every push and pull request (.github/workflows/tests.yml): the Python suites and every MATLAB suite but END-001.
 
 Run only when named (2026-10-20):
@@ -52,12 +54,13 @@ SUITES = [
     {"id": "CEF", "kind": "python", "path": ".", "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_cef_*.py"]},
     {"id": "END-006", "kind": "python", "path": "END006-ComponentSelector/star_component_selector",
      "args": ["-m", "unittest", "discover", "-s", "tests", "-t", "."]},
+    {"id": "END-008", "kind": "python", "path": ".", "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_end008_*.py"]},
     {"id": "END-019", "kind": "matlab", "path": "END019-ComponentsThermalAnalysis/tests"},
     {"id": "HEATER", "kind": "matlab", "path": "tests/test_end019_heater_cases.m"},
 ]
 # not in the default run: python run_all_tests.py SMOKE
 OPTIONAL_SUITES = [
-    {"id": "SMOKE", "kind": "script", "path": "FrontEnd/star_smoke_test.py"},
+    {"id": "SMOKE", "kind": "script", "path": "FrontEnd/star_smoke_test.py", "args": ["--add", "END-008"]},
 ]
 
 MATLAB_SCRIPT = r"""

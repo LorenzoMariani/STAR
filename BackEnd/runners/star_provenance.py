@@ -21,6 +21,7 @@ CRITICAL_ITEMS: dict[str, tuple[str, ...]] = {
     "END-010": ("attitude",),
     "END-016": ("spacecraft.",),
     "END-019": ("form_factor", "P_internal_W"),
+    "END-008": ("pack.temperature_C", "mission.duration_years"),    # the cell and the pack are minor assumptions
 }
 
 

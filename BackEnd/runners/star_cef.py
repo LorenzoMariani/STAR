@@ -8,6 +8,8 @@ Iteration 1 is the ordinary workflow, run by the orchestrator. ``CefLoop.run`` t
                                                           ->  k == max    -> not_converged, end
                                                           ->  stalled?    -> stalled, end
                                                           ->  promote D(k) over spacecraft_definition, re-run the loop nodes
+    end  ->  after-loop nodes (registry ``cef_loop: after_loop``, END-008): run once if the loop status is in
+             ``after_loop.run_when`` of cef_loop.yaml, otherwise reported as not run (``skip_node``)
 
 D(k) is the design END-006/final produced in iteration k; the modules of iteration k+1 use it as their ``spacecraft_definition``
 (the registry ``feeds_back_to`` edge). The node sets come from the workflow graph (``loop_nodes`` / ``post_loop_nodes``), the
@@ -46,6 +48,7 @@ CONFIG_PATH = Path(__file__).resolve().parents[2] / "Input" / "input_base_knowle
 CONVERGED, NOT_CONVERGED, STALLED = "converged", "not_converged", "stalled"
 INTERRUPTED, STOPPED, NOT_APPLICABLE, RUNNING = "interrupted", "stopped", "not_applicable", "running"
 PASS, FAIL, N_A, NOT_EVALUABLE = "pass", "fail", "not_applicable", "not_evaluable"
+AFTER_LOOP_RUN_WHEN = (CONVERGED, NOT_CONVERGED, STALLED, NOT_APPLICABLE)    # default of cef_loop.yaml after_loop.run_when
 
 ARCHIVE_SKIP_FORMATS = ("html", "image")      # reports with images: a few MB per iteration instead of about 100
 ARCHIVE_MAX_BYTES = 25_000_000
@@ -59,6 +62,9 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
     data.setdefault("max_iterations", 3)
     data.setdefault("stall_mass_rel", 0.001)
     data.setdefault("criteria", [])
+    after = data.get("after_loop") if isinstance(data.get("after_loop"), dict) else {}
+    after.setdefault("run_when", list(AFTER_LOOP_RUN_WHEN))
+    data["after_loop"] = after
     return data
 
 
@@ -307,14 +313,18 @@ def _digest(data: Any) -> str:
 
 class CefLoop:
     """The design loop. ``run_node(node_id, iteration)`` runs one node in the orchestrator and returns its result dict
-    (``status`` and, for the log, ``evidence`` / ``duration_seconds``); it must return status ``stopped`` when the user stopped."""
+    (``status`` and, for the log, ``evidence`` / ``duration_seconds``); it must return status ``stopped`` when the user stopped.
+    ``skip_node(node_id, reason)`` records an after-loop node that is not run (optional)."""
 
     def __init__(self, graph: Any, config: dict[str, Any], modules_root: str | Path, run_dir: str | Path,
                  run_node: Callable[[str, int], dict[str, Any]], log: Callable[[str, str], None] | None = None,
-                 stop_event: Any = None, run_id: str = "") -> None:
+                 stop_event: Any = None, run_id: str = "", skip_node: Callable[[str, str], Any] | None = None) -> None:
         self.graph, self.config = graph, config
         self.modules_root, self.run_dir = Path(modules_root), Path(run_dir)
         self.run_node, self._log, self.stop_event, self.run_id = run_node, log or (lambda level, msg: None), stop_event, run_id
+        self.skip_node = skip_node
+        self.after_nodes = graph.after_loop_nodes()
+        self.after_run_when = [str(s) for s in ((config.get("after_loop") or {}).get("run_when") or AFTER_LOOP_RUN_WHEN)]
         self.max_iterations = max(1, int(config.get("max_iterations", 3)))
         self.crit_nodes = criteria_nodes(config)
         edges = graph.feedback_edges()
@@ -470,13 +480,44 @@ class CefLoop:
             post.append({"node": n, "trigger": rules or "any consumed product changed", "fired": None})
         return {"schema_version": 1, "run_id": self.run_id, "status": RUNNING, "max_iterations": self.max_iterations,
                 "iterations_run": 0, "converged_at": None, "loop_nodes": self.loop_nodes, "post_loop_nodes": post,
+                "after_loop_nodes": [{"node": n, "run_when": self.after_run_when, "status": None, "reason": ""} for n in self.after_nodes],
                 "fixed_modules": [self.graph.node(n).module_id for n in self.fixed_nodes],
                 "feedback": {"produced": self.edge[1], "fed_back_to": self.edge[2], "producer": self.edge[0]} if self.edge else None,
                 "criteria_def": [{"id": c["id"], "name": c.get("name", "")} for c in self.config.get("criteria", [])],
                 "iterations": [], "failing_criteria": [], "reason": "", "warnings": []}
 
     def run(self, first_pass: dict[str, dict[str, Any]]) -> dict[str, Any]:
-        """``first_pass``: node id -> result of iteration 1 (the ordinary workflow, already executed)."""
+        """``first_pass``: node id -> result of iteration 1 (the ordinary workflow, already executed, after-loop nodes left out).
+        The loop, then the after-loop nodes."""
+        self._run_loop(first_pass)
+        self._after_loop()
+        return self.state
+
+    def _after_loop(self) -> None:
+        """Run the after-loop nodes once on what the loop left (the power budget of its last iteration), when the loop status
+        allows it; otherwise report them as not run."""
+        if not self.after_nodes:
+            return
+        status = str(self.state.get("status"))
+        k = int(self.state.get("iterations_run") or 1)
+        for entry in self.state["after_loop_nodes"]:
+            n = entry["node"]
+            if status in self.after_run_when and not self.stopped():
+                self.log("EXECUTION", f"Design loop {status}: after-loop node {n} runs once on the results of iteration {k}.")
+                result = self.run_node(n, k)
+                entry["status"] = result.get("status")
+                if not star_status.is_success(result.get("status")) and result.get("status") != star_status.SKIP_SCOPE:
+                    entry["reason"] = str(result.get("evidence", ""))[:200]
+                    self.state["warnings"].append(f"{n} after the loop {result.get('status')}: {entry['reason'][:160]}")
+            else:
+                why = "stopped by the user" if self.stopped() else f"the design loop ended {status}: {self.state.get('reason', '')}"
+                entry.update(status=star_status.STOPPED if self.stopped() else star_status.SKIP_BLOCKED, reason=why)
+                self.log("WARNING", f"After-loop node {n} not run: {why}")
+                if self.skip_node:
+                    self.skip_node(n, why)
+        self._write()
+
+    def _run_loop(self, first_pass: dict[str, dict[str, Any]]) -> dict[str, Any]:
         self.state = self._initial_state()
         if self.edge is None:
             return self._finish(NOT_APPLICABLE, "the workflow has no feedback edge (END-006 final design is not in the workflow)")

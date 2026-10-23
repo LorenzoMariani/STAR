@@ -42,7 +42,7 @@ def _c(product, required=True, **extra):
     return {"product": product, "required": required, **extra}
 
 
-def fake_modules(with_end010=True, with_end007=True, with_end016=True, with_end019=True):
+def fake_modules(with_end010=True, with_end007=True, with_end016=True, with_end019=True, with_end008=False):
     mods = [
         {"module_id": "END-006", "module_name": "Selector", "always_in_workflow": True,
          "execution": {"runner_module": "x", "runner_function": "y"},
@@ -80,6 +80,11 @@ def fake_modules(with_end010=True, with_end007=True, with_end016=True, with_end0
                      "cef_loop": {"rerun_on": [{"product": "satellite_orbits"}]},
                      "consumes": [_c("attitude_csv")],
                      "produces": [_p("kpis_end007", "kpis.json"), _p("synthetic_images", "out/img.json")]})
+    if with_end008:
+        mods.append({"module_id": "END-008", "module_name": "Battery", "execution": {"runner_module": "x", "runner_function": "y"},
+                     "cef_loop": "after_loop",
+                     "consumes": [_c("power_summary"), _c("spacecraft_definition"), _c("thermal_summary", False)],
+                     "produces": [_p("kpis_end008", "kpis.json"), _p("battery_summary", "out/battery.json")]})
     return mods
 
 
@@ -111,6 +116,7 @@ class FakeRun:
         self.calls, self.used_log = [], {}
         self.stop = threading.Event()
         self.logs = []
+        self.skipped = []
         self.on_call = None
 
     def write(self, module, rel, content):
@@ -173,6 +179,8 @@ class FakeRun:
     def first_pass(self):
         results = {}
         for node_id in self.graph.order():
+            if node_id in self.graph.after_loop_nodes():      # as the orchestrator: after the loop only
+                continue
             results[node_id] = self.run_node(node_id, 1)
             if results[node_id]["status"] == "stopped":
                 break
@@ -182,7 +190,7 @@ class FakeRun:
         config = C.load_config()
         config.update(config_over or {})
         return C.CefLoop(self.graph, config, self.root, self.run, self.run_node, log=lambda l, m: self.logs.append((l, m)),
-                         stop_event=self.stop, run_id="RUN_FAKE")
+                         stop_event=self.stop, run_id="RUN_FAKE", skip_node=lambda n, why: self.skipped.append((n, why)))
 
     def execute(self, config_over=None):
         first = self.first_pass()
@@ -446,6 +454,69 @@ class TestOutcomes(unittest.TestCase):
                         p.pop("feeds_back_to", None)
             r = FakeRun(tmp, lambda k: {"design": D1}, modules=mods)
             self.assertEqual(r.execute()["status"], "not_applicable")
+
+
+@unittest.skipIf(C is None, "PyYAML not installed")
+class TestAfterLoopNode(unittest.TestCase):
+    """END-008 (cef_loop: after_loop): never in the first pass nor in the loop, once at the end on the last iteration."""
+
+    WORKFLOW = ["END-003", "END-004", "END-016", "END-019", "END-010", "END-007", "END-008"]
+
+    def run_with(self, tmp, plan, modules=None):
+        r = FakeRun(tmp, plan, modules=modules or fake_modules(with_end008=True))
+        r.graph = WorkflowGraph.build(r.registry, self.WORKFLOW)
+        return r
+
+    def test_sets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.run_with(tmp, lambda k: {"design": D1})
+            loop = r.loop()
+            self.assertEqual(loop.after_nodes, ["END-008"])
+            self.assertNotIn("END-008", loop.loop_nodes)
+            self.assertNotIn("END-008", loop.post_nodes)
+
+    def test_runs_once_after_a_converged_loop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.run_with(tmp, lambda k: {"design": D1, "battery_min": -36.8 if k == 1 else 5.0})
+            state = r.execute()
+            self.assertEqual(state["status"], "converged")
+            self.assertEqual([c for c in r.calls if c[0] == "END-008"], [("END-008", 2)])
+            self.assertEqual(r.calls[-1], ("END-008", 2))                              # after the loop and the post-loop nodes
+            self.assertEqual(r.conv["after_loop_nodes"][0]["status"], "completed")
+            self.assertTrue((r.root / "END-008" / "out" / "battery.json").is_file())
+
+    def test_runs_after_not_converged_and_not_applicable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.run_with(tmp, lambda k: {"design": design(9.0 + k, {"adcs": "xact-100"}), "battery_min": -36.8})
+            self.assertEqual(r.execute()["status"], "not_converged")
+            self.assertEqual([c for c in r.calls if c[0] == "END-008"], [("END-008", 3)])
+        with tempfile.TemporaryDirectory() as tmp:
+            mods = fake_modules(with_end008=True)
+            for m in mods:
+                for ph in (m.get("phases") or {}).values():
+                    for p in ph.get("produces", []):
+                        p.pop("feeds_back_to", None)
+            r = self.run_with(tmp, lambda k: {"design": D1}, modules=mods)
+            self.assertEqual(r.execute()["status"], "not_applicable")
+            self.assertEqual([c for c in r.calls if c[0] == "END-008"], [("END-008", 1)])
+
+    def test_not_run_when_the_loop_is_interrupted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.run_with(tmp, lambda k: {"design": D1, "battery_min": -36.8, "fail": {"END-019": "failed"} if k == 2 else {}})
+            self.assertEqual(r.execute()["status"], "interrupted")
+            self.assertFalse([c for c in r.calls if c[0] == "END-008"])
+            self.assertEqual([n for n, _ in r.skipped], ["END-008"])
+            self.assertIn("interrupted", r.skipped[0][1])
+            self.assertEqual(r.conv["after_loop_nodes"][0]["status"], "skipped_blocked")
+
+    def test_run_when_from_the_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.run_with(tmp, lambda k: {"design": D1, "battery_min": -36.8 if k == 1 else 5.0})
+            r.state = r.loop({"after_loop": {"run_when": ["not_converged"]}}).run(r.first_pass())
+            self.assertEqual(r.state["status"], "converged")
+            self.assertFalse([c for c in r.calls if c[0] == "END-008"])
+            self.assertEqual([n for n, _ in r.skipped], ["END-008"])
+        self.assertEqual(C.load_config()["after_loop"]["run_when"], ["converged", "not_converged", "stalled", "not_applicable"])
 
 
 @unittest.skipIf(C is None, "PyYAML not installed")

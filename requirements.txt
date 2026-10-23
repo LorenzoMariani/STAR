@@ -5,3 +5,6 @@ PyYAML>=6.0.1       # 6.0 has no Python 3.12 wheel
 openai>=1.0         # the OpenAI client and client.chat.completions, BackEnd/ai
 python-docx>=1.0    # 0.8.11 is a source package only
 Pillow>=10.1        # END-006: PNG metadata of the component images
+openpyxl>=3.1       # END-008: power_budget.xlsx writer and the official converter
+pandas>=2.0         # END-008: plot_battery_monitoring.py load()
+matplotlib>=3.8     # END-008: mission figure PNG

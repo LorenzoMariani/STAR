@@ -55,6 +55,7 @@ MODULE_OUTPUT_LAYOUT: dict[str, tuple[str, str]] = {
     "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
     "END-019": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
     "END-006": ("output_component_selector", "results_component_selector"),
+    "END-008": ("output_battery_health_monitoring", "results_battery_health_monitoring"),
 }   # same names as StarApi.get_module_output_layout (FrontEnd/star_frontend_v5.py)
 
 RESULT_SUFFIXES = {
@@ -1228,7 +1229,9 @@ def read_design_loads(modules_output: Path | str, offset: int = 0) -> tuple[list
 MODULE_FOLDERS = {"END-001": "END001-ConstellationOptimizer", "END-003": "END003-AttitudePropagation",
                   "END-004": "END004-PowerBudget", "END-007": "END007-SyntheticDataGeneration",
                   "END-010": "END010-ReflectanceDetermination", "END-016": "END016-CollisionAvoidance",
-                  "END-019": "END019-ComponentsThermalAnalysis", "END-006": "END006-ComponentSelector"}
+                  "END-019": "END019-ComponentsThermalAnalysis", "END-006": "END006-ComponentSelector",
+                  "END-008": "END008-BatteryHealthMonitoring"}
+END008_VENDOR_FILES = ("battery_monitoring.exe", "power_budget_to_input.py", "plot_battery_monitoring.py")
 MATLAB_MODULES = {"END-001", "END-003", "END-004", "END-010", "END-016"}
 
 
@@ -1262,4 +1265,15 @@ def module_prerequisites(module_id: str, star_root: str | Path | None = None) ->
             return False, "END-019 star_thermal.exe and MATLAB not found"
     if mid == "END-006" and not (root / folder / "star_component_selector" / "star_selector").is_dir():
         return False, "END-006 star_component_selector package not found"
+    if mid == "END-008":
+        # the vendor delivery is not in git (only star_integration/ is): without it END-008 cannot run here
+        missing = [f for f in END008_VENDOR_FILES if not (root / folder / f).is_file()]
+        if missing:
+            return False, f"END-008 delivery incomplete: {', '.join(missing)} not found in {folder}"
+        if not (root / folder / "star_integration").is_dir():
+            return False, "END-008 star_integration package not found"
+        import importlib.util
+        libs = [m for m in ("openpyxl", "pandas", "matplotlib") if importlib.util.find_spec(m) is None]
+        if libs:
+            return False, f"END-008 needs the Python packages {', '.join(libs)} (requirements.txt)"
     return True, ""

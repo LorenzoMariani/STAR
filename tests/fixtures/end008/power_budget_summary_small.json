@@ -1,0 +1,151 @@
+{
+ "module_id": "END-004",
+ "source": "fixture (reduced RUN_SMOKETEST_20261023_172401)",
+ "input_config": {
+  "orbit": {
+   "daily_orbits": 14.805,
+   "period_min": 97.2621,
+   "sunlight_min": 63.2731,
+   "eclipse_min": 33.989
+  },
+  "generation": {
+   "power_generated_per_orbit_Wh": 21.927,
+   "solar_power_W": [],
+   "power_generated_per_orbit_Wh_by_mode": {
+    "idle": 21.927,
+    "tx_uhf": 21.927,
+    "tx_sband": 22.3653,
+    "payload": 22.3653
+   }
+  },
+  "battery": {
+   "capacity_Wh": 84
+  },
+  "margin_fraction": 0.1,
+  "operations": {
+   "mode_orbits_per_day": {
+    "idle": 7.805,
+    "tx_uhf": 0,
+    "tx_sband": 5,
+    "payload": 2
+   }
+  },
+  "subsystems": [
+   {
+    "name": "OBDH",
+    "powerW": 0.4,
+    "duty": {
+     "idle": {
+      "sun": 1,
+      "eclipse": 1
+     },
+     "tx_uhf": {
+      "sun": 1,
+      "eclipse": 1
+     },
+     "tx_sband": {
+      "sun": 1,
+      "eclipse": 1
+     },
+     "payload": {
+      "sun": 1,
+      "eclipse": 1
+     }
+    },
+    "source": "END-006 aac-kryten-m3 (declared peak power)"
+   },
+   {
+    "name": "TX UHF",
+    "powerW": 3.2,
+    "duty": {
+     "idle": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "tx_uhf": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "tx_sband": {
+      "sun": 0.15654,
+      "eclipse": 0
+     },
+     "payload": {
+      "sun": 0.15654,
+      "eclipse": 0
+     }
+    },
+    "source": "END-006 nanoavionics-satcom-uhf (published transmit power)"
+   },
+   {
+    "name": "TX S BAND",
+    "powerW": 15,
+    "duty": {
+     "idle": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "tx_uhf": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "tx_sband": {
+      "sun": 0.15654,
+      "eclipse": 0
+     },
+     "payload": {
+      "sun": 0.15654,
+      "eclipse": 0
+     }
+    },
+    "source": "END-006 iq-spacecom-xlink-s (published transmit power)"
+   },
+   {
+    "name": "CAMERAS",
+    "powerW": 25.3,
+    "duty": {
+     "idle": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "tx_uhf": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "tx_sband": {
+      "sun": 0,
+      "eclipse": 0
+     },
+     "payload": {
+      "sun": 0.01712,
+      "eclipse": 0
+     }
+    },
+    "source": "END-006 satlantis-isim-90 (declared peak power)"
+   },
+   {
+    "name": "THERMAL",
+    "powerW": 3,
+    "duty": {
+     "idle": {
+      "sun": 0,
+      "eclipse": 0.1
+     },
+     "tx_uhf": {
+      "sun": 0,
+      "eclipse": 0.1
+     },
+     "tx_sband": {
+      "sun": 0,
+      "eclipse": 0.1
+     },
+     "payload": {
+      "sun": 0,
+      "eclipse": 0
+     }
+    },
+    "source": "template (heaters, not a subsystem END-006 selects)"
+   }
+  ]
+ }
+}

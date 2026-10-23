@@ -109,7 +109,7 @@ CANONICAL_MODULE_CATALOG = [
     # is END-019, so STAR has 19 END
     {"module_id": "END-006", "module_name": "Satellite Design Component Selector", "owner": "UNIRM1"},
     {"module_id": "END-007", "module_name": "Synthetic Data Generation", "owner": "TELESPAZIO"},
-    {"module_id": "END-008", "module_name": "Battery Healt Monitorying", "owner": "UNIRM1"},
+    {"module_id": "END-008", "module_name": "Battery Health Monitoring", "owner": "UNIRM1"},
     {"module_id": "END-009", "module_name": "Solar Array Wings", "owner": "TASI-POLIBA"},
     {"module_id": "END-010", "module_name": "Reflectance Determination", "owner": "UNIRM1"},
     {"module_id": "END-011", "module_name": "Multy-Fidelity Analysis", "owner": "POLITO"},
@@ -161,6 +161,7 @@ STAR_MODULE_TIME_S: dict[str, dict[str, float]] = {
     "END-016": {"test": 6, "full": 9},
     "END-019": {"test": 32},          # measured 2026-10-23 (test mode, 20 satellites, with the heater cases)
     "END-006": {"test": 1},
+    "END-008": {"test": 8, "full": 30},   # measured 2026-10-23: 6 s in all (exe 5 s, 1 year at 120 s); exe 16 s (3 years) / 25 s (5 years) at 60 s
 }
 STAR_MODULE_TIME_DEFAULT_S = 5     # modules without a runner (placeholders)
 STAR_CEF_LOOP_MODULES = ("END-003", "END-004", "END-016", "END-019", "END-006")   # re-run in each design-loop iteration
@@ -412,8 +413,9 @@ class StarApi:
         modules that feed its final design). A dependency cycle raises (the registry is wrong, CI catches it)."""
         graph = self.workflow_graph_of_steps([{"module_id": m.get("module_id", "")} for m in modules])
         position: dict[str, int] = {}
+        after_loop = set(graph.after_loop_nodes())      # END-008 runs once after the design loop: listed last
         for index, node_id in enumerate(graph.order()):
-            position[graph.node(node_id).module_id] = index
+            position[graph.node(node_id).module_id] = index + (10 ** 5 if node_id in after_loop else 0)
         return sorted(modules, key=lambda m: (position.get(str(m.get("module_id", "")).upper(), 10 ** 6),
                                               self.get_module_order_score(m)))
 
@@ -512,6 +514,8 @@ class StarApi:
                     "are exceeded.", "engineering_feasibility", "medium"),
         "END-006": ("Design the CubeSat every module uses (initial design) and update it with their results (final design): the "
                     "smallest class whose real components meet the requirements.", "engineering_feasibility", "high"),
+        "END-008": ("Simulate the battery state of charge orbit by orbit and its state of health over the mission (90 % band, end of "
+                    "life) from the power budget of the final design, after the design loop.", "engineering_feasibility", "medium"),
     }
     def module_executable(self, module_or_id: Any) -> tuple[bool, str]:
         """(True, "") when the module has a runner that imports and the programs it needs are on this machine; STAR plans
@@ -3654,17 +3658,25 @@ Return only valid JSON:
         self.execution_results = execution_results
         self.init_cef_progress(graph)
         first_pass: dict[str, dict[str, Any]] = {}
+        after_loop = graph.after_loop_nodes()
         for node_id in order:
+            if node_id in after_loop:       # END-008: not in the first pass, it runs once after the design loop (star_cef)
+                self.add_log("EXECUTION", f"{graph.node(node_id).label} runs once after the design loop.")
+                continue
             result, stop = self._run_node(node_id, graph, blocked, 1)
             first_pass[node_id] = result
             if stop:
                 workflow_stopped = True
                 break
 
-        # CEF loop (phase F): iterate the nodes that use the satellite design until END-006's final design settles
+        # CEF loop (phase F): iterate the nodes that use the satellite design until END-006's final design settles, then the
+        # after-loop nodes once
         self.cef_state = None
         if not workflow_stopped:
             workflow_stopped = self._run_cef_loop(graph, blocked, first_pass)
+        elif after_loop:
+            for node_id in after_loop:
+                self._skip_after_loop_node(node_id, graph, "the workflow was stopped before the design loop")
 
         for module in self.modules:
             if module.get("module_name") not in selected_modules:
@@ -3926,20 +3938,50 @@ Return only valid JSON:
             config = star_cef.load_config()
         except Exception as exc:
             self.add_log("WARNING", f"Design loop skipped: cef_loop.yaml not readable ({exc}).")
-            return False
+            return self._run_after_loop_without_loop(graph, blocked)
         loop = star_cef.CefLoop(
             graph, config, self.get_modules_output_root(), self.current_run_path,
             run_node=lambda node_id, iteration: self._run_node(node_id, graph, blocked, iteration)[0],
-            log=self.add_log, stop_event=self.execution_stop_event, run_id=str(self.current_run_id or ""))
+            log=self.add_log, stop_event=self.execution_stop_event, run_id=str(self.current_run_id or ""),
+            skip_node=lambda node_id, reason: self._skip_after_loop_node(node_id, graph, reason))
         try:
             self.cef_state = loop.run(first_pass)
             if getattr(self, "cef_progress", None) is not None:
                 self.cef_progress["status"] = str(self.cef_state.get("status", ""))
         except Exception as exc:
             self.add_log("ERROR", f"Design loop failed: {exc}")
-            return False
+            ran = {r.get("node") for r in self.execution_results}
+            for node_id in graph.after_loop_nodes():
+                if node_id not in ran:
+                    self._skip_after_loop_node(node_id, graph, f"the design loop failed ({exc})")
+            return self.execution_stop_event.is_set()
         self.save_star_provenance(self.execution_results)
-        return self.cef_state.get("status") == star_cef.STOPPED
+        return self.cef_state.get("status") == star_cef.STOPPED or self.execution_stop_event.is_set()
+
+    def _run_after_loop_without_loop(self, graph: WorkflowGraph, blocked: dict[str, str]) -> bool:
+        """No design loop (cef_loop.yaml not readable): the after-loop nodes still run once at the end."""
+        for node_id in graph.after_loop_nodes():
+            _, stop = self._run_node(node_id, graph, blocked, 1)
+            if stop:
+                return True
+        return False
+
+    def _skip_after_loop_node(self, node_id: str, graph: WorkflowGraph, reason: str) -> None:
+        """Record an after-loop node (END-008) that is not run: stopped by the user, or the loop did not end in a usable state."""
+        steps_by_module = {str(s.get("module_id", "")).upper(): s for s in self.workflow_steps}
+        node = graph.node(node_id)
+        step = steps_by_module.get(node.module_id, {"module_id": node.module_id, "module": node.module_id})
+        result = self.build_stopped_execution_result(step, f"Not run: {reason}.")
+        if not self.execution_stop_event.is_set():
+            result["status"] = star_status.SKIP_BLOCKED
+            result["skipped_because"] = reason
+            result["evidence"] = star_status.evidence(node.module_id, star_status.SKIP_BLOCKED, reason=reason)
+        result["node"], result["iteration"] = node_id, 1
+        self.execution_results.append(result)
+        self.save_star_provenance(self.execution_results)
+        for module in self.modules:
+            if module.get("module_name") == step.get("module"):
+                module["status"] = star_status.ui_status(result["status"])
 
     def save_star_provenance(self, execution_results: list[dict[str, Any]]) -> None:
         """<run>/star_provenance.json (phase C): status, evidence, inputs with their source and fallbacks of every module run,
@@ -4082,6 +4124,7 @@ Return only valid JSON:
             "END-016": ("output_collision_avoidance", "results_collision_avoidance"),
             "END-019": ("output_components_thermal_analysis", "results_components_thermal_analysis"),
             "END-006": ("output_component_selector", "results_component_selector"),
+            "END-008": ("output_battery_health_monitoring", "results_battery_health_monitoring"),
         }
         clean_id = str(module_id or "UNKNOWN").upper()
         output_name, results_name = layout_names.get(
@@ -4753,6 +4796,7 @@ def build_results_frontend_html(web_dir: Path) -> str:
         "__SRCDOC_PLACEHOLDER_FRAME_REFLECTANCE__": "end010_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COLLISION__": "end016_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_THERMAL__": "end019_results.html",
+        "__SRCDOC_PLACEHOLDER_FRAME_BATTERY__": "end008_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__": "end006_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_CONSTELLATION__": "end001_results.html",
         "__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__": "end003_results.html",

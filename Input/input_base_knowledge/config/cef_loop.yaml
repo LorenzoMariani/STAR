@@ -22,6 +22,12 @@ max_iterations: 3      # passes, the first one included
 # the runs are deterministic, another iteration would give the same result -> status "stalled".
 stall_mass_rel: 0.001
 
+# After-loop nodes (registry cef_loop: after_loop, END-008): left out of the first pass and of the loop, they run once at the
+# end on the products of the last iteration, when the loop ended with one of these statuses (not_applicable = no loop in the
+# workflow). After interrupted or stopped they are reported as not run (skipped_blocked / stopped).
+after_loop:
+  run_when: [converged, not_converged, stalled, not_applicable]
+
 # KPIs shown as "design evolution" in the results (convergence.json iterations[].evolution), not part of any criterion.
 evolution_kpis:
 - {kpi: END-006.mass_kg, label: Satellite mass}

@@ -41,6 +41,8 @@ def main() -> int:
     ap.add_argument("--requirements", default=str(SAMPLES / "Mission_Proposal_v7_requirements.json"),
                     help="JSON with the reviewed requirements, or 'none' for the rule-based extraction of the document")
     ap.add_argument("--with-end007", action="store_true", help="keep END-007 (Unreal, always in full) in the workflow")
+    ap.add_argument("--add", nargs="*", default=[], metavar="END-XXX",
+                    help="modules added to the planned workflow, as a user edit of the review (e.g. --add END-008)")
     args = ap.parse_args()
 
     import star_frontend_v5 as fe  # noqa: PLC0415  (the window module; no window is opened)
@@ -72,8 +74,14 @@ def main() -> int:
     # 3. planning (rule-based, the LLM-free path) and approval
     check(api.propose_workflow("Rule-based MVP"), "mission planning")
     workflow = [dict(s) for s in api.workflow_steps if args.with_end007 or s.get("module_id") != "END-007"]
-    if len(workflow) != len(api.workflow_steps):
-        check(api.save_reviewed_workflow(workflow), "workflow without END-007")
+    planned = {s.get("module_id") for s in workflow}
+    for module_id in (m.upper() for m in args.add):
+        if module_id not in planned:
+            module = api.get_module_by_id(module_id)
+            check({"ok": bool(module), "error": f"{module_id} not in the registry"}, f"add {module_id}")
+            workflow.append(api.build_workflow_step_for_module(module))
+    if [s.get("module_id") for s in workflow] != [s.get("module_id") for s in api.workflow_steps]:
+        check(api.save_reviewed_workflow(workflow), "reviewed workflow (END-007 left out, --add modules)")
     check(api.approve_workflow(), "approve workflow")
 
     # 4. module inputs (registry first guesses) and approval

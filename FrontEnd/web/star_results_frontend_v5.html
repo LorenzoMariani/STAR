@@ -259,6 +259,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END-003</span><span class="tab-title">Attitude Propagation</span></button>
         <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END-004</span><span class="tab-title">Power Budget</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END-006</span><span class="tab-title">Component Selector</span></button>
+        <button class="tab-button" id="tab-battery" data-tab="battery" type="button"><span class="tab-code">END-008</span><span class="tab-title">Battery Health</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END-007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END-010</span><span class="tab-title">Reflectance Determination</span></button>
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END-016</span><span class="tab-title">Collision Avoidance</span></button>
@@ -5040,6 +5041,377 @@ document.addEventListener(&#x27;DOMContentLoaded&#x27;, () =&gt; {
 &lt;/body&gt;
 &lt;/html&gt;
 " title="Components Thermal Analysis"></iframe>
+      <iframe id="frame-battery" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+&lt;title&gt;STAR — Battery Health Monitoring&lt;/title&gt;
+&lt;style&gt;
+@import url(&#x27;https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap&#x27;);
+:root{
+  --bg:#090a0d;--panel:#11141c;--panel-strong:#151925;--panel-muted:#0d1017;--border:#232838;--border-soft:rgba(114,125,151,.22);
+  --text:#d7dde9;--text-strong:#fff;--muted:#7d879a;--muted-2:#9aa3b4;--accent:#e8ff47;--accent-2:#4dffc3;
+  --danger:#ff5c7a;--success:#61f6a8;--shadow:0 24px 80px rgba(0,0,0,.32);
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --st-good:#0ca30c;--st-critical:#d03b3b;--st-warning:#fab219;
+  color-scheme:dark;
+}
+:root[data-theme=&quot;light&quot;]{
+  --bg:#f3f5f8;--panel:#fff;--panel-strong:#f8fafc;--panel-muted:#eef2f7;--border:#d9e0eb;--border-soft:rgba(45,55,72,.13);
+  --text:#222b3b;--text-strong:#070b12;--muted:#667085;--muted-2:#475467;--accent:#667c00;--accent-2:#007a66;
+  --danger:#bd2450;--success:#047857;--shadow:0 18px 60px rgba(31,41,55,.12);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(circle at top left,rgba(77,255,195,.10),transparent 32rem),radial-gradient(circle at top right,rgba(232,255,71,.08),transparent 36rem),var(--bg);color:var(--text);font-family:&#x27;Space Mono&#x27;,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.5}
+button{font:inherit;border:1px solid var(--border);background:var(--panel-strong);color:var(--text);border-radius:12px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent-2)}
+.primary-action{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#07100d;font-weight:700}
+.hidden-file-input{display:none}
+.page{padding:0 0 28px;display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--panel) 95%,transparent);box-shadow:var(--shadow)}
+.topbar h2{margin:0;font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:14px;color:var(--text-strong)}
+.topbar .sub{color:var(--muted);font-size:11px;margin-top:2px}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.status-pill{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.status-dot{width:10px;height:10px;border-radius:999px;background:var(--danger);box-shadow:0 0 0 4px color-mix(in srgb,var(--danger) 18%,transparent)}
+.status-dot.loaded{background:var(--success);box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 18%,transparent)}
+.banner{border:1px solid var(--border);border-left-width:6px;border-radius:14px;padding:12px 16px;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.banner .icon{font-size:18px;line-height:1.2}
+.banner.good{border-left-color:var(--st-good)}.banner.critical{border-left-color:var(--st-critical)}.banner.warning{border-left-color:var(--st-warning)}
+.banner b{color:var(--text-strong)}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:12px;padding:8px 12px;background:var(--panel);min-width:150px}
+.chip .c-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.chip .c-value{color:var(--text-strong);font-weight:700;font-size:14px}
+.chip .c-src{color:var(--muted-2);font-size:10px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{border:1px solid var(--border);border-radius:16px;padding:12px 14px;background:var(--panel);min-width:0}
+.kpi .k-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .k-value{font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text-strong);line-height:1.15;margin-top:4px}
+.kpi .k-unit{font-size:12px;color:var(--muted-2);font-weight:400;margin-left:4px}
+.kpi .k-note{color:var(--muted-2);font-size:11px;margin-top:4px}
+.kpi .k-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:6px}
+.kpi .k-flag.good{color:var(--st-good)}.kpi .k-flag.critical{color:var(--st-critical)}.kpi .k-flag.warning{color:var(--st-warning)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{border:1px solid var(--border);background:color-mix(in srgb,var(--panel) 95%,transparent);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.card.wide{grid-column:1/-1}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel-strong);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-header h3{margin:0;color:var(--text-strong);font-family:&#x27;Syne&#x27;,Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.card-header .hint{color:var(--muted);font-size:11px}
+.card-body{padding:10px 12px 12px}
+.plot{width:100%}
+.empty{color:var(--muted);text-align:center;padding:40px 16px}
+.table-wrap{overflow:auto;max-height:420px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border-bottom:1px solid var(--border-soft);padding:6px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td.flag{color:var(--st-critical);font-weight:700}
+td.ok{color:var(--st-good)}
+td.wrap{white-space:normal;text-align:left}
+.figure img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:8px;background:#fff}
+.links{display:flex;gap:10px;flex-wrap:wrap;padding:12px 14px}
+.links a{color:var(--accent-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;text-decoration:none;background:var(--panel-strong)}
+.links a:hover{border-color:var(--accent-2)}
+.links .none{color:var(--muted)}
+&lt;/style&gt;
+&lt;script src=&quot;https://cdn.plot.ly/plotly-2.24.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;page&quot;&gt;
+  &lt;input id=&quot;batteryFolderInput&quot; class=&quot;hidden-file-input&quot; type=&quot;file&quot; webkitdirectory directory multiple /&gt;
+  &lt;div class=&quot;topbar&quot;&gt;
+    &lt;div&gt;
+      &lt;h2&gt;Battery Health Monitoring&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot; id=&quot;source-label&quot;&gt;END-008 · battery state of charge per orbit and state of health over the mission · power budget from END-004&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;controls&quot;&gt;
+      &lt;span class=&quot;status-pill&quot;&gt;&lt;span id=&quot;status-dot&quot; class=&quot;status-dot&quot;&gt;&lt;/span&gt;&lt;span id=&quot;load-status&quot;&gt;No data loaded&lt;/span&gt;&lt;/span&gt;
+      &lt;button id=&quot;manual-load&quot; class=&quot;primary-action&quot; type=&quot;button&quot;&gt;Select END-008 Folder&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div id=&quot;banner&quot; class=&quot;banner&quot; hidden&gt;&lt;/div&gt;
+  &lt;div id=&quot;config&quot; class=&quot;chips&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;kpis&quot; class=&quot;kpis&quot;&gt;&lt;/div&gt;
+
+  &lt;div class=&quot;grid&quot;&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;State of health per orbit&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Median with the 90 % band (5th to 95th percentile) · dashed = end-of-life threshold&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotSoh&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;State of charge per orbit&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Minimum and maximum of each orbit · dashed = operating window of the pack&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div id=&quot;plotSoc&quot; class=&quot;plot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Energy balance per mode&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Wh per orbit, with margin · balance = generated − consumed&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot; id=&quot;modes&quot;&gt;&lt;div class=&quot;empty&quot;&gt;No data loaded.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Degradation law domain&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Inputs outside the range the law was fitted on make the SOH an extrapolation&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot; id=&quot;domain&quot;&gt;&lt;div class=&quot;empty&quot;&gt;No data loaded.&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Input warnings and assumptions&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;END-008 input checks, converter notes and the values STAR had to assume&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body&quot; id=&quot;warnings&quot;&gt;&lt;div class=&quot;empty&quot;&gt;No data loaded.&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Official END-008 figure&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;01_battery_monitoring.png · powers, SOC and SOH of the mission&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;card-body figure&quot; id=&quot;figure&quot;&gt;&lt;div class=&quot;empty&quot;&gt;No figure loaded.&lt;/div&gt;&lt;/div&gt;
+    &lt;/article&gt;
+    &lt;article class=&quot;card wide&quot;&gt;
+      &lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Generated files&lt;/h3&gt;&lt;span class=&quot;hint&quot;&gt;Power budget workbook and input of the END-008 executable&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;links&quot; id=&quot;links&quot;&gt;&lt;span class=&quot;none&quot;&gt;No files loaded.&lt;/span&gt;&lt;/div&gt;
+    &lt;/article&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(function(){
+&#x27;use strict&#x27;;
+const $ = id =&gt; document.getElementById(id);
+const state = { data:null, labels:{}, urls:{}, productFiles:[], resultFiles:[] };
+
+const esc = s =&gt; String(s == null ? &#x27;&#x27; : s).replace(/[&amp;&lt;&gt;&quot;&#x27;]/g, c =&gt; ({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;,&quot;&#x27;&quot;:&#x27;&amp;#39;&#x27;}[c]));
+const css = name =&gt; getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const num = (v, d = 1) =&gt; (v == null || !isFinite(v)) ? &#x27;–&#x27; : Number(v).toLocaleString(&#x27;en-US&#x27;, { maximumFractionDigits:d, minimumFractionDigits:0 });
+const pct = (v, d = 1) =&gt; (v == null || !isFinite(v)) ? &#x27;–&#x27; : num(v * 100, d);
+const hasPlotly = () =&gt; typeof window.Plotly !== &#x27;undefined&#x27;;
+
+function empty(id, msg){ const el = $(id); if (el) el.innerHTML = `&lt;div class=&quot;empty&quot;&gt;${esc(msg)}&lt;/div&gt;`; }
+
+function layout(extra){
+  return Object.assign({
+    paper_bgcolor:&#x27;rgba(0,0,0,0)&#x27;, plot_bgcolor:&#x27;rgba(0,0,0,0)&#x27;, font:{ color:css(&#x27;--text&#x27;), family:&#x27;Space Mono, monospace&#x27;, size:11 },
+    margin:{ l:62, r:24, t:14, b:46 }, height:340, hovermode:&#x27;x unified&#x27;,
+    legend:{ orientation:&#x27;h&#x27;, y:1.14, x:0 },
+    xaxis:{ title:&#x27;Mission time [years]&#x27;, gridcolor:css(&#x27;--border-soft&#x27;), zerolinecolor:css(&#x27;--border-soft&#x27;) },
+    yaxis:{ gridcolor:css(&#x27;--border-soft&#x27;), zerolinecolor:css(&#x27;--border-soft&#x27;) }
+  }, extra || {});
+}
+
+function plot(id, traces, lay){
+  const el = $(id);
+  if (!hasPlotly()) { empty(id, &#x27;Plotly could not be loaded (offline?): charts unavailable.&#x27;); return; }
+  try { Plotly.purge(el); } catch (_) {}
+  el.innerHTML = &#x27;&#x27;;
+  Plotly.newPlot(el, traces, lay, { displayModeBar:false, responsive:true });
+}
+
+/* ---------- rendering ---------- */
+function renderStatus(s){
+  const banner = $(&#x27;banner&#x27;);
+  const items = [];
+  let level = &#x27;good&#x27;, head = &#x27;Battery stays healthy over the mission&#x27;;
+  if (s.eol_reached) { level = &#x27;critical&#x27;; head = &#x27;End of life reached before the end of the mission&#x27;; }
+  else if (s.orbits_soc_zero &gt; 0 || s.orbits_below_soc_min &gt; 0) { level = &#x27;warning&#x27;; head = &#x27;Battery leaves its operating window&#x27;; }
+  if (s.orbits_soc_zero &gt; 0) items.push(`${s.orbits_soc_zero} orbit(s) with the battery empty`);
+  if (s.orbits_below_soc_min &gt; 0) items.push(`${s.orbits_below_soc_min} orbit(s) below the minimum SOC of the pack`);
+  if (s.law_domain_outside_fraction &gt; 0) items.push(`Degradation law used outside its fitted domain (${pct(s.law_domain_outside_fraction, 0)} % of the checked orbits): the SOH is an extrapolation`);
+  if (level === &#x27;good&#x27; &amp;&amp; s.law_domain_outside_fraction &gt; 0) level = &#x27;warning&#x27;;
+  const icon = level === &#x27;good&#x27; ? &#x27;●&#x27; : level === &#x27;critical&#x27; ? &#x27;▲&#x27; : &#x27;▲&#x27;;
+  banner.className = `banner ${level}`; banner.hidden = false;
+  banner.innerHTML = `&lt;span class=&quot;icon&quot;&gt;${icon}&lt;/span&gt;&lt;div&gt;&lt;b&gt;${esc(head)}&lt;/b&gt;${items.length ? `&lt;ul&gt;${items.map(i =&gt; `&lt;li&gt;${esc(i)}&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+}
+
+function renderConfig(s){
+  const st = s.settings || {};
+  const chip = (l, v, src) =&gt; `&lt;div class=&quot;chip&quot;&gt;&lt;div class=&quot;c-label&quot;&gt;${esc(l)}&lt;/div&gt;&lt;div class=&quot;c-value&quot;&gt;${esc(v)}&lt;/div&gt;${src ? `&lt;div class=&quot;c-src&quot;&gt;${esc(src)}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+  const parts = [
+    chip(&#x27;Run mode&#x27;, `${s.run_mode || &#x27;–&#x27;} · ${num(st.duration_years, 2)} y · ${num(st.time_step_s, 0)} s step`),
+    chip(&#x27;Pack&#x27;, `${st.cells_in_series || &#x27;–&#x27;}S${st.cells_in_parallel || &#x27;–&#x27;}P · ${st.cell || &#x27;–&#x27;}`, `${num(s.pack_energy_Wh, 1)} Wh · ${num(s.pack_nominal_voltage_V, 1)} V (design ${num(st.battery_capacity_Wh, 0)} Wh)`),
+    chip(&#x27;Battery temperature&#x27;, `${num(st.temperature_C, 1)} °C`, st.temperature_source),
+    chip(&#x27;SOC window&#x27;, `${pct(st.SOC_min, 0)}–${pct(st.SOC_max, 0)} %`),
+    chip(&#x27;Orbits&#x27;, `${num(s.orbits, 0)}`, `${num(s.orbits_per_day, 2)} per day · model ${s.degradation_model || &#x27;–&#x27;}`),
+    chip(&#x27;Executable&#x27;, (s.run &amp;&amp; s.run.message) || &#x27;–&#x27;, s.run ? `exit ${s.run.returncode} · ${num(s.run.seconds, 1)} s` : &#x27;&#x27;)
+  ];
+  $(&#x27;config&#x27;).innerHTML = parts.join(&#x27;&#x27;);
+}
+
+function renderKpis(s){
+  const kpi = (label, value, unit, note, flag) =&gt; `&lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;k-label&quot;&gt;${esc(label)}&lt;/div&gt;&lt;div class=&quot;k-value&quot;&gt;${esc(value)}&lt;span class=&quot;k-unit&quot;&gt;${esc(unit || &#x27;&#x27;)}&lt;/span&gt;&lt;/div&gt;${note ? `&lt;div class=&quot;k-note&quot;&gt;${esc(note)}&lt;/div&gt;` : &#x27;&#x27;}${flag ? `&lt;div class=&quot;k-flag ${flag[0]}&quot;&gt;${esc(flag[1])}&lt;/div&gt;` : &#x27;&#x27;}&lt;/div&gt;`;
+  const eolPct = pct(s.eol_threshold_soh, 0);
+  const soh = s.soh_end_of_mission;
+  const items = [
+    kpi(&#x27;SOH at end of mission&#x27;, pct(soh, 1), &#x27;%&#x27;, `90 % band ${pct(s.soh_p05, 1)}–${pct(s.soh_p95, 1)} %`,
+        s.eol_reached ? [&#x27;critical&#x27;, `Below the ${eolPct} % end-of-life threshold`] : [&#x27;good&#x27;, `Above the ${eolPct} % end-of-life threshold`]),
+    kpi(&#x27;End of life&#x27;, s.eol_reached ? &#x27;Reached&#x27; : &#x27;Not reached&#x27;, &#x27;&#x27;, `Threshold ${eolPct} % · sigma points ${s.eol_sigma_points || &#x27;–&#x27;}`),
+    kpi(&#x27;Minimum SOC of the mission&#x27;, pct(s.soc_min_mission, 1), &#x27;%&#x27;, `Maximum ${pct(s.soc_max_overall, 1)} %`),
+    kpi(&#x27;Orbits below minimum SOC&#x27;, num(s.orbits_below_soc_min, 0), &#x27;&#x27;, `of ${num(s.orbits, 0)} · ${num(s.orbits_soc_zero, 0)} with an empty battery`,
+        s.orbits_below_soc_min &gt; 0 ? [&#x27;critical&#x27;, &#x27;SOC window violated&#x27;] : [&#x27;good&#x27;, &#x27;SOC window respected&#x27;]),
+    kpi(&#x27;Law domain exceeded&#x27;, pct(s.law_domain_outside_fraction, 0), &#x27;%&#x27;, &#x27;Orbits with an input outside the fitted range&#x27;,
+        s.law_domain_outside_fraction &gt; 0 ? [&#x27;warning&#x27;, &#x27;SOH is an extrapolation&#x27;] : [&#x27;good&#x27;, &#x27;Inside the fitted domain&#x27;])
+  ];
+  $(&#x27;kpis&#x27;).innerHTML = items.join(&#x27;&#x27;);
+}
+
+function renderCharts(d){
+  const c = d.curves || {}, s = d.summary || {}, st = s.settings || {};
+  if (!c.t_years || !c.t_years.length) { empty(&#x27;plotSoh&#x27;, &#x27;No curves in the END-008 data.&#x27;); empty(&#x27;plotSoc&#x27;, &#x27;No curves in the END-008 data.&#x27;); return; }
+  const t = c.t_years, y = a =&gt; a.map(v =&gt; v * 100);
+  const sohLine = css(&#x27;--s3&#x27;), band = &#x27;rgba(25,158,112,.22)&#x27;;
+  const traces = [];
+  if (c.SOH_p05 &amp;&amp; c.SOH_p95) {
+    traces.push({ x:t, y:y(c.SOH_p95), mode:&#x27;lines&#x27;, line:{ width:0 }, hoverinfo:&#x27;skip&#x27;, showlegend:false });
+    traces.push({ x:t, y:y(c.SOH_p05), mode:&#x27;lines&#x27;, line:{ width:0 }, fill:&#x27;tonexty&#x27;, fillcolor:band, name:&#x27;90 % band (p05–p95)&#x27;, hovertemplate:&#x27;%{y:.2f} %&#x27; });
+  }
+  traces.push({ x:t, y:y(c.SOH), mode:&#x27;lines&#x27;, name:&#x27;SOH (median)&#x27;, line:{ color:sohLine, width:2.2 }, hovertemplate:&#x27;%{y:.2f} %&#x27; });
+  const eol = (s.eol_threshold_soh || 0.8) * 100;
+  traces.push({ x:[t[0], t[t.length - 1]], y:[eol, eol], mode:&#x27;lines&#x27;, name:`End of life (${num(eol, 0)} %)`, line:{ color:css(&#x27;--st-critical&#x27;), width:1.5, dash:&#x27;dash&#x27; }, hoverinfo:&#x27;skip&#x27; });
+  const lo = Math.min(eol, ...y(c.SOH_p05 || c.SOH)) - 2;
+  plot(&#x27;plotSoh&#x27;, traces, layout({ yaxis:{ title:&#x27;State of health [%]&#x27;, range:[Math.max(0, Math.floor(lo)), 101], gridcolor:css(&#x27;--border-soft&#x27;) } }));
+
+  const socTraces = [
+    { x:t, y:y(c.SOC_max), mode:&#x27;lines&#x27;, name:&#x27;SOC maximum&#x27;, line:{ color:css(&#x27;--s1&#x27;), width:1.8 }, hovertemplate:&#x27;%{y:.1f} %&#x27; },
+    { x:t, y:y(c.SOC_min), mode:&#x27;lines&#x27;, name:&#x27;SOC minimum&#x27;, line:{ color:css(&#x27;--s2&#x27;), width:1.8 }, hovertemplate:&#x27;%{y:.1f} %&#x27; }
+  ];
+  const shapes = [];
+  for (const [v, col] of [[st.SOC_min, css(&#x27;--s2&#x27;)], [st.SOC_max, css(&#x27;--s1&#x27;)]]) {
+    if (v != null) shapes.push({ type:&#x27;line&#x27;, xref:&#x27;paper&#x27;, x0:0, x1:1, y0:v * 100, y1:v * 100, line:{ color:col, width:1, dash:&#x27;dash&#x27; } });
+  }
+  plot(&#x27;plotSoc&#x27;, socTraces, layout({ shapes, yaxis:{ title:&#x27;State of charge [%]&#x27;, range:[0, 102], gridcolor:css(&#x27;--border-soft&#x27;) } }));
+}
+
+function renderModes(s){
+  const modes = s.modes || {}, names = Object.keys(modes);
+  if (!names.length) { empty(&#x27;modes&#x27;, &#x27;No per-mode balance in the data.&#x27;); return; }
+  const rows = names.map(n =&gt; {
+    const m = modes[n], bal = m.orbit_balance_Wh;
+    return `&lt;tr&gt;&lt;td&gt;${esc(n.replace(/_/g, &#x27; &#x27;))}&lt;/td&gt;&lt;td&gt;${num(m.sunlight_with_margin_Wh, 2)}&lt;/td&gt;&lt;td&gt;${num(m.eclipse_with_margin_Wh, 2)}&lt;/td&gt;&lt;td&gt;${num(m.total_with_margin_Wh, 2)}&lt;/td&gt;&lt;td class=&quot;${bal &lt; 0 ? &#x27;flag&#x27; : &#x27;ok&#x27;}&quot;&gt;${bal &gt;= 0 ? &#x27;+&#x27; : &#x27;&#x27;}${num(bal, 2)}&lt;/td&gt;&lt;/tr&gt;`;
+  }).join(&#x27;&#x27;);
+  $(&#x27;modes&#x27;).innerHTML = `&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Mode&lt;/th&gt;&lt;th&gt;Sunlight [Wh]&lt;/th&gt;&lt;th&gt;Eclipse [Wh]&lt;/th&gt;&lt;th&gt;Total [Wh]&lt;/th&gt;&lt;th&gt;Balance [Wh]&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;${rows}&lt;/tbody&gt;&lt;/table&gt;`;
+}
+
+function renderDomain(dom){
+  if (!dom) { empty(&#x27;domain&#x27;, &#x27;No degradation-law domain in the data.&#x27;); return; }
+  const rows = [];
+  const range = a =&gt; a ? `${num(a[0], 3)} – ${num(a[1], 3)}` : &#x27;–&#x27;;
+  const t = dom.temperature_C;
+  if (t) rows.push(`&lt;tr&gt;&lt;td&gt;Temperature [°C]&lt;/td&gt;&lt;td&gt;${range(t.domain)}&lt;/td&gt;&lt;td&gt;${num(t.value, 1)}&lt;/td&gt;&lt;td class=&quot;${t.outside ? &#x27;flag&#x27; : &#x27;ok&#x27;}&quot;&gt;${t.outside ? &#x27;outside&#x27; : &#x27;inside&#x27;}&lt;/td&gt;&lt;/tr&gt;`);
+  for (const [key, label] of [[&#x27;dod_in&#x27;, &#x27;Depth of discharge&#x27;], [&#x27;amp&#x27;, &#x27;Current amplitude&#x27;], [&#x27;C_chg&#x27;, &#x27;Charge C-rate&#x27;], [&#x27;C_dis&#x27;, &#x27;Discharge C-rate&#x27;]]) {
+    const v = dom[key]; if (!v) continue;
+    rows.push(`&lt;tr&gt;&lt;td&gt;${esc(label)}&lt;/td&gt;&lt;td&gt;${range(v.domain)}&lt;/td&gt;&lt;td&gt;${num(v.min, 3)} – ${num(v.max, 3)}&lt;/td&gt;&lt;td class=&quot;${v.fraction_of_orbits_outside &gt; 0 ? &#x27;flag&#x27; : &#x27;ok&#x27;}&quot;&gt;${v.fraction_of_orbits_outside &gt; 0 ? pct(v.fraction_of_orbits_outside, 1) + &#x27; % outside&#x27; : &#x27;inside&#x27;}&lt;/td&gt;&lt;/tr&gt;`);
+  }
+  if (dom.cycles) rows.push(`&lt;tr&gt;&lt;td&gt;Cycles&lt;/td&gt;&lt;td&gt;up to ${num(dom.cycles.max_cycles_in_data, 0)} in the data&lt;/td&gt;&lt;td&gt;${num(dom.cycles.law_cycles, 0)}&lt;/td&gt;&lt;td class=&quot;${dom.cycles.beyond ? &#x27;flag&#x27; : &#x27;ok&#x27;}&quot;&gt;${dom.cycles.beyond ? &#x27;beyond the data&#x27; : &#x27;within the data&#x27;}&lt;/td&gt;&lt;/tr&gt;`);
+  if (dom.calendar_ageing) rows.push(`&lt;tr&gt;&lt;td&gt;Calendar ageing&lt;/td&gt;&lt;td colspan=&quot;2&quot;&gt;${esc(dom.calendar_ageing)}&lt;/td&gt;&lt;td class=&quot;flag&quot;&gt;${/not/i.test(dom.calendar_ageing) ? &#x27;ignored&#x27; : &#x27;&#x27;}&lt;/td&gt;&lt;/tr&gt;`);
+  $(&#x27;domain&#x27;).innerHTML = `&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Quantity&lt;/th&gt;&lt;th&gt;Fitted range&lt;/th&gt;&lt;th&gt;In this run&lt;/th&gt;&lt;th&gt;Check&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;${rows.join(&#x27;&#x27;)}&lt;/tbody&gt;&lt;/table&gt;`;
+}
+
+function renderWarnings(s){
+  const groups = [];
+  const list = (title, arr, cls) =&gt; arr &amp;&amp; arr.length ? `&lt;div class=&quot;table-title&quot; style=&quot;padding:6px 4px;color:var(--muted-2);font-size:11px;text-transform:uppercase&quot;&gt;${esc(title)}&lt;/div&gt;&lt;ul&gt;${arr.map(a =&gt; `&lt;li class=&quot;${cls || &#x27;&#x27;}&quot;&gt;${esc(a)}&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;` : &#x27;&#x27;;
+  groups.push(list(&#x27;END-008 input warnings&#x27;, s.input_warnings));
+  groups.push(list(&#x27;Converter notes&#x27;, s.converter_notes));
+  groups.push(list(&#x27;STAR notes&#x27;, s.notes));
+  const assumed = (s.provenance || []).filter(p =&gt; p.kind === &#x27;fallback&#x27; || p.severity);
+  if (assumed.length) groups.push(list(&#x27;Assumptions and fallbacks&#x27;, assumed.map(p =&gt; `${p.item} = ${p.value == null ? &#x27;–&#x27; : p.value} (${p.severity || &#x27;minor&#x27;}): ${p.reason || p.source}`)));
+  const html = groups.filter(Boolean).join(&#x27;&#x27;);
+  $(&#x27;warnings&#x27;).innerHTML = html || &#x27;&lt;div class=&quot;empty&quot;&gt;No warnings: the input is complete.&lt;/div&gt;&#x27;;
+}
+
+function renderFiles(){
+  const find = (list, re) =&gt; list.find(f =&gt; re.test(f.name));
+  const png = find(state.resultFiles, /\.png$/i);
+  if (png) $(&#x27;figure&#x27;).innerHTML = `&lt;img alt=&quot;END-008 battery monitoring&quot; src=&quot;${state.urls.png}&quot;&gt;`;
+  else empty(&#x27;figure&#x27;, &#x27;No official figure (01_battery_monitoring.png) in the results folder.&#x27;);
+  const links = [];
+  for (const [key, label] of [[&#x27;xlsx&#x27;, &#x27;power_budget.xlsx&#x27;], [&#x27;input&#x27;, &#x27;input.json&#x27;], [&#x27;output&#x27;, &#x27;battery_monitoring_output.json&#x27;], [&#x27;orbits&#x27;, &#x27;battery_orbits.csv&#x27;]]) {
+    if (state.urls[key]) links.push(`&lt;a href=&quot;${state.urls[key]}&quot; download=&quot;${esc(label)}&quot;&gt;${esc(label)}&lt;/a&gt;`);
+  }
+  $(&#x27;links&#x27;).innerHTML = links.length ? links.join(&#x27;&#x27;) : &#x27;&lt;span class=&quot;none&quot;&gt;No generated files found in the output folder.&lt;/span&gt;&#x27;;
+}
+
+function renderAll(){
+  const d = state.data;
+  if (!d || !d.summary) {
+    for (const id of [&#x27;plotSoh&#x27;, &#x27;plotSoc&#x27;]) empty(id, &#x27;Select a RUN folder to load the END-008 battery health.&#x27;);
+    return;
+  }
+  renderStatus(d.summary); renderConfig(d.summary); renderKpis(d.summary); renderCharts(d);
+  renderModes(d.summary); renderDomain(d.degradation_law_domain); renderWarnings(d.summary); renderFiles();
+}
+
+/* ---------- data loading ---------- */
+function setLoaded(ok, label){ $(&#x27;status-dot&#x27;).classList.toggle(&#x27;loaded&#x27;, ok); $(&#x27;load-status&#x27;).textContent = label; }
+function parseDataJs(text){
+  const i = text.indexOf(&#x27;=&#x27;);
+  if (i &lt; 0) throw new Error(&#x27;batteryHealthData assignment not found&#x27;);
+  return JSON.parse(text.slice(i + 1).trim().replace(/;\s*$/, &#x27;&#x27;));
+}
+function blobUrl(file, type){
+  if (!file) return null;
+  return URL.createObjectURL(type ? new Blob([file], { type }) : file);
+}
+async function loadFiles(files, labels){
+  const arr = Array.from(files || []);
+  for (const u of Object.values(state.urls)) { try { URL.revokeObjectURL(u); } catch (_) {} }
+  state.urls = {}; state.labels = labels || {}; state.data = null;
+  const byName = re =&gt; arr.find(f =&gt; re.test(f.name));
+  const dataFile = byName(/^battery_health_data\.js$/i);
+  state.resultFiles = arr.filter(f =&gt; /\.png$/i.test(f.name));
+  if (dataFile) {
+    try { state.data = parseDataJs(await dataFile.text()); } catch (e) { console.warn(&#x27;END-008: could not read battery_health_data.js&#x27;, e); }
+  }
+  const png = byName(/^01_battery_monitoring\.png$/i) || state.resultFiles[0];
+  if (png) { state.resultFiles = [png]; state.urls.png = blobUrl(png); }
+  const xlsx = byName(/^power_budget\.xlsx$/i), inp = byName(/^input\.json$/i), out = byName(/^battery_monitoring_output\.json$/i), orb = byName(/^battery_orbits\.csv$/i);
+  if (xlsx) state.urls.xlsx = blobUrl(xlsx);
+  if (inp) state.urls.input = blobUrl(inp);
+  if (out) state.urls.output = blobUrl(out);
+  if (orb) state.urls.orbits = blobUrl(orb);
+  if (!state.data) { setLoaded(false, &#x27;No END-008 data in the selected folder&#x27;); renderAll(); return false; }
+  const s = state.data.summary || {};
+  setLoaded(true, `${s.run_mode || &#x27;run&#x27;} · ${num(s.orbits, 0)} orbits`);
+  if (labels &amp;&amp; (labels.product || labels.all)) $(&#x27;source-label&#x27;).textContent = `${labels.results || labels.product || labels.all} · END-008 Battery Health Monitoring`;
+  renderAll();
+  return true;
+}
+async function collect(handle, prefix = &#x27;&#x27;){
+  const files = [];
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === &#x27;file&#x27;) { const f = await entry.getFile(); f.relativeDisplayPath = `${prefix}${name}`; files.push(f); }
+    else if (entry.kind === &#x27;directory&#x27;) files.push(...await collect(entry, `${prefix}${name}/`));
+  }
+  return files;
+}
+async function requestFolder(){
+  if (window.parent &amp;&amp; window.parent !== window &amp;&amp; typeof window.parent.STAR_PICK_DIRECTORY === &#x27;function&#x27;) {
+    const picked = await window.parent.STAR_PICK_DIRECTORY(&#x27;battery&#x27;, &#x27;all&#x27;);
+    if (picked &amp;&amp; picked.files) { await loadFiles(picked.files, { all:picked.label }); return; }
+  }
+  if (&#x27;showDirectoryPicker&#x27; in window) {
+    try { const h = await window.showDirectoryPicker({ mode:&#x27;read&#x27;, id:&#x27;star-battery&#x27; }); await loadFiles(await collect(h, `${h.name}/`), { all:h.name }); return; }
+    catch (e) { if (e &amp;&amp; e.name === &#x27;AbortError&#x27;) return; console.warn(e); }
+  }
+  $(&#x27;batteryFolderInput&#x27;).click();
+}
+
+window.receiveBatteryFilesFromParent = async function(payload = {}, labels = {}){
+  await loadFiles([...(payload.productFiles || []), ...(payload.resultFiles || [])], labels);
+};
+window.loadBatteryFiles = loadFiles;          // direct feed (tests / scripting)
+window.refreshBatteryDashboard = function(){ renderAll(); };
+
+document.addEventListener(&#x27;DOMContentLoaded&#x27;, () =&gt; {
+  $(&#x27;manual-load&#x27;).onclick = requestFolder;
+  $(&#x27;batteryFolderInput&#x27;).addEventListener(&#x27;change&#x27;, async e =&gt; { await loadFiles(e.target.files, { all:&#x27;Selected END-008 folder&#x27; }); e.target.value = &#x27;&#x27;; });
+  new MutationObserver(() =&gt; renderAll()).observe(document.documentElement, { attributes:true, attributeFilter:[&#x27;data-theme&#x27;] });
+  let t = null;
+  window.addEventListener(&#x27;resize&#x27;, () =&gt; { clearTimeout(t); t = setTimeout(renderAll, 120); });
+  empty(&#x27;plotSoh&#x27;, &#x27;Select a RUN folder to load the END-008 battery health.&#x27;);
+  empty(&#x27;plotSoc&#x27;, &#x27;Select a RUN folder to load the END-008 battery health.&#x27;);
+});
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" title="Battery Health Monitoring"></iframe>
       <iframe id="frame-compsel" class="tab-frame" srcdoc="&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot; data-theme=&quot;dark&quot;&gt;
 &lt;head&gt;
@@ -6376,6 +6748,11 @@ const STAR_KIND_PATHS = {
     product: ['modules_output', 'END-019', 'output_components_thermal_analysis'],
     results: ['modules_output', 'END-019', 'results_components_thermal_analysis']
   },
+  battery: {
+    all: ['modules_output', 'END-008'],
+    product: ['modules_output', 'END-008', 'output_battery_health_monitoring'],
+    results: ['modules_output', 'END-008', 'results_battery_health_monitoring']
+  },
   compsel: {
     all: ['modules_output', 'END-006'],
     product: ['modules_output', 'END-006', 'output_component_selector'],
@@ -6400,7 +6777,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-cefloop'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-battery'), $('frame-compsel'), $('frame-compliance'), $('frame-cefloop'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -6950,6 +7327,25 @@ async function loadThermalAnalysisFromStarRoot() {
   }
 }
 
+async function loadBatteryHealthFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-battery');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveBatteryFilesFromParent !== 'function') return false;
+  try {
+    const productPath = ['modules_output','END-008','output_battery_health_monitoring'];
+    const resultsPath = ['modules_output','END-008','results_battery_health_monitoring'];
+    const payload = {
+      productFiles: await collectFilesFromSelectedPath(productPath),
+      resultFiles: await collectFilesFromSelectedPath(resultsPath)
+    };
+    await frame.contentWindow.receiveBatteryFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load END-008 battery-health data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function loadComponentSelectorFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-compsel');
@@ -7049,6 +7445,7 @@ function moduleDisplayName(moduleId) {
     'END-010': 'Reflectance Determination',
     'END-016': 'Collision Avoidance',
     'END-019': 'Components Thermal Analysis',
+    'END-008': 'Battery Health Monitoring',
     'END-006': 'Satellite Design Component Selector'
   };
   return names[moduleId] || moduleId;
@@ -7078,6 +7475,8 @@ async function buildRunDiagnostics() {
     { module:'END-016', artifact:'Collision-avoidance run information', path:['modules_output','END-016','results_collision_avoidance'], matcher:name=>/^collision_run_info\.json$/i },
     { module:'END-019', artifact:'Thermal time series and summaries', path:['modules_output','END-019','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
     { module:'END-019', artifact:'Thermal run information', path:['modules_output','END-019','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
+    { module:'END-008', artifact:'Battery health summary and monitoring output', path:['modules_output','END-008','output_battery_health_monitoring'], matcher:name=>/^(battery_health_summary\.json|battery_monitoring_output\.json|battery_orbits\.csv|power_budget\.xlsx|input\.json)$/i.test(name) },
+    { module:'END-008', artifact:'Battery health frontend data and figure', path:['modules_output','END-008','results_battery_health_monitoring'], matcher:name=>/^(battery_health_data\.js|01_battery_monitoring\.png)$/i.test(name) },
     { module:'END-006', artifact:'Component-selector results', path:['modules_output','END-006','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
     { module:'END-006', artifact:'Component-selector frontend data and report', path:['modules_output','END-006','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
   ];
@@ -7120,7 +7519,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: (Array.isArray(step.fallbacks) && step.fallbacks.length ? `Fallback (${step.fallback_severity || 'minor'}): ${step.fallbacks.map(f => f.item).join(', ')}` : '') || step.skipped_because || step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-019']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-008','END-010','END-016','END-019']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {
@@ -7182,7 +7581,7 @@ function scheduleAttitudeDataDelivery() {
 // a run still in progress).
 const TAB_FRAMES = {
   constellation: 'frame-constellation', attitude: 'frame-attitude', powerviz: 'frame-powerviz', synthetic: 'frame-synthetic',
-  reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', compsel: 'frame-compsel',
+  reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', battery: 'frame-battery', compsel: 'frame-compsel',
   compliance: 'frame-compliance', cefloop: 'frame-cefloop', diagnostics: 'frame-diagnostics'
 };
 const TAB_LOADERS = {
@@ -7197,13 +7596,14 @@ const TAB_LOADERS = {
   reflectance: loadReflectanceFromStarRoot,
   collision: loadCollisionAvoidanceFromStarRoot,
   thermal: loadThermalAnalysisFromStarRoot,
+  battery: loadBatteryHealthFromStarRoot,
   compsel: loadComponentSelectorFromStarRoot,
   compliance: loadComplianceFromStarRoot,
   cefloop: loadCefLoopFromStarRoot,
   diagnostics: updateRunDiagnostics
 };
 // module redraws; refreshDiagnosticsDashboard is left out because it scans the RUN again (its loader already did)
-const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshComponentSelectorDashboard',
+const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshBatteryDashboard', 'refreshComponentSelectorDashboard',
   'refreshConstellationDashboard', 'refreshAttitudeDashboard', 'refreshPowerInsightsDashboard', 'refreshSyntheticDashboard',
   'refreshReflectanceDashboard', 'refreshComplianceDashboard', 'refreshCefLoopDashboard'];
 const tabLoads = {};    // tab -> { run, promise, size }: data read for the selected RUN, frame size at the last redraw

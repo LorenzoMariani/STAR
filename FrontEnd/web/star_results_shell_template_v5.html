@@ -259,6 +259,7 @@ code{color:var(--accent-2)}
         <button class="tab-button" id="tab-attitude" data-tab="attitude" type="button"><span class="tab-code">END-003</span><span class="tab-title">Attitude Propagation</span></button>
         <button class="tab-button" id="tab-powerviz" data-tab="powerviz" type="button"><span class="tab-code">END-004</span><span class="tab-title">Power Budget</span></button>
         <button class="tab-button" id="tab-compsel" data-tab="compsel" type="button"><span class="tab-code">END-006</span><span class="tab-title">Component Selector</span></button>
+        <button class="tab-button" id="tab-battery" data-tab="battery" type="button"><span class="tab-code">END-008</span><span class="tab-title">Battery Health</span></button>
         <button class="tab-button" id="tab-synthetic" data-tab="synthetic" type="button"><span class="tab-code">END-007</span><span class="tab-title">Synthetic Data Generation</span></button>
         <button class="tab-button" id="tab-reflectance" data-tab="reflectance" type="button"><span class="tab-code">END-010</span><span class="tab-title">Reflectance Determination</span></button>
         <button class="tab-button" id="tab-collision" data-tab="collision" type="button"><span class="tab-code">END-016</span><span class="tab-title">Collision Avoidance</span></button>
@@ -281,6 +282,7 @@ code{color:var(--accent-2)}
       <iframe id="frame-attitude" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_ATTITUDE__" title="Attitude Propagator"></iframe>
       <iframe id="frame-collision" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COLLISION__" title="Collision Avoidance"></iframe>
       <iframe id="frame-thermal" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_THERMAL__" title="Components Thermal Analysis"></iframe>
+      <iframe id="frame-battery" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_BATTERY__" title="Battery Health Monitoring"></iframe>
       <iframe id="frame-compsel" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPSEL__" title="Component Selector"></iframe>
       <iframe id="frame-compliance" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_COMPLIANCE__" title="Requirements and KPIs"></iframe>
       <iframe id="frame-cefloop" class="tab-frame" srcdoc="__SRCDOC_PLACEHOLDER_FRAME_CEFLOOP__" title="Design loop"></iframe>
@@ -346,6 +348,11 @@ const STAR_KIND_PATHS = {
     product: ['modules_output', 'END-019', 'output_components_thermal_analysis'],
     results: ['modules_output', 'END-019', 'results_components_thermal_analysis']
   },
+  battery: {
+    all: ['modules_output', 'END-008'],
+    product: ['modules_output', 'END-008', 'output_battery_health_monitoring'],
+    results: ['modules_output', 'END-008', 'results_battery_health_monitoring']
+  },
   compsel: {
     all: ['modules_output', 'END-006'],
     product: ['modules_output', 'END-006', 'output_component_selector'],
@@ -370,7 +377,7 @@ function setTheme(theme, persist = true) {
 }
 
 function propagateTheme(theme) {
-  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-compsel'), $('frame-compliance'), $('frame-cefloop'), $('frame-diagnostics')]) {
+  for (const frame of [$('frame-constellation'), $('frame-attitude'), $('frame-powerviz'), $('frame-synthetic'), $('frame-reflectance'), $('frame-collision'), $('frame-thermal'), $('frame-battery'), $('frame-compsel'), $('frame-compliance'), $('frame-cefloop'), $('frame-diagnostics')]) {
     try {
       const doc = frame.contentDocument;
       if (!doc) continue;
@@ -920,6 +927,25 @@ async function loadThermalAnalysisFromStarRoot() {
   }
 }
 
+async function loadBatteryHealthFromStarRoot() {
+  if (!hasRunFolderSelection()) return false;
+  const frame = $('frame-battery');
+  if (!frame || !frame.contentWindow || typeof frame.contentWindow.receiveBatteryFilesFromParent !== 'function') return false;
+  try {
+    const productPath = ['modules_output','END-008','output_battery_health_monitoring'];
+    const resultsPath = ['modules_output','END-008','results_battery_health_monitoring'];
+    const payload = {
+      productFiles: await collectFilesFromSelectedPath(productPath),
+      resultFiles: await collectFilesFromSelectedPath(resultsPath)
+    };
+    await frame.contentWindow.receiveBatteryFilesFromParent(payload, { product: selectedPathLabel(productPath), results: selectedPathLabel(resultsPath) });
+    return true;
+  } catch (error) {
+    console.warn('Unable to load END-008 battery-health data from the selected RUN folder:', error);
+    return false;
+  }
+}
+
 async function loadComponentSelectorFromStarRoot() {
   if (!hasRunFolderSelection()) return false;
   const frame = $('frame-compsel');
@@ -1019,6 +1045,7 @@ function moduleDisplayName(moduleId) {
     'END-010': 'Reflectance Determination',
     'END-016': 'Collision Avoidance',
     'END-019': 'Components Thermal Analysis',
+    'END-008': 'Battery Health Monitoring',
     'END-006': 'Satellite Design Component Selector'
   };
   return names[moduleId] || moduleId;
@@ -1048,6 +1075,8 @@ async function buildRunDiagnostics() {
     { module:'END-016', artifact:'Collision-avoidance run information', path:['modules_output','END-016','results_collision_avoidance'], matcher:name=>/^collision_run_info\.json$/i },
     { module:'END-019', artifact:'Thermal time series and summaries', path:['modules_output','END-019','output_components_thermal_analysis'], matcher:name=>/^(output_thermal_.+\.csv|thermal_summary_.+\.json|thermal_constellation_output\.csv)$/i },
     { module:'END-019', artifact:'Thermal run information', path:['modules_output','END-019','results_components_thermal_analysis'], matcher:name=>/^thermal_run_info\.json$/i },
+    { module:'END-008', artifact:'Battery health summary and monitoring output', path:['modules_output','END-008','output_battery_health_monitoring'], matcher:name=>/^(battery_health_summary\.json|battery_monitoring_output\.json|battery_orbits\.csv|power_budget\.xlsx|input\.json)$/i.test(name) },
+    { module:'END-008', artifact:'Battery health frontend data and figure', path:['modules_output','END-008','results_battery_health_monitoring'], matcher:name=>/^(battery_health_data\.js|01_battery_monitoring\.png)$/i.test(name) },
     { module:'END-006', artifact:'Component-selector results', path:['modules_output','END-006','output_component_selector'], matcher:name=>/^component_selector_(results\.json|bom\.csv|power_handoff\.json)$/i.test(name) },
     { module:'END-006', artifact:'Component-selector frontend data and report', path:['modules_output','END-006','results_component_selector'], matcher:name=>/^component_selector_(data\.js|report\.html)$/i.test(name) }
   ];
@@ -1090,7 +1119,7 @@ async function buildRunDiagnostics() {
     modules.push({ module: `${moduleId} · ${moduleDisplayName(moduleId)}`, status, generatedArtifacts: generated, notes: (Array.isArray(step.fallbacks) && step.fallbacks.length ? `Fallback (${step.fallback_severity || 'minor'}): ${step.fallbacks.map(f => f.item).join(', ')}` : '') || step.skipped_because || step.error || step.message || step.output_dir || step.module_input_file || '' });
   }
 
-  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-010','END-016','END-019']) {
+  for (const moduleId of ['END-001','END-003','END-004','END-006','END-007','END-008','END-010','END-016','END-019']) {
     const processJsonName = moduleId.toLowerCase().replace('-', '') + '_process_result.json';
     const process = await readJsonFileFromPathIfExists(starRootHandle, ['modules_output', moduleId, processJsonName]);
     if (process) {
@@ -1152,7 +1181,7 @@ function scheduleAttitudeDataDelivery() {
 // a run still in progress).
 const TAB_FRAMES = {
   constellation: 'frame-constellation', attitude: 'frame-attitude', powerviz: 'frame-powerviz', synthetic: 'frame-synthetic',
-  reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', compsel: 'frame-compsel',
+  reflectance: 'frame-reflectance', collision: 'frame-collision', thermal: 'frame-thermal', battery: 'frame-battery', compsel: 'frame-compsel',
   compliance: 'frame-compliance', cefloop: 'frame-cefloop', diagnostics: 'frame-diagnostics'
 };
 const TAB_LOADERS = {
@@ -1167,13 +1196,14 @@ const TAB_LOADERS = {
   reflectance: loadReflectanceFromStarRoot,
   collision: loadCollisionAvoidanceFromStarRoot,
   thermal: loadThermalAnalysisFromStarRoot,
+  battery: loadBatteryHealthFromStarRoot,
   compsel: loadComponentSelectorFromStarRoot,
   compliance: loadComplianceFromStarRoot,
   cefloop: loadCefLoopFromStarRoot,
   diagnostics: updateRunDiagnostics
 };
 // module redraws; refreshDiagnosticsDashboard is left out because it scans the RUN again (its loader already did)
-const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshComponentSelectorDashboard',
+const TAB_REFRESH_FUNCTIONS = ['refreshCollisionDashboard', 'refreshThermalDashboard', 'refreshBatteryDashboard', 'refreshComponentSelectorDashboard',
   'refreshConstellationDashboard', 'refreshAttitudeDashboard', 'refreshPowerInsightsDashboard', 'refreshSyntheticDashboard',
   'refreshReflectanceDashboard', 'refreshComplianceDashboard', 'refreshCefLoopDashboard'];
 const tabLoads = {};    // tab -> { run, promise, size }: data read for the selected RUN, frame size at the last redraw

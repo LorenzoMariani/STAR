@@ -140,13 +140,16 @@ class Registry:
         return sorted(found, key=module_number)
 
     def cef_loop(self, module_id: str) -> dict[str, Any]:
-        """CEF loop declaration of a module (phase F): ``cef_loop: fixed`` -> {"fixed": True, "rerun_on": []};
-        ``cef_loop: {rerun_on: [{product, keys}]}`` -> {"fixed": False, "rerun_on": [...]}; nothing -> no rule."""
+        """CEF loop declaration of a module (phase F): ``cef_loop: fixed`` -> {"fixed": True, ...}; ``cef_loop: after_loop`` ->
+        {"after_loop": True, ...} (not in the first pass nor in the loop: runs once after it, END-008);
+        ``cef_loop: {rerun_on: [{product, keys}]}`` -> {"rerun_on": [...], ...}; nothing -> no rule."""
         raw = (self.modules.get(str(module_id).upper()) or {}).get("cef_loop")
         if isinstance(raw, str):
-            return {"fixed": raw.strip().lower() == "fixed", "rerun_on": []}
+            word = raw.strip().lower()
+            return {"fixed": word == "fixed", "after_loop": word == "after_loop", "rerun_on": []}
         raw = raw if isinstance(raw, dict) else {}
-        return {"fixed": bool(raw.get("fixed")) or str(raw.get("mode", "")).lower() == "fixed",
+        mode = str(raw.get("mode", "")).lower()
+        return {"fixed": bool(raw.get("fixed")) or mode == "fixed", "after_loop": bool(raw.get("after_loop")) or mode == "after_loop",
                 "rerun_on": [dict(r) for r in (raw.get("rerun_on") or []) if isinstance(r, dict) and r.get("product")]}
 
     def feedback_edges(self) -> list[tuple[str, str, str]]:
@@ -353,14 +356,19 @@ class WorkflowGraph:
     def fixed_nodes(self) -> list[str]:
         return [n for n in self.node_ids if self.registry.cef_loop(self.node(n).module_id)["fixed"]]
 
+    def after_loop_nodes(self) -> list[str]:
+        """Nodes of ``cef_loop: after_loop`` modules: skipped in the first pass, never in the loop, run once after it (star_cef).
+        Execution order."""
+        return [n for n in self.order() if self.registry.cef_loop(self.node(n).module_id)["after_loop"]]
+
     def consumers_of_product(self, product: str) -> list[str]:
         return [n for n in self.node_ids if any(str(c.get("product")) == product for c in self.node(n).consumes)]
 
     def affected_by(self, product: str) -> list[str]:
         """Nodes whose results depend on the feedback product: its transitive consumers (required or optional), minus the
-        fixed modules (and what only reaches them) and minus the nodes that produce the feedback. Execution order."""
+        fixed modules (and what only reaches them), the after-loop ones and the nodes that produce the feedback. Execution order."""
         producers = {p for p, _, target in self.feedback_edges() if target == product}
-        fixed = set(self.fixed_nodes())
+        fixed = set(self.fixed_nodes()) | {n for n in self.node_ids if self.registry.cef_loop(self.node(n).module_id)["after_loop"]}
         found: list[str] = []
         todo = list(self.consumers_of_product(product))
         while todo:

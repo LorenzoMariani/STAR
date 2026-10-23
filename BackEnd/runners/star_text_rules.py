@@ -512,6 +512,8 @@ MODULE_KEYWORDS: dict[str, tuple[str, ...]] = {
                 "debris mitigation", "space safety", "space sustainability", "deorbit", "de-orbit", "disposal", "end of life", "post-mission",
                 "re-enter", "reenter", "re-entry", "reentry", "orbital lifetime", "safe separation", "collisione", "collisioni", "detriti",
                 "rientro", "rientrare", "fine vita", "smaltimento", "deorbitazione", "avvicinamenti", "separazione sicura", "vita orbitale"),
+    "END-008": ("state of health", "battery health", "battery degradation", "battery ageing", "battery aging", "capacity fade",
+                "remaining useful life", "battery end of life", "salute della batteria", "stato di salute", "degrado della batteria"),
     "END-019": ("thermal", "temperature", "temperatures", "overheating", "heat dissipation", "heat load", "termico", "termica", "termici",
                 "termiche", "temperatura", "temperature", "surriscaldamento"),
     "END-006": ("cubesat", "cubesats", "satellite design", "component", "components", "subsystem", "subsystems", "bill of materials",

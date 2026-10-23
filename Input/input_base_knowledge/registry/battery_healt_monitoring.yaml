@@ -1,166 +1,150 @@
 module_id: END-008
-module_name: Battery module
+module_name: Battery Health Monitoring
 module_type: digital_twin_module
-module_version: "0.1.0"
+module_version: "0.2.0"
 owner: UNIRM1
 
+short_description: Battery state of charge orbit by orbit and state of health over the mission, with a 90 % band, from the END-004 power budget of the STAR design.
 description: >
-  High-fidelity representation of the physical
-  asset, continuously synchronized with real-time data for State Of Health
-  (SOH) monitoring and Remaining Useful Life (RUL) prediction for operational
-  and design purposes.
+  END-008 simulates the battery of the satellite over the mission: the state of charge (SOC) at every time step from the loads
+  and the solar energy of the power budget, and the state of health (SOH) orbit by orbit with a 90 % uncertainty band (5
+  representative cells), the end of life against a SOH threshold and the orbits below the minimum SOC. The degradation law is a
+  surrogate of a physical electrochemical model (PyBaMM single-particle DFN, O'Kane et al. 2022 degradation, NMC811 / graphite-SiOx
+  cell rescaled on the nominal capacity of the cell used). Delivered as a black box (battery_monitoring.exe, with its official
+  power_budget_to_input.py converter and plot_battery_monitoring.py); STAR builds its input from the END-004 power budget of the
+  final design, after the design loop.
+aliases:
+  - battery health monitoring
+  - battery health
+  - battery degradation
+  - state of health
+  - battery ageing
+  - battery digital twin
 
 capabilities:
-  - physical_asset_digital_twin
-  - high_fidelity_asset_representation
-  - real_time_synchronization
-  - state_of_health_monitoring
-  - remaining_useful_life_prediction
-  - diagnostics_generation
-  - design_exploration
-  - design_validation
-  - operational_support
+  - Simulate the battery state of charge at every time step from the power budget modes, duty cycles and orbit sequence.
+  - Estimate the battery state of health orbit by orbit over the mission, with a 90 % band, and whether the end-of-life threshold is reached.
+  - Report the lowest state of charge, the orbits below the minimum state of charge and the orbits with an empty battery.
+  - Compare the mission with the domain of the degradation law (temperature, depth of discharge, C-rates, cycles).
 
 domain_of_validity:
   mission_phase:
+    - pre_phase_a
     - phase_a
     - design_trade_off
-    - verification
-    - operations
   mission_type:
     - earth_observation
-  fidelity_level: high_fidelity_when_data_available
+    - cubesat
+  fidelity_level: preliminary
   notes: >
-    In design scenarios, the module may rely on mission-specific assumptions and
-    historical data. In operational scenarios, real-time telemetry is
-    required to synchronize the digital twin with the physical asset.
+    Degradation law extracted for LEO orbits of about 95 min with 35 min of eclipse, battery 5-35 degC, SOC max >= 0.70, depth of
+    discharge per orbit 0.01-0.40, up to 27 000 orbits (about 5 years), cycling ageing only (no calendar ageing); outside the
+    domain the executable extrapolates and STAR reports the fraction of orbits outside it. The battery temperature is constant
+    over the mission (the END-019 mean when END-019 ran). The cell is an assumption of the template: END-006 publishes only the
+    battery energy.
+
+activation_rules:
+  include_when_any_requirement_contains:
+    - state of health
+    - battery health
+    - battery degradation
+    - battery ageing
+    - battery aging
+    - capacity fade
+    - remaining useful life
+    - salute della batteria
+    - degrado della batteria
+  only_when_mission_contains:
+    - battery
+    - batteria
+
+planning_guidance: >
+  Select END-008 when the request asks for the battery state of health, its degradation or ageing over the mission, its end of
+  life or its remaining useful life. END-008 needs END-004 (power budget) and the END-006 design of the same run; it runs once
+  after the design loop, on the power budget of the final design. Do not select it for the depth of discharge or the energy
+  balance alone (END-004).
 
 required_inputs:
-  - name: asset_configuration
-    kind: parameter_or_file
-    data_type: object_or_json
-    unit: "-"
-    required: true
-    default_value: null
-    assumption_allowed: false
-    description: >
-      Configuration of the physical asset, including relevant EPS architecture,
-      battery configuration, electrical interfaces and subsystem parameters.
-    missing_information_reason: >
-      Required to instantiate the EPS digital twin and represent the physical
-      asset.
-
-  - name: battery_data_training
-    kind: dataset
-    data_type: time_series_or_table
-    unit: "-"
-    required: false
-    default_value: null
-    assumption_allowed: false
-    description: >
-      Battery data used for training SOH/RUL models or calibrating battery
-      behavior.
-    missing_information_reason: >
-      Required when data-driven SOH monitoring or RUL model training is part of
-      the analysis.
-
-  - name: battery_data_forecasting
-    kind: dataset
-    data_type: time_series_or_table
-    unit: "-"
-    required: false
-    default_value: null
-    assumption_allowed: false
-    description: >
-      Battery data used for forecasting or validating predictive models.
-    missing_information_reason: >
-      Required when RUL prediction or forecasting validation is requested.
-
-  - name: mission_specific_information
-    kind: parameter
+  - name: battery_cell
     data_type: object
-    unit: "-"
-    required: true
-    default_value: null
+    required: false
+    description: Cell of the pack (capacity, nominal voltage) and its SOC window, from Input/input_battery_health_monitoring.json.
+    missing_information_reason: END-006 publishes only the battery energy; the cell and the pack configuration are assumptions of the template.
     assumption_allowed: true
-    description: >
-      Mission-specific information required for design analysis, such as
-      operational profile, acquisition timeline, duty cycles, power modes,
-      eclipse periods or design constraints.
-    missing_information_reason: >
-      Required to evaluate EPS behavior in the context of the specific mission.
+    default_value: 18650 Li-ion 2.9 Ah 3.6 V, 2S
 
-  - name: real_time_telemetry
-    kind: data_stream
-    data_type: telemetry
-    unit: "-"
-    required: false
-    default_value: null
-    assumption_allowed: false
-    description: >
-      Real-time telemetry required for operational synchronization of the EPS
-      digital twin with the physical asset.
-    missing_information_reason: >
-      Required when the scenario is operational or requires live synchronized
-      state estimation.
+consumes:
+- product: power_budget_summary
+  required: true
+  used_for: orbit, subsystems, duty cycles per mode, orbits per day per mode, energy generated per orbit and battery capacity of the power budget
+- product: spacecraft_definition
+  required: true
+  used_for: battery of the design (energy) for the pack and the mission name
+- product: thermal_summary
+  required: false
+  used_for: mean battery temperature of the pack (nodes.BAT.mean_C, mean over the satellites)
+  fallback: 20 degC
 
-  - name: acquisition_timeline
-    kind: artifact
-    artifact_name: acquisition_timeline_or_plan
-    data_type: csv_or_json
-    required: false
-    default_value: null
-    assumption_allowed: false
-    description: >
-      Timeline of acquisitions or operational events affecting the EPS load
-      profile.
-    missing_information_reason: >
-      Required when observation operations are used to estimate mission-specific
-      EPS load, SOH or RUL evolution.
+produces:
+- product: kpis_end008
+  path: kpis.json
+  format: json
+  required_keys: [kpis]
+  guaranteed: true
+  description: common KPI list of END-008 (star_kpis format)
+- product: battery_health_summary
+  path: output_battery_health_monitoring/battery_health_summary.json
+  format: json
+  required_keys: [soh_end_of_mission, eol_reached, soc_min_mission]
+  guaranteed: true
+  description: SOH at the end of the mission with its band, end of life, SOC minimum, orbits below the minimum SOC, per-mode balance, domain of the law, input warnings and run settings
+- product: battery_monitoring_output
+  path: output_battery_health_monitoring/battery_monitoring_output.json
+  format: json
+  required_keys: [summary, orbits]
+  guaranteed: true
+  description: output of battery_monitoring.exe (summary, input used, one row per orbit, SOC detail; no time series)
+- product: battery_monitoring_input
+  path: output_battery_health_monitoring/input.json
+  format: json
+  guaranteed: true
+  description: input of battery_monitoring.exe written by the official converter from the power budget and the STAR base
+- product: battery_power_budget_xlsx
+  path: output_battery_health_monitoring/power_budget.xlsx
+  format: xlsx
+  guaranteed: true
+  description: power budget of END-004 in the END-008 workbook layout, read by the official converter
+- product: battery_orbits_csv
+  path: output_battery_health_monitoring/battery_orbits.csv
+  format: csv
+  guaranteed: true
+  description: one row per orbit (SOH and band, SOC min / max, energies)
+- product: battery_health_frontend_data
+  path: results_battery_health_monitoring/battery_health_data.js
+  format: javascript
+  guaranteed: true
+  description: JavaScript payload of the STAR results tab (summary and per-orbit curves decimated to 600 points)
+- product: battery_monitoring_figure
+  path: results_battery_health_monitoring/01_battery_monitoring.png
+  format: image
+  guaranteed: true
+  description: mission figure of plot_battery_monitoring.py (powers, SOC and SOH with the 90 % band and the end-of-life threshold)
 
-outputs:
-  - name: live_synchronized_state
-    kind: result
-    artifact_name: live_synchronized_state.json
-    data_type: json
-    description: >
-      Current synchronized state of the EPS digital twin with respect to the
-      asset or simulated mission state.
-
-  - name: diagnostics_soh
-    kind: result
-    artifact_name: diagnostics_soh.json
-    data_type: json
-    description: >
-      Diagnostics and State Of Health assessment.
-
-  - name: predictions_rul
-    kind: result
-    artifact_name: predictions_rul.json
-    data_type: json
-    description: >
-      Remaining Useful Life predictions.
-
-  - name: design_exploration_results
-    kind: result
-    artifact_name: design_exploration_results.json
-    data_type: json
-    description: >
-      Results of design-space exploration and trade-off analysis.
-
-  - name: validation_results
-    kind: result
-    artifact_name: validation_results.json
-    data_type: json
-    description: >
-      Validation results for design or operational scenarios.
+cef_loop: after_loop   # CEF loop (phase F): not in the first pass nor in the loop; runs once after it, on the final power budget
 
 execution:
-  estimated_runtime: 3
-  execution_mode: sequential_or_live_synchronized
+  execution_mode: python_runner_executable
+  runner_module: runners.end008_runner
+  runner_function: run_end008
+  estimated_runtime: 1
 
 interface_notes: >
-  For early STAR demonstrations without real telemetry, the module can operate
-  in design-support mode using asset configuration and mission-specific
-  information. For operational use, real-time telemetry is required for live
-  synchronization, SOH monitoring and RUL prediction.
+  The Python runner (BackEnd/runners/end008_runner.py) reads the END-004 power_budget_summary.json, the END-006
+  spacecraft_definition.json and, when END-019 ran, its thermal_summary_SAT-*.json, and delegates to
+  END008-BatteryHealthMonitoring/star_integration: it writes power_budget.xlsx in the END-008 layout, builds input.json with the
+  official power_budget_to_input.py and a STAR base (Test = 1 year with a 120 s step, Full = the mission lifetime of the
+  requirements with a 60 s step; cell and pack from Input/input_battery_health_monitoring.json), runs battery_monitoring.exe
+  input.json --quiet (exit 0 = completed, 1 = input errors, 2 = calculation error) and writes the products under
+  modules_output/END-008/output_battery_health_monitoring and the figure and the frontend data under
+  modules_output/END-008/results_battery_health_monitoring. The vendor folder is not in git: without battery_monitoring.exe the
+  module is not executable on the machine and the planner leaves it out.

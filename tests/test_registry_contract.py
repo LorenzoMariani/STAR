@@ -95,7 +95,7 @@ class TestRegistrySchema(unittest.TestCase):
 
     def test_integrated_modules(self):
         integrated = sorted(m for m in self.registry.modules if self.registry.has_contract(m))
-        self.assertEqual(integrated, ["END-001", "END-003", "END-004", "END-006", "END-007", "END-010", "END-016", "END-019"])
+        self.assertEqual(integrated, ["END-001", "END-003", "END-004", "END-006", "END-007", "END-008", "END-010", "END-016", "END-019"])
         for module_id in integrated:
             execution = self.registry.modules[module_id].get("execution") or {}
             self.assertTrue(execution.get("runner_module") and execution.get("runner_function"), module_id)
@@ -188,6 +188,17 @@ class TestCefLoopDeclarations(unittest.TestCase):
         self.assertEqual(self.graph.affected_by("spacecraft_definition"),
                          ["END-003", "END-004", "END-007", "END-010", "END-016", "END-019"])      # no END-001 (fixed), no END-006/final (producer)
 
+    def test_after_loop_node(self):
+        """END-008 runs once after the loop: not a loop node, not a post-loop node, not affected by the feedback."""
+        self.assertEqual(self.registry.cef_loop("END-008"), {"fixed": False, "after_loop": True, "rerun_on": []})
+        self.assertEqual(self.graph.after_loop_nodes(), ["END-008"])
+        self.assertNotIn("END-008", self.graph.loop_nodes(self.crit_nodes))
+        self.assertNotIn("END-008", self.graph.affected_by("spacecraft_definition"))
+        graph = WorkflowGraph.build(self.registry, ["END-008"])
+        self.assertEqual(sorted(graph.module_ids), ["END-001", "END-003", "END-004", "END-006", "END-008"])
+        self.assertEqual(graph.after_loop_nodes(), ["END-008"])
+        self.assertLess(graph.order().index("END-004"), graph.order().index("END-008"))
+
     def test_loop_nodes_follow_the_workflow(self):
         # without the modules of the criteria only the ancestors of END-006 final stay in the loop
         graph = WorkflowGraph.build(self.registry, ["END-003", "END-004"])
@@ -195,7 +206,7 @@ class TestCefLoopDeclarations(unittest.TestCase):
         self.assertEqual(WorkflowGraph.build(self.registry, []).loop_nodes(self.crit_nodes), ["END-006/final"])
 
     def test_end001_is_fixed_and_declares_the_keys_it_uses(self):
-        self.assertEqual(self.registry.cef_loop("END-001"), {"fixed": True, "rerun_on": []})
+        self.assertEqual(self.registry.cef_loop("END-001"), {"fixed": True, "after_loop": False, "rerun_on": []})
         uses = [c.get("uses") for c in self.registry.nodes["END-001"].consumes if c["product"] == "spacecraft_definition"]
         self.assertEqual(uses, [["radios"]])
 
@@ -345,8 +356,8 @@ class TestWorkflowGraph(unittest.TestCase):
         view = self.registry.planning_view()
         self.assertLessEqual(len(view), PLANNING_VIEW_LIMIT, len(view))
         self.assertIn("END-004", view)
-        self.assertNotIn("END-008", view)        # not integrated
-        self.assertEqual(len(view.splitlines()), 8)
+        self.assertIn("END-008", view)
+        self.assertEqual(len(view.splitlines()), 9)
 
     def test_graph_json(self):
         data = self.build(["END-007"]).to_json()

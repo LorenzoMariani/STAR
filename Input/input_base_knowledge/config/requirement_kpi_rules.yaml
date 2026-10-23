@@ -217,6 +217,20 @@ rules:
   - {kpi: END-019.battery_min_C, op: ">=", threshold: {kpi_limit: END-019.battery_min_C}, unit: C, label: Battery min temperature vs operating minimum}
   - {kpi: END-019.battery_max_C, op: "<=", threshold: {kpi_limit: END-019.battery_max_C}, unit: C, label: Battery max temperature vs operating maximum}
 
+# ---------------------------------------------------------------- END-008 battery health (runs once after the design loop)
+- id: R-BATTERY-SOH                    # "the battery state of health shall stay above its end-of-life threshold over the mission"
+  match: [[state of health, soh, battery health, battery degradation, battery ageing, battery aging, end of life of the battery,
+           battery end of life, capacity fade, salute della batteria, stato di salute, degrado della batteria]]
+  unless_evidence: true
+  checks:
+  - {kpi: END-008.soh_end_of_mission, op: ">=", threshold: {kpi_limit: END-008.soh_end_of_mission}, unit: "%", label: Battery state of health at the end of the mission vs end-of-life threshold}
+  note_not_met: the battery reaches its end of life within the mission
+- id: E-BATTERY-HEALTH
+  evidence: true
+  match: [[state of health, soh, battery health, battery degradation, battery ageing, battery aging, capacity fade,
+           salute della batteria, stato di salute, degrado della batteria]]
+  kpis: [END-008.soh_end_of_mission, END-008.soh_p05, END-008.eol_reached, END-008.soc_min_mission]
+
 # ---------------------------------------------------------------- inputs the modules apply
 - id: R-APPLIED-START
   param: start

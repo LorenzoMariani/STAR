@@ -528,11 +528,42 @@ def adapt_end019(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str,
     return out
 
 
+# --------------------------------------------------------------------------- END-008 battery health monitoring
+def adapt_end008(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str, Any]]:
+    """battery_health_summary.json (end008_runner): fractions become %. The SOH carries the module's verdict against its
+    end-of-life threshold (simulation.EOL_threshold_SOH of the template), the SOC minimum against the SOC window."""
+    s = _load(_first(Path(module_root), "*/battery_health_summary.json"))
+    if not s:
+        return []
+    pct = lambda v: None if _num(v) is None else round(100.0 * float(v), 3)      # noqa: E731
+    settings = s.get("settings") or {}
+    ctx = {"duration_years": settings.get("duration_years"), "run_mode": s.get("run_mode"),
+           "temperature_C": settings.get("temperature_C"), "pack": f"{settings.get('cells_in_series')}S{settings.get('cells_in_parallel')}P"}
+    out: list[dict[str, Any]] = []
+    thr = pct(s.get("eol_threshold_soh"))
+    soh = pct(s.get("soh_end_of_mission"))
+    note = "END-008 end-of-life threshold (template simulation.EOL_threshold_SOH)"
+    for key, value in (("soh_end_of_mission", soh), ("soh_p05", pct(s.get("soh_p05")))):
+        assess = None if value is None or thr is None else K.assessment(value >= thr - 1e-9, ">=", thr, "%", "module_default", note=note)
+        _add(out, f"END-008.{key}", value, context={**ctx, "band": "90 %"}, assessment=assess)
+    if s.get("eol_reached") is not None:
+        out.append(K.kpi("END-008.eol_reached", bool(s["eol_reached"]), context={**ctx, "sigma_points": s.get("eol_sigma_points")},
+                         assessment=K.assessment(not s["eol_reached"], "==", False, "bool", "module_default", note=note)))
+    soc_min, window = pct(s.get("soc_min_mission")), pct(settings.get("SOC_min"))
+    _add(out, "END-008.soc_min_mission", soc_min, context=ctx,
+         assessment=None if soc_min is None or window is None else
+         K.assessment(soc_min >= window - 1e-9, ">=", window, "%", "module_default", note="SOC minimum of the pack (template)"))
+    _add(out, "END-008.orbits_below_soc_min", s.get("orbits_below_soc_min"), context={**ctx, "orbits": s.get("orbits")})
+    _add(out, "END-008.law_domain_outside_fraction", pct(s.get("law_domain_outside_fraction")),
+         context={"variables": sorted((s.get("degradation_law_domain") or {}).keys())})
+    return out
+
+
 # --------------------------------------------------------------------------- dispatch and files
 ADAPTERS: dict[str, Callable[..., list[dict[str, Any]]]] = {
     "END-001": adapt_end001, "END-003": adapt_end003, "END-004": adapt_end004, "END-006/initial": adapt_end006_initial,
-    "END-006/final": adapt_end006_final, "END-007": adapt_end007, "END-010": adapt_end010, "END-016": adapt_end016,
-    "END-019": adapt_end019,
+    "END-006/final": adapt_end006_final, "END-007": adapt_end007, "END-008": adapt_end008, "END-010": adapt_end010,
+    "END-016": adapt_end016, "END-019": adapt_end019,
 }
 
 

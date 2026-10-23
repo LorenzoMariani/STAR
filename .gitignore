@@ -77,3 +77,7 @@ __pycache__/
 *.asv
 *.log
 desktop.ini
+
+# END-008: vendor module (black box, 118 MB exe); only the STAR integration package is tracked
+/END008-BatteryHealthMonitoring/*
+!/END008-BatteryHealthMonitoring/star_integration/

@@ -1,5 +1,5 @@
 {
- "generated_from": "RUN_SMOKETEST_20261023_110701",
+ "generated_from": "RUN_SMOKETEST_20261023_202514",
  "files": {
   "END-001": [
    "end001_process_result.json",
@@ -66,8 +66,8 @@
    "results_constellation_optimizer/11_revisit_boxplot_latband.png",
    "results_constellation_optimizer/constellation_plots_data.js",
    "results_constellation_optimizer/coverage_summary.json",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261023_110728.mat",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261023_110739.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261023_202540.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261023_202552.mat",
    "star_constellation_optimizer_runtime.m"
   ],
   "END-003": [
@@ -80,13 +80,13 @@
    "output_attitude_propagation/AEM_END003_SAT11_imaging_20260521T160351.xml",
    "output_attitude_propagation/AEM_END003_SAT17_lightcurve_20260521T192140.xml",
    "output_attitude_propagation/kpis.json",
-   "output_attitude_propagation/kpis_1792746793.json",
+   "output_attitude_propagation/kpis_1792780289.json",
    "output_attitude_propagation/orbit_and_window.json",
    "output_attitude_propagation/output_attitude_propagation.csv",
    "output_attitude_propagation/output_attitude_propagation_lightcurve_ECI.csv",
    "output_attitude_propagation/pass_candidates.csv",
    "output_attitude_propagation/png_validation_report.json",
-   "output_attitude_propagation/png_validation_report_1792746793.json",
+   "output_attitude_propagation/png_validation_report_1792780289.json",
    "output_attitude_propagation/selected_pass_summary.csv",
    "output_attitude_propagation/selected_passes.json",
    "png_validation_report.json",
@@ -118,9 +118,9 @@
    "matlab_stderr.txt",
    "matlab_stdout.txt",
    "output_power_budget/kpis.json",
-   "output_power_budget/kpis_1792746819.json",
+   "output_power_budget/kpis_1792780315.json",
    "output_power_budget/png_validation_report.json",
-   "output_power_budget/png_validation_report_1792746819.json",
+   "output_power_budget/png_validation_report_1792780315.json",
    "output_power_budget/power_budget_foglio1.csv",
    "output_power_budget/power_budget_sheet1.csv",
    "output_power_budget/power_budget_status.json",
@@ -154,6 +154,18 @@
    "results_component_selector/component_selector_data_initial.js",
    "results_component_selector/component_selector_report.html",
    "results_component_selector/component_selector_report_initial.html"
+  ],
+  "END-008": [
+   "end008_process_result.json",
+   "kpis.json",
+   "output_battery_health_monitoring/battery_health_summary.json",
+   "output_battery_health_monitoring/battery_monitoring_output.json",
+   "output_battery_health_monitoring/battery_orbits.csv",
+   "output_battery_health_monitoring/input.json",
+   "output_battery_health_monitoring/power_budget.xlsx",
+   "png_validation_report.json",
+   "results_battery_health_monitoring/01_battery_monitoring.png",
+   "results_battery_health_monitoring/battery_health_data.js"
   ],
   "END-010": [
    "end010_process_result.json",
