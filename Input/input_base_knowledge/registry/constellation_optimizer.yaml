@@ -287,6 +287,28 @@ required_inputs:
   missing_information_reason: 'Only required when fitness_engine is Surrogate.
 
     '
+- name: revisit_policy
+  kind: parameter
+  data_type: string
+  unit: '-'
+  required: false
+  default_value: auto
+  allowed_values:
+  - auto
+  - hard
+  - compromise
+  assumption_allowed: true
+  description: 'How a revisit time stated in the call drives the constellation design.
+    hard: a requirement; the score is penalised above the stated value, so the GA
+    rejects the constellations that miss it and adds satellites. compromise: a
+    preference scored linearly between the stated value and an automatic bad value,
+    traded against the number of satellites and planes. auto: hard when the call
+    states a revisit, compromise otherwise.
+
+    '
+  missing_information_reason: 'Not required; auto follows the call.
+
+    '
 - name: complete_eval_table_coverage
   kind: parameter
   data_type: string

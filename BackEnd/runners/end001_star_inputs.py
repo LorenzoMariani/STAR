@@ -402,6 +402,26 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
         note("MissionRequirements (revisit)", "auto",
              "automatic: the call states no revisit; END-001 takes the thresholds from what the design space achieves "
              "(ok = 2nd percentile, bad = 90th percentile of the feasible designs), so the revisit objectives never saturate")
+    # ---- revisit policy (2026-10-24): a stated revisit as a requirement (hard) or a preference (compromise) -------
+    pol_in = inp.get("revisit_policy")
+    pol = str(pol_in[0]).strip().lower() if pol_in else "auto"
+    if pol not in ("auto", "hard", "compromise"):
+        raise ValueError(f"revisit_policy must be auto, hard or compromise, not {pol_in[0]!r}")
+    stated = [field for k, field, _ in keys if k in given]
+    if pol == "auto":
+        pol, why = ("hard", "automatic: the call states the revisit") if stated else ("compromise", "automatic: the call states no revisit")
+    else:
+        why = f"STAR input revisit_policy ({pol_in[1]})"
+    if pol == "hard" and not stated:
+        pol, why = "compromise", why + "; no revisit stated in the call, so nothing to enforce: compromise"
+    mreq["RevisitPolicy"] = pol
+    if pol == "hard":
+        mreq["RevisitHard"] = stated
+        why += f": penalty above the stated {', '.join(stated)} (the GA adds satellites until it is met)"
+    else:
+        mreq.pop("RevisitHard", None)
+        why += ": revisit scored linearly between ok and bad, traded against satellites and planes"
+    note("MissionRequirements.RevisitPolicy", pol, why)
     if "latency_h" in found and found["latency_h"][0]:
         v, rid = found["latency_h"]
         mreq["MaxLatency_h"] = [round(v, 4), round(2 * v, 4)]

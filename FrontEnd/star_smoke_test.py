@@ -43,6 +43,8 @@ def main() -> int:
     ap.add_argument("--with-end007", action="store_true", help="keep END-007 (Unreal, always in full) in the workflow")
     ap.add_argument("--add", nargs="*", default=[], metavar="END-XXX",
                     help="modules added to the planned workflow, as a user edit of the review (e.g. --add END-008)")
+    ap.add_argument("--set", nargs="*", default=[], metavar="END-XXX.param=value",
+                    help="module inputs set as a user review before approval (e.g. --set END-001.revisit_policy=compromise)")
     args = ap.parse_args()
 
     import star_frontend_v5 as fe  # noqa: PLC0415  (the window module; no window is opened)
@@ -86,6 +88,22 @@ def main() -> int:
 
     # 4. module inputs (registry first guesses) and approval
     check(api.analyze_missing_information("Registry-driven MVP"), "resolve module inputs")
+    if args.set:
+        items = [dict(i) for i in api.missing_information]
+        for spec in args.set:
+            target, _, value = spec.partition("=")
+            module_id, _, param = target.partition(".")
+            hits = [i for i in items if i.get("parameter") == param and str(i.get("needed_by_module_id", "")).upper() == module_id.upper()]
+            for i in hits:
+                i["proposed_value"], i["source"] = value, "user_reviewed"
+            if not hits:        # an optional input the resolution did not list: added as the user would add it
+                module = api.get_module_by_id(module_id.upper())
+                check({"ok": bool(module), "error": f"{module_id} not in the registry"}, f"set {target}")
+                items.append({"parameter": param, "needed_by": module.get("module_name", module_id), "needed_by_module_id": module_id.upper(),
+                              "reason": "set by the smoke test (--set)", "proposed_value": value, "unit": "-", "status": "user_provided",
+                              "source": "user_reviewed", "required": False, "assumption_allowed": True, "data_type": "string",
+                              "reviewed_by_user": True})
+        check(api.save_reviewed_missing_information(items), "reviewed module inputs (--set)")
     check(api.approve_missing_information(), "approve module inputs")
 
     # 5. execution

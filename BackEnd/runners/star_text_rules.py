@@ -256,7 +256,9 @@ def mission_parameters(requirements) -> dict[str, tuple[Any, str]]:
             put("sats_min", int(num(m.group(1))), rid)
         if "sats_min" not in found and "sats_max" not in found:
             m = re.search(r"(?<![a-z0-9.,])" + NUM + r"\s+(?:small\s+|identical\s+|optical\s+|piccoli\s+)?" + SAT_WORDS + r"(?!\s+per\s+(?:plane|piano))", t)
-            if m and num(m.group(1)) > 1 and "u" not in t[max(0, m.start() - 1): m.start()]:
+            # "any two satellites", "between two satellites" (2026-10-24, v14 separation requirement): a pair, not a count
+            pair = re.search(r"(?:any|every|each|between|qualsiasi|ogni|tra|fra|due)\s+$", t[max(0, m.start() - 12): m.start()]) if m else None
+            if m and not pair and num(m.group(1)) > 1 and "u" not in t[max(0, m.start() - 1): m.start()]:
                 n = int(num(m.group(1)))
                 put("sats_min", n, rid); put("sats_max", n, rid)
         if re.search(r"(?:single|1|a single|un solo|un singolo|singolo|unico)\s+(?:\d{1,2}\s*u\s+)?(?:cubesat|satellite|spacecraft|nanosatellite)(?!\s+per\s+(?:plane|piano))", t) \

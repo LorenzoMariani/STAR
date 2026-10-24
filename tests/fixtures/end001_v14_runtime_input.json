@@ -1,0 +1,194 @@
+{
+ "TimeSettings": {
+  "StartDate": [
+   2026,
+   5,
+   21
+  ],
+  "StartHour": 13,
+  "StartMin": 41,
+  "StartSec": 0
+ },
+ "GroundStations": [
+  {
+   "name": "Viterbo - Universita della Tuscia ground station (HORTA)",
+   "lat": 42.42,
+   "lon": 12.11,
+   "alt": 310.0,
+   "mask": 5.0
+  }
+ ],
+ "RegionSettings": {
+  "AreaofInterest": "Italy",
+  "Default_LATkm": 25,
+  "Default_LONkm": 25,
+  "CustomCoordinates": [
+   [
+    45.5,
+    12.2
+   ],
+   [
+    44.1,
+    11.5
+   ],
+   [
+    43.2,
+    13.1
+   ]
+  ]
+ },
+ "SensorSettings": {
+  "SAR_Configuration": "Left & Right",
+  "SAR_Theta_min": 15,
+  "SAR_Theta_max": 50,
+  "Optic_Steerable": "Field of View",
+  "Optic_CON_FOV": 2.2915,
+  "Optic_PBS_FOV": 2.2915,
+  "Optic_RECT_FOV_cross": 2.2915,
+  "Optic_RECT_FOV_along": 10,
+  "Operative_Mode": "Single Sensor",
+  "Single_Sensor_Type": "PBS",
+  "Sun_Constraint": true
+ },
+ "OptimizerSettings": {
+  "Optimizer_Type": "MOGA NSGA-II",
+  "Population": 8,
+  "Iterations": 1,
+  "PlatEMO_Algorithm": "NSGA-III",
+  "Parallelize": false,
+  "Num_Coworkers": 8,
+  "Orbit_Type": "Auto",
+  "PropagationDays": "auto",
+  "timeStep": 10,
+  "Evaluation_Mode": "GA_Optimization",
+  "Fitness_Engine": "Surrogate",
+  "Surrogate_VerifyTopK": 1,
+  "Surrogate_Population": 20,
+  "Surrogate_Iterations": 5,
+  "Surrogate_Restarts": 1,
+  "SSORGT_AltitudeRange_km": [
+   500.0,
+   650.0
+  ],
+  "SSORGT_PlanesRange": [
+   3,
+   10
+  ],
+  "SSORGT_SatsPerPlaneRange": [
+   2,
+   10
+  ],
+  "SSORGT_TotalSatellitesRange": [
+   6,
+   100
+  ],
+  "CompleteEval_TableCoverage": "Full",
+  "CompleteEval_RowStride": 5,
+  "CompleteEval_PlanesList": [
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "CompleteEval_SatsPerPlane": 4,
+  "RGT_AltitudeRange_km": [
+   500.0,
+   650.0
+  ],
+  "RGT_PlanesRange": [
+   2,
+   10
+  ],
+  "RGT_SatsPerPlaneRange": [
+   1,
+   10
+  ],
+  "RGT_TotalSatellitesRange": [
+   2,
+   100
+  ],
+  "RGT_InclinationRange_deg": [
+   35,
+   75
+  ],
+  "RGT_InclinationFromAOI": true,
+  "RGT_RepeatCycleRange_days": [
+   1,
+   35
+  ]
+ },
+ "SpacecraftProperties": {
+  "Mass": 5.96388,
+  "ADrag": 0.071028,
+  "CD": 2.2
+ },
+ "MissionRequirements": {
+  "MaxRevisit_h": [
+   5.5,
+   6
+  ],
+  "P90Revisit_h": [
+   4.85,
+   5.75
+  ],
+  "MeanRevisit_h": [
+   48.0,
+   -1
+  ],
+  "MaxLatency_h": [
+   0.929,
+   3.167
+  ],
+  "GSAccess_min": [
+   9.32,
+   5
+  ],
+  "RevisitPolicy": "hard",
+  "RevisitHard": [
+   "MeanRevisit_h"
+  ]
+ },
+ "Weights": {
+  "MaxRevisitTime": 0,
+  "Percentile90RevisitTime": 0,
+  "MeanRevisitTime": 4,
+  "NumSatellites": 7,
+  "NumPlanes": 8,
+  "MaxLatency": 5,
+  "Robustness": 4,
+  "CollisionAvoidance": 4,
+  "Launch": 1,
+  "EndOfLife": 1,
+  "AvgGSAccessTime": 7
+ },
+ "PassSelection": {
+  "Imaging": {
+   "ElevationThreshold_deg": 10,
+   "SunConstraint": true,
+   "SunConstraintMode": "day",
+   "SunElevationThreshold_deg": 0,
+   "PreferredSunElevation_deg": 20
+  },
+  "LightCurve": {
+   "Enabled": true,
+   "Observer": {
+    "name": "Matera - SPADE (ASI Centro di Geodesia Spaziale)",
+    "lat_deg": 40.6492,
+    "lon_deg": 16.7039,
+    "alt_m": 400.0
+   },
+   "ElevationThreshold_deg": 10,
+   "ElevationMargin_deg": 1,
+   "ObserverSunElevationMax_deg": -12,
+   "RequireSatelliteSunlit": true,
+   "MinDuration_s": 120,
+   "EdgeMargin_s": 10
+  }
+ },
+ "StarRunMode": "test",
+ "MissionLifetimeYears": 3.0
+}

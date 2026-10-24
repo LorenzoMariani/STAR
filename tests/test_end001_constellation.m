@@ -162,8 +162,84 @@ function test_eclipse_summary(tc)
 end
 
 %% =========================================================================
+%  REVISIT POLICY (2026-10-24): hard requirement vs compromise
+%  =========================================================================
+function test_revisit_policy_score(tc)
+    % compromise: exactly the linear score used until 2026-10-24; hard: a penalty above ok that grows with the excess
+    th = struct('ok', 48, 'bad', 120);
+    v = [0 30 48 60 100 120 500 NaN];
+    old = min(1, max(0, (v - th.ok)/(th.bad - th.ok))); old(isnan(v)) = 1;
+    verifyEqual(tc, requirement_score(v, th), old);
+    th.hard = true;
+    J = requirement_score(v, th);
+    verifyEqual(tc, J(v <= 48), old(v <= 48));
+    verifyGreaterThan(tc, min(J(v > 48)), 5);                 % above the size objectives at any constellation size
+    verifyTrue(tc, issorted(J(4:7)));
+    R = struct('MeanRevisit_h', [48 -1], 'RevisitPolicy', 'hard', 'RevisitHard', {{'MeanRevisit_h'}});
+    REQ = build_mission_requirements(struct('Requirements', R));
+    verifyTrue(tc, REQ.revmean.hard);
+    verifyFalse(tc, isfield(REQ.revmax, 'hard') || isfield(REQ.revavp90, 'hard'));
+    REQ = build_mission_requirements(struct('Requirements', rmfield(setfield(R, 'RevisitPolicy', 'compromise'), 'RevisitHard'))); %#ok<SFLD>
+    verifyEqual(tc, REQ.revisitPolicy, 'compromise');
+    verifyFalse(tc, isfield(REQ.revmean, 'hard'));
+end
+
+function test_revisit_policy_v14_hard_meets_48h(tc)
+    % v14 call (mean revisit <= 48 h), STAR test-mode GA: the hard policy exports a constellation that meets it
+    s = run_v14(tc, 'hard');
+    verifyEqual(tc, s.revisit_policy.policy, 'hard');
+    verifyLessThanOrEqual(tc, kpi(s, 'KPI-05'), 48, sprintf('hard policy: mean revisit %.1f h with %d satellites', ...
+        kpi(s, 'KPI-05'), kpi(s, 'KPI-13')));
+end
+
+function test_revisit_policy_v14_compromise(tc)
+    % compromise: the linear preference, no penalty; the run completes and reports its policy
+    s = run_v14(tc, 'compromise');
+    verifyEqual(tc, s.revisit_policy.policy, 'compromise');
+    verifyEmpty(tc, s.revisit_policy.hard_keys);
+    verifyGreaterThanOrEqual(tc, kpi(s, 'KPI-13'), 2);
+end
+
+%% =========================================================================
 %  HELPERS
 %  =========================================================================
+function s = run_v14(tc, policy)
+    % END-001 on the v14 runtime input (tests/fixtures, STAR test mode) with the given revisit policy
+    star = fileparts(tc.TestData.end001);
+    cfg = jsondecode(fileread(fullfile(star, 'tests', 'fixtures', 'end001_v14_runtime_input.json')));
+    cfg.MissionRequirements.RevisitPolicy = policy;
+    if strcmp(policy, 'hard'), cfg.MissionRequirements.RevisitHard = {'MeanRevisit_h'};
+    elseif isfield(cfg.MissionRequirements, 'RevisitHard'), cfg.MissionRequirements = rmfield(cfg.MissionRequirements, 'RevisitHard');
+    end
+    out = fullfile(tc.TestData.work, ['v14_' policy]);
+    mkdir(out);
+    cfgFile = fullfile(out, 'config.json');
+    fid = fopen(cfgFile, 'w'); fwrite(fid, jsonencode(cfg), 'char'); fclose(fid);
+    vars = {'STAR_END001_INPUT_FILE', cfgFile; 'STAR_END001_OUTPUT_DIR', out; 'STAR_END001_PRODUCT_OUTPUT_DIR', fullfile(out, 'output'); ...
+        'STAR_END001_RESULTS_DIR', fullfile(out, 'results'); 'STAR_END001_MAIN_FOLDER', tc.TestData.end001};
+    old = cellfun(@getenv, vars(:, 1), 'UniformOutput', false);
+    restore = onCleanup(@() cellfun(@setenv, vars(:, 1), old));
+    cellfun(@setenv, vars(:, 1), vars(:, 2));
+    run_end001_script(fullfile(tc.TestData.end001, 'lib', 'star_constellation_optimizer.m'));
+    clear restore
+    f = dir(fullfile(out, '**', 'coverage_summary.json'));
+    if isempty(f), f = dir(fullfile(tc.TestData.end001, '**', 'results_constellation_optimizer', 'coverage_summary.json')); end
+    assertNotEmpty(tc, f, 'coverage_summary.json not written');
+    [~, i] = max([f.datenum]);
+    s = jsondecode(fileread(fullfile(f(i).folder, f(i).name)));
+end
+
+function run_end001_script(file)
+    % the END-001 script starts with "clear": its own workspace, not the test's
+    evalc('run(file)');
+end
+
+function v = kpi(s, id)
+    k = s.kpis;
+    if iscell(k), k = [k{:}]; end
+    v = k(strcmp({k.id}, id)).value;
+end
+
 function verify_check(tc, k)
     % [k] header of the harness output, then its first PASS / FAIL line
     L = strtrim(tc.TestData.harness);
