@@ -157,6 +157,12 @@ phases:
       format: csv
       guaranteed: true
       description: bill of materials with masses, volumes, declared powers and datasheet links
+    - product: design_requests
+      path: output_component_selector/design_requests.json
+      format: json
+      required_keys: [requests]
+      guaranteed: true
+      description: ledger of the requests END-019 (heater), END-003 (wheels), END-004 (battery) and END-016 (propulsion) make to the final design and the response to each (applied, not_needed, not_satisfiable)
     - product: component_selector_requirements_mapping
       path: output_component_selector/component_selector_requirements_mapping.json
       format: json

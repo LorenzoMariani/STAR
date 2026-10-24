@@ -112,6 +112,8 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .dtabs button{border:1px solid var(--border);background:var(--panel-muted);color:var(--text);border-radius:999px;padding:6px 14px;font-size:11.5px;cursor:pointer}
 .dtabs button.on{border-color:var(--accent);color:var(--text-strong);background:var(--panel-strong);font-weight:700}
 .dtabs button:disabled{opacity:.45;cursor:default}
+.drt{border-collapse:collapse;font-size:10.5px;width:100%}.drt th,.drt td{text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-soft);vertical-align:top}
+.drt th{color:var(--muted-2);font-weight:600}.drt .applied{color:var(--success)}.drt .not_needed{color:var(--muted-2)}.drt .not_satisfiable{color:var(--danger);font-weight:700}
 .dchg{padding:2px 12px 6px;font-size:11px;color:var(--muted-2)}.dchg.diff{color:var(--warn)}.dchg b{color:var(--text-strong)}
 @media(max-width:900px){.plwrap{grid-template-columns:1fr}.dual{grid-template-columns:1fr}body{overflow:auto}.app,.app.drawer-open{grid-template-columns:1fr;height:auto}}
 @media print{body{overflow:visible;background:#fff;color:#000}.drawer{display:none!important}.app{display:block}.card{box-shadow:none;border:1px solid #999}}
@@ -128,6 +130,9 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
       <div class="kpis" id="kpis"></div><div class="msgs" id="msgs"></div><div class="budgets" id="budgets"></div></div>
     <div class="card" id="pl-card"><div class="hd"><h3>Placement</h3><span class="hint" id="pl-sum"></span></div><div id="pl"></div></div>
     <div class="card" id="rq-card"><div class="hd"><h3>Mission requirements</h3><span class="hint" id="rq-sum"></span></div><div class="reqs" id="reqs"></div></div>
+    <div class="card" id="dr-card" style="display:none"><div class="hd"><h3>Design requests</h3><span class="hint" id="dr-sum"></span></div>
+      <div class="hint" style="padding:8px 12px 0">Requests the other modules make to the final design (design_requests.json) and the response to each; the selection is not changed by the ledger.</div>
+      <div style="overflow-x:auto;padding:6px 12px 10px"><table class="drt" id="dr-table"></table></div></div>
     <div class="card"><div class="hd"><h3 id="grid-title">Components</h3><span class="hint" id="count"></span></div><div class="grid" id="grid"></div></div>
     <div class="card" id="x-card"><div class="hd"><h3>Not required by this mission</h3><span class="hint" id="x-count"></span></div>
       <div class="hint" style="padding:8px 12px 0">Not part of the design: not counted in mass, volume, power or placement. Each card shows the best component that fits the class and whether it would still fit together with the design.</div>
@@ -292,6 +297,7 @@ function render() {
   $('mode-pill').textContent = S.mode === 'http' ? 'live (server)' : S.mode === 'star' ? 'live (STAR)' : 'view only (RUN results)';
   $('app').classList.toggle('drawer-open', !!S.sel);
   if (!r || r.ok === false) { $('inputs').innerHTML = ''; $('search').innerHTML = ''; $('kpis').innerHTML = `<div class="hint" style="padding:6px 0">${esc(r && r.error ? r.error : 'Computing…')}</div>`; $('budgets').innerHTML = ''; $('grid').innerHTML = ''; $('msgs').innerHTML = ''; $('db').innerHTML = ''; $('db-sum').textContent = ''; $('pl').innerHTML = ''; $('pl-sum').textContent = ''; $('rq-card').style.display = 'none'; $('x-card').style.display = 'none'; return; }
+  renderDesignRequests();
   renderInputs(r); renderDatabase(r); renderIndicators(r); renderRequirements(r); renderPlacement(r); renderGrid(r); renderExtras(r); renderDrawer();
 }
 /* subsystem of a design slot ("comms_s" -> "comms"): colours, icons and acronyms follow the subsystem */
@@ -327,6 +333,17 @@ function renderRequirements(r) {
         : `<div class="hint">Battery: ${esc(M.battery.why)}</div>`) : '')
     + (M.altitude ? `<div class="hint">Orbit altitude ${f(M.altitude.min_km, 0)}${M.altitude.max_km !== M.altitude.min_km ? '–' + f(M.altitude.max_km, 0) : ''} km (${esc(M.altitude.source)}): GSD and swath of the imagers are scaled to it.</div>` : '')
     + (M.notes || []).map(n => `<div class="hint">• ${esc(n)}</div>`).join('');
+}
+/* ---------------- ledger of the requests the other modules make to the final design ---------------- */
+function renderDesignRequests() {
+  const F = S.designs.final, rows = S.design === 'final' && F && Array.isArray(F.design_requests) ? F.design_requests : null;
+  $('dr-card').style.display = rows && rows.length ? '' : 'none';
+  if (!rows || !rows.length) return;
+  const open = rows.filter(x => x.response === 'not_satisfiable').length;
+  $('dr-sum').textContent = `${rows.length} request(s) · ${open} not satisfiable`;
+  $('dr-table').innerHTML = '<thead><tr><th>From</th><th>Request</th><th>Need</th><th>Slot</th><th>Response</th><th>Component</th><th>Reason</th><th>Criterion</th></tr></thead><tbody>'
+    + rows.map(x => `<tr title="${esc(x.id)}"><td>${esc(x.from_module)}</td><td>${esc(x.kpi)}</td><td>${x.need == null ? '—' : Number(x.need).toPrecision(3) + ' ' + esc(x.unit)}</td><td>${esc(x.slot || '—')}</td>
+      <td class="${esc(x.response)}">${esc(String(x.response).replace('_', ' '))}</td><td>${esc(x.component || '—')}</td><td>${esc(x.reason)}</td><td>${esc(x.criterion)}</td></tr>`).join('') + '</tbody>';
 }
 /* ---------------- subsystems the mission does not need ---------------- */
 function renderExtras(r) {

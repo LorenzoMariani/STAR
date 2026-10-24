@@ -5526,6 +5526,8 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
 .dtabs button{border:1px solid var(--border);background:var(--panel-muted);color:var(--text);border-radius:999px;padding:6px 14px;font-size:11.5px;cursor:pointer}
 .dtabs button.on{border-color:var(--accent);color:var(--text-strong);background:var(--panel-strong);font-weight:700}
 .dtabs button:disabled{opacity:.45;cursor:default}
+.drt{border-collapse:collapse;font-size:10.5px;width:100%}.drt th,.drt td{text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-soft);vertical-align:top}
+.drt th{color:var(--muted-2);font-weight:600}.drt .applied{color:var(--success)}.drt .not_needed{color:var(--muted-2)}.drt .not_satisfiable{color:var(--danger);font-weight:700}
 .dchg{padding:2px 12px 6px;font-size:11px;color:var(--muted-2)}.dchg.diff{color:var(--warn)}.dchg b{color:var(--text-strong)}
 @media(max-width:900px){.plwrap{grid-template-columns:1fr}.dual{grid-template-columns:1fr}body{overflow:auto}.app,.app.drawer-open{grid-template-columns:1fr;height:auto}}
 @media print{body{overflow:visible;background:#fff;color:#000}.drawer{display:none!important}.app{display:block}.card{box-shadow:none;border:1px solid #999}}
@@ -5542,6 +5544,9 @@ sup{font-size:8px;color:var(--accent-2);margin-left:2px}
       &lt;div class=&quot;kpis&quot; id=&quot;kpis&quot;&gt;&lt;/div&gt;&lt;div class=&quot;msgs&quot; id=&quot;msgs&quot;&gt;&lt;/div&gt;&lt;div class=&quot;budgets&quot; id=&quot;budgets&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot; id=&quot;pl-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Placement&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;pl-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div id=&quot;pl&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot; id=&quot;rq-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Mission requirements&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;rq-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;reqs&quot; id=&quot;reqs&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;card&quot; id=&quot;dr-card&quot; style=&quot;display:none&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Design requests&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;dr-sum&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;hint&quot; style=&quot;padding:8px 12px 0&quot;&gt;Requests the other modules make to the final design (design_requests.json) and the response to each; the selection is not changed by the ledger.&lt;/div&gt;
+      &lt;div style=&quot;overflow-x:auto;padding:6px 12px 10px&quot;&gt;&lt;table class=&quot;drt&quot; id=&quot;dr-table&quot;&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3 id=&quot;grid-title&quot;&gt;Components&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;count&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;grid&quot; id=&quot;grid&quot;&gt;&lt;/div&gt;&lt;/div&gt;
     &lt;div class=&quot;card&quot; id=&quot;x-card&quot;&gt;&lt;div class=&quot;hd&quot;&gt;&lt;h3&gt;Not required by this mission&lt;/h3&gt;&lt;span class=&quot;hint&quot; id=&quot;x-count&quot;&gt;&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;hint&quot; style=&quot;padding:8px 12px 0&quot;&gt;Not part of the design: not counted in mass, volume, power or placement. Each card shows the best component that fits the class and whether it would still fit together with the design.&lt;/div&gt;
@@ -5706,6 +5711,7 @@ function render() {
   $(&#x27;mode-pill&#x27;).textContent = S.mode === &#x27;http&#x27; ? &#x27;live (server)&#x27; : S.mode === &#x27;star&#x27; ? &#x27;live (STAR)&#x27; : &#x27;view only (RUN results)&#x27;;
   $(&#x27;app&#x27;).classList.toggle(&#x27;drawer-open&#x27;, !!S.sel);
   if (!r || r.ok === false) { $(&#x27;inputs&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;search&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;kpis&#x27;).innerHTML = `&lt;div class=&quot;hint&quot; style=&quot;padding:6px 0&quot;&gt;${esc(r &amp;&amp; r.error ? r.error : &#x27;Computing…&#x27;)}&lt;/div&gt;`; $(&#x27;budgets&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;grid&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;msgs&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;db&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;db-sum&#x27;).textContent = &#x27;&#x27;; $(&#x27;pl&#x27;).innerHTML = &#x27;&#x27;; $(&#x27;pl-sum&#x27;).textContent = &#x27;&#x27;; $(&#x27;rq-card&#x27;).style.display = &#x27;none&#x27;; $(&#x27;x-card&#x27;).style.display = &#x27;none&#x27;; return; }
+  renderDesignRequests();
   renderInputs(r); renderDatabase(r); renderIndicators(r); renderRequirements(r); renderPlacement(r); renderGrid(r); renderExtras(r); renderDrawer();
 }
 /* subsystem of a design slot (&quot;comms_s&quot; -&gt; &quot;comms&quot;): colours, icons and acronyms follow the subsystem */
@@ -5741,6 +5747,17 @@ function renderRequirements(r) {
         : `&lt;div class=&quot;hint&quot;&gt;Battery: ${esc(M.battery.why)}&lt;/div&gt;`) : &#x27;&#x27;)
     + (M.altitude ? `&lt;div class=&quot;hint&quot;&gt;Orbit altitude ${f(M.altitude.min_km, 0)}${M.altitude.max_km !== M.altitude.min_km ? &#x27;–&#x27; + f(M.altitude.max_km, 0) : &#x27;&#x27;} km (${esc(M.altitude.source)}): GSD and swath of the imagers are scaled to it.&lt;/div&gt;` : &#x27;&#x27;)
     + (M.notes || []).map(n =&gt; `&lt;div class=&quot;hint&quot;&gt;• ${esc(n)}&lt;/div&gt;`).join(&#x27;&#x27;);
+}
+/* ---------------- ledger of the requests the other modules make to the final design ---------------- */
+function renderDesignRequests() {
+  const F = S.designs.final, rows = S.design === &#x27;final&#x27; &amp;&amp; F &amp;&amp; Array.isArray(F.design_requests) ? F.design_requests : null;
+  $(&#x27;dr-card&#x27;).style.display = rows &amp;&amp; rows.length ? &#x27;&#x27; : &#x27;none&#x27;;
+  if (!rows || !rows.length) return;
+  const open = rows.filter(x =&gt; x.response === &#x27;not_satisfiable&#x27;).length;
+  $(&#x27;dr-sum&#x27;).textContent = `${rows.length} request(s) · ${open} not satisfiable`;
+  $(&#x27;dr-table&#x27;).innerHTML = &#x27;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;From&lt;/th&gt;&lt;th&gt;Request&lt;/th&gt;&lt;th&gt;Need&lt;/th&gt;&lt;th&gt;Slot&lt;/th&gt;&lt;th&gt;Response&lt;/th&gt;&lt;th&gt;Component&lt;/th&gt;&lt;th&gt;Reason&lt;/th&gt;&lt;th&gt;Criterion&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&#x27;
+    + rows.map(x =&gt; `&lt;tr title=&quot;${esc(x.id)}&quot;&gt;&lt;td&gt;${esc(x.from_module)}&lt;/td&gt;&lt;td&gt;${esc(x.kpi)}&lt;/td&gt;&lt;td&gt;${x.need == null ? &#x27;—&#x27; : Number(x.need).toPrecision(3) + &#x27; &#x27; + esc(x.unit)}&lt;/td&gt;&lt;td&gt;${esc(x.slot || &#x27;—&#x27;)}&lt;/td&gt;
+      &lt;td class=&quot;${esc(x.response)}&quot;&gt;${esc(String(x.response).replace(&#x27;_&#x27;, &#x27; &#x27;))}&lt;/td&gt;&lt;td&gt;${esc(x.component || &#x27;—&#x27;)}&lt;/td&gt;&lt;td&gt;${esc(x.reason)}&lt;/td&gt;&lt;td&gt;${esc(x.criterion)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;) + &#x27;&lt;/tbody&gt;&#x27;;
 }
 /* ---------------- subsystems the mission does not need ---------------- */
 function renderExtras(r) {
@@ -6465,7 +6482,8 @@ a.arch{color:var(--accent-2);cursor:pointer;text-decoration:underline;font-size:
     &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Criteria &amp;times; iterations&lt;/h3&gt;&lt;span class=&quot;muted&quot; id=&quot;cl-crit-count&quot;&gt;&amp;mdash;&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-crit-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-crit-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;No design loop data loaded.&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
     &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Design evolution&lt;/h3&gt;&lt;span class=&quot;muted&quot;&gt;design used &amp;rarr; design produced by END-006 in each iteration&lt;/span&gt;&lt;/div&gt;
-      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-evo-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-evo-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;&amp;mdash;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+      &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-evo-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-evo-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;&amp;mdash;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+      &lt;div class=&quot;cl-note&quot;&gt;Design requests: END-006 answers the requests of END-019 (heater), END-003 (wheels), END-004 (battery) and END-016 (propulsion) in design_requests.json, archived in every iteration; &lt;i&gt;Design requests not satisfiable&lt;/i&gt; counts the ones no catalogued component meets (see the END-006 tab).&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
     &lt;section class=&quot;card&quot;&gt;&lt;div class=&quot;card-header&quot;&gt;&lt;h3&gt;Nodes run&lt;/h3&gt;&lt;span class=&quot;muted&quot;&gt;per iteration and after the loop&lt;/span&gt;&lt;/div&gt;
       &lt;div class=&quot;card-body&quot;&gt;&lt;div class=&quot;table-wrap&quot;&gt;&lt;table&gt;&lt;thead id=&quot;cl-node-head&quot;&gt;&lt;/thead&gt;&lt;tbody id=&quot;cl-node-body&quot;&gt;&lt;tr&gt;&lt;td class=&quot;empty&quot;&gt;&amp;mdash;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
         &lt;h3 class=&quot;section-title&quot; style=&quot;margin-top:16px&quot;&gt;After the loop&lt;/h3&gt;

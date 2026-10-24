@@ -286,6 +286,11 @@ def adapt_end006(module_root: str | Path, run_ctx: Ctx = None, phase: str = "fin
         if tc:
             out.append(K.kpi("END-006.check_battery_temperature", tc.get("met"), context={**ctx, **{k: v for k, v in tc.items() if k != "met"}},
                              assessment=K.assessment(tc.get("met"), "==", True, "bool", "module_default", note=str(tc.get("what") or ""))))
+    reqs = (_load(base / "design_requests.json") or {}).get("requests") if phase == "final" else None
+    if reqs is not None:
+        _add(out, "END-006.requests_total", len(reqs), context=ctx)
+        _add(out, "END-006.requests_open", sum(1 for r in reqs if r.get("response") == "not_satisfiable"),
+             context={**ctx, "open": [r.get("id") for r in reqs if r.get("response") == "not_satisfiable"]})
     _add(out, "END-006.solar_peak_power_W", _get(sd, "solar_panels.total_peak_w"), context=ctx)
     _add(out, "END-006.declared_peak_power_W", totals.get("power_w_declared_peak"), context=ctx)
     _add(out, "END-006.drag_area_m2", sd.get("area_mean_projected_m2"), context=ctx)

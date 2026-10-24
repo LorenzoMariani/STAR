@@ -38,6 +38,8 @@ evolution_kpis:
 - {kpi: END-006.wheel_torque_ratio, label: Wheel torque capacity / need}
 - {kpi: END-003.peak_wheel_momentum_pct, label: Peak wheel momentum}
 - {kpi: END-006.battery_heater_W, label: Battery heater in the design}
+- {kpi: END-006.requests_open, label: Design requests not satisfiable}
+- {kpi: END-006.requests_total, label: Design requests}
 - {kpi: END-019.heater_needed_peak_W, label: Heater power needed (peak)}
 - {kpi: END-019.battery_min_C, label: Battery min temperature}
 - {kpi: END-019.battery_max_C, label: Battery max temperature}

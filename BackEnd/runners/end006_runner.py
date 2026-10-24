@@ -264,6 +264,57 @@ def mission_context(payload: dict[str, Any]) -> dict[str, Any]:
     return ctx
 
 
+def design_requests(result: dict[str, Any], sc: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
+    """Ledger of the requests the other modules make to the final design (design_requests.json): one row per request whose source
+    is in the run (END-019 heater, END-003 wheels, END-004 battery, END-016 propulsion). response: applied (a component meets
+    the need), not_needed (no need) or not_satisfiable (no catalogued component meets it). Read-only: the selection is not changed."""
+    mission = result.get("mission") or {}
+    rows: list[dict[str, Any]] = []
+
+    def add(rid: str, module: str, kpi: str, need: Any, unit: str, slot: str | None, response: str, component: Any, reason: str, criterion: str) -> None:
+        rows.append({"id": rid, "from_module": module, "kpi": kpi, "need": need, "unit": unit, "slot": slot, "response": response,
+                     "component": component, "reason": reason, "criterion": criterion})
+
+    def selected_id(slot: str) -> Any:
+        return next(((r.get("selected") or {}).get("id") for r in result.get("subsystems") or []
+                     if (r.get("id") or r.get("subsystem")) == slot and r.get("selected")), None)
+
+    bh = mission.get("battery_heater") if context.get("end019") else None
+    if bh:
+        response = {"met": "applied", "not_needed": "not_needed"}.get(str(bh.get("status")), "not_satisfiable")
+        add("REQ-019-HEATER", "END-019", "END-019.heater_needed_peak_W", bh.get("need_peak_w"), "W", "heater", response, bh.get("component"),
+            str(bh.get("why") or ""), f"heater power >= {bh.get('design_factor')} x the cold-case peak at the lowest battery voltage")
+    ws = mission.get("wheel_sizing") if context.get("end003") else None
+    if ws:
+        ratios = [r for r in (ws.get("momentum_ratio"), ws.get("torque_ratio")) if isinstance(r, (int, float))]
+        factor = float(ws.get("design_factor") or 1.0)
+        ok = len(ratios) == 2 and min(ratios) >= factor - 1e-9
+        reason = (f"{ws.get('component')}: momentum {ws.get('capacity_momentum_nms')} Nms, torque {ws.get('capacity_torque_nm')} Nm "
+                  f"against the need {ws.get('need_momentum_nms')} Nms, {ws.get('need_torque_nm')} Nm"
+                  if ws.get("component") else "no wheel with published momentum and torque")
+        add("REQ-003-WHEELS", "END-003", "END-003.peak_wheel_momentum_pct", ws.get("need_momentum_nms"), "Nms", ws.get("slot"),
+            "applied" if ok else "not_satisfiable", ws.get("component"), reason, f"wheel momentum and torque >= {factor:g} x the END-003 peaks")
+    bat = mission.get("battery")
+    if bat and bat.get("need_wh") is not None and context.get("end004"):
+        have = _number(sc.get("battery_wh"))
+        ok = have is not None and have >= float(bat["need_wh"]) - 1e-9
+        slot = "eps" if bat.get("variant") == "eps" else "battery"
+        add("REQ-004-BATTERY", "END-004", "END-004.worst_dod_pct", bat["need_wh"], "Wh", slot, "applied" if ok else "not_satisfiable", selected_id(slot),
+            f"battery {have if have is not None else 'n/a'} Wh against the {float(bat['need_wh']):.1f} Wh the eclipse energy needs"
+            + (f" ({bat.get('why')})" if bat.get("why") else ""), "battery capacity >= eclipse energy / depth of discharge")
+    dv = mission.get("dv")
+    if dv and dv.get("source") == "END-016":
+        need, given = _number(dv.get("dv_m_s")), _number(dv.get("given_m_s"))
+        if need is not None and need <= 0:
+            response = "not_needed"
+        else:
+            response = "applied" if given is not None and need is not None and given >= need - 1e-9 else "not_satisfiable"
+        add("REQ-016-PROPULSION", "END-016", "END-016.dv_need_m_s", need, "m/s", "propulsion", response, selected_id("propulsion"),
+            f"delta-v capacity {given if given is not None else 'n/a'} m/s against the {need if need is not None else 'n/a'} m/s the disposal needs",
+            "delta-v capacity >= the disposal delta-v on the mass of the design")
+    return rows
+
+
 def end019_heater(kpis_path: Path | None) -> dict[str, Any] | None:
     """IF-019-006: the END-019 battery temperatures and the cold-case heater sizing (kpis_end019). None without END-019."""
     if not kpis_path or not kpis_path.is_file():
@@ -417,6 +468,9 @@ def run_end006(input_file: str, output_dir: str, run_id: str | None = None,
             record["initial_spacecraft"] = initial
             record["design_changes"] = changes
             # D(k): relative to the design the modules used in this iteration, D(k-1) (the initial design in the first pass)
+            requests = design_requests(result, sc, context)
+            record["design_requests"] = requests
+            write(product_dir / "design_requests.json", dumps({"schema_version": 1, "run_id": run_id, "requests": requests}))
             write(product_dir / "spacecraft_definition_final.json",
                   dumps({**sc, "design_iteration": used_iteration + 1, "used_design_iteration": used_iteration,
                          "changes_from_used_design": changes}))

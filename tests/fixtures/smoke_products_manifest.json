@@ -1,5 +1,5 @@
 {
- "generated_from": "RUN_SMOKETEST_20261024_111759",
+ "generated_from": "RUN_SMOKETEST_20261024_114359",
  "files": {
   "END-001": [
    "end001_process_result.json",
@@ -106,8 +106,8 @@
    "results_constellation_optimizer/11_revisit_boxplot_latband.png",
    "results_constellation_optimizer/constellation_plots_data.js",
    "results_constellation_optimizer/coverage_summary.json",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261024_111826.mat",
-   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261024_111838.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261024_114426.mat",
+   "results_constellation_optimizer/results_backup/results_HYB_theta1_20261024_114439.mat",
    "star_constellation_optimizer_runtime.m"
   ],
   "END-003": [
@@ -184,6 +184,7 @@
    "output_component_selector/component_selector_requirements_mapping_initial.json",
    "output_component_selector/component_selector_results.json",
    "output_component_selector/component_selector_results_initial.json",
+   "output_component_selector/design_requests.json",
    "output_component_selector/spacecraft_definition.json",
    "output_component_selector/spacecraft_definition_final.json",
    "results_component_selector/component_selector_data.js",

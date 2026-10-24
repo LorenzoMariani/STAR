@@ -163,6 +163,8 @@ CATALOGUE: dict[str, dict[str, Any]] = {
     "END-006.wheel_torque_ratio": _c("Wheel torque capacity / END-003 need (IF-003-006)", "-", "design", "component_selector_results", "result.mission.wheel_sizing.torque_ratio"),
     "END-006.battery_heater_W": _c("Battery heater power of the design (IF-019-006, at the lowest battery voltage)", "W", "design", "component_selector_results", "result.mission.battery_heater.power_w"),
     "END-006.check_battery_temperature": _c("Battery within its limits: cold case held by the heater, hot max <= upper limit (IF-019-006)", "bool", "evidence", "component_selector_results", "result.mission.battery_heater.temperature_check.met"),
+    "END-006.requests_total": _c("Design requests made to the final design (END-019 heater, END-003 wheels, END-004 battery, END-016 propulsion)", "-", "design", "design_requests", "len(requests)"),
+    "END-006.requests_open": _c("Design requests no catalogued component satisfies (response not_satisfiable)", "-", "design", "design_requests", "count(requests[].response == not_satisfiable)"),
     "END-006.mass_kg": _c("Satellite mass", "kg", "design", "component_selector_results", "result.totals.mass_kg"),
     "END-006.mass_limit_kg": _c("Mass limit of the class / requirement", "kg", "design", "component_selector_results", "result.totals.mass_limit_kg"),
     "END-006.volume_used_pct": _c("Volume used (% of the class envelope)", "%", "design", "component_selector_results", "result.totals.volume_m3 / volume_limit_m3 x 100"),
