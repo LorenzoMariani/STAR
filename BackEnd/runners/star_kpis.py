@@ -243,6 +243,8 @@ CATALOGUE: dict[str, dict[str, Any]] = {
     "END-019.face_min_C": _c("Face min temperature (window and design cases)", "C", "performance", "thermal_summary", "min over nodes pX..mZ min_C"),
     "END-019.sar_max_C": _c("SAR payload max temperature", "C", "mission_compliance", "thermal_summary", "nodes.SAR.max_C"),
     "END-019.battery_limit_min_C": _c("Battery operating minimum used", "C", "design", "thermal_run_info", "config.bat_min_C (provenance.bat_min_C)"),
+    "END-019.battery_charge_start_C": _c("Battery temperature at the start of the sunlit part, cold case (charge starts)", "C", "mission_compliance", "heater_cases", "worst.battery_charge_start_C"),
+    "END-019.battery_charge_limit_min_C": _c("Battery charge lower limit used", "C", "design", "thermal_run_info", "config.bat_charge_min_C (provenance.bat_charge_min_C)"),
     "END-019.battery_limit_max_C": _c("Battery operating maximum used", "C", "design", "thermal_run_info", "config.bat_max_C (provenance.bat_max_C)"),
     "END-019.limits_violated": _c("A thermal limit is exceeded on at least one satellite", "bool", "mission_compliance", "thermal_summary", "any(violations)"),
     "END-019.hot_case_beta_deg": _c("Beta angle of the hot case", "deg", "environment", "thermal_summary", "design_cases.hot.beta_deg"),

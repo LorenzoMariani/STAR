@@ -89,8 +89,11 @@ def mission_lifetime_years(requirement_texts: list[str] | None) -> float | None:
 
 def build_base(template: dict[str, Any], *, run_mode: str = "test", mission_name: str = "STAR mission",
                battery_wh: float, lifetime_years: float | None = None,
-               temperature_C: float | None = None) -> tuple[dict[str, Any], list[tuple[str, Any, str]]]:
-    """The --base input for the official converter and the provenance of every value STAR chose."""
+               temperature_C: float | None = None,
+               datasheet: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[tuple[str, Any, str]]]:
+    """The --base input for the official converter and the provenance of every value STAR chose.
+    datasheet = battery_data of the END-006 battery (cell and pack read from its datasheet): the values it publishes replace
+    the template ones and are recorded with their source; a value it does not publish keeps the template (and its fallback)."""
     run_mode = "full" if str(run_mode).lower() == "full" else "test"
     st = RUN_SETTINGS[run_mode]
     prov: list[tuple[str, Any, str]] = []
@@ -103,14 +106,30 @@ def build_base(template: dict[str, Any], *, run_mode: str = "test", mission_name
     prov.append(("mission.duration_years", years, why))
     cell = dict(template["cell"])
     pack = dict(template["pack"])
+    ds = datasheet or {}
+    ds_cell = ds.get("cell") or {}
+    if ds_cell.get("description"):
+        cell["name"] = ds_cell["description"]
+    if ds_cell.get("nominal_capacity_ah"):
+        cell["nominal_capacity_Ah"] = float(ds_cell["nominal_capacity_ah"])
+    if ds.get("cells_in_series"):
+        pack["cells_in_series"] = int(ds["cells_in_series"])
     series = int(pack.get("cells_in_series") or 1)
-    cell_wh = series * float(cell["nominal_voltage_V"]) * float(cell["nominal_capacity_Ah"])
-    pack["cells_in_parallel"] = max(1, int(round(float(battery_wh) / cell_wh)))
-    prov.append(("cell", cell.get("name"), "assumption: END-006 gives only the battery energy ({:.4g} Wh), cell from the template".format(
-        float(battery_wh))))
-    prov.append(("pack.cells_in_parallel", pack["cells_in_parallel"],
-                 "round({:.4g} Wh / ({} S x {} V x {} Ah))".format(float(battery_wh), series, cell["nominal_voltage_V"],
-                                                                    cell["nominal_capacity_Ah"])))
+    if ds.get("cells_in_parallel"):
+        pack["cells_in_parallel"] = int(ds["cells_in_parallel"])
+    else:
+        cell_wh = series * float(cell["nominal_voltage_V"]) * float(cell["nominal_capacity_Ah"])
+        pack["cells_in_parallel"] = max(1, int(round(float(battery_wh) / cell_wh)))
+    src = ds.get("sources") or {}
+    prov.append(("cell", cell.get("name"), ("datasheet" if ds_cell.get("description") else "assumption") + (
+        " page {}".format(src["cell"]["page"]) if ds_cell.get("description") and src.get("cell") else
+        ": END-006 gives only the battery energy ({:.4g} Wh), cell from the template".format(float(battery_wh)))))
+    if ds.get("cells_in_parallel"):
+        prov.append(("pack.cells_in_parallel", pack["cells_in_parallel"], "datasheet page {}".format((src.get("cells_in_series") or {}).get("page"))))
+    else:
+        prov.append(("pack.cells_in_parallel", pack["cells_in_parallel"],
+                     "round({:.4g} Wh / ({} S x {} V x {} Ah))".format(float(battery_wh), series, cell["nominal_voltage_V"],
+                                                                        cell["nominal_capacity_Ah"])))
     if temperature_C is None:
         temperature_C = DEFAULT_TEMPERATURE_C
         prov.append(("pack.temperature_C", temperature_C, "default"))

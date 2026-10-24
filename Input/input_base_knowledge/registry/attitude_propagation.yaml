@@ -124,6 +124,8 @@ required_inputs:
     data_type: string
     unit: "-"
     required: true
+    reviewed: true             # default approved by the user on 2026-10-24 (runner _reviewed: not a registry first guess any more)
+    reviewed_on: "2026-10-24"
     default_value: nadir
     allowed_values:
       - dynamics
@@ -144,6 +146,8 @@ required_inputs:
     data_type: object
     unit: mixed
     required: false
+    reviewed: true             # default approved by the user on 2026-10-24 (runner _reviewed: not a registry first guess any more)
+    reviewed_on: "2026-10-24"
     default_value:
       q0: [1.0, 0.0, 0.0, 0.0]
       w0_rad_s: [0.0, 0.0, 0.0]
@@ -188,6 +192,8 @@ required_inputs:
     data_type: object
     unit: "-"
     required: true
+    reviewed: true             # default approved by the user on 2026-10-24 (runner _reviewed: not a registry first guess any more)
+    reviewed_on: "2026-10-24"
     default_value:
       gg: true
       srp: true

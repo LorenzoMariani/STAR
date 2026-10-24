@@ -247,8 +247,22 @@ def _apply_design(payload: dict[str, Any], sat: dict[str, Any] | None, config: d
             config["battery_heater"]["setpoint_c"] = float(heater["setpoint_c"])
         provenance["battery_heater"] = (f"END-006 design (thermal_control.battery_heater: {heater.get('component')}, "
                                         f"{float(heater['power_w']):g} W, {heater.get('source') or 'heater'})")
-    temp = ((sat or {}).get("battery") or {}).get("temp_op_c")
-    if isinstance(temp, list) and len(temp) == 2 and None not in temp:
+    bat = (sat or {}).get("battery") or {}
+    data = bat.get("battery_data") or {}
+    dis, chg = data.get("temp_discharge_c"), data.get("temp_charge_c")
+    src = data.get("sources") or {}
+    temp = bat.get("temp_op_c")
+    if isinstance(dis, list) and len(dis) == 2 and isinstance(chg, list) and len(chg) == 2:
+        # datasheet limits (phase battery-data): cold case = discharge lower limit (eclipse, battery discharging); hot case =
+        # the lower of the two upper limits (the maximum is reached in sunlight, while charging); charge lower limit checked
+        # at the start of the sunlit part
+        config["bat_min_C"], config["bat_max_C"] = float(dis[0]), float(min(chg[1], dis[1]))
+        config["bat_charge_min_C"] = float(chg[0])
+        where = f"END-006 battery {bat.get('component')}, datasheet page {{}}"
+        provenance["bat_min_C"] = where.format((src.get("temp_discharge_c") or {}).get("page")) + " (discharge lower limit)"
+        provenance["bat_max_C"] = where.format((src.get("temp_charge_c") or {}).get("page")) + " (lower of charge and discharge upper limits)"
+        provenance["bat_charge_min_C"] = where.format((src.get("temp_charge_c") or {}).get("page")) + " (charge lower limit)"
+    elif isinstance(temp, list) and len(temp) == 2 and None not in temp:
         config["bat_min_C"], config["bat_max_C"] = float(temp[0]), float(temp[1])
         provenance["bat_min_C"] = provenance["bat_max_C"] = f"END-006 battery {(sat.get('battery') or {}).get('component')} (operating temperatures)"
     else:

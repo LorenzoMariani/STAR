@@ -18,6 +18,7 @@ import itertools
 import math
 import time
 from dataclasses import dataclass, field, replace
+from typing import Any
 
 from . import layout
 from .models import Component
@@ -439,9 +440,19 @@ def admitted(catalog: list[Component], slot: Slot, units: int, mass_limit_kg: fl
     return [k.comp for k in _slot_pool(catalog, slot, units, cls, float(dv_m_s) if dv_m_s else None)[-1]]
 
 
-def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
-           dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False,
-           interface_check: bool = False, power_supply_check: bool = False, objective: str = "completeness", require_all: bool = False) -> Selection:
+def select(*args: Any, battery_mass_tolerance: float | None = None, **kwargs: Any) -> Selection:
+    """select_once con la tolleranza di massa della batteria (vedi `select_once`): se con quel restringimento il progetto non sta nei limiti
+    si ripete senza, cosi' la tolleranza non rende irrealizzabile una classe che lo e'."""
+    sel = select_once(*args, battery_mass_tolerance=battery_mass_tolerance, **kwargs)
+    if battery_mass_tolerance is not None and not sel.within_limits:
+        return select_once(*args, battery_mass_tolerance=None, **kwargs)
+    return sel
+
+
+def select_once(catalog: list[Component], units: int, time_budget_s: float = 3.0, slots: list[Slot] | None = None,
+                dv_m_s: float | None = None, mass_limit_kg: float | None = None, electric_power_check: bool = False,
+                interface_check: bool = False, power_supply_check: bool = False, objective: str = "completeness", require_all: bool = False,
+                battery_mass_tolerance: float | None = None) -> Selection:
     """Selezione per la classe `units`. Senza parametri facoltativi: un posto per ciascuno dei 17 sottosistemi, tutti i componenti, limiti CDS.
     slots: i posti del progetto (mission.py: solo i sottosistemi che la missione chiede, una radio per banda, i componenti che soddisfano i requisiti);
     dv_m_s: il propulsore scelto deve dare questo delta-v al satellite intero (impulso totale pubblicato / somma delle masse pubblicate);
@@ -452,7 +463,10 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
     objective: "completeness" (predefinito: massima completezza dei dati pubblicati, poi massa minima) oppure "mass" (massa minima al lancio,
     poi completezza: mission.py, filosofia dell'utente 2026-10-16: meno massa e volume lanciati, meno costi);
     require_all: un posto senza candidati nella classe rende il progetto incompleto (mission.py): la ricerca esatta non si fa e ogni scheda
-    mostra il componente che entra da solo (within_limits False)."""
+    mostra il componente che entra da solo (within_limits False);
+    battery_mass_tolerance (solo con objective "mass"): frazione di massa, es. 0.35 = +35 %: per la batteria sono ammesse tutte quelle con massa
+    entro la tolleranza dalla piu' leggera e tra queste vince quella con piu' dati pubblicati (a parita' la piu' leggera); la massa totale
+    resta minimizzata sugli altri sottosistemi (richiesta dell'utente 2026-10-24: privilegiare i componenti con piu' informazioni utili)."""
     if objective not in ("completeness", "mass"):
         raise ValueError(f"unsupported objective {objective!r} (allowed: completeness, mass)")
     mass_first = objective == "mass"
@@ -483,6 +497,15 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
             note = "Only components without a published mass are in the database for this subsystem."
         results.append(SubsystemResult(sl.id, CATEGORY_OF.get(sid, sid), sl.label, len(members), len(pool), len(unknown), None, [], note, subsystem=sid))
         pools.append(pool)
+    all_pools = list(pools)             # le alternative mostrate sono tutti i candidati, anche quelli esclusi dalla tolleranza di massa
+    if mass_first and battery_mass_tolerance is not None:
+        for i, sl in enumerate(slots):
+            known = [k for k in pools[i] if k.mass_kg is not None]
+            if sl.subsystem == "battery" and known:
+                limit = min(k.mass_kg for k in known) * (1.0 + battery_mass_tolerance) + 1e-12
+                band = [k for k in known if k.mass_kg <= limit]
+                top = max(k.completeness for k in band)
+                pools[i] = [k for k in band if k.completeness >= top - 1e-12]
 
     # scelta: massimizza la completezza totale (poi minimizza la massa) con somma delle masse e dei volumi noti entro i limiti
     idx = [i for i, p in enumerate(pools) if p]
@@ -706,7 +729,7 @@ def select(catalog: list[Component], units: int, time_budget_s: float = 3.0, slo
                         "a {u}U cannot carry all of them at once.".replace("{u}", str(units)))
     for j, i in enumerate(idx):
         results[i].selected = chosen[j]
-        results[i].alternatives = [k for k in pools[i] if k is not chosen[j]]
+        results[i].alternatives = [k for k in all_pools[i] if k is not chosen[j]]
     if truncated:
         messages.append("The search stopped at the time limit: the selection may not be the one with the most complete data.")
 

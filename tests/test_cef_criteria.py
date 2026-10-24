@@ -37,6 +37,7 @@ def good():
         "END-004.worst_dod_pct": k(1.2, limit=30.0),
         "END-019.battery_min_C": k(5.0), "END-019.battery_max_C": k(30.0),
         "END-019.battery_limit_min_C": k(0.0), "END-019.battery_limit_max_C": k(45.0),
+        "END-019.battery_charge_start_C": k(12.0), "END-019.battery_charge_limit_min_C": k(10.0),
     }
 
 
@@ -171,6 +172,18 @@ class TestCriteria(unittest.TestCase):
         kp["END-019.battery_max_C"] = k(45.5)
         self.assertEqual(self.evaluate(kp)["CEF-BATTERY"]["status"], C.FAIL)
 
+    def test_battery_charge_start_uses_the_charge_lower_limit(self):
+        kp = good()
+        kp["END-019.battery_charge_start_C"] = k(10.0)
+        self.assertEqual(self.evaluate(kp)["CEF-BATTERY"]["status"], C.PASS)
+        kp["END-019.battery_charge_start_C"] = k(8.5)
+        res = self.evaluate(kp)["CEF-BATTERY"]
+        self.assertEqual(res["status"], C.FAIL)
+        self.assertIn("start of the charge", res["reason"])
+        kp = good()
+        del kp["END-019.battery_charge_start_C"]                       # battery without a datasheet charge limit: not checked
+        self.assertEqual(self.evaluate(kp)["CEF-BATTERY"]["status"], C.PASS)
+
     def test_battery_dod_uses_the_limit_the_module_published(self):
         kp = good()
         kp["END-004.worst_dod_pct"] = k(30.0, limit=30.0)
@@ -187,7 +200,7 @@ class TestCriteria(unittest.TestCase):
         kp["END-004.worst_dod_pct"] = k(95.0)                          # no assessment: nothing to check against
         res = self.evaluate(kp)["CEF-BATTERY"]
         self.assertEqual(res["status"], C.PASS)
-        self.assertEqual([c["status"] for c in res["checks"]], [C.N_A, C.PASS, C.PASS])
+        self.assertEqual([c["status"] for c in res["checks"]], [C.N_A, C.PASS, C.PASS, C.PASS])
 
     # ---------------------------------------------------------------- not_evaluable and not_applicable
     def test_missing_kpi_is_not_evaluable_with_the_reason_of_the_module(self):
@@ -207,7 +220,7 @@ class TestCriteria(unittest.TestCase):
     def test_module_out_of_the_workflow_is_not_applicable(self):
         kp = {i: v for i, v in good().items() if not i.startswith("END-019")}
         res = self.evaluate(kp, inactive={"END-019": "is not in the workflow"})["CEF-BATTERY"]
-        self.assertEqual([c["status"] for c in res["checks"]], [C.PASS, C.N_A, C.N_A])
+        self.assertEqual([c["status"] for c in res["checks"]], [C.PASS, C.N_A, C.N_A, C.N_A])
         self.assertEqual(res["status"], C.PASS)
         kp = {i: v for i, v in kp.items() if not i.startswith("END-004")}
         res = self.evaluate(kp, inactive={"END-019": "is not in the workflow", "END-004": "was skipped (out of scope)"})["CEF-BATTERY"]

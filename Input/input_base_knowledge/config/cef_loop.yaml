@@ -71,5 +71,6 @@ criteria:
   name: Depth of discharge and battery temperatures inside the limits
   checks:
   - {kpi: END-004.worst_dod_pct, op: "<=", threshold: {kpi_limit: END-004.worst_dod_pct}, if_no_limit: not_applicable, label: Worst-case depth of discharge}
-  - {kpi: END-019.battery_min_C, op: ">=", threshold: {kpi: END-019.battery_limit_min_C}, label: Battery minimum temperature}
-  - {kpi: END-019.battery_max_C, op: "<=", threshold: {kpi: END-019.battery_limit_max_C}, label: Battery maximum temperature}
+  - {kpi: END-019.battery_min_C, op: ">=", threshold: {kpi: END-019.battery_limit_min_C}, label: Battery minimum temperature (cold case, discharge limit)}
+  - {kpi: END-019.battery_charge_start_C, op: ">=", threshold: {kpi: END-019.battery_charge_limit_min_C}, if_missing: not_applicable, label: Battery temperature at the start of the charge (charge lower limit)}
+  - {kpi: END-019.battery_max_C, op: "<=", threshold: {kpi: END-019.battery_limit_max_C}, label: Battery maximum temperature (hot case, lower of the charge and discharge upper limits)}

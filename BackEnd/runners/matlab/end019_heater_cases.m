@@ -15,7 +15,9 @@ function H = end019_heater_cases(cfg_json)
 %   - Verification (bang-bang, +-hysteresis_K around the setpoint) with the heater power of the design
 %     (opts.battery_heater.power_w): battery min / max in the cold case and over the mission window
 %     (window run as star_thermal_run, SAR in the imaging passes, nominal dissipation).
-%   Setpoint: opts.battery_heater.setpoint_c, else the battery lower limit (bat_min_C) + 5 K.
+%   Setpoint: opts.battery_heater.setpoint_c, else the battery lower limit (bat_min_C, the discharge limit) + 5 K; with
+%   opts.bat_charge_min_C (charge lower limit of the battery datasheet) at least that + the hysteresis, so that the battery
+%   is not colder than the charge limit when the sunlit part, and the charge, starts (battery_charge_start_C below).
 %   The heater heat stays inside END-019; its energy is END-004's (mean_W of the cold case).
 if nargin < 1 || isempty(cfg_json), cfg_json = 'input_termico.json'; end
 cfg_json = char(cfg_json);
@@ -47,7 +49,9 @@ if isempty(M0.iBAT) || isnan(cfg.limits.BAT_min)
     write_out(cfg, H);
     return
 end
-H.setpoint_C = getf(heater, 'setpoint_c', cfg.limits.BAT_min + 5);
+Tchg = getf(opts, 'bat_charge_min_C', NaN);
+H.bat_charge_min_limit_C = Tchg;
+H.setpoint_C = getf(heater, 'setpoint_c', max([cfg.limits.BAT_min + 5, Tchg + hyst]));
 Tset = H.setpoint_C;
 cs = cold_case(cfg);
 sats = dir(fullfile(cfg.io.sat_dir, cfg.io.sat_glob));
@@ -92,6 +96,8 @@ if Ph > 0
     tmax = cellfun(@(s) max(s.cold.verify.battery_max_C, s.window.battery_max_C), S);
     H.worst.battery_min_with_heater_C = round(min(tmin), 2);
     H.worst.battery_max_with_heater_C = round(max(tmax), 2);
+    cs0 = cellfun(@(s) s.cold.verify.charge_start_C, S);
+    if any(~isnan(cs0)), H.worst.battery_charge_start_C = round(min(cs0), 2); end
     H.worst.duty_cold_pct = S{kw}.cold.verify.duty_pct;
     H.worst.mean_W_cold_design_heater = S{kw}.cold.verify.mean_W;
 end
@@ -141,7 +147,7 @@ for o = 1:nmax
 end
 C = struct('beta_deg', round(beta, 3), 'P_internal_W', round(Pint, 4), 'eclipse_min', round((1 - mean(lit))*Torb/60, 2), ...
            'needed_peak_W', round(max(q), 4), 'needed_mean_W', round(mean(q), 4), 'ideal_on_pct', round(100*mean(q > 1e-9), 2), ...
-           'ideal_battery_min_C', round(min(Tb), 2), 'periodic_orbits', o, 'verify', struct());
+           'ideal_battery_min_C', round(min(Tb), 2), 'ideal_charge_start_C', exit_temp(Tb, lit), 'periodic_orbits', o, 'verify', struct());
 if Ph <= 0, return; end
 % bang-bang with the heater of the design, from the ideal periodic state (a limit cycle need not repeat orbit by
 % orbit: at most cfg.sim.spinup_orbits orbits)
@@ -149,13 +155,13 @@ on = false; u = zeros(nO, 1); Tb = zeros(nO, 1);
 for o = 1:cfg.sim.spinup_orbits
     T1 = T;
     for n = 1:nO
-        [T, on] = bang_step(P, T, (n-1)*dt, iB, Ts, hyst, Ph, on);
+        [T, on, lit(n)] = bang_step(P, T, (n-1)*dt, iB, Ts, hyst, Ph, on);
         u(n) = on; Tb(n) = T(iB) - 273.15;
     end
     if max(abs(T - T1)) < cfg.sim.spinup_tol, break; end
 end
 C.verify = struct('power_W', Ph, 'battery_min_C', round(min(Tb), 2), 'battery_max_C', round(max(Tb), 2), ...
-                  'mean_W', round(Ph*mean(u), 4), 'duty_pct', round(100*mean(u), 2), 'orbits', o);
+                  'charge_start_C', exit_temp(Tb, lit), 'mean_W', round(Ph*mean(u), 4), 'duty_pct', round(100*mean(u), 2), 'orbits', o);
 end
 
 function W = window_heater(cfg, orb, passes, Tset, hyst, Ph)
@@ -196,10 +202,17 @@ q = (Ts - T0(iB))/(T1(iB) - T0(iB));
 T = T0 + q*(T1 - T0);
 end
 
-function [T, on] = bang_step(P, T, ts, iB, Ts, hyst, Ph, on)
+function [T, on, L] = bang_step(P, T, ts, iB, Ts, hyst, Ph, on)
 if T(iB) < Ts - hyst, on = true; elseif T(iB) > Ts + hyst, on = false; end
 if on, P.M.Pc(iB) = P.M.Pc(iB) + Ph; end
-T = star_thermal_step(P, T, ts);
+[T, L] = star_thermal_step(P, T, ts);
+end
+
+function v = exit_temp(Tb, lit)
+% battery temperature [C] at the eclipse exit (first sunlit step after an eclipse step), the lowest of the orbit; NaN without eclipse
+sun = lit(:) > 0.5;
+k = find(sun & ~circshift(sun, 1));
+if isempty(k), v = NaN; else, v = round(min(Tb(k)), 2); end
 end
 
 function write_out(cfg, H)

@@ -144,10 +144,14 @@ def run_end008(input_file: str, output_dir: str, run_id: str | None = None,
         notes.append(f"battery of the END-006 design {float(sat_wh):g} Wh, END-004 power budget {battery_wh:g} Wh: the power "
                      "budget one is simulated (its loads and depth of discharge go with it)")
     base, base_prov = inp.build_base(template, run_mode=mode, mission_name=f"STAR {run_id or ''}".strip(), battery_wh=battery_wh,
-                                     lifetime_years=lifetime, temperature_C=temperature if thermal else None)
+                                     lifetime_years=lifetime, temperature_C=temperature if thermal else None,
+                                     datasheet=((sat or {}).get("battery") or {}).get("battery_data"))
     tpl_src = f"template {template_path.name}" if template_path.is_file() else "template defaults of star_integration"
     for key, value, why in base_prov:
-        if key == "cell":
+        from_datasheet = str(why).startswith("datasheet")
+        if key in ("cell", "pack.cells_in_parallel") and from_datasheet:
+            prov.record(key, value, f"END-006 battery {((sat or {}).get('battery') or {}).get('component')}, {why}")
+        elif key == "cell":
             prov.record("cell", value, tpl_src, kind="fallback", severity="minor", reason="assumption: " + why)
         elif key == "pack.cells_in_parallel":
             prov.record(key, value, f"{tpl_src} cell and the battery energy", kind="fallback", severity="minor",
@@ -160,8 +164,12 @@ def run_end008(input_file: str, output_dir: str, run_id: str | None = None,
         else:
             prov.record(key, value, why)
     prov.record("battery_capacity_Wh", battery_wh, "END-004 power budget (battery of the design it used)")
-    prov.record("pack.cells_in_series", base["pack"]["cells_in_series"], tpl_src, kind="fallback", severity="minor",
-                reason="assumption of the template")
+    if ((((sat or {}).get("battery") or {}).get("battery_data") or {}).get("cells_in_series")):
+        prov.record("pack.cells_in_series", base["pack"]["cells_in_series"],
+                    f"END-006 battery {sat['battery'].get('component')} datasheet (battery_data)")
+    else:
+        prov.record("pack.cells_in_series", base["pack"]["cells_in_series"], tpl_src, kind="fallback", severity="minor",
+                    reason="assumption of the template: the battery datasheet does not publish the pack configuration")
     log("EXECUTION", f"END-008 {mode} run: {base['mission']['duration_years']:g} year(s), step {base['simulation']['time_step_s']:g} s, "
                      f"pack {base['pack']['cells_in_series']}S{base['pack']['cells_in_parallel']}P, {base['pack']['temperature_C']:g} degC")
 

@@ -124,8 +124,24 @@ def _end001_ground_stations(star_payload: dict[str, Any]) -> list[dict[str, Any]
     return out
 
 
+def _registry_reviewed(name: str) -> str | None:
+    """Date the user approved the registry default of an END-003 input (`reviewed_on` in attitude_propagation.yaml), else None."""
+    try:
+        import yaml
+        path = Path(__file__).resolve().parents[2] / "Input" / "input_base_knowledge" / "registry" / "attitude_propagation.yaml"
+        for item in (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("required_inputs") or []:
+            if item.get("name") == name and item.get("reviewed"):
+                return str(item.get("reviewed_on") or "reviewed")
+    except Exception:                                              # noqa: BLE001 (no yaml / no registry: not reviewed)
+        pass
+    return None
+
+
 def _reviewed(star_payload: dict[str, Any], name: str) -> bool:
-    """False for a registry first guess the user has not reviewed (as END-004 _user_input), True otherwise."""
+    """False for a registry first guess the user has not reviewed (as END-004 _user_input), True otherwise (a default the user
+    approved in the registry counts as reviewed)."""
+    if _registry_reviewed(name):
+        return True
     for item in star_payload.get("resolved_inputs") or []:
         if isinstance(item, dict) and item.get("parameter") == name:
             return not (item.get("source") in ("module_registry_default", "module_registry_required_input") and not item.get("reviewed_by_user"))
@@ -133,6 +149,9 @@ def _reviewed(star_payload: dict[str, Any], name: str) -> bool:
 
 
 def _source(star_payload: dict[str, Any], name: str) -> str:
+    day = _registry_reviewed(name)
+    if day and not any(isinstance(i, dict) and i.get("parameter") == name and i.get("reviewed_by_user") for i in star_payload.get("resolved_inputs") or []):
+        return f"registry value approved by the user on {day}"
     return "STAR input" if _reviewed(star_payload, name) else "registry default (not reviewed by the user)"
 
 

@@ -84,12 +84,14 @@ def select(*args: Any, **kwargs: Any) -> Selection:
     kwargs.setdefault("power_supply_check", True)
     kwargs.setdefault("objective", "mass")
     kwargs.setdefault("require_all", True)      # ogni posto del progetto deve avere un componente: senza candidati la classe non va
+    kwargs.setdefault("battery_mass_tolerance", BATTERY_MASS_TOLERANCE)
     return _select(*args, **kwargs)
 
 NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
              "fifteen": 15, "twenty": 20, "twenty-five": 25, "thirty": 30}
 BANDS = (("UHF", r"\buhf\b"), ("VHF", r"\bvhf\b"), ("S", r"\bs[- ]band\b|\bbanda s\b"), ("X", r"\bx[- ]band\b|\bbanda x\b"))
 BAND_ORDER = {"VHF": 0, "UHF": 1, "S": 2, "X": 3, "COMMS": 1}     # dalla frequenza piu' bassa; "comms" = una sola radio senza banda nominata
+BATTERY_MASS_TOLERANCE = 0.35       # batteria: entro +35 % di massa dalla piu' leggera vince quella con piu' dati (utente, 2026-10-24)
 BUS = ("structure", "obc", "eps", "battery", "solar_panel", "comms", "antenna")
 # esiti del controllo di ingombro con cui una classe e' accettata: "undetermined" = a un componente mancano le quote pubblicate (massa,
 # volume e pila noti entro i limiti; non e' dimostrato che non entri: l'avviso resta nell'esito)

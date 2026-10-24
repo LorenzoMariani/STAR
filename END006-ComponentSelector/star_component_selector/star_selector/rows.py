@@ -98,7 +98,15 @@ _SPEC_ROWS: dict[str, list[tuple[str, str, str, Callable[[Component], str | None
     "battery": [("capacity_wh", "Capacity", "Wh", lambda c: _num(c.spec("capacity_wh"))),
                 ("voltage", "Voltage", "V", lambda c: _rng([c.spec("voltage_range_v")]) if c.spec("voltage_range_v") else None),
                 ("max_discharge_a", "Max discharge", "A", lambda c: _num(c.spec("max_discharge_a"))),
-                ("cycle_life", "Cycle life", "cycles", lambda c: _num(c.spec("cycle_life")))],
+                ("cycle_life", "Cycle life", "cycles", lambda c: _num(c.spec("cycle_life"))),
+                # data the thermal (END-019) and health (END-008) modules need, from battery_data (datasheet, tools/add_battery_data.py)
+                ("temp_charge_c", "Charge temperature", "C", lambda c: _rng([(c.raw.get("battery_data") or {}).get("temp_charge_c")])
+                 if (c.raw.get("battery_data") or {}).get("temp_charge_c") else None),
+                ("temp_discharge_c", "Discharge temperature", "C", lambda c: _rng([(c.raw.get("battery_data") or {}).get("temp_discharge_c")])
+                 if (c.raw.get("battery_data") or {}).get("temp_discharge_c") else None),
+                ("pack_config", "Cells in series x parallel", "", lambda c: None if not ((c.raw.get("battery_data") or {}).get("cells_in_series")
+                 and (c.raw.get("battery_data") or {}).get("cells_in_parallel")) else
+                 f"{c.raw['battery_data']['cells_in_series']}S{c.raw['battery_data']['cells_in_parallel']}P")],
     "solar_panel": [("peak_power_w", "Peak power", "W", lambda c: _num(c.spec("peak_power_w"))),
                     ("voltage_options_v", "Output voltage", "V", lambda c: _list(c.spec("voltage_options_v"))),
                     ("degradation", "Degradation", "%/year", lambda c: None if c.spec("degradation_per_year") is None else f"{100 * c.spec('degradation_per_year'):g}")],

@@ -92,7 +92,7 @@ def component_record(c: Component, root: Path = ROOT, with_image: bool = False) 
         "id": c.id, "category": c.category, "vendor": raw["vendor"], "name": raw["name"], "family": raw.get("family"),
         "mass_kg": raw.get("mass_kg"), "power_w": raw.get("power_w"), "volume_u": raw.get("volume_u"), "price": raw.get("price"),
         "status": raw.get("status"), "trl": raw.get("trl"), "flight_heritage": raw.get("flight_heritage"), "tid_krad": raw.get("tid_krad"),
-        "temp_op_c": raw.get("temp_op_c"), "notes": raw.get("notes"), "specs": raw["specs"], "dimensions": raw.get("dimensions"),
+        "temp_op_c": raw.get("temp_op_c"), "battery_data": raw.get("battery_data"), "notes": raw.get("notes"), "specs": raw["specs"], "dimensions": raw.get("dimensions"),
         "missing_specs": sorted(k for k, v in raw["specs"].items() if v is None) + (["mass_kg"] if raw.get("mass_kg") is None else []),
         "source": {"url": src["url"], "document": src.get("document"), "retrieved": src.get("retrieved"), "verified": bool(src.get("verified"))},
         "image": image, "datasheet": datasheet,

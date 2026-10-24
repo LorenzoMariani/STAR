@@ -243,6 +243,8 @@ COMMON_FIELDS: dict[str, tuple[str, bool, str]] = {
     "flight_heritage": ("int", False, "Numero di missioni in orbita (solo se dichiarato)"),
     "tid_krad": ("num", False, "Tolleranza alla dose totale, krad(Si)"),
     "temp_op_c": ("range", False, "Temperatura operativa [min, max] in gradi C"),
+    "battery_data": ("obj", False, "Solo batterie: {temp_charge_c, temp_discharge_c, cell: {description, nominal_capacity_ah}, cells_in_series, cells_in_parallel, "
+                                   "sources: {campo: {page, quote}}, note} letti dal datasheet (tools/add_battery_data.py); un campo assente = non pubblicato"),
     "notes": ("str", False, "Valori non modellati, discrepanze tra fonti, campi derivati"),
     "dimensions": ("obj", False, "Ingombro esterno {mm: [a, b, c], basis, note}: mm nell'ordine della fonte (per le schede: ingombro in pianta poi altezza), "
                                  "un valore null se non dichiarato; basis = declared (numeri del fornitore), standard (formato normato, es. PC/104, con altezza dichiarata "

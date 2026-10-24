@@ -1496,6 +1496,40 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-16"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -20,
+     60
+    ],
+    "cell": {
+     "description": "18650 Li-ion",
+     "nominal_capacity_ah": 3.5
+    },
+    "cells_in_series": 4,
+    "cells_in_parallel": 2,
+    "sources": {
+     "temp_discharge_c": {
+      "page": 8,
+      "quote": "TOP Operating temperature, Discharge -20.0 .. 60.0 C"
+     },
+     "temp_charge_c": {
+      "page": 8,
+      "quote": "TOP Operating temperature, Charge 0.0 .. 45.0 C"
+     },
+     "cells_in_series": {
+      "page": 6,
+      "quote": "standard configurations 4S-2P / 8S-1P"
+     },
+     "cell": {
+      "page": 5,
+      "quote": "Utilizes 18650 Lithium-ion cells with nominal capacity of 3500mAh"
+     }
+    }
    }
   },
   {
@@ -1557,6 +1591,40 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-16"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -20,
+     60
+    ],
+    "cell": {
+     "description": "18650 Li-ion",
+     "nominal_capacity_ah": 3.5
+    },
+    "cells_in_series": 8,
+    "cells_in_parallel": 1,
+    "sources": {
+     "temp_discharge_c": {
+      "page": 8,
+      "quote": "TOP Operating temperature, Discharge -20.0 .. 60.0 C"
+     },
+     "temp_charge_c": {
+      "page": 8,
+      "quote": "TOP Operating temperature, Charge 0.0 .. 45.0 C"
+     },
+     "cells_in_series": {
+      "page": 6,
+      "quote": "standard configurations 4S-2P / 8S-1P"
+     },
+     "cell": {
+      "page": 5,
+      "quote": "Utilizes 18650 Lithium-ion cells with nominal capacity of 3500mAh"
+     }
+    }
    }
   },
   {
@@ -1617,6 +1685,40 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-16"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     -10,
+     45
+    ],
+    "temp_discharge_c": [
+     -20,
+     60
+    ],
+    "cell": {
+     "description": "Li-ion cell (type not named)",
+     "nominal_capacity_ah": 3.5
+    },
+    "cells_in_series": 8,
+    "cells_in_parallel": 1,
+    "sources": {
+     "temp_charge_c": {
+      "page": 9,
+      "quote": "Operating temperature, Charge -10 .. 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 9,
+      "quote": "Operating temperature, Discharge -20 .. 60 C"
+     },
+     "cells_in_series": {
+      "page": 5,
+      "quote": "8S1P configuration with nominal capacity of 3500 mAh"
+     },
+     "cell": {
+      "page": 5,
+      "quote": "8S1P configuration with nominal capacity of 3500 mAh"
+     }
+    }
    }
   },
   {
@@ -2417,6 +2519,25 @@
     "axis": null,
     "basis": "image",
     "set": "2026-10-16"
+   },
+   "battery_data": {
+    "cell": {
+     "description": "18650 Li-ion",
+     "nominal_capacity_ah": null
+    },
+    "cells_in_series": 2,
+    "cells_in_parallel": 2,
+    "sources": {
+     "cell": {
+      "page": 1,
+      "quote": "Two 18650 Li-Ion cells per battery (2S2P)"
+     },
+     "cells_in_series": {
+      "page": 3,
+      "quote": "two 18650 cells connected in series (2S1P), two batteries in parallel (2S2P)"
+     }
+    },
+    "note": "no charge/discharge temperature limit: the datasheet only says most Li-ion cells are typically 0-45 C (page 4, footnote)"
    }
   },
   {
@@ -20655,6 +20776,27 @@
     "type": "estratta dal datasheet PDF",
     "retrieved": "2026-10-23",
     "note": "Page 1 of the datasheet Ibeos__B14-M45-M90-14V-Modular-SmallSat-Battery.pdf, largest product image (automatic import, to be checked)."
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     10,
+     45
+    ],
+    "temp_discharge_c": [
+     0,
+     45
+    ],
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Operating Cell Temperature, Charge 10 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Operating Cell Temperature, Discharge 0 to 45 C"
+     }
+    },
+    "note": "cell type and series/parallel configuration not published in the datasheet (only the 13.2-16.8 V typical operating voltage)"
    }
   },
   {
@@ -20709,6 +20851,27 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     0,
+     45
+    ],
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Recommended Operating Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Recommended Operating Temperature 0 to 45 C"
+     }
+    },
+    "note": "the datasheet gives one recommended range for charge and discharge; cell and configuration not published"
    }
   },
   {
@@ -20763,6 +20926,33 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 8,
+    "cells_in_parallel": 2,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 8S2P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {
@@ -20817,6 +21007,33 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 8,
+    "cells_in_parallel": 4,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 8S4P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {
@@ -20871,6 +21088,33 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 8,
+    "cells_in_parallel": 6,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 8S6P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {
@@ -20925,6 +21169,33 @@
     "axis": null,
     "basis": "subsystem",
     "set": "2026-10-23"
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 8,
+    "cells_in_parallel": 8,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 8S8P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {
@@ -20987,6 +21258,33 @@
     "type": "estratta dal datasheet PDF",
     "retrieved": "2026-10-23",
     "note": "Page 1 of the datasheet Ibeos__B50-412-1237-50V-Modular-Battery.pdf, largest product image (automatic import, to be checked). Datasheet shared with: ibeos-b50-825, ibeos-b50-1237."
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 12,
+    "cells_in_parallel": 2,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 12S2P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {
@@ -21049,6 +21347,33 @@
     "type": "estratta dal datasheet PDF",
     "retrieved": "2026-10-23",
     "note": "Page 1 of the datasheet Ibeos__B50-412-1237-50V-Modular-Battery.pdf, largest product image (automatic import, to be checked). Datasheet shared with: ibeos-b50-412, ibeos-b50-1237."
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 12,
+    "cells_in_parallel": 4,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 12S4P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {
@@ -21111,6 +21436,33 @@
     "type": "estratta dal datasheet PDF",
     "retrieved": "2026-10-23",
     "note": "Page 1 of the datasheet Ibeos__B50-412-1237-50V-Modular-Battery.pdf, largest product image (automatic import, to be checked). Datasheet shared with: ibeos-b50-412, ibeos-b50-825."
+   },
+   "battery_data": {
+    "temp_charge_c": [
+     0,
+     45
+    ],
+    "temp_discharge_c": [
+     -25,
+     55
+    ],
+    "cells_in_series": 12,
+    "cells_in_parallel": 6,
+    "sources": {
+     "temp_charge_c": {
+      "page": 1,
+      "quote": "Charge Cell Temperature 0 to 45 C"
+     },
+     "temp_discharge_c": {
+      "page": 1,
+      "quote": "Discharge Cell Temperature -25 to 55 C"
+     },
+     "cells_in_series": {
+      "page": 1,
+      "quote": "Configuration 12S6P"
+     }
+    },
+    "note": "cell type not published in the datasheet"
    }
   },
   {

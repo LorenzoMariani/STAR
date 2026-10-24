@@ -519,6 +519,15 @@ def adapt_end019(module_root: str | Path, run_ctx: Ctx = None) -> list[dict[str,
     put("END-019.sar_max_C", "sar_max", True, limit_assessment("sar_max", True, _num(limits.get("SAR")), "module_default", "END-019 default limit"))
     _add(out, "END-019.battery_limit_min_C", bat_min, context={"source": note_min})
     _add(out, "END-019.battery_limit_max_C", bat_max, context={"source": note_max})
+    chg_min = _num(cfg.get("bat_charge_min_C"))
+    if chg_min is not None:
+        _add(out, "END-019.battery_charge_limit_min_C", chg_min, context={"source": str(prov.get("bat_charge_min_C") or "")})
+        start = _num(hw.get("battery_charge_start_C"))
+        if start is not None:
+            out.append(K.kpi("END-019.battery_charge_start_C", start,
+                             context={"case": "cold case, eclipse exit, heater of the design", "satellite": hw.get("satellite_label") or ""},
+                             assessment=K.assessment(start >= chg_min - 1e-9, ">=", chg_min, "C", bat_source("bat_charge_min_C"),
+                                                     note=str(prov.get("bat_charge_min_C") or ""))))
     _add(out, "END-019.limits_violated", bool(over), context={"violations": sorted(over)})
     if "hot" in betas:
         _add(out, "END-019.hot_case_beta_deg", betas["hot"][0], context={"case": "hot", "battery_max_C": betas["hot"][1]})

@@ -86,6 +86,10 @@
             "maxItems": 2,
             "description": "Temperatura operativa [min, max] in gradi C"
           },
+          "battery_data": {
+            "type": "object",
+            "description": "Solo batterie: {temp_charge_c, temp_discharge_c, cell: {description, nominal_capacity_ah}, cells_in_series, cells_in_parallel, sources: {campo: {page, quote}}, note} letti dal datasheet (tools/add_battery_data.py); un campo assente = non pubblicato"
+          },
           "notes": {
             "type": "string",
             "description": "Valori non modellati, discrepanze tra fonti, campi derivati"
