@@ -37,8 +37,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--mode", default="test", choices=["test", "full"], help="STAR run mode (default test)")
     ap.add_argument("--level", type=int, default=3, choices=[1, 2, 3, 4, 5], help="accuracy level of a full run (default 3)")
-    ap.add_argument("--proposal", default=str(SAMPLES / "Mission_Proposal_v7.txt"), help="mission request document (.txt or .docx)")
-    ap.add_argument("--requirements", default=str(SAMPLES / "Mission_Proposal_v7_requirements.json"),
+    ap.add_argument("--proposal", default=str(SAMPLES / "Mission_Proposal_v14.docx"), help="mission request document (.txt or .docx)")
+    ap.add_argument("--requirements", default=str(SAMPLES / "Mission_Proposal_v14_requirements.json"),
                     help="JSON with the reviewed requirements, or 'none' for the rule-based extraction of the document")
     ap.add_argument("--with-end007", action="store_true", help="keep END-007 (Unreal, always in full) in the workflow")
     ap.add_argument("--add", nargs="*", default=[], metavar="END-XXX",
@@ -179,8 +179,9 @@ def check_convergence(api) -> int:
     # accepted outcome (2026-10-23): no catalogued heater covers the cold-case battery, so the loop may end not_converged
     # with CEF-BATTERY as the only failing criterion; anything else failing is a regression
     converged = conv.get("status") == "converged"
-    if not converged and conv.get("status") != "not_converged":
-        problems.append(f"status {conv.get('status')} (expected converged or not_converged): {conv.get('reason')}")
+    # stalled = the design reached a fixed point before the iteration limit: same outcome as not_converged
+    if not converged and conv.get("status") not in ("not_converged", "stalled"):
+        problems.append(f"status {conv.get('status')} (expected converged, not_converged or stalled): {conv.get('reason')}")
     if not converged and sorted(conv.get("failing_criteria") or []) != ["CEF-BATTERY"]:
         problems.append(f"failing criteria {conv.get('failing_criteria')} (expected only CEF-BATTERY)")
     if int(conv.get("iterations_run") or 0) > 3 or len(iterations) != int(conv.get("iterations_run") or 0):
@@ -208,7 +209,8 @@ def check_convergence(api) -> int:
     comp_path = run / "compliance" / "compliance.json"
     comp = json.loads(comp_path.read_text(encoding="utf-8")) if comp_path.is_file() else {}
     reqs = comp.get("requirements") or comp.get("items") or []
-    req20 = next((r for r in reqs if str(r.get("id") or r.get("requirement_id")) == "REQ-020"), None)
+    req20 = next((r for r in reqs if "battery temperature" in str(r.get("text") or "").lower() and "operational limit" in str(r.get("text") or "").lower()), None) \
+        or next((r for r in reqs if str(r.get("id") or r.get("requirement_id")) == "REQ-020"), None)
     want20 = "met" if converged else "not_met"
     if not req20 or req20.get("status") != want20:
         problems.append(f"REQ-020 {None if not req20 else req20.get('status')} (expected {want20}): {None if not req20 else req20.get('reason')}")

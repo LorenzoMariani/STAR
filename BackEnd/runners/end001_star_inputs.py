@@ -379,8 +379,8 @@ def apply_star_mode(cfg: dict[str, Any], payload: dict[str, Any]) -> tuple[dict[
     for k, field, wkey in keys:
         if k in given:
             v, rid = given[k]
-            mreq[field] = [round(v, 4), round(2 * v, 4)]
-            note(f"MissionRequirements.{field}", mreq[field], f"requirement {rid}: {v:g} h ok, {2 * v:g} h (twice) bad")
+            mreq[field] = [round(v, 4), -1]     # -1: END-001 takes "bad" from the design space (a fixed bad saturates every design)
+            note(f"MissionRequirements.{field}", mreq[field], f"requirement {rid}: {v:g} h ok, bad from the design space (auto)")
     if given:
         order = [k for k, _, _ in keys]
         for i, (k, field, wkey) in enumerate(keys):

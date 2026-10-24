@@ -22,7 +22,7 @@ Python suites (unittest):
 On GitHub at every push and pull request (.github/workflows/tests.yml): the Python suites and every MATLAB suite but END-001.
 
 Run only when named (2026-10-20):
-    SMOKE    FrontEnd/star_smoke_test.py   the whole STAR pipeline headless in test mode (Mission_Proposal_v7, without
+    SMOKE    FrontEnd/star_smoke_test.py   the whole STAR pipeline headless in test mode (Mission_Proposal_v14, without
              END-007), 4 to 7 minutes; needs MATLAB, pywebview and the module data and builds of the STAR PC (END-010:
              lib/data/DE440.mat and the Unity build)
 
